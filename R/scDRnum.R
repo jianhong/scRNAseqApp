@@ -2,7 +2,12 @@ scDRnum <- function(inpConf, inpMeta, inp1, inp2, inpsub1, inpsub2,
                     dataset, inpH5, inpGene, inpsplt){
   # Prepare ggData
   ggData = inpMeta[, c(inpConf[UI == inp1]$ID, inpConf[UI == inpsub1]$ID),
-                   with = FALSE]
+                   with = FALSE, drop=FALSE]
+  if(nrow(ggData)<1){
+    dt <- data.frame("group"=numeric(), "nCells"=numeric(),
+                     "nExpress"=numeric(), "pctExpress"=numeric())
+    return(dt)
+  }
   colnames(ggData) = c("group", "sub")
   h5file <- H5File$new(file.path(datafolder, dataset, inpH5), mode = "r")
   h5data <- h5file[["grp"]][["data"]]

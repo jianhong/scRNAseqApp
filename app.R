@@ -62,23 +62,23 @@ ui <- function(req){
                format(Sys.Date(), "%Y"),
                "jianhong@duke"), class="rightAlign"),
     ### Tab1.a1: cellInfo vs geneExpr on dimRed
-    tab1a1,
+    tab1a1(),
     ### Tab1.a2: cellInfo vs cellInfo on dimRed
-    tab1a2,     # End of tab (2 space)
+    tab1a2(),     # End of tab (2 space)
     ### Tab1.a3: geneExpr vs geneExpr on dimRed
-    tab1a3,     # End of tab (2 space)
+    tab1a3(),     # End of tab (2 space)
     ### Tab1.b2: Gene coexpression plot
-    tab1b2,     # End of tab (2 space)
+    tab1b2(),     # End of tab (2 space)
     ### Tab1.c1: violinplot / boxplot
-    tab1c1,     # End of tab (2 space)
+    tab1c1(),     # End of tab (2 space)
     ### Tab1.c2: Proportion plot
-    tab1c2,     # End of tab (2 space)
+    tab1c2(),     # End of tab (2 space)
     ### Tab1.d1: Multiple gene expr
-    tab1d1,     # End of tab (2 space)
+    tab1d1(),     # End of tab (2 space)
     ### Tab1.e1: change dataset
-    tab1e1,
+    tab1e1(req),
     ### Tab1.f1: Login form
-    tab1f1,
+    tab1f1(),
     br(),br(),br(),br(),br()
   ))
 }
@@ -134,6 +134,26 @@ server <- function(input, output, session) {
       }
     }
     refreshData(input, output, session)
+  })
+
+  output$total_visitor <- renderPlot({
+    counter <- read.delim("www/counter.tsv", header = TRUE)
+    ips <- counter$ip
+    counter <- as.Date(counter$date)
+    visitors <- paste(format(counter, "%d/%m/%y %H"), ips)
+    current <- Sys.time()
+    ip <- isolate(input$remote_addr)
+    agent <- isolate(input$remote_agent)
+    if(!paste(format(current, "%d/%m/%y %H"), ip) %in% visitors){
+      write(paste(as.character(current), ip, agent, sep="\t"),
+            "www/counter.tsv", append = TRUE)
+      counter <- c(counter, current)
+    }
+    counter <- table(format(counter, "%m/%y"))
+    counter <- as.data.frame(counter)
+    ggplot(counter, aes(x=Var1, y=Freq)) +
+      geom_bar(stat = "identity", fill="darkorchid4") +
+      theme_minimal() + xlab("") + ylab("visitor counts")
   })
 
   refreshData <- function(input, output, session){
@@ -250,7 +270,10 @@ server <- function(input, output, session) {
 
     ### Plots for tab a1
     output$sc1a1sub1.ui <- renderUI({
-      sub = strsplit(dataSource$sc1conf[UI == input$sc1a1sub1]$fID, "\\|")[[1]]
+      sub = strsplit(dataSource$sc1conf[UI == input$sc1a1sub1]$fID, "\\|")
+      if(length(sub)){
+        sub <- sub[[1]]
+      }
       checkboxGroupInput("sc1a1sub2", "Select which cells to show", inline = TRUE,
                          choices = sub, selected = sub)
     })

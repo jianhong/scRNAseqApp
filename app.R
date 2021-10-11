@@ -571,7 +571,7 @@ server <- function(input, output, session) {
     })
     output$sc1c1inp1c.ui <- renderUI({
       if(!input$sc1c1inp2 %in% dataSource$sc1conf$UI){
-        h5file <- H5File$new(file.path(dataSource$dataset, "sc1gexpr.h5"), mode = "r")
+        h5file <- H5File$new(file.path(datafolder, dataSource$dataset, "sc1gexpr.h5"), mode = "r")
         h5data <- h5file[["grp"]][["data"]]
         val = h5data$read(args = list(dataSource$sc1gene[input$sc1c1inp2], quote(expr=)))
         val <- max(val, na.rm = TRUE)

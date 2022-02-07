@@ -5,7 +5,7 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpPlt,
   # Identify genes that are in our dataset
   geneList = scGeneList(inp, inpGene)
   geneList = geneList[present == TRUE]
-  shiny::validate(need(nrow(geneList) <= 50, "More than 50 genes to plot! Please reduce the gene list!"))
+  shiny::validate(need(nrow(geneList) <= 500, "More than 500 genes to plot! Please reduce the gene list!"))
   shiny::validate(need(nrow(geneList) > 1, "Please input at least 2 genes to plot!"))
 
   # Prepare ggData

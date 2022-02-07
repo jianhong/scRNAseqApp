@@ -7,7 +7,8 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpPlt,
   geneList = geneList[present == TRUE]
   shiny::validate(need(nrow(geneList) <= 500, "More than 500 genes to plot! Please reduce the gene list!"))
   shiny::validate(need(nrow(geneList) > 1, "Please input at least 2 genes to plot!"))
-  axis_fontsize <- max(c(500/nrow(geneList), 10), na.rm=TRUE)
+  axis_fontsize <- min(c(500/nrow(geneList), 12), na.rm=TRUE)
+  bulb_pointsize <- min(c(round(400/nrow(geneList)), 8), na.rm=TRUE)
 
   # Prepare ggData
   h5file <- H5File$new(file.path(datafolder, dataset, inpH5), mode = "r")
@@ -82,7 +83,7 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpPlt,
       sctheme(base_size = sList[inpfsz], Xang = 45, XjusH = 1) +
       scale_x_discrete(expand = c(0.05, 0)) +
       scale_y_discrete(expand = c(0, 0.5)) +
-      scale_size_continuous("proportion", range = c(0, 8),
+      scale_size_continuous("proportion", range = c(0, bulb_pointsize),
                             limits = c(0, 1), breaks = c(0.00,0.25,0.50,0.75,1.00)) +
       scale_color_gradientn("expression", limits = colRange, colours = cList[[inpcols]]) +
       guides(color = guide_colorbar(barwidth = 15)) +

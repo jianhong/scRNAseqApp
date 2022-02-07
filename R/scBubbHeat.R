@@ -7,6 +7,7 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpPlt,
   geneList = geneList[present == TRUE]
   shiny::validate(need(nrow(geneList) <= 500, "More than 500 genes to plot! Please reduce the gene list!"))
   shiny::validate(need(nrow(geneList) > 1, "Please input at least 2 genes to plot!"))
+  axis_fontsize <- max(c(500/nrow(geneList), 10), na.rm=TRUE)
 
   # Prepare ggData
   h5file <- H5File$new(file.path(datafolder, dataset, inpH5), mode = "r")
@@ -85,7 +86,7 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpPlt,
                             limits = c(0, 1), breaks = c(0.00,0.25,0.50,0.75,1.00)) +
       scale_color_gradientn("expression", limits = colRange, colours = cList[[inpcols]]) +
       guides(color = guide_colorbar(barwidth = 15)) +
-      theme(axis.title = element_blank(), legend.box = "vertical")
+      theme(axis.title = element_blank(), axis.text=element_text(size=axis_fontsize), legend.box = "vertical")
   } else { # Heatmap
     ggOut = ggplot(ggData, aes(grpBy, geneName, fill = val)) +
       geom_tile() +
@@ -94,7 +95,7 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpPlt,
       scale_y_discrete(expand = c(0, 0.5)) +
       scale_fill_gradientn("expression", limits = colRange, colours = cList[[inpcols]]) +
       guides(fill = guide_colorbar(barwidth = 15)) +
-      theme(axis.title = element_blank())
+      theme(axis.title = element_blank(), axis.text=element_text(size=axis_fontsize))
   }
 
   # Final tidy

@@ -10,7 +10,7 @@ library(hdf5r)
 library(ggdendro)
 library(gridExtra)
 library(ggridges)
-VERSION = "2.0.0"
+VERSION = "2.0.2"
 if(names(dev.cur())!= "null device") dev.off()
 pdf(NULL)
 

@@ -10,14 +10,14 @@ tab1d1 <- function(){
     column(
       3, style="border-right: 2px solid black",
       textAreaInput("sc1d1inp", HTML("List of gene names <br />
-                                         (Max 50 genes, separated <br />
-                                         by , or ; or newline):"),
+                                         (Max 500 genes (over 50 will response slow), <br />
+                                         separated by , or ; or newline):"),
                     height = "200px",
                     value = NULL) %>%
         helper(type = "inline", size = "m", fade = TRUE,
                title = "List of genes to plot on bubbleplot / heatmap",
                content = c("Input genes to plot",
-                           "- Maximum 50 genes (due to ploting space limitations)",
+                           "- Maximum 500 genes (due to ploting space limitations)",
                            "- Genes should be separated by comma, semicolon or newline")),
       selectInput("sc1d1grp", "Group by:",
                   choices = NULL) %>%

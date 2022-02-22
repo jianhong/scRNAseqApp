@@ -14,14 +14,14 @@ tab1d1 <- function(){
                                          separated by , or ; or newline):"),
                     height = "200px",
                     value = NULL) %>%
-        helper(type = "inline", size = "m", fade = TRUE,
+        shinyhelper::helper(type = "inline", size = "m", fade = TRUE,
                title = "List of genes to plot on bubbleplot / heatmap",
                content = c("Input genes to plot",
                            "- Maximum 500 genes (due to ploting space limitations)",
                            "- Genes should be separated by comma, semicolon or newline")),
       selectInput("sc1d1grp", "Group by:",
                   choices = NULL) %>%
-        helper(type = "inline", size = "m", fade = TRUE,
+        shinyhelper::helper(type = "inline", size = "m", fade = TRUE,
                title = "Cell information to group cells by",
                content = c("Select categorical cell information to group cells by",
                            "- Single cells are grouped by this categorical covariate",

@@ -11,13 +11,13 @@ tab1c2 <- function(){
       3, style="border-right: 2px solid black",
       selectInput("sc1c2inp1", "Cell information to plot (X-axis):",
                   choices = NULL) %>%
-        helper(type = "inline", size = "m", fade = TRUE,
+        shinyhelper::helper(type = "inline", size = "m", fade = TRUE,
                title = "Cell information to plot cells by",
                content = c("Select categorical cell information to plot cells by",
                            "- Plotted as the X-axis of the proportion plot")),
       selectInput("sc1c2inp2", "Cell information to group / colour by:",
                   choices = NULL) %>%
-        helper(type = "inline", size = "m", fade = TRUE,
+        shinyhelper::helper(type = "inline", size = "m", fade = TRUE,
                title = "Cell information to group / colour cells by",
                content = c("Select categorical cell information to group / colour cells by",
                            "- Proportion / cell numbers are shown in different colours")),

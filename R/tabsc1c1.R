@@ -10,20 +10,20 @@ tab1c1 <- function(){
       3, style="border-right: 2px solid black",
       selectInput("sc1c1inp1", "Cell information (X-axis):",
                   choices = NULL) %>%
-        helper(type = "inline", size = "m", fade = TRUE,
+        shinyhelper::helper(type = "inline", size = "m", fade = TRUE,
                title = "Cell information to group cells by",
                content = c("Select categorical cell information to group cells by",
                            "- Single cells are grouped by this categorical covariate",
                            "- Plotted as the X-axis of the violin plot / box plot")),
       selectInput("sc1c1inp1a", "Cell information to subset:",
                   choices = NULL) %>%
-        helper(type = "inline", size = "m", fade = TRUE,
+        shinyhelper::helper(type = "inline", size = "m", fade = TRUE,
                title = "Cell information to subset by:",
                content = c("Select categorical cell information to sebset cells by",
                            "- cells are shown in different subsets")),
       uiOutput("sc1c1inp1b.ui"),
       selectInput("sc1c1inp2", "Cell Info / Gene name (Y-axis):", choices=NULL) %>%
-        helper(type = "inline", size = "m", fade = TRUE,
+        shinyhelper::helper(type = "inline", size = "m", fade = TRUE,
                title = "Cell Info / Gene to plot",
                content = c("Select cell info / gene to plot on Y-axis",
                            "- Can be continuous cell information (e.g. nUMIs / scores)",

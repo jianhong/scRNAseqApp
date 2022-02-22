@@ -55,7 +55,7 @@ tab1a1 <- function(){
         column(
           6, selectInput("sc1a1inp1", "Cell information:",
                          choices = NULL) %>%
-            helper(type = "inline", size = "m", fade = TRUE,
+            shinyhelper::helper(type = "inline", size = "m", fade = TRUE,
                    title = "Cell information to colour cells by",
                    content = c("Select cell information to colour cells",
                                "- Categorical covariates have a fixed colour palette",
@@ -101,7 +101,7 @@ tab1a1 <- function(){
       fluidRow(
         column(
           6, selectInput("sc1a1inp2", "Gene name:", choices=NULL) %>%
-            helper(type = "inline", size = "m", fade = TRUE,
+            shinyhelper::helper(type = "inline", size = "m", fade = TRUE,
                    title = "Gene expression to colour cells by",
                    content = c("Select gene to colour cells by gene expression",
                                paste0("- Gene expression are coloured in a ",

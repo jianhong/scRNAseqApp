@@ -54,7 +54,7 @@ tab1a3 <- function(){
       fluidRow(
         column(
           6, selectInput("sc1a3inp1", "Gene name:", choices=NULL) %>%
-            helper(type = "inline", size = "m", fade = TRUE,
+            shinyhelper::helper(type = "inline", size = "m", fade = TRUE,
                    title = "Gene expression to colour cells by",
                    content = c("Select gene to colour cells by gene expression",
                                paste0("- Gene expression are coloured in a ",
@@ -90,7 +90,7 @@ tab1a3 <- function(){
       fluidRow(
         column(
           6, selectInput("sc1a3inp2", "Gene name:", choices=NULL) %>%
-            helper(type = "inline", size = "m", fade = TRUE,
+            shinyhelper::helper(type = "inline", size = "m", fade = TRUE,
                    title = "Gene expression to colour cells by",
                    content = c("Select gene to colour cells by gene expression",
                                paste0("- Gene expression are coloured in a ",

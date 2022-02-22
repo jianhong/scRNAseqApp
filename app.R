@@ -1,3 +1,5 @@
+## BiocManager::install(c("shinyhelper", "DT", "ggplot2", "ggrepel", "Matrix",
+##                        "hdf5r", "ggdendro", "gridExtra", "ggridges"))
 library(shiny)
 library(shinyhelper)
 library(data.table)
@@ -16,7 +18,7 @@ pdf(NULL)
 
 source("R/data.R")
 defaultDataset <- "GSM5023610_glial_app"
-if(defaultDataset %in% datasets){
+if(!defaultDataset %in% datasets){
   defaultDataset <- datasets[1]
 }
 source("R/userdata.R")

@@ -52,14 +52,14 @@ tab1b2 <- function(){
     column(
       3, style="border-right: 2px solid black", h4("Gene Expression"),
       selectInput("sc1b2inp1", "Gene 1:", choices=NULL) %>%
-        helper(type = "inline", size = "m", fade = TRUE,
+        shinyhelper::helper(type = "inline", size = "m", fade = TRUE,
                title = "Gene expression to colour cells by",
                content = c("Select gene to colour cells by gene expression",
                            paste0("- Gene expression are coloured in a ",
                                   "White-Red colour scheme which can be ",
                                   "changed in the plot controls"))),
       selectInput("sc1b2inp2", "Gene 2:", choices=NULL) %>%
-        helper(type = "inline", size = "m", fade = TRUE,
+        shinyhelper::helper(type = "inline", size = "m", fade = TRUE,
                title = "Gene expression to colour cells by",
                content = c("Select gene to colour cells by gene expression",
                            paste0("- Gene expression are coloured in a ",

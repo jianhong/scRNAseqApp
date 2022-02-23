@@ -12,7 +12,7 @@ library(hdf5r)
 library(ggdendro)
 library(gridExtra)
 library(ggridges)
-VERSION = "2.0.2"
+VERSION = "2.0.3"
 if(names(dev.cur())!= "null device") dev.off()
 pdf(NULL)
 
@@ -118,6 +118,12 @@ server <- function(input, output, session) {
         }
   })
 
+  observe({
+    query <- parseQueryString(session$clientData$url_search)
+    if(!is.null(query[['data']])){
+      updateSelectInput(session, "availableDatasets", selected=query[['data']])
+    }
+  })
   observeEvent(input$availableDatasets,{
     dataSource$dataset <- input$availableDatasets
     dataSource$geoAcc <- sub("^(.*?)_.*$", "\\1", input$availableDatasets)
@@ -640,6 +646,12 @@ server <- function(input, output, session) {
         plot = scProp(dataSource$sc1conf, dataSource$sc1meta, input$sc1c2inp1, input$sc1c2inp2,
                       input$sc1c2typ, input$sc1c2flp, input$sc1c2fsz) )
       })
+    output$sc1c2.dt <- renderDataTable({
+      ggData = scProp(dataSource$sc1conf, dataSource$sc1meta, input$sc1c2inp1, input$sc1c2inp2,
+                      input$sc1c2typ, input$sc1c2flp, input$sc1c2fsz)
+      datatable(ggData$data, rownames = FALSE, extensions = "Buttons",
+                options = list(pageLength = -1, dom = "tB", buttons = c("copy", "csv", "excel")))
+    })
 
 
     ### Plots for tab d1

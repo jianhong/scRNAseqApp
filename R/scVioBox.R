@@ -32,6 +32,7 @@ scVioBox <- function(inpConf, inpMeta, inp1, inp1a, inp1b, inp1c, inp2, dataset,
   ggCol = strsplit(inpConf[UI == inp1]$fCL, "\\|")[[1]]
   names(ggCol) = levels(ggData$X)
   ggLvl = levels(ggData$X)[levels(ggData$X) %in% unique(ggData$X)]
+  ggLvl = sortLevels(ggLvl)
   ggData$X = factor(ggData$X, levels = ggLvl)
   ggCol = ggCol[ggLvl]
 

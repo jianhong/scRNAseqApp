@@ -43,7 +43,13 @@ tab1c2 <- function(){
                             min = 4, max = 20, value = 8, step = 0.5)),
            div(style="display:inline-block",
                numericInput("sc1c2oup.w", "PDF / PNG width:", width = "138px",
-                            min = 4, max = 20, value = 10, step = 0.5))
+                            min = 4, max = 20, value = 10, step = 0.5)), br(),
+           actionButton("sc1c2tog9", "Toggle to show statistics"),
+           conditionalPanel(
+             condition = "input.sc1c2tog9 % 2 == 1",
+             h4("Statistics"),
+             dataTableOutput("sc1c2.dt")
+           )
     )  # End of column (6 space)
   )    # End of fluidRow (4 space)
 )

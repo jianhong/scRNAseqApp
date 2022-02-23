@@ -12,7 +12,7 @@ library(hdf5r)
 library(ggdendro)
 library(gridExtra)
 library(ggridges)
-VERSION = "2.0.3"
+VERSION = "2.0.4"
 if(names(dev.cur())!= "null device") dev.off()
 pdf(NULL)
 
@@ -66,17 +66,17 @@ ui <- function(req){
     ### Tab1.a1: cellInfo vs geneExpr on dimRed
     tab1a1(),
     ### Tab1.a2: cellInfo vs cellInfo on dimRed
-    tab1a2(),     # End of tab (2 space)
+    tab1a2(),
     ### Tab1.a3: geneExpr vs geneExpr on dimRed
-    tab1a3(),     # End of tab (2 space)
+    tab1a3(),
     ### Tab1.b2: Gene coexpression plot
-    tab1b2(),     # End of tab (2 space)
+    tab1b2(),
     ### Tab1.c1: violinplot / boxplot
-    tab1c1(),     # End of tab (2 space)
+    tab1c1(),
     ### Tab1.c2: Proportion plot
-    tab1c2(),     # End of tab (2 space)
+    tab1c2(),
     ### Tab1.d1: Multiple gene expr
-    tab1d1(),     # End of tab (2 space)
+    tab1d1(),
     ### Tab1.e1: change dataset
     tab1e1(req),
     ### Tab1.f1: Login form
@@ -272,6 +272,9 @@ server <- function(input, output, session) {
     updateSelectInput(session,"sc1d1grp", "Group by:",
                       choices = dataSource$sc1conf[grp == TRUE]$UI,
                       selected = dataSource$sc1conf[grp == TRUE]$UI[1])
+    updateSelectInput(session,"sc1d1grp1a", "Cell information to subset by:",
+                      choices = c("N/A", dataSource$sc1conf[grp == TRUE]$UI),
+                      selected = "N/A")
 
     updateTextAreaInput(session, "sc1d1inp",
                         value = paste0(dataSource$sc1def$genes, collapse = ", "))
@@ -655,6 +658,15 @@ server <- function(input, output, session) {
 
 
     ### Plots for tab d1
+    output$sc1d1grp1b.ui <- renderUI({
+      if(input$sc1d1grp1a!="N/A"){
+        sub = strsplit(dataSource$sc1conf[UI == input$sc1d1grp1a]$fID, "\\|")[[1]]
+        checkboxGroupInput("sc1d1grp1b", "Select which cells to show", inline = TRUE,
+                           choices = sub)
+      }else{
+        sub = NULL
+      }
+    })
     output$sc1d1oupTxt <- renderUI({
       geneList = scGeneList(input$sc1d1inp, dataSource$sc1gene)
       if(nrow(geneList) > 50){
@@ -670,7 +682,8 @@ server <- function(input, output, session) {
       }
     })
     output$sc1d1oup <- renderPlot({
-      scBubbHeat(dataSource$sc1conf, dataSource$sc1meta, input$sc1d1inp, input$sc1d1grp, input$sc1d1plt,
+      scBubbHeat(dataSource$sc1conf, dataSource$sc1meta, input$sc1d1inp, input$sc1d1grp,
+                 input$sc1d1grp1a, input$sc1d1grp1b, input$sc1d1plt,
                  dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
                  input$sc1d1scl, input$sc1d1row, input$sc1d1col,
                  input$sc1d1cols, input$sc1d1fsz)
@@ -682,7 +695,8 @@ server <- function(input, output, session) {
       filename = function() { paste0(input$availableDatasets, "_",input$sc1d1plt,"_",input$sc1d1grp,".pdf") },
       content = function(file) { ggsave(
         file, device = "pdf", height = input$sc1d1oup.h, width = input$sc1d1oup.w,
-        plot = scBubbHeat(dataSource$sc1conf, dataSource$sc1meta, input$sc1d1inp, input$sc1d1grp, input$sc1d1plt,
+        plot = scBubbHeat(dataSource$sc1conf, dataSource$sc1meta, input$sc1d1inp, input$sc1d1grp,
+                          input$sc1d1grp1a, input$sc1d1grp1b, input$sc1d1plt,
                           dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
                           input$sc1d1scl, input$sc1d1row, input$sc1d1col,
                           input$sc1d1cols, input$sc1d1fsz, save = TRUE) )
@@ -691,7 +705,8 @@ server <- function(input, output, session) {
       filename = function() { paste0(input$availableDatasets, "_",input$sc1d1plt,"_",input$sc1d1grp,".png") },
       content = function(file) { ggsave(
         file, device = "png", height = input$sc1d1oup.h, width = input$sc1d1oup.w,
-        plot = scBubbHeat(dataSource$sc1conf, dataSource$sc1meta, input$sc1d1inp, input$sc1d1grp, input$sc1d1plt,
+        plot = scBubbHeat(dataSource$sc1conf, dataSource$sc1meta, input$sc1d1inp, input$sc1d1grp,
+                          input$sc1d1grp1a, input$sc1d1grp1b, input$sc1d1plt,
                           dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
                           input$sc1d1scl, input$sc1d1row, input$sc1d1col,
                           input$sc1d1cols, input$sc1d1fsz, save = TRUE) )

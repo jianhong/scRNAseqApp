@@ -1,5 +1,5 @@
 # Plot gene expression bubbleplot / heatmap
-scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpPlt,
+scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpPlt,
                        dataset, inpH5, inpGene, inpScl, inpRow, inpCol,
                        inpcols, inpfsz, save = FALSE){
   # Identify genes that are in our dataset
@@ -23,6 +23,9 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpPlt,
   }
   h5file$close_all()
 
+  if(inpGrp1a!="N/A" && length(inpGrp1b)){
+    ggData <- ggData[ggData[[inpConf[UI == inpGrp1a]$ID]] %in% inpGrp1b, , drop=FALSE]
+  }
   # Aggregate
   ggData$val = expm1(ggData$val)
   ggData = ggData[, .(val = mean(val), prop = sum(val>0) / length(sampleID)),

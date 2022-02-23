@@ -26,6 +26,13 @@ tab1d1 <- function(){
                content = c("Select categorical cell information to group cells by",
                            "- Single cells are grouped by this categorical covariate",
                            "- Plotted as the X-axis of the bubbleplot / heatmap")),
+      selectInput("sc1d1grp1a", "Cell information to subset:",
+                  choices = NULL) %>%
+        shinyhelper::helper(type = "inline", size = "m", fade = TRUE,
+                            title = "Cell information to subset by:",
+                            content = c("Select categorical cell information to sebset cells by",
+                                        "- cells are shown in different subsets")),
+      uiOutput("sc1d1grp1b.ui"),
       radioButtons("sc1d1plt", "Plot type:",
                    choices = c("Bubbleplot", "Heatmap"),
                    selected = "Bubbleplot", inline = TRUE),

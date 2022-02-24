@@ -12,7 +12,7 @@ library(hdf5r)
 library(ggdendro)
 library(gridExtra)
 library(ggridges)
-VERSION = "2.0.4"
+VERSION = "2.0.5"
 if(names(dev.cur())!= "null device") dev.off()
 pdf(NULL)
 
@@ -52,7 +52,8 @@ ui <- function(req){
   tags$head(tags$style(HTML(".shiny-output-error-validation {color: red; font-weight: bold;}")),
             tags$style(HTML(".rightAlign{float:right;}")),
             tags$script(src = "login.js"),
-  list(tags$style(HTML(".navbar-default .navbar-nav { font-weight: bold; font-size: 16px; }")))),
+            list(tags$style(HTML(".navbar-default .navbar-nav { font-weight: bold; font-size: 16px; }")))
+            ),
 
   ### Page title
   titlePanel(htmlOutput("dataTitle"), windowTitle = "scRNAseq regeneration database"),

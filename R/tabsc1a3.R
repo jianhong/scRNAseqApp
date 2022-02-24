@@ -59,7 +59,9 @@ tab1a3 <- function(){
                    content = c("Select gene to colour cells by gene expression",
                                paste0("- Gene expression are coloured in a ",
                                       "White-Red colour scheme which can be ",
-                                      "changed in the plot controls")))
+                                      "changed in the plot controls"),
+                               paste("- Gene name support autocomplete.",
+                                     "Try to input gene name in the input box.")))
         ),
         column(
           6, actionButton("sc1a3tog1", "Toggle plot controls"),
@@ -95,7 +97,9 @@ tab1a3 <- function(){
                    content = c("Select gene to colour cells by gene expression",
                                paste0("- Gene expression are coloured in a ",
                                       "White-Red colour scheme which can be ",
-                                      "changed in the plot controls")))
+                                      "changed in the plot controls"),
+                               paste("- Gene name support autocomplete.",
+                                     "Try to input gene name in the input box.")))
         ),
         column(
           6, actionButton("sc1a3tog2", "Toggle plot controls"),

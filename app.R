@@ -12,7 +12,7 @@ library(hdf5r)
 library(ggdendro)
 library(gridExtra)
 library(ggridges)
-VERSION = "2.0.5"
+VERSION = "2.0.6"
 if(names(dev.cur())!= "null device") dev.off()
 pdf(NULL)
 
@@ -145,7 +145,8 @@ server <- function(input, output, session) {
     refreshData(input, output, session)
   })
 
-  output$total_visitor <- renderPlot({
+  update_visitor <- function(){
+    req(input$remote_addr)
     counter <- read.delim("www/counter.tsv", header = TRUE)
     ips <- counter$ip
     counter <- as.Date(counter$date)
@@ -156,8 +157,12 @@ server <- function(input, output, session) {
     if(!paste(format(current, "%d/%m/%y %H"), ip) %in% visitors){
       write(paste(as.character(current), ip, agent, sep="\t"),
             "www/counter.tsv", append = TRUE)
-      counter <- c(counter, current)
     }
+  }
+  observeEvent(input$remote_addr, update_visitor())
+  output$total_visitor <- renderPlot({
+    counter <- read.delim("www/counter.tsv", header = TRUE)
+    counter <- as.Date(counter$date)
     counter <- table(format(counter, "%m/%y"))
     counter <- as.data.frame(counter)
     ggplot(counter, aes(x=Var1, y=Freq)) +

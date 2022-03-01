@@ -347,15 +347,17 @@ server <- function(input, output, session) {
     output$sc1a1oup2.pdf <- downloadHandler(
       filename = function() { paste0(input$availableDatasets, "_",input$sc1a1drX,"_",input$sc1a1drY,"_",
                                      input$sc1a1inp2,".pdf") },
-      content = function(file) { ggsave(
-        file, device = "pdf", height = input$sc1a1oup2.h, width = input$sc1a1oup2.w, useDingbats = FALSE,
-        plot = scDRgene(dataSource$sc1conf, dataSource$sc1meta, input$sc1a1drX, input$sc1a1drY, input$sc1a1inp2,
-                        input$sc1a1sub1, input$sc1a1sub2,
-                        dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
-                        input$sc1a1siz, input$sc1a1col2, input$sc1a1ord2,
-                        input$sc1a1fsz, input$sc1a1asp, input$sc1a1txt,
-                        input$sc1a1type2, if(input$sc1a1xlim0 %% 2==0) 0 else input$sc1a1xlim1),
-                        if(input$sc1a1rg0 %% 2==0) 0 else input$sc1a1rg1 )
+      content = function(file) {
+        ggsave(
+          file, device = "pdf", height = input$sc1a1oup2.h, width = input$sc1a1oup2.w, useDingbats = FALSE,
+          plot = scDRgene(dataSource$sc1conf, dataSource$sc1meta, input$sc1a1drX, input$sc1a1drY, input$sc1a1inp2,
+                          input$sc1a1sub1, input$sc1a1sub2,
+                          dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
+                          input$sc1a1siz, input$sc1a1col2, input$sc1a1ord2,
+                          input$sc1a1fsz, input$sc1a1asp, input$sc1a1txt,
+                          input$sc1a1type2, if(input$sc1a1xlim0 %% 2==0) 0 else input$sc1a1xlim1,
+                          if(input$sc1a1rg0 %% 2==0) 0 else input$sc1a1rg1)
+        )
       })
     output$sc1a1oup2.png <- downloadHandler(
       filename = function() { paste0(input$availableDatasets, "_",input$sc1a1drX,"_",input$sc1a1drY,"_",
@@ -367,8 +369,8 @@ server <- function(input, output, session) {
                         dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
                         input$sc1a1siz, input$sc1a1col2, input$sc1a1ord2,
                         input$sc1a1fsz, input$sc1a1asp, input$sc1a1txt,
-                        input$sc1a1type2, if(input$sc1a1xlim0 %% 2==0) 0 else input$sc1a1xlim1),
-                        if(input$sc1a1rg0 %% 2==0) 0 else input$sc1a1rg1 )
+                        input$sc1a1type2, if(input$sc1a1xlim0 %% 2==0) 0 else input$sc1a1xlim1,
+                        if(input$sc1a1rg0 %% 2==0) 0 else input$sc1a1rg1) )
       })
 
 

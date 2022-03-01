@@ -2,7 +2,7 @@
 scDRgene <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
                      dataset, inpH5, inpGene,
                      inpsiz, inpcol, inpord, inpfsz, inpasp, inptxt,
-                     inpPlt="Dotplot", inpXlim){
+                     inpPlt="Dotplot", inpXlim, inpColRange=0){
   # Prepare ggData
   ggData = inpMeta[, c(inpConf[UI == inpdrX]$ID, inpConf[UI == inpdrY]$ID,
                        inpConf[UI == inpsub1]$ID),
@@ -30,6 +30,9 @@ scDRgene <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
   }
   # Actual ggplot
   if(inpPlt == "Dotplot"){
+    if(inpColRange>0){
+      ggData[ggData$val>inpColRange, "val"] <- inpColRange
+    }
     ggOut = ggplot(ggData, aes(X, Y, color = val))
     if(bgCells){
       ggOut = ggOut +
@@ -38,8 +41,14 @@ scDRgene <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
     ggOut = ggOut +
       geom_point(size = inpsiz, shape = 16) + xlab(inpdrX) + ylab(inpdrY) +
       sctheme(base_size = sList[inpfsz], XYval = inptxt) +
-      scale_color_gradientn(inp1, colours = cList[[inpcol]]) +
       guides(color = guide_colorbar(barwidth = 15))
+    if(inpColRange>0){
+      ggOut = ggOut +
+        scale_color_gradientn(inp1, colours = cList[[inpcol]], limits=c(0, inpColRange))
+    }else{
+      ggOut = ggOut +
+        scale_color_gradientn(inp1, colours = cList[[inpcol]])
+    }
     if(inpasp == "Square") {
       ggOut = ggOut + coord_fixed(ratio = rat)
     } else if(inpasp == "Fixed") {

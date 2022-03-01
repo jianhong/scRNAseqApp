@@ -124,7 +124,12 @@ tab1a1 <- function(){
                            selected = "White-Red"),
               radioButtons("sc1a1ord2", "Plot order:",
                            choices = c("Max-1st", "Min-1st", "Original", "Random"),
-                           selected = "Max-1st", inline = TRUE)),
+                           selected = "Max-1st", inline = TRUE),
+              actionButton("sc1a1rg0", "Manually set max color value", inline = TRUE),
+              conditionalPanel(
+                condition = "input.sc1a1rg0 % 2 ==1",
+                numericInput("sc1a1rg1", "Max value:", value = 100))
+              ),
             conditionalPanel(
               condition = "input.sc1a1type2 == 'Ridgeplot'",
               actionButton("sc1a1xlim0", "Manually set x axis", inline = TRUE),

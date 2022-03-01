@@ -73,7 +73,11 @@ tab1a3 <- function(){
                          selected = "White-Red"),
             radioButtons("sc1a3ord1", "Plot order:",
                          choices = c("Max-1st", "Min-1st", "Original", "Random"),
-                         selected = "Max-1st", inline = TRUE)
+                         selected = "Max-1st", inline = TRUE),
+            actionButton("sc1a3rg0", "Manually set max color value", inline = TRUE),
+            conditionalPanel(
+              condition = "input.sc1a3rg0 % 2 ==1",
+              numericInput("sc1a3rg1", "Max value:", value = 100))
           )
         )
       ),
@@ -111,7 +115,11 @@ tab1a3 <- function(){
                          selected = "White-Red"),
             radioButtons("sc1a3ord2", "Plot order:",
                          choices = c("Max-1st", "Min-1st", "Original", "Random"),
-                         selected = "Max-1st", inline = TRUE)
+                         selected = "Max-1st", inline = TRUE),
+            actionButton("sc1a3rg2", "Manually set max color value", inline = TRUE),
+            conditionalPanel(
+              condition = "input.sc1a3rg2 % 2 ==1",
+              numericInput("sc1a3rg3", "Max value:", value = 100))
           )
         )
       ),

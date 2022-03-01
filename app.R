@@ -12,7 +12,7 @@ library(hdf5r)
 library(ggdendro)
 library(gridExtra)
 library(ggridges)
-VERSION = "2.0.6"
+VERSION = "2.0.7"
 if(names(dev.cur())!= "null device") dev.off()
 pdf(NULL)
 
@@ -338,7 +338,8 @@ server <- function(input, output, session) {
                dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
                input$sc1a1siz, input$sc1a1col2, input$sc1a1ord2,
                input$sc1a1fsz, input$sc1a1asp, input$sc1a1txt,
-               input$sc1a1type2, if(input$sc1a1xlim0 %% 2==0) 0 else input$sc1a1xlim1)
+               input$sc1a1type2, if(input$sc1a1xlim0 %% 2==0) 0 else input$sc1a1xlim1,
+               if(input$sc1a1rg0 %% 2==0) 0 else input$sc1a1rg1)
     })
     output$sc1a1oup2.ui <- renderUI({
       plotOutput("sc1a1oup2", height = pList[input$sc1a1psz])
@@ -353,7 +354,8 @@ server <- function(input, output, session) {
                         dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
                         input$sc1a1siz, input$sc1a1col2, input$sc1a1ord2,
                         input$sc1a1fsz, input$sc1a1asp, input$sc1a1txt,
-                        input$sc1a1type2, if(input$sc1a1xlim0 %% 2==0) 0 else input$sc1a1xlim1) )
+                        input$sc1a1type2, if(input$sc1a1xlim0 %% 2==0) 0 else input$sc1a1xlim1),
+                        if(input$sc1a1rg0 %% 2==0) 0 else input$sc1a1rg1 )
       })
     output$sc1a1oup2.png <- downloadHandler(
       filename = function() { paste0(input$availableDatasets, "_",input$sc1a1drX,"_",input$sc1a1drY,"_",
@@ -365,7 +367,8 @@ server <- function(input, output, session) {
                         dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
                         input$sc1a1siz, input$sc1a1col2, input$sc1a1ord2,
                         input$sc1a1fsz, input$sc1a1asp, input$sc1a1txt,
-                        input$sc1a1type2, if(input$sc1a1xlim0 %% 2==0) 0 else input$sc1a1xlim1) )
+                        input$sc1a1type2, if(input$sc1a1xlim0 %% 2==0) 0 else input$sc1a1xlim1),
+                        if(input$sc1a1rg0 %% 2==0) 0 else input$sc1a1rg1 )
       })
 
 
@@ -447,7 +450,8 @@ server <- function(input, output, session) {
                input$sc1a3sub1, input$sc1a3sub2,
                dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
                input$sc1a3siz, input$sc1a3col1, input$sc1a3ord1,
-               input$sc1a3fsz, input$sc1a3asp, input$sc1a3txt)
+               input$sc1a3fsz, input$sc1a3asp, input$sc1a3txt,
+               inpColRange=if(input$sc1a3rg0 %% 2==0) 0 else input$sc1a3rg1)
     })
     output$sc1a3oup1.ui <- renderUI({
       plotOutput("sc1a3oup1", height = pList[input$sc1a3psz])
@@ -461,7 +465,8 @@ server <- function(input, output, session) {
                         input$sc1a3sub1, input$sc1a3sub2,
                         dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
                         input$sc1a3siz, input$sc1a3col1, input$sc1a3ord1,
-                        input$sc1a3fsz, input$sc1a3asp, input$sc1a3txt) )
+                        input$sc1a3fsz, input$sc1a3asp, input$sc1a3txt,
+                        inpColRange=if(input$sc1a3rg0 %% 2==0) 0 else input$sc1a3rg1) )
       })
     output$sc1a3oup1.png <- downloadHandler(
       filename = function() { paste0(input$availableDatasets, "_",input$sc1a3drX,"_",input$sc1a3drY,"_",
@@ -472,7 +477,8 @@ server <- function(input, output, session) {
                         input$sc1a3sub1, input$sc1a3sub2,
                         dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
                         input$sc1a3siz, input$sc1a3col1, input$sc1a3ord1,
-                        input$sc1a3fsz, input$sc1a3asp, input$sc1a3txt) )
+                        input$sc1a3fsz, input$sc1a3asp, input$sc1a3txt,
+                        inpColRange=if(input$sc1a3rg0 %% 2==0) 0 else input$sc1a3rg1) )
       })
 
     output$sc1a3oup2 <- renderPlot({
@@ -480,7 +486,8 @@ server <- function(input, output, session) {
                input$sc1a3sub1, input$sc1a3sub2,
                dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
                input$sc1a3siz, input$sc1a3col2, input$sc1a3ord2,
-               input$sc1a3fsz, input$sc1a3asp, input$sc1a3txt)
+               input$sc1a3fsz, input$sc1a3asp, input$sc1a3txt,
+               inpColRange=if(input$sc1a3rg2 %% 2==0) 0 else input$sc1a3rg3)
     })
     output$sc1a3oup2.ui <- renderUI({
       plotOutput("sc1a3oup2", height = pList[input$sc1a3psz])
@@ -494,7 +501,8 @@ server <- function(input, output, session) {
                         input$sc1a3sub1, input$sc1a3sub2,
                         dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
                         input$sc1a3siz, input$sc1a3col2, input$sc1a3ord2,
-                        input$sc1a3fsz, input$sc1a3asp, input$sc1a3txt) )
+                        input$sc1a3fsz, input$sc1a3asp, input$sc1a3txt,
+                        inpColRange=if(input$sc1a3rg2 %% 2==0) 0 else input$sc1a3rg3) )
       })
     output$sc1a3oup2.png <- downloadHandler(
       filename = function() { paste0(input$availableDatasets, "_",input$sc1a3drX,"_",input$sc1a3drY,"_",
@@ -505,7 +513,8 @@ server <- function(input, output, session) {
                         input$sc1a3sub1, input$sc1a3sub2,
                         dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
                         input$sc1a3siz, input$sc1a3col2, input$sc1a3ord2,
-                        input$sc1a3fsz, input$sc1a3asp, input$sc1a3txt) )
+                        input$sc1a3fsz, input$sc1a3asp, input$sc1a3txt,
+                        inpColRange=if(input$sc1a3rg2 %% 2==0) 0 else input$sc1a3rg3) )
       })
 
 

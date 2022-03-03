@@ -174,8 +174,8 @@ server <- function(input, output, session) {
 
   refreshData <- function(input, output, session){
     hasRef <- dataSource$geoAcc %in% names(refs_pmids)
-    if(dataSource$geoAcc %in% names(data_types)){
-      dataSource$terms <- terms[[data_types[[dataSource$geoAcc]]]]
+    if(dataSource$dataset %in% names(data_types)){
+      dataSource$terms <- terms[[data_types[[dataSource$dataset]]]]
     }
     dataSource <- loadData(dataSource)
     output$dataTitle <- renderUI({HTML(names(datasets)[datasets==input$availableDatasets])})

@@ -9,3 +9,4 @@ refs_titles <- c(
 refs_journals <- c("GSM5023610"="Dev Cell ")
 refs_years <- c("GSM5023610"="(2021) ")
 refs_pmids <- c("GSM5023610"="33609461")
+data_types <- c("GSM5023610"="scRNAseq")

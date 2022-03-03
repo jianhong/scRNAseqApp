@@ -12,10 +12,11 @@ library(hdf5r)
 library(ggdendro)
 library(gridExtra)
 library(ggridges)
-VERSION = "2.0.7"
+VERSION = "2.0.8"
 if(names(dev.cur())!= "null device") dev.off()
 pdf(NULL)
 
+source("R/lang.R")
 source("R/data.R")
 defaultDataset <- "GSM5023610_glial_app"
 if(!defaultDataset %in% datasets){
@@ -60,7 +61,7 @@ ui <- function(req){
   navbarPage(
     NULL,
     id = "topnav",
-    footer = div(p(em("scRNAseq Database (Version:", VERSION, ")"),
+    footer = div(p(em("scRNAseq/scATACseq Database (Version:", VERSION, ")"),
                HTML("&copy;"), "2020 -",
                format(Sys.Date(), "%Y"),
                "jianhong@duke"), class="rightAlign"),
@@ -98,6 +99,7 @@ server <- function(input, output, session) {
                                sc1gene=NULL,
                                sc1meta=NULL,
                                Logged=FALSE,
+                               terms=terms[["scRNAseq"]],
                                Username="",
                                Password="")
   observeEvent(input$Login, {
@@ -172,6 +174,9 @@ server <- function(input, output, session) {
 
   refreshData <- function(input, output, session){
     hasRef <- dataSource$geoAcc %in% names(refs_pmids)
+    if(dataSource$geoAcc %in% names(data_types)){
+      dataSource$terms <- terms[[data_types[[dataSource$geoAcc]]]]
+    }
     dataSource <- loadData(dataSource)
     output$dataTitle <- renderUI({HTML(names(datasets)[datasets==input$availableDatasets])})
     output$ref_author <- renderText(ifelse(hasRef, refs_authors[dataSource$geoAcc], ""))
@@ -187,6 +192,19 @@ server <- function(input, output, session) {
         br()
       }
     })
+    output$tabCellInfoGeneExpr <- renderUI({HTML(paste("CellInfo vs", dataSource$terms["GeneExpr"]))})
+    output$tabCellInfoGeneExprSubTitle <- renderUI({h4(paste("Cell information vs gene", dataSource$terms["expression"], "on reduced dimensions"))})
+    output$tabCellInfoGeneExprSubTitGene <- renderUI({h4(paste("Gene", dataSource$terms['expression']))})
+    output$tabGeneExprGeneExpr <- renderUI({HTML(paste(dataSource$terms["GeneExpr"], "vs", dataSource$terms["GeneExpr"]))})
+    output$tabGeneExprGeneExprSubTitle <- renderUI({
+      h4(paste("Gene", dataSource$terms['expression'], "vs gene", dataSource$terms['expression'], "on dimension reduction"))})
+    output$tabGeneExprGeneExprSub1 <- renderUI({h4(paste("Gene", dataSource$terms['expression'], "1"))})
+    output$tabGeneExprGeneExprSub2 <- renderUI({h4(paste("Gene", dataSource$terms['expression'], "2"))})
+    output$tabCoExpr <- renderUI({HTML(paste("Gene", dataSource$terms['coexpression']))})
+    output$tabCoExprSubTitle <- renderUI({h4(paste(sub(substr(dataSource$terms['coexpression'], 1, 1),
+                                                       toupper(substr(dataSource$terms['coexpression'], 1, 1)),
+                                                       dataSource$terms['coexpression']), "of two genes on reduced dimensions"))})
+    output$tabCoExprSubTit1 <- renderUI({h4(paste("Gene", dataSource$terms['expression']))})
 
     updateSelectInput(session, "sc1a1drX", "X-axis:",
                       choices = dataSource$sc1conf[dimred == TRUE]$UI,
@@ -703,7 +721,7 @@ server <- function(input, output, session) {
                  input$sc1d1grp1a, input$sc1d1grp1b, input$sc1d1plt,
                  dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
                  input$sc1d1scl, input$sc1d1row, input$sc1d1col,
-                 input$sc1d1cols, input$sc1d1fsz)
+                 input$sc1d1cols, input$sc1d1fsz, legendTitle=dataSource$terms['expression'])
     })
     output$sc1d1oup.ui <- renderUI({
       plotOutput("sc1d1oup", height = pList3[input$sc1d1psz])
@@ -716,7 +734,8 @@ server <- function(input, output, session) {
                           input$sc1d1grp1a, input$sc1d1grp1b, input$sc1d1plt,
                           dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
                           input$sc1d1scl, input$sc1d1row, input$sc1d1col,
-                          input$sc1d1cols, input$sc1d1fsz, save = TRUE) )
+                          input$sc1d1cols, input$sc1d1fsz, save = TRUE,
+                          legendTitle=dataSource$terms['expression']) )
       })
     output$sc1d1oup.png <- downloadHandler(
       filename = function() { paste0(input$availableDatasets, "_",input$sc1d1plt,"_",input$sc1d1grp,".png") },
@@ -726,7 +745,8 @@ server <- function(input, output, session) {
                           input$sc1d1grp1a, input$sc1d1grp1b, input$sc1d1plt,
                           dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
                           input$sc1d1scl, input$sc1d1row, input$sc1d1col,
-                          input$sc1d1cols, input$sc1d1fsz, save = TRUE) )
+                          input$sc1d1cols, input$sc1d1fsz, save = TRUE,
+                          legendTitle=dataSource$terms['expression']) )
       })
   }
 }

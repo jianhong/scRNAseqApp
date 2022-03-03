@@ -1,7 +1,7 @@
 tab1b2 <- function(){
   tabPanel(
-  HTML("Gene coexpression"),
-  h4("Coexpression of two genes on reduced dimensions"),
+  htmlOutput("tabCoExpr"),
+  htmlOutput("tabCoExprSubTitle"),
   "In this tab, users can visualise the coexpression of two genes ",
   "on low-dimensional representions.",
   br(),br(),
@@ -50,7 +50,7 @@ tab1b2 <- function(){
   ),   # End of fluidRow (4 space)
   fluidRow(
     column(
-      3, style="border-right: 2px solid black", h4("Gene Expression"),
+      3, style="border-right: 2px solid black", htmlOutput("tabCoExprSubTit1"),
       selectInput("sc1b2inp1", "Gene 1:", choices=NULL) %>%
         shinyhelper::helper(type = "inline", size = "m", fade = TRUE,
                title = "Gene expression to colour cells by",

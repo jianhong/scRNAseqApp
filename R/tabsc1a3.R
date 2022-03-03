@@ -1,7 +1,7 @@
 tab1a3 <- function(){
   tabPanel(
-  HTML("GeneExpr vs GeneExpr"),
-  h4("Gene expression vs gene expression on dimension reduction"),
+    htmlOutput("tabGeneExprGeneExpr"),
+    htmlOutput("tabGeneExprGeneExprSubTitle"),
   "In this tab, users can visualise two gene expressions side-by-side ",
   "on low-dimensional representions.",
   br(),br(),
@@ -50,14 +50,14 @@ tab1a3 <- function(){
   ),   # End of fluidRow (4 space)
   fluidRow(
     column(
-      6, style="border-right: 2px solid black", h4("Gene expression 1"),
+      6, style="border-right: 2px solid black", htmlOutput("tabGeneExprGeneExprSub1"),
       fluidRow(
         column(
           6, selectInput("sc1a3inp1", "Gene name:", choices=NULL) %>%
             shinyhelper::helper(type = "inline", size = "m", fade = TRUE,
-                   title = "Gene expression to colour cells by",
-                   content = c("Select gene to colour cells by gene expression",
-                               paste0("- Gene expression are coloured in a ",
+                   title = "Gene information to colour cells by",
+                   content = c("Select gene to colour cells by gene expression/accessibility",
+                               paste0("- Gene expression/accessibility are coloured in a ",
                                       "White-Red colour scheme which can be ",
                                       "changed in the plot controls"),
                                paste("- Gene name support autocomplete.",
@@ -92,14 +92,14 @@ tab1a3 <- function(){
                        min = 4, max = 20, value = 8, step = 0.5))
     ), # End of column (6 space)
     column(
-      6, h4("Gene expression 2"),
+      6, htmlOutput("tabGeneExprGeneExprSub2"),
       fluidRow(
         column(
           6, selectInput("sc1a3inp2", "Gene name:", choices=NULL) %>%
             shinyhelper::helper(type = "inline", size = "m", fade = TRUE,
-                   title = "Gene expression to colour cells by",
-                   content = c("Select gene to colour cells by gene expression",
-                               paste0("- Gene expression are coloured in a ",
+                   title = "Gene information to colour cells by",
+                   content = c("Select gene to colour cells by gene expression/accessibility",
+                               paste0("- Gene expression/accessibility are coloured in a ",
                                       "White-Red colour scheme which can be ",
                                       "changed in the plot controls"),
                                paste("- Gene name support autocomplete.",

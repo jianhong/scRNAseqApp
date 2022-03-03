@@ -1,7 +1,7 @@
 # Plot gene expression bubbleplot / heatmap
 scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpPlt,
                        dataset, inpH5, inpGene, inpScl, inpRow, inpCol,
-                       inpcols, inpfsz, save = FALSE){
+                       inpcols, inpfsz, save = FALSE, legendTitle="expression"){
   # Identify genes that are in our dataset
   geneList = scGeneList(inp, inpGene)
   geneList = geneList[present == TRUE]
@@ -88,7 +88,7 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpPlt
       scale_y_discrete(expand = c(0, 0.5)) +
       scale_size_continuous("proportion", range = c(0, bulb_pointsize),
                             limits = c(0, 1), breaks = c(0.00,0.25,0.50,0.75,1.00)) +
-      scale_color_gradientn("expression", limits = colRange, colours = cList[[inpcols]]) +
+      scale_color_gradientn(legendTitle, limits = colRange, colours = cList[[inpcols]]) +
       guides(color = guide_colorbar(barwidth = 15)) +
       theme(axis.title = element_blank(), axis.text=element_text(size=axis_fontsize), legend.box = "vertical")
   } else { # Heatmap
@@ -97,7 +97,7 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpPlt
       sctheme(base_size = sList[inpfsz], Xang = 45, XjusH = 1) +
       scale_x_discrete(expand = c(0.05, 0)) +
       scale_y_discrete(expand = c(0, 0.5)) +
-      scale_fill_gradientn("expression", limits = colRange, colours = cList[[inpcols]]) +
+      scale_fill_gradientn(legendTitle, limits = colRange, colours = cList[[inpcols]]) +
       guides(fill = guide_colorbar(barwidth = 15)) +
       theme(axis.title = element_blank(), axis.text=element_text(size=axis_fontsize))
   }

@@ -1,9 +1,9 @@
 tab1a1 <- function(){
   tabPanel(
-  HTML("CellInfo vs GeneExpr"),
-  h4("Cell information vs gene expression on reduced dimensions"),
-  "In this tab, users can visualise both cell information and gene ",
-  "expression side-by-side on low-dimensional representions.",
+    htmlOutput("tabCellInfoGeneExpr"),
+    htmlOutput("tabCellInfoGeneExprSubTitle"),
+  "In this tab, users can visualise both cell and feature information ",
+  "side-by-side on low-dimensional representions.",
   br(),br(),
   fluidRow(
     column(
@@ -97,14 +97,14 @@ tab1a1 <- function(){
       )
     ), # End of column (6 space)
     column(
-      6, h4("Gene expression"),
+      6, htmlOutput("tabCellInfoGeneExprSubTitGene"),
       fluidRow(
         column(
           6, selectInput("sc1a1inp2", "Gene name:", choices=NULL) %>%
             shinyhelper::helper(type = "inline", size = "m", fade = TRUE,
-                   title = "Gene expression to colour cells by",
-                   content = c("Select gene to colour cells by gene expression",
-                               paste0("- Gene expression are coloured in a ",
+                   title = "Gene information to colour cells by",
+                   content = c("Select gene to colour cells by gene expression/accessibility",
+                               paste0("- Gene expression/accessibility are coloured in a ",
                                       "White-Red colour scheme which can be ",
                                       "changed in the plot controls"),
                                paste("- Gene name support autocomplete.",

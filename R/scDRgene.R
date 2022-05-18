@@ -56,8 +56,8 @@ scDRgene <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
     }
   }else{## ridgePlot
     #print(inpXlim)
-    ggData$sub <- as.factor(ggData$sub)
-    levels(ggData$sub) <- rev(sortLevels(levels(ggData$sub)))
+    ggData$sub <- factor(ggData$sub,
+                         levels=rev(sortLevels(as.character(unique(ggData$sub)))))
     ggOut = ggplot(ggData, aes(x = val, y = sub, fill = sub)) +
       geom_density_ridges(scale = 4, show.legend = FALSE) +
       theme_ridges() +

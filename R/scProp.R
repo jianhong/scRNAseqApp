@@ -17,8 +17,7 @@ scProp <- function(inpConf, inpMeta, inp1, inp2,
   ggLvl = sortLevels(ggLvl)
   ggData$grp = factor(ggData$grp, levels = ggLvl)
   ggCol = ggCol[ggLvl]
-  ggData$X <- as.factor(ggData$X)
-  levels(ggData$X) <- sortLevels(levels(ggData$X))
+  ggData$X <- as.factor(ggData$X, levels=sortLevels(unique(ggData$X)))
 
   # Actual ggplot
   if(inptyp == "Proportion"){

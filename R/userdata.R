@@ -8,6 +8,13 @@ for(d in datasets){
 checkLockedDataset <- function(datasetname){
   datasetname %in% names(my_password)
 }
+checkToken <- function(tokenList, token, dataset){
+  if(token %in% names(tokenList)){
+    return(tokenList[[token]]==dataset)
+  }else{
+    return(FALSE)
+  }
+}
 checkUserNameAndPassword <- function(username, password, datasetname){
   if(checkLockedDataset(datasetname)){
     pwd <- my_password[[datasetname]]

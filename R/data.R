@@ -17,3 +17,6 @@ loadData <- function(dataSource){
 
 ## the datalist file is described in data.R.
 source(file.path(datafolder, "datalist.R"))
+if(file.exists(file.path(datafolder, "token.R"))){
+  source(file.path(datafolder, "token.R"))
+}

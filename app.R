@@ -12,7 +12,7 @@ library(hdf5r)
 library(ggdendro)
 library(gridExtra)
 library(ggridges)
-VERSION = "2.0.8"
+VERSION = "2.0.9"
 if(names(dev.cur())!= "null device") dev.off()
 pdf(NULL)
 
@@ -101,7 +101,8 @@ server <- function(input, output, session) {
                                Logged=FALSE,
                                terms=terms[["scRNAseq"]],
                                Username="",
-                               Password="")
+                               Password="",
+                               token="")
   observeEvent(input$Login, {
         dataSource$Username <- isolate(input$userName)
         dataSource$Password <- isolate(input$passwd)
@@ -109,7 +110,10 @@ server <- function(input, output, session) {
           output$loginmsg <- renderText("No need to login yet.")
           updateTabsetPanel(session, "topnav", selected = "ChangeDataset")
         }
-        if (checkUserNameAndPassword(dataSource$Username, dataSource$Password, dataSource$dataset)) {
+        if (checkUserNameAndPassword(dataSource$Username,
+                                     dataSource$Password,
+                                     dataSource$dataset) ||
+            checkToken(token, dataSource$token, dataSource$dataset)) {
           dataSource$Logged <- TRUE
           output$loginmsg <- renderText("Logged!")
           updateTabsetPanel(session, "topnav", selected = "ChangeDataset")
@@ -117,6 +121,7 @@ server <- function(input, output, session) {
           dataSource$Logged <- FALSE
           dataSource$Username <- ""
           dataSource$Password <- ""
+          dataSource$token <- ""
           output$loginmsg <- renderText("Wrong Username, Password or Dataset!")
         }
   })
@@ -125,6 +130,16 @@ server <- function(input, output, session) {
     query <- parseQueryString(session$clientData$url_search)
     if(!is.null(query[['data']])){
       updateSelectInput(session, "availableDatasets", selected=query[['data']])
+    }
+    if(!is.null(query[['token']])){
+      if(query[["token"]] %in% names(token)){
+        dataSource$token <- query[["token"]]
+        if(dataSource$token %in% names(token)){
+          updateSelectInput(session,
+                            "availableDatasets",
+                            selected=token[[query[['token']]]])
+        }
+      }
     }
   })
   observeEvent(input$availableDatasets,{
@@ -140,7 +155,14 @@ server <- function(input, output, session) {
             updateTabsetPanel(session, "topnav", selected = "Login")
           }
         }else{
-          updateTabsetPanel(session, "topnav", selected = "Login")
+          if(dataSource$token!=""){
+            if(checkToken(token, dataSource$token, dataSource$dataset)){
+              dataSource$Logged <- TRUE
+              output$loginmsg <- renderText("Logged!")
+            }
+          }else{
+            updateTabsetPanel(session, "topnav", selected = "Login")
+          }
         }
       }
     }

@@ -79,6 +79,11 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp
             axis.text.y = element_text(color = "white"))
     ggData$grpBy = factor(ggData$grpBy, levels = hcCol$labels$label)
   }
+  # sort X
+  #ggData$grpBy <- factor(as.character(ggData$grpBy),
+  #                       levels=sortLevels(as.character(unique(ggData$grpBy))))
+  print(sortLevels(as.character(unique(ggData$grpBy))))
+
   # Actual plot according to plottype
   if(inpPlt == "Bubbleplot"){
     # Bubbleplot

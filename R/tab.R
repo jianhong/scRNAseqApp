@@ -11,7 +11,7 @@ sortLevels <- function(lev, controls=c("control", "wildtype", "wt", "cont", "con
   l1.sub <- apply(l1.sub, 2, unique, simplify = FALSE)
   ml <- lengths(l1.sub)
   ml <- min(which(ml!=1))
-  if(ml>0){
+  if(ml>1){
     l1.sub <- paste(unlist(l1.sub)[seq.int(ml-1)], collapse="")
     l1.sub0 <- sub(l1.sub, "", l1)
   }else{

@@ -1,8 +1,9 @@
 # Plot gene expression bubbleplot / heatmap
-scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpPlt,
+scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp1c, inpPlt,
                        dataset, inpH5, inpGene, inpScl, inpRow, inpCol,
                        inpcols, inpfsz, save = FALSE, legendTitle="expression"){
   # Identify genes that are in our dataset
+  if(missing(inpGrp1c)) inpGrp1c <- 0
   geneList = scGeneList(inp, inpGene)
   geneList = geneList[present == TRUE]
   shiny::validate(need(nrow(geneList) <= 500, "More than 500 genes to plot! Please reduce the gene list!"))
@@ -28,7 +29,7 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpPlt
   }
   # Aggregate
   ggData$val = expm1(ggData$val)
-  ggData = ggData[, .(val = mean(val), prop = sum(val>0) / length(sampleID)),
+  ggData = ggData[, .(val = mean(val[val>=inpGrp1c]), prop = sum(val>0) / length(sampleID)),
                   by = c("geneName", "grpBy")]
   ggData$val = log1p(ggData$val)
 

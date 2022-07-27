@@ -12,7 +12,7 @@ library(hdf5r)
 library(ggdendro)
 library(gridExtra)
 library(ggridges)
-VERSION = "2.0.9"
+VERSION = "2.0.10"
 if(names(dev.cur())!= "null device") dev.off()
 pdf(NULL)
 
@@ -740,7 +740,7 @@ server <- function(input, output, session) {
     })
     output$sc1d1oup <- renderPlot({
       scBubbHeat(dataSource$sc1conf, dataSource$sc1meta, input$sc1d1inp, input$sc1d1grp,
-                 input$sc1d1grp1a, input$sc1d1grp1b, input$sc1d1plt,
+                 input$sc1d1grp1a, input$sc1d1grp1b, input$sc1d1grp1c, input$sc1d1plt,
                  dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
                  input$sc1d1scl, input$sc1d1row, input$sc1d1col,
                  input$sc1d1cols, input$sc1d1fsz, legendTitle=dataSource$terms['expression'])
@@ -753,7 +753,7 @@ server <- function(input, output, session) {
       content = function(file) { ggsave(
         file, device = "pdf", height = input$sc1d1oup.h, width = input$sc1d1oup.w,
         plot = scBubbHeat(dataSource$sc1conf, dataSource$sc1meta, input$sc1d1inp, input$sc1d1grp,
-                          input$sc1d1grp1a, input$sc1d1grp1b, input$sc1d1plt,
+                          input$sc1d1grp1a, input$sc1d1grp1b, input$sc1d1grp1c, input$sc1d1plt,
                           dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
                           input$sc1d1scl, input$sc1d1row, input$sc1d1col,
                           input$sc1d1cols, input$sc1d1fsz, save = TRUE,
@@ -764,7 +764,7 @@ server <- function(input, output, session) {
       content = function(file) { ggsave(
         file, device = "png", height = input$sc1d1oup.h, width = input$sc1d1oup.w,
         plot = scBubbHeat(dataSource$sc1conf, dataSource$sc1meta, input$sc1d1inp, input$sc1d1grp,
-                          input$sc1d1grp1a, input$sc1d1grp1b, input$sc1d1plt,
+                          input$sc1d1grp1a, input$sc1d1grp1b, input$sc1d1grp1c, input$sc1d1plt,
                           dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
                           input$sc1d1scl, input$sc1d1row, input$sc1d1col,
                           input$sc1d1cols, input$sc1d1fsz, save = TRUE,

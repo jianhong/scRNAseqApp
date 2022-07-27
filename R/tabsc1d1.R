@@ -33,6 +33,8 @@ tab1d1 <- function(){
                             content = c("Select categorical cell information to sebset cells by",
                                         "- cells are shown in different subsets")),
       uiOutput("sc1d1grp1b.ui"),
+      sliderInput("sc1d1grp1c", "Filter the cells by value",
+                  min = 0, max = 10, value = 0),
       radioButtons("sc1d1plt", "Plot type:",
                    choices = c("Bubbleplot", "Heatmap"),
                    selected = "Bubbleplot", inline = TRUE),

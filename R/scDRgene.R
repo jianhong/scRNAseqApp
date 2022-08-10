@@ -3,6 +3,9 @@ scDRgene <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
                      dataset, inpH5, inpGene,
                      inpsiz, inpcol, inpord, inpfsz, inpasp, inptxt,
                      inpPlt="Dotplot", inpXlim, inpColRange=0){
+  if(inp1[1]==""){
+    return(ggplot())
+  }
   # Prepare ggData
   ggData = inpMeta[, c(inpConf[UI == inpdrX]$ID, inpConf[UI == inpdrY]$ID,
                        inpConf[UI == inpsub1]$ID),

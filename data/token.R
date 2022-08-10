@@ -1,1 +1,1 @@
-token <- list('thisisatest'='Leslie_scRNAseq')
+token <- list('thisisatest'='GSM5023610_glial_app')

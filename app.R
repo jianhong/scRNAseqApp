@@ -12,7 +12,7 @@ library(hdf5r)
 library(ggdendro)
 library(gridExtra)
 library(ggridges)
-VERSION = "2.0.11"
+VERSION = "2.0.12"
 if(names(dev.cur())!= "null device") dev.off()
 pdf(NULL)
 
@@ -146,7 +146,6 @@ server <- function(input, output, session) {
     dataSource$dataset <- input$availableDatasets
     dataSource$geoAcc <- sub("^(.*?)_.*$", "\\1", input$availableDatasets)
     if(checkLockedDataset(dataSource$dataset)){
-      if(!dataSource$Logged){
         if(dataSource$Username!="" && dataSource$Password!=""){
           if(checkUserNameAndPassword(dataSource$Username, dataSource$Password, dataSource$dataset)){
             dataSource$Logged <- TRUE
@@ -164,7 +163,6 @@ server <- function(input, output, session) {
             updateTabsetPanel(session, "topnav", selected = "Login")
           }
         }
-      }
     }
     refreshData(input, output, session)
   })

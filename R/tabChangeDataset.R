@@ -1,4 +1,4 @@
-tab1e1 <- function(req){
+tabChangeDataset <- function(req){
   tabPanel(value="ChangeDataset",
          HTML("Change dataset"),
          h4("Change the dataset"),

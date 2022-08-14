@@ -1,4 +1,4 @@
-tab1f1 <- function(){
+tabLogin <- function(){
   tabPanel(value="Login",
          HTML("Login"),
          h4("Login the dataset"),

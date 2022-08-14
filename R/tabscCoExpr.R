@@ -1,4 +1,4 @@
-tab1b2 <- function(){
+tabscCoExpr <- function(){
   tabPanel(
   htmlOutput("tabCoExpr"),
   htmlOutput("tabCoExprSubTitle"),
@@ -10,39 +10,39 @@ tab1b2 <- function(){
       3, h4("Dimension Reduction"),
       fluidRow(
         column(
-          12, selectInput("sc1b2drX", "X-axis:", choices = NULL),
-          selectInput("sc1b2drY", "Y-axis:", choices = NULL))
+          12, selectInput("scCoExprdrX", "X-axis:", choices = NULL),
+          selectInput("scCoExprdrY", "Y-axis:", choices = NULL))
       )
     ), # End of column (6 space)
     column(
-      3, actionButton("sc1b2togL", "Toggle to subset cells"),
+      3, actionButton("scCoExprtogL", "Toggle to subset cells"),
       conditionalPanel(
-        condition = "input.sc1b2togL % 2 == 0",
-        selectInput("sc1b2sub1", "Cell information to subset:",
+        condition = "input.scCoExprtogL % 2 == 0",
+        selectInput("scCoExprsub1", "Cell information to subset:",
                     choices = NULL),
-        uiOutput("sc1b2sub1.ui")
+        uiOutput("scCoExprsub1.ui")
       )
     ), # End of column (6 space)
     column(
-      6, actionButton("sc1b2tog0", "Toggle graphics controls"),
+      6, actionButton("scCoExprtog0", "Toggle graphics controls"),
       conditionalPanel(
-        condition = "input.sc1b2tog0 % 2 == 1",
+        condition = "input.scCoExprtog0 % 2 == 1",
         fluidRow(
           column(
-            6, sliderInput("sc1b2siz", "Point size:",
+            6, sliderInput("scCoExprsiz", "Point size:",
                            min = 0, max = 4, value = 1.5, step = 0.25),
-            radioButtons("sc1b2psz", "Plot size:",
+            radioButtons("scCoExprpsz", "Plot size:",
                          choices = c("Small", "Medium", "Large"),
                          selected = "Medium", inline = TRUE),
-            radioButtons("sc1b2fsz", "Font size:",
+            radioButtons("scCoExprfsz", "Font size:",
                          choices = c("Small", "Medium", "Large"),
                          selected = "Medium", inline = TRUE)
           ),
           column(
-            6, radioButtons("sc1b2asp", "Aspect ratio:",
+            6, radioButtons("scCoExprasp", "Aspect ratio:",
                             choices = c("Square", "Fixed", "Free"),
                             selected = "Square", inline = TRUE),
-            checkboxInput("sc1b2txt", "Show axis text", value = FALSE)
+            checkboxInput("scCoExprtxt", "Show axis text", value = FALSE)
           )
         )
       )
@@ -51,7 +51,7 @@ tab1b2 <- function(){
   fluidRow(
     column(
       3, style="border-right: 2px solid black", htmlOutput("tabCoExprSubTit1"),
-      selectInput("sc1b2inp1", "Gene 1:", choices=NULL) %>%
+      selectInput("scCoExprinp1", "Gene 1:", choices=NULL) %>%
         shinyhelper::helper(type = "inline", size = "m", fade = TRUE,
                title = "Gene expression to colour cells by",
                content = c("Select gene to colour cells by gene expression",
@@ -60,7 +60,7 @@ tab1b2 <- function(){
                                   "changed in the plot controls"),
                            paste("- Gene name support autocomplete.",
                                  "Try to input gene name in the input box."))),
-      selectInput("sc1b2inp2", "Gene 2:", choices=NULL) %>%
+      selectInput("scCoExprinp2", "Gene 2:", choices=NULL) %>%
         shinyhelper::helper(type = "inline", size = "m", fade = TRUE,
                title = "Gene expression to colour cells by",
                content = c("Select gene to colour cells by gene expression",
@@ -69,38 +69,38 @@ tab1b2 <- function(){
                                   "changed in the plot controls"),
                            paste("- Gene name support autocomplete.",
                                  "Try to input gene name in the input box."))),
-      actionButton("sc1b2tog1", "Toggle plot controls"),
+      actionButton("scCoExprtog1", "Toggle plot controls"),
       conditionalPanel(
-        condition = "input.sc1b2tog1 % 2 == 1",
-        radioButtons("sc1b2col1", "Colour:",
+        condition = "input.scCoExprtog1 % 2 == 1",
+        radioButtons("scCoExprcol1", "Colour:",
                      choices = c("Red (Gene1); Blue (Gene2)",
                                  "Orange (Gene1); Blue (Gene2)",
                                  "Red (Gene1); Green (Gene2)",
                                  "Green (Gene1); Blue (Gene2)"),
                      selected = "Red (Gene1); Blue (Gene2)"),
-        radioButtons("sc1b2ord1", "Plot order:",
+        radioButtons("scCoExprord1", "Plot order:",
                      choices = c("Max-1st", "Min-1st", "Original", "Random"),
                      selected = "Max-1st", inline = TRUE)
       )
     ), # End of column (6 space)
     column(
       6, style="border-right: 2px solid black",
-      uiOutput("sc1b2oup1.ui"),
-      downloadButton("sc1b2oup1.pdf", "Download PDF"),
-      downloadButton("sc1b2oup1.png", "Download PNG"), br(),
+      uiOutput("scCoExproup1.ui"),
+      downloadButton("scCoExproup1.pdf", "Download PDF"),
+      downloadButton("scCoExproup1.png", "Download PNG"), br(),
       div(style="display:inline-block",
-          numericInput("sc1b2oup1.h", "PDF / PNG height:", width = "138px",
+          numericInput("scCoExproup1.h", "PDF / PNG height:", width = "138px",
                        min = 4, max = 20, value = 8, step = 0.5)),
       div(style="display:inline-block",
-          numericInput("sc1b2oup1.w", "PDF / PNG width:", width = "138px",
+          numericInput("scCoExproup1.w", "PDF / PNG width:", width = "138px",
                        min = 4, max = 20, value = 10, step = 0.5))
     ), # End of column (6 space)
     column(
-      3, uiOutput("sc1b2oup2.ui"),
-      downloadButton("sc1b2oup2.pdf", "Download PDF"),
-      downloadButton("sc1b2oup2.png", "Download PNG"),
+      3, uiOutput("scCoExproup2.ui"),
+      downloadButton("scCoExproup2.pdf", "Download PDF"),
+      downloadButton("scCoExproup2.png", "Download PNG"),
       br(), h4("Cell numbers"),
-      dataTableOutput("sc1b2.dt")
+      dataTableOutput("scCoExpr.dt")
     )  # End of column (6 space)
   )    # End of fluidRow (4 space)
 )

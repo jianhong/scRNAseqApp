@@ -65,24 +65,24 @@ ui <- function(req){
                HTML("&copy;"), "2020 -",
                format(Sys.Date(), "%Y"),
                "jianhong@duke"), class="rightAlign"),
-    ### Tab1.a1: cellInfo vs geneExpr on dimRed
-    tab1a1(),
-    ### Tab1.a2: cellInfo vs cellInfo on dimRed
-    tab1a2(),
-    ### Tab1.a3: geneExpr vs geneExpr on dimRed
-    tab1a3(),
-    ### Tab1.b2: Gene coexpression plot
-    tab1b2(),
-    ### Tab1.c1: violinplot / boxplot
-    tab1c1(),
-    ### Tab1.c2: Proportion plot
-    tab1c2(),
-    ### Tab1.d1: Multiple gene expr
-    tab1d1(),
-    ### Tab1.e1: change dataset
-    tab1e1(req),
-    ### Tab1.f1: Login form
-    tab1f1(),
+    ### Tab: cellInfo vs geneExpr on dimRed
+    tabcellInfoGeneExpr(),
+    ### Tab: cellInfo vs cellInfo on dimRed
+    tabcellInfoCellInfo(),
+    ### Tab: geneExpr vs geneExpr on dimRed
+    tabgeneExprGeneExpr(),
+    ### Tab: Gene coexpression plot
+    tabscCoExpr(),
+    ### Tab: violinplot / boxplot
+    tabscVioBoxPlot(),
+    ### Tab: Proportion plot
+    tabscProportion(),
+    ### Tab: Multiple gene expr
+    tabscBubbleHeatmap(),
+    ### Tab: change dataset
+    tabChangeDataset(req),
+    ### Tab: Login form
+    tabLogin(),
     br(),br(),br(),br(),br()
   ))
 }
@@ -226,399 +226,399 @@ server <- function(input, output, session) {
                                                        dataSource$terms['coexpression']), "of two genes on reduced dimensions"))})
     output$tabCoExprSubTit1 <- renderUI({h4(paste("Gene", dataSource$terms['expression']))})
 
-    updateSelectInput(session, "sc1a1drX", "X-axis:",
+    updateSelectInput(session, "cellInfoGeneExprdrX", "X-axis:",
                       choices = dataSource$sc1conf[dimred == TRUE]$UI,
                       selected = dataSource$sc1def$dimred[1])
-    updateSelectInput(session, "sc1a1drY", "Y-axis:",
+    updateSelectInput(session, "cellInfoGeneExprdrY", "Y-axis:",
                       choices = dataSource$sc1conf[dimred == TRUE]$UI,
                       selected = dataSource$sc1def$dimred[2])
-    updateSelectInput(session, "sc1a1sub1", "Cell information to subset:",
+    updateSelectInput(session, "cellInfoGeneExprsub1", "Cell information to subset:",
                       choices = dataSource$sc1conf[grp == TRUE]$UI,
                       selected = dataSource$sc1def$grp1)
-    updateSelectInput(session, "sc1a1inp1", "Cell information:",
+    updateSelectInput(session, "cellInfoGeneExprinp1", "Cell information:",
                       choices = dataSource$sc1conf$UI,
                       selected = dataSource$sc1def$meta1)
-    updateSelectizeInput(session, "sc1a1inp2",
+    updateSelectizeInput(session, "cellInfoGeneExprinp2",
                          choices = sort(names(dataSource$sc1gene)),
                          server = TRUE,
                          selected = dataSource$sc1def$gene1,
                          options = list(maxOptions = 6, create = TRUE,
                                         persist = TRUE, render = I(optCrt)))
 
-    updateSelectInput(session, "sc1a2drX", "X-axis:",
+    updateSelectInput(session, "cellInfoCellInfodrX", "X-axis:",
                       choices = dataSource$sc1conf[dimred == TRUE]$UI,
                       selected = dataSource$sc1def$dimred[1])
-    updateSelectInput(session, "sc1a2drY", "Y-axis:",
+    updateSelectInput(session, "cellInfoCellInfodrY", "Y-axis:",
                       choices = dataSource$sc1conf[dimred == TRUE]$UI,
                       selected = dataSource$sc1def$dimred[2])
-    updateSelectInput(session, "sc1a2sub1", "Cell information to subset:",
+    updateSelectInput(session, "cellInfoCellInfosub1", "Cell information to subset:",
                       choices = dataSource$sc1conf[grp == TRUE]$UI,
                       selected = dataSource$sc1def$grp1)
-    updateSelectInput(session, "sc1a2inp1", "Cell information:",
+    updateSelectInput(session, "cellInfoCellInfoinp1", "Cell information:",
                       choices = dataSource$sc1conf$UI,
                       selected = dataSource$sc1def$meta1)
-    updateSelectInput(session, "sc1a2inp2", "Cell information:",
+    updateSelectInput(session, "cellInfoCellInfoinp2", "Cell information:",
                       choices = dataSource$sc1conf$UI,
                       selected = dataSource$sc1def$meta2)
-    updateSelectInput(session, "sc1a3drX", "X-axis:",
+    updateSelectInput(session, "geneExprGeneExprdrX", "X-axis:",
                       choices = dataSource$sc1conf[dimred == TRUE]$UI,
                       selected = dataSource$sc1def$dimred[1])
-    updateSelectInput(session,"sc1a3drY", "Y-axis:",
+    updateSelectInput(session,"geneExprGeneExprdrY", "Y-axis:",
                       choices = dataSource$sc1conf[dimred == TRUE]$UI,
                       selected = dataSource$sc1def$dimred[2])
-    updateSelectInput(session,"sc1a3sub1", "Cell information to subset:",
+    updateSelectInput(session,"geneExprGeneExprsub1", "Cell information to subset:",
                       choices = dataSource$sc1conf[grp == TRUE]$UI,
                       selected = dataSource$sc1def$grp1)
 
-    updateSelectizeInput(session, "sc1a3inp1", choices = sort(names(dataSource$sc1gene)), server = TRUE,
+    updateSelectizeInput(session, "geneExprGeneExprinp1", choices = sort(names(dataSource$sc1gene)), server = TRUE,
                          selected = dataSource$sc1def$gene1, options = list(
                            maxOptions = 6, create = TRUE, persist = TRUE, render = I(optCrt)))
-    updateSelectizeInput(session, "sc1a3inp2", choices = sort(names(dataSource$sc1gene)), server = TRUE,
+    updateSelectizeInput(session, "geneExprGeneExprinp2", choices = sort(names(dataSource$sc1gene)), server = TRUE,
                          selected = dataSource$sc1def$gene2, options = list(
                            maxOptions = 6, create = TRUE, persist = TRUE, render = I(optCrt)))
 
-    updateSelectInput(session,"sc1b2drX", "X-axis:",
+    updateSelectInput(session,"scCoExprdrX", "X-axis:",
                       choices = dataSource$sc1conf[dimred == TRUE]$UI,
                       selected = dataSource$sc1def$dimred[1])
-    updateSelectInput(session,"sc1b2drY", "Y-axis:",
+    updateSelectInput(session,"scCoExprdrY", "Y-axis:",
                       choices = dataSource$sc1conf[dimred == TRUE]$UI,
                       selected = dataSource$sc1def$dimred[2])
-    updateSelectInput(session,"sc1b2sub1", "Cell information to subset:",
+    updateSelectInput(session,"scCoExprsub1", "Cell information to subset:",
                       choices = dataSource$sc1conf[grp == TRUE]$UI,
                       selected = dataSource$sc1def$grp1)
 
-    updateSelectizeInput(session, "sc1b2inp1", choices = sort(names(dataSource$sc1gene)), server = TRUE,
+    updateSelectizeInput(session, "scCoExprinp1", choices = sort(names(dataSource$sc1gene)), server = TRUE,
                          selected = dataSource$sc1def$gene1, options = list(
                            maxOptions = 6, create = TRUE, persist = TRUE, render = I(optCrt)))
-    updateSelectizeInput(session, "sc1b2inp2", choices = sort(names(dataSource$sc1gene)), server = TRUE,
+    updateSelectizeInput(session, "scCoExprinp2", choices = sort(names(dataSource$sc1gene)), server = TRUE,
                          selected = dataSource$sc1def$gene2, options = list(
                            maxOptions = 6, create = TRUE, persist = TRUE, render = I(optCrt)))
 
-    updateSelectInput(session,"sc1c1inp1", "Cell information (X-axis):",
+    updateSelectInput(session,"scVioBoxPlotinp1", "Cell information (X-axis):",
                       choices = dataSource$sc1conf[grp == TRUE]$UI,
                       selected = dataSource$sc1def$grp1)
-    updateSelectInput(session,"sc1c1inp1a", "Cell information to subset by:",
+    updateSelectInput(session,"scVioBoxPlotinp1a", "Cell information to subset by:",
                       choices = c("N/A", dataSource$sc1conf[grp == TRUE]$UI),
                       selected = "N/A")
-    updateSelectizeInput(session, "sc1c1inp2", server = TRUE,
+    updateSelectizeInput(session, "scVioBoxPlotinp2", server = TRUE,
                          choices = c(dataSource$sc1conf[is.na(fID)]$UI,sort(names(dataSource$sc1gene))),
                          selected = dataSource$sc1conf[is.na(fID)]$UI[1], options = list(
                            maxOptions = length(dataSource$sc1conf[is.na(fID)]$UI) + 3,
                            create = TRUE, persist = TRUE, render = I(optCrt)))
 
-    updateSelectInput(session,"sc1c2inp1", "Cell information to plot (X-axis):",
+    updateSelectInput(session,"scProportioninp1", "Cell information to plot (X-axis):",
                       choices = dataSource$sc1conf[grp == TRUE]$UI,
                       selected = dataSource$sc1def$grp2)
-    updateSelectInput(session,"sc1c2inp2", "Cell information to group / colour by:",
+    updateSelectInput(session,"scProportioninp2", "Cell information to group / colour by:",
                       choices = dataSource$sc1conf[grp == TRUE]$UI,
                       selected = dataSource$sc1def$grp1)
 
-    updateSelectInput(session,"sc1d1grp", "Group by:",
+    updateSelectInput(session,"scBubbleHeatmapgrp", "Group by:",
                       choices = dataSource$sc1conf[grp == TRUE]$UI,
                       selected = dataSource$sc1conf[grp == TRUE]$UI[1])
-    updateSelectInput(session,"sc1d1grp1a", "Cell information to subset by:",
+    updateSelectInput(session,"scBubbleHeatmapgrp1a", "Cell information to subset by:",
                       choices = c("N/A", dataSource$sc1conf[grp == TRUE]$UI),
                       selected = "N/A")
 
-    updateTextAreaInput(session, "sc1d1inp",
+    updateTextAreaInput(session, "scBubbleHeatmapinp",
                         value = paste0(dataSource$sc1def$genes, collapse = ", "))
 
     ### Plots for tab a1
-    output$sc1a1sub1.ui <- renderUI({
-      sub = strsplit(dataSource$sc1conf[UI == input$sc1a1sub1]$fID, "\\|")
+    output$cellInfoGeneExprsub1.ui <- renderUI({
+      sub = strsplit(dataSource$sc1conf[UI == input$cellInfoGeneExprsub1]$fID, "\\|")
       if(length(sub)){
         sub <- sub[[1]]
       }
-      checkboxGroupInput("sc1a1sub2", "Select which cells to show", inline = TRUE,
+      checkboxGroupInput("cellInfoGeneExprsub2", "Select which cells to show", inline = TRUE,
                          choices = sub, selected = sub)
     })
-    output$sc1a1oup1 <- renderPlot({
-      scDRcell(dataSource$sc1conf, dataSource$sc1meta, input$sc1a1drX, input$sc1a1drY, input$sc1a1inp1,
-               input$sc1a1sub1, input$sc1a1sub2,
-               input$sc1a1siz, input$sc1a1col1, input$sc1a1ord1,
-               input$sc1a1fsz, input$sc1a1asp, input$sc1a1txt, input$sc1a1lab1)
+    output$cellInfoGeneExproup1 <- renderPlot({
+      scDRcell(dataSource$sc1conf, dataSource$sc1meta, input$cellInfoGeneExprdrX, input$cellInfoGeneExprdrY, input$cellInfoGeneExprinp1,
+               input$cellInfoGeneExprsub1, input$cellInfoGeneExprsub2,
+               input$cellInfoGeneExprsiz, input$cellInfoGeneExprcol1, input$cellInfoGeneExprord1,
+               input$cellInfoGeneExprfsz, input$cellInfoGeneExprasp, input$cellInfoGeneExprtxt, input$cellInfoGeneExprlab1)
     })
-    output$sc1a1oup1.ui <- renderUI({
-      plotOutput("sc1a1oup1", height = pList[input$sc1a1psz])
+    output$cellInfoGeneExproup1.ui <- renderUI({
+      plotOutput("cellInfoGeneExproup1", height = pList[input$cellInfoGeneExprpsz])
     })
-    output$sc1a1oup1.pdf <- downloadHandler(
-      filename = function() { paste0(input$availableDatasets, "_",input$sc1a1drX,"_",input$sc1a1drY,"_",
-                                     input$sc1a1inp1,".pdf") },
+    output$cellInfoGeneExproup1.pdf <- downloadHandler(
+      filename = function() { paste0(input$availableDatasets, "_",input$cellInfoGeneExprdrX,"_",input$cellInfoGeneExprdrY,"_",
+                                     input$cellInfoGeneExprinp1,".pdf") },
       content = function(file) { ggsave(
-        file, device = "pdf", height = input$sc1a1oup1.h, width = input$sc1a1oup1.w, useDingbats = FALSE,
-        plot = scDRcell(dataSource$sc1conf, dataSource$sc1meta, input$sc1a1drX, input$sc1a1drY, input$sc1a1inp1,
-                        input$sc1a1sub1, input$sc1a1sub2,
-                        input$sc1a1siz, input$sc1a1col1, input$sc1a1ord1,
-                        input$sc1a1fsz, input$sc1a1asp, input$sc1a1txt, input$sc1a1lab1) )
+        file, device = "pdf", height = input$cellInfoGeneExproup1.h, width = input$cellInfoGeneExproup1.w, useDingbats = FALSE,
+        plot = scDRcell(dataSource$sc1conf, dataSource$sc1meta, input$cellInfoGeneExprdrX, input$cellInfoGeneExprdrY, input$cellInfoGeneExprinp1,
+                        input$cellInfoGeneExprsub1, input$cellInfoGeneExprsub2,
+                        input$cellInfoGeneExprsiz, input$cellInfoGeneExprcol1, input$cellInfoGeneExprord1,
+                        input$cellInfoGeneExprfsz, input$cellInfoGeneExprasp, input$cellInfoGeneExprtxt, input$cellInfoGeneExprlab1) )
       })
-    output$sc1a1oup1.png <- downloadHandler(
-      filename = function() { paste0(input$availableDatasets, "_",input$sc1a1drX,"_",input$sc1a1drY,"_",
-                                     input$sc1a1inp1,".png") },
+    output$cellInfoGeneExproup1.png <- downloadHandler(
+      filename = function() { paste0(input$availableDatasets, "_",input$cellInfoGeneExprdrX,"_",input$cellInfoGeneExprdrY,"_",
+                                     input$cellInfoGeneExprinp1,".png") },
       content = function(file) { ggsave(
-        file, device = "png", height = input$sc1a1oup1.h, width = input$sc1a1oup1.w,
-        plot = scDRcell(dataSource$sc1conf, dataSource$sc1meta, input$sc1a1drX, input$sc1a1drY, input$sc1a1inp1,
-                        input$sc1a1sub1, input$sc1a1sub2,
-                        input$sc1a1siz, input$sc1a1col1, input$sc1a1ord1,
-                        input$sc1a1fsz, input$sc1a1asp, input$sc1a1txt, input$sc1a1lab1) )
+        file, device = "png", height = input$cellInfoGeneExproup1.h, width = input$cellInfoGeneExproup1.w,
+        plot = scDRcell(dataSource$sc1conf, dataSource$sc1meta, input$cellInfoGeneExprdrX, input$cellInfoGeneExprdrY, input$cellInfoGeneExprinp1,
+                        input$cellInfoGeneExprsub1, input$cellInfoGeneExprsub2,
+                        input$cellInfoGeneExprsiz, input$cellInfoGeneExprcol1, input$cellInfoGeneExprord1,
+                        input$cellInfoGeneExprfsz, input$cellInfoGeneExprasp, input$cellInfoGeneExprtxt, input$cellInfoGeneExprlab1) )
       })
-    output$sc1a1.dt <- renderDataTable({
-      ggData = scDRnum(dataSource$sc1conf, dataSource$sc1meta, input$sc1a1inp1, input$sc1a1inp2,
-                       input$sc1a1sub1, input$sc1a1sub2,
-                       dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene, input$sc1a1splt)
+    output$cellInfoGeneExpr.dt <- renderDataTable({
+      ggData = scDRnum(dataSource$sc1conf, dataSource$sc1meta, input$cellInfoGeneExprinp1, input$cellInfoGeneExprinp2,
+                       input$cellInfoGeneExprsub1, input$cellInfoGeneExprsub2,
+                       dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene, input$cellInfoGeneExprsplt)
       datatable(ggData, rownames = FALSE, extensions = "Buttons",
                 options = list(pageLength = -1, dom = "tB", buttons = c("copy", "csv", "excel"))) %>%
         formatRound(columns = c("pctExpress"), digits = 2)
     })
 
-    output$sc1a1oup2 <- renderPlot({
-      scDRgene(dataSource$sc1conf, dataSource$sc1meta, input$sc1a1drX, input$sc1a1drY, input$sc1a1inp2,
-               input$sc1a1sub1, input$sc1a1sub2,
+    output$cellInfoGeneExproup2 <- renderPlot({
+      scDRgene(dataSource$sc1conf, dataSource$sc1meta, input$cellInfoGeneExprdrX, input$cellInfoGeneExprdrY, input$cellInfoGeneExprinp2,
+               input$cellInfoGeneExprsub1, input$cellInfoGeneExprsub2,
                dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
-               input$sc1a1siz, input$sc1a1col2, input$sc1a1ord2,
-               input$sc1a1fsz, input$sc1a1asp, input$sc1a1txt,
-               input$sc1a1type2, if(input$sc1a1xlim0 %% 2==0) 0 else input$sc1a1xlim1,
-               if(input$sc1a1rg0 %% 2==0) 0 else input$sc1a1rg1)
+               input$cellInfoGeneExprsiz, input$cellInfoGeneExprcol2, input$cellInfoGeneExprord2,
+               input$cellInfoGeneExprfsz, input$cellInfoGeneExprasp, input$cellInfoGeneExprtxt,
+               input$cellInfoGeneExprtype2, if(input$cellInfoGeneExprxlim0 %% 2==0) 0 else input$cellInfoGeneExprxlim1,
+               if(input$cellInfoGeneExprrg0 %% 2==0) 0 else input$cellInfoGeneExprrg1)
     })
-    output$sc1a1oup2.ui <- renderUI({
-      plotOutput("sc1a1oup2", height = pList[input$sc1a1psz])
+    output$cellInfoGeneExproup2.ui <- renderUI({
+      plotOutput("cellInfoGeneExproup2", height = pList[input$cellInfoGeneExprpsz])
     })
-    output$sc1a1oup2.pdf <- downloadHandler(
-      filename = function() { paste0(input$availableDatasets, "_",input$sc1a1drX,"_",input$sc1a1drY,"_",
-                                     input$sc1a1inp2,".pdf") },
+    output$cellInfoGeneExproup2.pdf <- downloadHandler(
+      filename = function() { paste0(input$availableDatasets, "_",input$cellInfoGeneExprdrX,"_",input$cellInfoGeneExprdrY,"_",
+                                     input$cellInfoGeneExprinp2,".pdf") },
       content = function(file) {
         ggsave(
-          file, device = "pdf", height = input$sc1a1oup2.h, width = input$sc1a1oup2.w, useDingbats = FALSE,
-          plot = scDRgene(dataSource$sc1conf, dataSource$sc1meta, input$sc1a1drX, input$sc1a1drY, input$sc1a1inp2,
-                          input$sc1a1sub1, input$sc1a1sub2,
+          file, device = "pdf", height = input$cellInfoGeneExproup2.h, width = input$cellInfoGeneExproup2.w, useDingbats = FALSE,
+          plot = scDRgene(dataSource$sc1conf, dataSource$sc1meta, input$cellInfoGeneExprdrX, input$cellInfoGeneExprdrY, input$cellInfoGeneExprinp2,
+                          input$cellInfoGeneExprsub1, input$cellInfoGeneExprsub2,
                           dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
-                          input$sc1a1siz, input$sc1a1col2, input$sc1a1ord2,
-                          input$sc1a1fsz, input$sc1a1asp, input$sc1a1txt,
-                          input$sc1a1type2, if(input$sc1a1xlim0 %% 2==0) 0 else input$sc1a1xlim1,
-                          if(input$sc1a1rg0 %% 2==0) 0 else input$sc1a1rg1)
+                          input$cellInfoGeneExprsiz, input$cellInfoGeneExprcol2, input$cellInfoGeneExprord2,
+                          input$cellInfoGeneExprfsz, input$cellInfoGeneExprasp, input$cellInfoGeneExprtxt,
+                          input$cellInfoGeneExprtype2, if(input$cellInfoGeneExprxlim0 %% 2==0) 0 else input$cellInfoGeneExprxlim1,
+                          if(input$cellInfoGeneExprrg0 %% 2==0) 0 else input$cellInfoGeneExprrg1)
         )
       })
-    output$sc1a1oup2.png <- downloadHandler(
-      filename = function() { paste0(input$availableDatasets, "_",input$sc1a1drX,"_",input$sc1a1drY,"_",
-                                     input$sc1a1inp2,".png") },
+    output$cellInfoGeneExproup2.png <- downloadHandler(
+      filename = function() { paste0(input$availableDatasets, "_",input$cellInfoGeneExprdrX,"_",input$cellInfoGeneExprdrY,"_",
+                                     input$cellInfoGeneExprinp2,".png") },
       content = function(file) { ggsave(
-        file, device = "png", height = input$sc1a1oup2.h, width = input$sc1a1oup2.w,
-        plot = scDRgene(dataSource$sc1conf, dataSource$sc1meta, input$sc1a1drX, input$sc1a1drY, input$sc1a1inp2,
-                        input$sc1a1sub1, input$sc1a1sub2,
+        file, device = "png", height = input$cellInfoGeneExproup2.h, width = input$cellInfoGeneExproup2.w,
+        plot = scDRgene(dataSource$sc1conf, dataSource$sc1meta, input$cellInfoGeneExprdrX, input$cellInfoGeneExprdrY, input$cellInfoGeneExprinp2,
+                        input$cellInfoGeneExprsub1, input$cellInfoGeneExprsub2,
                         dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
-                        input$sc1a1siz, input$sc1a1col2, input$sc1a1ord2,
-                        input$sc1a1fsz, input$sc1a1asp, input$sc1a1txt,
-                        input$sc1a1type2, if(input$sc1a1xlim0 %% 2==0) 0 else input$sc1a1xlim1,
-                        if(input$sc1a1rg0 %% 2==0) 0 else input$sc1a1rg1) )
+                        input$cellInfoGeneExprsiz, input$cellInfoGeneExprcol2, input$cellInfoGeneExprord2,
+                        input$cellInfoGeneExprfsz, input$cellInfoGeneExprasp, input$cellInfoGeneExprtxt,
+                        input$cellInfoGeneExprtype2, if(input$cellInfoGeneExprxlim0 %% 2==0) 0 else input$cellInfoGeneExprxlim1,
+                        if(input$cellInfoGeneExprrg0 %% 2==0) 0 else input$cellInfoGeneExprrg1) )
       })
 
 
     ### Plots for tab a2
-    output$sc1a2sub1.ui <- renderUI({
-      sub = strsplit(dataSource$sc1conf[UI == input$sc1a2sub1]$fID, "\\|")[[1]]
-      checkboxGroupInput("sc1a2sub2", "Select which cells to show", inline = TRUE,
+    output$cellInfoCellInfosub1.ui <- renderUI({
+      sub = strsplit(dataSource$sc1conf[UI == input$cellInfoCellInfosub1]$fID, "\\|")[[1]]
+      checkboxGroupInput("cellInfoCellInfosub2", "Select which cells to show", inline = TRUE,
                          choices = sub, selected = sub)
     })
-    output$sc1a2oup1 <- renderPlot({
-      scDRcell(dataSource$sc1conf, dataSource$sc1meta, input$sc1a2drX, input$sc1a2drY, input$sc1a2inp1,
-               input$sc1a2sub1, input$sc1a2sub2,
-               input$sc1a2siz, input$sc1a2col1, input$sc1a2ord1,
-               input$sc1a2fsz, input$sc1a2asp, input$sc1a2txt, input$sc1a2lab1)
+    output$cellInfoCellInfooup1 <- renderPlot({
+      scDRcell(dataSource$sc1conf, dataSource$sc1meta, input$cellInfoCellInfodrX, input$cellInfoCellInfodrY, input$cellInfoCellInfoinp1,
+               input$cellInfoCellInfosub1, input$cellInfoCellInfosub2,
+               input$cellInfoCellInfosiz, input$cellInfoCellInfocol1, input$cellInfoCellInfoord1,
+               input$cellInfoCellInfofsz, input$cellInfoCellInfoasp, input$cellInfoCellInfotxt, input$cellInfoCellInfolab1)
     })
-    output$sc1a2oup1.ui <- renderUI({
-      plotOutput("sc1a2oup1", height = pList[input$sc1a2psz])
+    output$cellInfoCellInfooup1.ui <- renderUI({
+      plotOutput("cellInfoCellInfooup1", height = pList[input$cellInfoCellInfopsz])
     })
-    output$sc1a2oup1.pdf <- downloadHandler(
-      filename = function() { paste0(input$availableDatasets, "_",input$sc1a2drX,"_",input$sc1a2drY,"_",
-                                     input$sc1a2inp1,".pdf") },
+    output$cellInfoCellInfooup1.pdf <- downloadHandler(
+      filename = function() { paste0(input$availableDatasets, "_",input$cellInfoCellInfodrX,"_",input$cellInfoCellInfodrY,"_",
+                                     input$cellInfoCellInfoinp1,".pdf") },
       content = function(file) { ggsave(
-        file, device = "pdf", height = input$sc1a2oup1.h, width = input$sc1a2oup1.w, useDingbats = FALSE,
-        plot = scDRcell(dataSource$sc1conf, dataSource$sc1meta, input$sc1a2drX, input$sc1a2drY, input$sc1a2inp1,
-                        input$sc1a2sub1, input$sc1a2sub2,
-                        input$sc1a2siz, input$sc1a2col1, input$sc1a2ord1,
-                        input$sc1a2fsz, input$sc1a2asp, input$sc1a2txt, input$sc1a2lab1) )
+        file, device = "pdf", height = input$cellInfoCellInfooup1.h, width = input$cellInfoCellInfooup1.w, useDingbats = FALSE,
+        plot = scDRcell(dataSource$sc1conf, dataSource$sc1meta, input$cellInfoCellInfodrX, input$cellInfoCellInfodrY, input$cellInfoCellInfoinp1,
+                        input$cellInfoCellInfosub1, input$cellInfoCellInfosub2,
+                        input$cellInfoCellInfosiz, input$cellInfoCellInfocol1, input$cellInfoCellInfoord1,
+                        input$cellInfoCellInfofsz, input$cellInfoCellInfoasp, input$cellInfoCellInfotxt, input$cellInfoCellInfolab1) )
       })
-    output$sc1a2oup1.png <- downloadHandler(
-      filename = function() { paste0(input$availableDatasets, "_",input$sc1a2drX,"_",input$sc1a2drY,"_",
-                                     input$sc1a2inp1,".png") },
+    output$cellInfoCellInfooup1.png <- downloadHandler(
+      filename = function() { paste0(input$availableDatasets, "_",input$cellInfoCellInfodrX,"_",input$cellInfoCellInfodrY,"_",
+                                     input$cellInfoCellInfoinp1,".png") },
       content = function(file) { ggsave(
-        file, device = "png", height = input$sc1a2oup1.h, width = input$sc1a2oup1.w,
-        plot = scDRcell(dataSource$sc1conf, dataSource$sc1meta, input$sc1a2drX, input$sc1a2drY, input$sc1a2inp1,
-                        input$sc1a2sub1, input$sc1a2sub2,
-                        input$sc1a2siz, input$sc1a2col1, input$sc1a2ord1,
-                        input$sc1a2fsz, input$sc1a2asp, input$sc1a2txt, input$sc1a2lab1) )
+        file, device = "png", height = input$cellInfoCellInfooup1.h, width = input$cellInfoCellInfooup1.w,
+        plot = scDRcell(dataSource$sc1conf, dataSource$sc1meta, input$cellInfoCellInfodrX, input$cellInfoCellInfodrY, input$cellInfoCellInfoinp1,
+                        input$cellInfoCellInfosub1, input$cellInfoCellInfosub2,
+                        input$cellInfoCellInfosiz, input$cellInfoCellInfocol1, input$cellInfoCellInfoord1,
+                        input$cellInfoCellInfofsz, input$cellInfoCellInfoasp, input$cellInfoCellInfotxt, input$cellInfoCellInfolab1) )
       })
 
-    output$sc1a2oup2 <- renderPlot({
-      scDRcell(dataSource$sc1conf, dataSource$sc1meta, input$sc1a2drX, input$sc1a2drY, input$sc1a2inp2,
-               input$sc1a2sub1, input$sc1a2sub2,
-               input$sc1a2siz, input$sc1a2col2, input$sc1a2ord2,
-               input$sc1a2fsz, input$sc1a2asp, input$sc1a2txt, input$sc1a2lab2)
+    output$cellInfoCellInfooup2 <- renderPlot({
+      scDRcell(dataSource$sc1conf, dataSource$sc1meta, input$cellInfoCellInfodrX, input$cellInfoCellInfodrY, input$cellInfoCellInfoinp2,
+               input$cellInfoCellInfosub1, input$cellInfoCellInfosub2,
+               input$cellInfoCellInfosiz, input$cellInfoCellInfocol2, input$cellInfoCellInfoord2,
+               input$cellInfoCellInfofsz, input$cellInfoCellInfoasp, input$cellInfoCellInfotxt, input$cellInfoCellInfolab2)
     })
-    output$sc1a2oup2.ui <- renderUI({
-      plotOutput("sc1a2oup2", height = pList[input$sc1a2psz])
+    output$cellInfoCellInfooup2.ui <- renderUI({
+      plotOutput("cellInfoCellInfooup2", height = pList[input$cellInfoCellInfopsz])
     })
-    output$sc1a2oup2.pdf <- downloadHandler(
-      filename = function() { paste0(input$availableDatasets, "_",input$sc1a2drX,"_",input$sc1a2drY,"_",
-                                     input$sc1a2inp2,".pdf") },
+    output$cellInfoCellInfooup2.pdf <- downloadHandler(
+      filename = function() { paste0(input$availableDatasets, "_",input$cellInfoCellInfodrX,"_",input$cellInfoCellInfodrY,"_",
+                                     input$cellInfoCellInfoinp2,".pdf") },
       content = function(file) { ggsave(
-        file, device = "pdf", height = input$sc1a2oup2.h, width = input$sc1a2oup2.w, useDingbats = FALSE,
-        plot = scDRcell(dataSource$sc1conf, dataSource$sc1meta, input$sc1a2drX, input$sc1a2drY, input$sc1a2inp2,
-                        input$sc1a2sub1, input$sc1a2sub2,
-                        input$sc1a2siz, input$sc1a2col2, input$sc1a2ord2,
-                        input$sc1a2fsz, input$sc1a2asp, input$sc1a2txt, input$sc1a2lab2) )
+        file, device = "pdf", height = input$cellInfoCellInfooup2.h, width = input$cellInfoCellInfooup2.w, useDingbats = FALSE,
+        plot = scDRcell(dataSource$sc1conf, dataSource$sc1meta, input$cellInfoCellInfodrX, input$cellInfoCellInfodrY, input$cellInfoCellInfoinp2,
+                        input$cellInfoCellInfosub1, input$cellInfoCellInfosub2,
+                        input$cellInfoCellInfosiz, input$cellInfoCellInfocol2, input$cellInfoCellInfoord2,
+                        input$cellInfoCellInfofsz, input$cellInfoCellInfoasp, input$cellInfoCellInfotxt, input$cellInfoCellInfolab2) )
       })
-    output$sc1a2oup2.png <- downloadHandler(
-      filename = function() { paste0(input$availableDatasets, "_",input$sc1a2drX,"_",input$sc1a2drY,"_",
-                                     input$sc1a2inp2,".png") },
+    output$cellInfoCellInfooup2.png <- downloadHandler(
+      filename = function() { paste0(input$availableDatasets, "_",input$cellInfoCellInfodrX,"_",input$cellInfoCellInfodrY,"_",
+                                     input$cellInfoCellInfoinp2,".png") },
       content = function(file) { ggsave(
-        file, device = "png", height = input$sc1a2oup2.h, width = input$sc1a2oup2.w,
-        plot = scDRcell(dataSource$sc1conf, dataSource$sc1meta, input$sc1a2drX, input$sc1a2drY, input$sc1a2inp2,
-                        input$sc1a2sub1, input$sc1a2sub2,
-                        input$sc1a2siz, input$sc1a2col2, input$sc1a2ord2,
-                        input$sc1a2fsz, input$sc1a2asp, input$sc1a2txt, input$sc1a2lab2) )
+        file, device = "png", height = input$cellInfoCellInfooup2.h, width = input$cellInfoCellInfooup2.w,
+        plot = scDRcell(dataSource$sc1conf, dataSource$sc1meta, input$cellInfoCellInfodrX, input$cellInfoCellInfodrY, input$cellInfoCellInfoinp2,
+                        input$cellInfoCellInfosub1, input$cellInfoCellInfosub2,
+                        input$cellInfoCellInfosiz, input$cellInfoCellInfocol2, input$cellInfoCellInfoord2,
+                        input$cellInfoCellInfofsz, input$cellInfoCellInfoasp, input$cellInfoCellInfotxt, input$cellInfoCellInfolab2) )
       })
 
 
     ### Plots for tab a3
-    output$sc1a3sub1.ui <- renderUI({
-      sub = strsplit(dataSource$sc1conf[UI == input$sc1a3sub1]$fID, "\\|")[[1]]
-      checkboxGroupInput("sc1a3sub2", "Select which cells to show", inline = TRUE,
+    output$geneExprGeneExprsub1.ui <- renderUI({
+      sub = strsplit(dataSource$sc1conf[UI == input$geneExprGeneExprsub1]$fID, "\\|")[[1]]
+      checkboxGroupInput("geneExprGeneExprsub2", "Select which cells to show", inline = TRUE,
                          choices = sub, selected = sub)
     })
-    output$sc1a3oup1 <- renderPlot({
-      scDRgene(dataSource$sc1conf, dataSource$sc1meta, input$sc1a3drX, input$sc1a3drY, input$sc1a3inp1,
-               input$sc1a3sub1, input$sc1a3sub2,
+    output$geneExprGeneExproup1 <- renderPlot({
+      scDRgene(dataSource$sc1conf, dataSource$sc1meta, input$geneExprGeneExprdrX, input$geneExprGeneExprdrY, input$geneExprGeneExprinp1,
+               input$geneExprGeneExprsub1, input$geneExprGeneExprsub2,
                dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
-               input$sc1a3siz, input$sc1a3col1, input$sc1a3ord1,
-               input$sc1a3fsz, input$sc1a3asp, input$sc1a3txt,
-               inpColRange=if(input$sc1a3rg0 %% 2==0) 0 else input$sc1a3rg1)
+               input$geneExprGeneExprsiz, input$geneExprGeneExprcol1, input$geneExprGeneExprord1,
+               input$geneExprGeneExprfsz, input$geneExprGeneExprasp, input$geneExprGeneExprtxt,
+               inpColRange=if(input$geneExprGeneExprrg0 %% 2==0) 0 else input$geneExprGeneExprrg1)
     })
-    output$sc1a3oup1.ui <- renderUI({
-      plotOutput("sc1a3oup1", height = pList[input$sc1a3psz])
+    output$geneExprGeneExproup1.ui <- renderUI({
+      plotOutput("geneExprGeneExproup1", height = pList[input$geneExprGeneExprpsz])
     })
-    output$sc1a3oup1.pdf <- downloadHandler(
-      filename = function() { paste0(input$availableDatasets, "_",input$sc1a3drX,"_",input$sc1a3drY,"_",
-                                     input$sc1a3inp1,".pdf") },
+    output$geneExprGeneExproup1.pdf <- downloadHandler(
+      filename = function() { paste0(input$availableDatasets, "_",input$geneExprGeneExprdrX,"_",input$geneExprGeneExprdrY,"_",
+                                     input$geneExprGeneExprinp1,".pdf") },
       content = function(file) { ggsave(
-        file, device = "pdf", height = input$sc1a3oup1.h, width = input$sc1a3oup1.w, useDingbats = FALSE,
-        plot = scDRgene(dataSource$sc1conf, dataSource$sc1meta, input$sc1a3drX, input$sc1a3drY, input$sc1a3inp1,
-                        input$sc1a3sub1, input$sc1a3sub2,
+        file, device = "pdf", height = input$geneExprGeneExproup1.h, width = input$geneExprGeneExproup1.w, useDingbats = FALSE,
+        plot = scDRgene(dataSource$sc1conf, dataSource$sc1meta, input$geneExprGeneExprdrX, input$geneExprGeneExprdrY, input$geneExprGeneExprinp1,
+                        input$geneExprGeneExprsub1, input$geneExprGeneExprsub2,
                         dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
-                        input$sc1a3siz, input$sc1a3col1, input$sc1a3ord1,
-                        input$sc1a3fsz, input$sc1a3asp, input$sc1a3txt,
-                        inpColRange=if(input$sc1a3rg0 %% 2==0) 0 else input$sc1a3rg1) )
+                        input$geneExprGeneExprsiz, input$geneExprGeneExprcol1, input$geneExprGeneExprord1,
+                        input$geneExprGeneExprfsz, input$geneExprGeneExprasp, input$geneExprGeneExprtxt,
+                        inpColRange=if(input$geneExprGeneExprrg0 %% 2==0) 0 else input$geneExprGeneExprrg1) )
       })
-    output$sc1a3oup1.png <- downloadHandler(
-      filename = function() { paste0(input$availableDatasets, "_",input$sc1a3drX,"_",input$sc1a3drY,"_",
-                                     input$sc1a3inp1,".png") },
+    output$geneExprGeneExproup1.png <- downloadHandler(
+      filename = function() { paste0(input$availableDatasets, "_",input$geneExprGeneExprdrX,"_",input$geneExprGeneExprdrY,"_",
+                                     input$geneExprGeneExprinp1,".png") },
       content = function(file) { ggsave(
-        file, device = "png", height = input$sc1a3oup1.h, width = input$sc1a3oup1.w,
-        plot = scDRgene(dataSource$sc1conf, dataSource$sc1meta, input$sc1a3drX, input$sc1a3drY, input$sc1a3inp1,
-                        input$sc1a3sub1, input$sc1a3sub2,
+        file, device = "png", height = input$geneExprGeneExproup1.h, width = input$geneExprGeneExproup1.w,
+        plot = scDRgene(dataSource$sc1conf, dataSource$sc1meta, input$geneExprGeneExprdrX, input$geneExprGeneExprdrY, input$geneExprGeneExprinp1,
+                        input$geneExprGeneExprsub1, input$geneExprGeneExprsub2,
                         dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
-                        input$sc1a3siz, input$sc1a3col1, input$sc1a3ord1,
-                        input$sc1a3fsz, input$sc1a3asp, input$sc1a3txt,
-                        inpColRange=if(input$sc1a3rg0 %% 2==0) 0 else input$sc1a3rg1) )
+                        input$geneExprGeneExprsiz, input$geneExprGeneExprcol1, input$geneExprGeneExprord1,
+                        input$geneExprGeneExprfsz, input$geneExprGeneExprasp, input$geneExprGeneExprtxt,
+                        inpColRange=if(input$geneExprGeneExprrg0 %% 2==0) 0 else input$geneExprGeneExprrg1) )
       })
 
-    output$sc1a3oup2 <- renderPlot({
-      scDRgene(dataSource$sc1conf, dataSource$sc1meta, input$sc1a3drX, input$sc1a3drY, input$sc1a3inp2,
-               input$sc1a3sub1, input$sc1a3sub2,
+    output$geneExprGeneExproup2 <- renderPlot({
+      scDRgene(dataSource$sc1conf, dataSource$sc1meta, input$geneExprGeneExprdrX, input$geneExprGeneExprdrY, input$geneExprGeneExprinp2,
+               input$geneExprGeneExprsub1, input$geneExprGeneExprsub2,
                dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
-               input$sc1a3siz, input$sc1a3col2, input$sc1a3ord2,
-               input$sc1a3fsz, input$sc1a3asp, input$sc1a3txt,
-               inpColRange=if(input$sc1a3rg2 %% 2==0) 0 else input$sc1a3rg3)
+               input$geneExprGeneExprsiz, input$geneExprGeneExprcol2, input$geneExprGeneExprord2,
+               input$geneExprGeneExprfsz, input$geneExprGeneExprasp, input$geneExprGeneExprtxt,
+               inpColRange=if(input$geneExprGeneExprrg2 %% 2==0) 0 else input$geneExprGeneExprrg3)
     })
-    output$sc1a3oup2.ui <- renderUI({
-      plotOutput("sc1a3oup2", height = pList[input$sc1a3psz])
+    output$geneExprGeneExproup2.ui <- renderUI({
+      plotOutput("geneExprGeneExproup2", height = pList[input$geneExprGeneExprpsz])
     })
-    output$sc1a3oup2.pdf <- downloadHandler(
-      filename = function() { paste0(input$availableDatasets, "_",input$sc1a3drX,"_",input$sc1a3drY,"_",
-                                     input$sc1a3inp2,".pdf") },
+    output$geneExprGeneExproup2.pdf <- downloadHandler(
+      filename = function() { paste0(input$availableDatasets, "_",input$geneExprGeneExprdrX,"_",input$geneExprGeneExprdrY,"_",
+                                     input$geneExprGeneExprinp2,".pdf") },
       content = function(file) { ggsave(
-        file, device = "pdf", height = input$sc1a3oup2.h, width = input$sc1a3oup2.w, useDingbats = FALSE,
-        plot = scDRgene(dataSource$sc1conf, dataSource$sc1meta, input$sc1a3drX, input$sc1a3drY, input$sc1a3inp2,
-                        input$sc1a3sub1, input$sc1a3sub2,
+        file, device = "pdf", height = input$geneExprGeneExproup2.h, width = input$geneExprGeneExproup2.w, useDingbats = FALSE,
+        plot = scDRgene(dataSource$sc1conf, dataSource$sc1meta, input$geneExprGeneExprdrX, input$geneExprGeneExprdrY, input$geneExprGeneExprinp2,
+                        input$geneExprGeneExprsub1, input$geneExprGeneExprsub2,
                         dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
-                        input$sc1a3siz, input$sc1a3col2, input$sc1a3ord2,
-                        input$sc1a3fsz, input$sc1a3asp, input$sc1a3txt,
-                        inpColRange=if(input$sc1a3rg2 %% 2==0) 0 else input$sc1a3rg3) )
+                        input$geneExprGeneExprsiz, input$geneExprGeneExprcol2, input$geneExprGeneExprord2,
+                        input$geneExprGeneExprfsz, input$geneExprGeneExprasp, input$geneExprGeneExprtxt,
+                        inpColRange=if(input$geneExprGeneExprrg2 %% 2==0) 0 else input$geneExprGeneExprrg3) )
       })
-    output$sc1a3oup2.png <- downloadHandler(
-      filename = function() { paste0(input$availableDatasets, "_",input$sc1a3drX,"_",input$sc1a3drY,"_",
-                                     input$sc1a3inp2,".png") },
+    output$geneExprGeneExproup2.png <- downloadHandler(
+      filename = function() { paste0(input$availableDatasets, "_",input$geneExprGeneExprdrX,"_",input$geneExprGeneExprdrY,"_",
+                                     input$geneExprGeneExprinp2,".png") },
       content = function(file) { ggsave(
-        file, device = "png", height = input$sc1a3oup2.h, width = input$sc1a3oup2.w,
-        plot = scDRgene(dataSource$sc1conf, dataSource$sc1meta, input$sc1a3drX, input$sc1a3drY, input$sc1a3inp2,
-                        input$sc1a3sub1, input$sc1a3sub2,
+        file, device = "png", height = input$geneExprGeneExproup2.h, width = input$geneExprGeneExproup2.w,
+        plot = scDRgene(dataSource$sc1conf, dataSource$sc1meta, input$geneExprGeneExprdrX, input$geneExprGeneExprdrY, input$geneExprGeneExprinp2,
+                        input$geneExprGeneExprsub1, input$geneExprGeneExprsub2,
                         dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
-                        input$sc1a3siz, input$sc1a3col2, input$sc1a3ord2,
-                        input$sc1a3fsz, input$sc1a3asp, input$sc1a3txt,
-                        inpColRange=if(input$sc1a3rg2 %% 2==0) 0 else input$sc1a3rg3) )
+                        input$geneExprGeneExprsiz, input$geneExprGeneExprcol2, input$geneExprGeneExprord2,
+                        input$geneExprGeneExprfsz, input$geneExprGeneExprasp, input$geneExprGeneExprtxt,
+                        inpColRange=if(input$geneExprGeneExprrg2 %% 2==0) 0 else input$geneExprGeneExprrg3) )
       })
 
 
     ### Plots for tab b2
-    output$sc1b2sub1.ui <- renderUI({
-      sub = strsplit(dataSource$sc1conf[UI == input$sc1b2sub1]$fID, "\\|")[[1]]
-      checkboxGroupInput("sc1b2sub2", "Select which cells to show", inline = TRUE,
+    output$scCoExprsub1.ui <- renderUI({
+      sub = strsplit(dataSource$sc1conf[UI == input$scCoExprsub1]$fID, "\\|")[[1]]
+      checkboxGroupInput("scCoExprsub2", "Select which cells to show", inline = TRUE,
                          choices = sub, selected = sub)
     })
-    output$sc1b2oup1 <- renderPlot({
-      scDRcoex(dataSource$sc1conf, dataSource$sc1meta, input$sc1b2drX, input$sc1b2drY,
-               input$sc1b2inp1, input$sc1b2inp2, input$sc1b2sub1, input$sc1b2sub2,
+    output$scCoExproup1 <- renderPlot({
+      scDRcoex(dataSource$sc1conf, dataSource$sc1meta, input$scCoExprdrX, input$scCoExprdrY,
+               input$scCoExprinp1, input$scCoExprinp2, input$scCoExprsub1, input$scCoExprsub2,
                dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
-               input$sc1b2siz, input$sc1b2col1, input$sc1b2ord1,
-               input$sc1b2fsz, input$sc1b2asp, input$sc1b2txt)
+               input$scCoExprsiz, input$scCoExprcol1, input$scCoExprord1,
+               input$scCoExprfsz, input$scCoExprasp, input$scCoExprtxt)
     })
-    output$sc1b2oup1.ui <- renderUI({
-      plotOutput("sc1b2oup1", height = pList2[input$sc1b2psz])
+    output$scCoExproup1.ui <- renderUI({
+      plotOutput("scCoExproup1", height = pList2[input$scCoExprpsz])
     })
-    output$sc1b2oup1.pdf <- downloadHandler(
-      filename = function() { paste0(input$availableDatasets, "_",input$sc1b2drX,"_",input$sc1b2drY,"_",
-                                     input$sc1b2inp1,"_",input$sc1b2inp2,".pdf") },
+    output$scCoExproup1.pdf <- downloadHandler(
+      filename = function() { paste0(input$availableDatasets, "_",input$scCoExprdrX,"_",input$scCoExprdrY,"_",
+                                     input$scCoExprinp1,"_",input$scCoExprinp2,".pdf") },
       content = function(file) { ggsave(
-        file, device = "pdf", height = input$sc1b2oup1.h, width = input$sc1b2oup1.w, useDingbats = FALSE,
-        plot = scDRcoex(dataSource$sc1conf, dataSource$sc1meta, input$sc1b2drX, input$sc1b2drY,
-                        input$sc1b2inp1, input$sc1b2inp2, input$sc1b2sub1, input$sc1b2sub2,
+        file, device = "pdf", height = input$scCoExproup1.h, width = input$scCoExproup1.w, useDingbats = FALSE,
+        plot = scDRcoex(dataSource$sc1conf, dataSource$sc1meta, input$scCoExprdrX, input$scCoExprdrY,
+                        input$scCoExprinp1, input$scCoExprinp2, input$scCoExprsub1, input$scCoExprsub2,
                         dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
-                        input$sc1b2siz, input$sc1b2col1, input$sc1b2ord1,
-                        input$sc1b2fsz, input$sc1b2asp, input$sc1b2txt) )
+                        input$scCoExprsiz, input$scCoExprcol1, input$scCoExprord1,
+                        input$scCoExprfsz, input$scCoExprasp, input$scCoExprtxt) )
       })
-    output$sc1b2oup1.png <- downloadHandler(
-      filename = function() { paste0(input$availableDatasets, "_",input$sc1b2drX,"_",input$sc1b2drY,"_",
-                                     input$sc1b2inp1,"_",input$sc1b2inp2,".png") },
+    output$scCoExproup1.png <- downloadHandler(
+      filename = function() { paste0(input$availableDatasets, "_",input$scCoExprdrX,"_",input$scCoExprdrY,"_",
+                                     input$scCoExprinp1,"_",input$scCoExprinp2,".png") },
       content = function(file) { ggsave(
-        file, device = "png", height = input$sc1b2oup1.h, width = input$sc1b2oup1.w,
-        plot = scDRcoex(dataSource$sc1conf, dataSource$sc1meta, input$sc1b2drX, input$sc1b2drY,
-                        input$sc1b2inp1, input$sc1b2inp2, input$sc1b2sub1, input$sc1b2sub2,
+        file, device = "png", height = input$scCoExproup1.h, width = input$scCoExproup1.w,
+        plot = scDRcoex(dataSource$sc1conf, dataSource$sc1meta, input$scCoExprdrX, input$scCoExprdrY,
+                        input$scCoExprinp1, input$scCoExprinp2, input$scCoExprsub1, input$scCoExprsub2,
                         dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
-                        input$sc1b2siz, input$sc1b2col1, input$sc1b2ord1,
-                        input$sc1b2fsz, input$sc1b2asp, input$sc1b2txt) )
+                        input$scCoExprsiz, input$scCoExprcol1, input$scCoExprord1,
+                        input$scCoExprfsz, input$scCoExprasp, input$scCoExprtxt) )
       })
-    output$sc1b2oup2 <- renderPlot({
-      scDRcoexLeg(input$sc1b2inp1, input$sc1b2inp2, input$sc1b2col1, input$sc1b2fsz)
+    output$scCoExproup2 <- renderPlot({
+      scDRcoexLeg(input$scCoExprinp1, input$scCoExprinp2, input$scCoExprcol1, input$scCoExprfsz)
     })
-    output$sc1b2oup2.ui <- renderUI({
-      plotOutput("sc1b2oup2", height = "300px")
+    output$scCoExproup2.ui <- renderUI({
+      plotOutput("scCoExproup2", height = "300px")
     })
-    output$sc1b2oup2.pdf <- downloadHandler(
-      filename = function() { paste0(input$availableDatasets, "_",input$sc1b2drX,"_",input$sc1b2drY,"_",
-                                     input$sc1b2inp1,"_",input$sc1b2inp2,"_leg.pdf") },
+    output$scCoExproup2.pdf <- downloadHandler(
+      filename = function() { paste0(input$availableDatasets, "_",input$scCoExprdrX,"_",input$scCoExprdrY,"_",
+                                     input$scCoExprinp1,"_",input$scCoExprinp2,"_leg.pdf") },
       content = function(file) { ggsave(
         file, device = "pdf", height = 3, width = 4, useDingbats = FALSE,
-        plot = scDRcoexLeg(input$sc1b2inp1, input$sc1b2inp2, input$sc1b2col1, input$sc1b2fsz) )
+        plot = scDRcoexLeg(input$scCoExprinp1, input$scCoExprinp2, input$scCoExprcol1, input$scCoExprfsz) )
       })
-    output$sc1b2oup2.png <- downloadHandler(
-      filename = function() { paste0(input$availableDatasets, "_",input$sc1b2drX,"_",input$sc1b2drY,"_",
-                                     input$sc1b2inp1,"_",input$sc1b2inp2,"_leg.png") },
+    output$scCoExproup2.png <- downloadHandler(
+      filename = function() { paste0(input$availableDatasets, "_",input$scCoExprdrX,"_",input$scCoExprdrY,"_",
+                                     input$scCoExprinp1,"_",input$scCoExprinp2,"_leg.png") },
       content = function(file) { ggsave(
         file, device = "png", height = 3, width = 4,
-        plot = scDRcoexLeg(input$sc1b2inp1, input$sc1b2inp2, input$sc1b2col1, input$sc1b2fsz) )
+        plot = scDRcoexLeg(input$scCoExprinp1, input$scCoExprinp2, input$scCoExprcol1, input$scCoExprfsz) )
       })
-    output$sc1b2.dt <- renderDataTable({
-      ggData = scDRcoexNum(dataSource$sc1conf, dataSource$sc1meta, input$sc1b2inp1, input$sc1b2inp2,
-                           input$sc1b2sub1, input$sc1b2sub2, dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene)
+    output$scCoExpr.dt <- renderDataTable({
+      ggData = scDRcoexNum(dataSource$sc1conf, dataSource$sc1meta, input$scCoExprinp1, input$scCoExprinp2,
+                           input$scCoExprsub1, input$scCoExprsub2, dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene)
       datatable(ggData, rownames = FALSE, extensions = "Buttons",
                 options = list(pageLength = -1, dom = "tB", buttons = c("copy", "csv", "excel"))) %>%
         formatRound(columns = c("percent"), digits = 2)
@@ -626,104 +626,104 @@ server <- function(input, output, session) {
 
 
     ### Plots for tab c1
-    output$sc1c1inp1b.ui <- renderUI({
-      if(input$sc1c1inp1a!="N/A"){
-        sub = strsplit(dataSource$sc1conf[UI == input$sc1c1inp1a]$fID, "\\|")[[1]]
-        checkboxGroupInput("sc1c1inp1b", "Select which cells to show", inline = TRUE,
+    output$scVioBoxPlotinp1b.ui <- renderUI({
+      if(input$scVioBoxPlotinp1a!="N/A"){
+        sub = strsplit(dataSource$sc1conf[UI == input$scVioBoxPlotinp1a]$fID, "\\|")[[1]]
+        checkboxGroupInput("scVioBoxPlotinp1b", "Select which cells to show", inline = TRUE,
                            choices = sub)
       }else{
         sub = NULL
       }
     })
-    output$sc1c1inp1c.ui <- renderUI({
-      if(!input$sc1c1inp2 %in% dataSource$sc1conf$UI){
+    output$scVioBoxPlotinp1c.ui <- renderUI({
+      if(!input$scVioBoxPlotinp2 %in% dataSource$sc1conf$UI){
         h5file <- H5File$new(file.path(datafolder, dataSource$dataset, "sc1gexpr.h5"), mode = "r")
         h5data <- h5file[["grp"]][["data"]]
-        val = h5data$read(args = list(dataSource$sc1gene[input$sc1c1inp2], quote(expr=)))
+        val = h5data$read(args = list(dataSource$sc1gene[input$scVioBoxPlotinp2], quote(expr=)))
         val <- max(val, na.rm = TRUE)
         h5file$close_all()
       }else{
-          val = dataSource$sc1meta[[dataSource$sc1conf[UI == input$sc1c1inp2]$ID]]
+          val = dataSource$sc1meta[[dataSource$sc1conf[UI == input$scVioBoxPlotinp2]$ID]]
           val <- max(val, na.rm = TRUE)
       }
       if(val<=1) maxv <- round(val, digits = 3)
       if(val>1 && val<=10) maxv <- round(val, digits = 1)
       if(val>10) maxv <- round(val, digits = 0)
-      sliderInput("sc1c1inp1c", "Filter the cells by value",
+      sliderInput("scVioBoxPlotinp1c", "Filter the cells by value",
                   min = 0, max = maxv, value = 0)
     })
-    output$sc1c1oup <- renderPlot({
-      scVioBox(dataSource$sc1conf, dataSource$sc1meta, input$sc1c1inp1, input$sc1c1inp1a, input$sc1c1inp1b, input$sc1c1inp1c, input$sc1c1inp2,
-               dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene, input$sc1c1typ, input$sc1c1pts,
-               input$sc1c1siz, input$sc1c1fsz)
+    output$scVioBoxPlotoup <- renderPlot({
+      scVioBox(dataSource$sc1conf, dataSource$sc1meta, input$scVioBoxPlotinp1, input$scVioBoxPlotinp1a, input$scVioBoxPlotinp1b, input$scVioBoxPlotinp1c, input$scVioBoxPlotinp2,
+               dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene, input$scVioBoxPlottyp, input$scVioBoxPlotpts,
+               input$scVioBoxPlotsiz, input$scVioBoxPlotfsz)
     })
-    output$sc1c1oup.ui <- renderUI({
-      plotOutput("sc1c1oup", height = pList2[input$sc1c1psz])
+    output$scVioBoxPlotoup.ui <- renderUI({
+      plotOutput("scVioBoxPlotoup", height = pList2[input$scVioBoxPlotpsz])
     })
-    output$sc1c1oup.pdf <- downloadHandler(
-      filename = function() { paste0(input$availableDatasets, "_", input$sc1c1typ,"_",input$sc1c1inp1,"_",
-                                     input$sc1c1inp2,".pdf") },
+    output$scVioBoxPlotoup.pdf <- downloadHandler(
+      filename = function() { paste0(input$availableDatasets, "_", input$scVioBoxPlottyp,"_",input$scVioBoxPlotinp1,"_",
+                                     input$scVioBoxPlotinp2,".pdf") },
       content = function(file) { ggsave(
-        file, device = "pdf", height = input$sc1c1oup.h, width = input$sc1c1oup.w, useDingbats = FALSE,
-        plot = scVioBox(dataSource$sc1conf, dataSource$sc1meta, input$sc1c1inp1, input$sc1c1inp1a, input$sc1c1inp1b, input$sc1c1inp1c, input$sc1c1inp2,
-                        dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene, input$sc1c1typ, input$sc1c1pts,
-                        input$sc1c1siz, input$sc1c1fsz) )
+        file, device = "pdf", height = input$scVioBoxPlotoup.h, width = input$scVioBoxPlotoup.w, useDingbats = FALSE,
+        plot = scVioBox(dataSource$sc1conf, dataSource$sc1meta, input$scVioBoxPlotinp1, input$scVioBoxPlotinp1a, input$scVioBoxPlotinp1b, input$scVioBoxPlotinp1c, input$scVioBoxPlotinp2,
+                        dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene, input$scVioBoxPlottyp, input$scVioBoxPlotpts,
+                        input$scVioBoxPlotsiz, input$scVioBoxPlotfsz) )
       })
-    output$sc1c1oup.png <- downloadHandler(
-      filename = function() { paste0(input$availableDatasets, "_", input$sc1c1typ,"_",input$sc1c1inp1,"_",
-                                     input$sc1c1inp2,".png") },
+    output$scVioBoxPlotoup.png <- downloadHandler(
+      filename = function() { paste0(input$availableDatasets, "_", input$scVioBoxPlottyp,"_",input$scVioBoxPlotinp1,"_",
+                                     input$scVioBoxPlotinp2,".png") },
       content = function(file) { ggsave(
-        file, device = "png", height = input$sc1c1oup.h, width = input$sc1c1oup.w,
-        plot = scVioBox(dataSource$sc1conf, dataSource$sc1meta, input$sc1c1inp1, input$sc1c1inp1a, input$sc1c1inp1b, input$sc1c1inp1c, input$sc1c1inp2,
-                        dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene, input$sc1c1typ, input$sc1c1pts,
-                        input$sc1c1siz, input$sc1c1fsz) )
+        file, device = "png", height = input$scVioBoxPlotoup.h, width = input$scVioBoxPlotoup.w,
+        plot = scVioBox(dataSource$sc1conf, dataSource$sc1meta, input$scVioBoxPlotinp1, input$scVioBoxPlotinp1a, input$scVioBoxPlotinp1b, input$scVioBoxPlotinp1c, input$scVioBoxPlotinp2,
+                        dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene, input$scVioBoxPlottyp, input$scVioBoxPlotpts,
+                        input$scVioBoxPlotsiz, input$scVioBoxPlotfsz) )
       })
 
 
     ### Plots for tab c2
-    output$sc1c2oup <- renderPlot({
-      scProp(dataSource$sc1conf, dataSource$sc1meta, input$sc1c2inp1, input$sc1c2inp2,
-             input$sc1c2typ, input$sc1c2flp, input$sc1c2fsz)
+    output$scProportionoup <- renderPlot({
+      scProp(dataSource$sc1conf, dataSource$sc1meta, input$scProportioninp1, input$scProportioninp2,
+             input$scProportiontyp, input$scProportionflp, input$scProportionfsz)
     })
-    output$sc1c2oup.ui <- renderUI({
-      plotOutput("sc1c2oup", height = pList2[input$sc1c2psz])
+    output$scProportionoup.ui <- renderUI({
+      plotOutput("scProportionoup", height = pList2[input$scProportionpsz])
     })
-    output$sc1c2oup.pdf <- downloadHandler(
-      filename = function() { paste0(input$availableDatasets, "_", input$sc1c2typ,"_",input$sc1c2inp1,"_",
-                                     input$sc1c2inp2,".pdf") },
+    output$scProportionoup.pdf <- downloadHandler(
+      filename = function() { paste0(input$availableDatasets, "_", input$scProportiontyp,"_",input$scProportioninp1,"_",
+                                     input$scProportioninp2,".pdf") },
       content = function(file) { ggsave(
-        file, device = "pdf", height = input$sc1c2oup.h, width = input$sc1c2oup.w, useDingbats = FALSE,
-        plot = scProp(dataSource$sc1conf, dataSource$sc1meta, input$sc1c2inp1, input$sc1c2inp2,
-                      input$sc1c2typ, input$sc1c2flp, input$sc1c2fsz) )
+        file, device = "pdf", height = input$scProportionoup.h, width = input$scProportionoup.w, useDingbats = FALSE,
+        plot = scProp(dataSource$sc1conf, dataSource$sc1meta, input$scProportioninp1, input$scProportioninp2,
+                      input$scProportiontyp, input$scProportionflp, input$scProportionfsz) )
       })
-    output$sc1c2oup.png <- downloadHandler(
-      filename = function() { paste0(input$availableDatasets, "_", input$sc1c2typ,"_",input$sc1c2inp1,"_",
-                                     input$sc1c2inp2,".png") },
+    output$scProportionoup.png <- downloadHandler(
+      filename = function() { paste0(input$availableDatasets, "_", input$scProportiontyp,"_",input$scProportioninp1,"_",
+                                     input$scProportioninp2,".png") },
       content = function(file) { ggsave(
-        file, device = "png", height = input$sc1c2oup.h, width = input$sc1c2oup.w,
-        plot = scProp(dataSource$sc1conf, dataSource$sc1meta, input$sc1c2inp1, input$sc1c2inp2,
-                      input$sc1c2typ, input$sc1c2flp, input$sc1c2fsz) )
+        file, device = "png", height = input$scProportionoup.h, width = input$scProportionoup.w,
+        plot = scProp(dataSource$sc1conf, dataSource$sc1meta, input$scProportioninp1, input$scProportioninp2,
+                      input$scProportiontyp, input$scProportionflp, input$scProportionfsz) )
       })
-    output$sc1c2.dt <- renderDataTable({
-      ggData = scProp(dataSource$sc1conf, dataSource$sc1meta, input$sc1c2inp1, input$sc1c2inp2,
-                      input$sc1c2typ, input$sc1c2flp, input$sc1c2fsz)
+    output$scProportion.dt <- renderDataTable({
+      ggData = scProp(dataSource$sc1conf, dataSource$sc1meta, input$scProportioninp1, input$scProportioninp2,
+                      input$scProportiontyp, input$scProportionflp, input$scProportionfsz)
       datatable(ggData$data, rownames = FALSE, extensions = "Buttons",
                 options = list(pageLength = -1, dom = "tB", buttons = c("copy", "csv", "excel")))
     })
 
 
     ### Plots for tab d1
-    output$sc1d1grp1b.ui <- renderUI({
-      if(input$sc1d1grp1a!="N/A"){
-        sub = strsplit(dataSource$sc1conf[UI == input$sc1d1grp1a]$fID, "\\|")[[1]]
-        checkboxGroupInput("sc1d1grp1b", "Select which cells to show", inline = TRUE,
+    output$scBubbleHeatmapgrp1b.ui <- renderUI({
+      if(input$scBubbleHeatmapgrp1a!="N/A"){
+        sub = strsplit(dataSource$sc1conf[UI == input$scBubbleHeatmapgrp1a]$fID, "\\|")[[1]]
+        checkboxGroupInput("scBubbleHeatmapgrp1b", "Select which cells to show", inline = TRUE,
                            choices = sub)
       }else{
         sub = NULL
       }
     })
-    output$sc1d1oupTxt <- renderUI({
-      geneList = scGeneList(input$sc1d1inp, dataSource$sc1gene)
+    output$scBubbleHeatmapoupTxt <- renderUI({
+      geneList = scGeneList(input$scBubbleHeatmapinp, dataSource$sc1gene)
       if(nrow(geneList) > 50){
         HTML("More than 50 input genes! Please reduce the gene list!")
       } else {
@@ -736,36 +736,36 @@ server <- function(input, output, session) {
         HTML(oup)
       }
     })
-    output$sc1d1oup <- renderPlot({
-      scBubbHeat(dataSource$sc1conf, dataSource$sc1meta, input$sc1d1inp, input$sc1d1grp,
-                 input$sc1d1grp1a, input$sc1d1grp1b, input$sc1d1grp1c, input$sc1d1plt,
+    output$scBubbleHeatmapoup <- renderPlot({
+      scBubbHeat(dataSource$sc1conf, dataSource$sc1meta, input$scBubbleHeatmapinp, input$scBubbleHeatmapgrp,
+                 input$scBubbleHeatmapgrp1a, input$scBubbleHeatmapgrp1b, input$scBubbleHeatmapgrp1c, input$scBubbleHeatmapplt,
                  dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
-                 input$sc1d1scl, input$sc1d1row, input$sc1d1col,
-                 input$sc1d1cols, input$sc1d1fsz, legendTitle=dataSource$terms['expression'])
+                 input$scBubbleHeatmapscl, input$scBubbleHeatmaprow, input$scBubbleHeatmapcol,
+                 input$scBubbleHeatmapcols, input$scBubbleHeatmapfsz, legendTitle=dataSource$terms['expression'])
     })
-    output$sc1d1oup.ui <- renderUI({
-      plotOutput("sc1d1oup", height = pList3[input$sc1d1psz])
+    output$scBubbleHeatmapoup.ui <- renderUI({
+      plotOutput("scBubbleHeatmapoup", height = pList3[input$scBubbleHeatmappsz])
     })
-    output$sc1d1oup.pdf <- downloadHandler(
-      filename = function() { paste0(input$availableDatasets, "_",input$sc1d1plt,"_",input$sc1d1grp,".pdf") },
+    output$scBubbleHeatmapoup.pdf <- downloadHandler(
+      filename = function() { paste0(input$availableDatasets, "_",input$scBubbleHeatmapplt,"_",input$scBubbleHeatmapgrp,".pdf") },
       content = function(file) { ggsave(
-        file, device = "pdf", height = input$sc1d1oup.h, width = input$sc1d1oup.w,
-        plot = scBubbHeat(dataSource$sc1conf, dataSource$sc1meta, input$sc1d1inp, input$sc1d1grp,
-                          input$sc1d1grp1a, input$sc1d1grp1b, input$sc1d1grp1c, input$sc1d1plt,
+        file, device = "pdf", height = input$scBubbleHeatmapoup.h, width = input$scBubbleHeatmapoup.w,
+        plot = scBubbHeat(dataSource$sc1conf, dataSource$sc1meta, input$scBubbleHeatmapinp, input$scBubbleHeatmapgrp,
+                          input$scBubbleHeatmapgrp1a, input$scBubbleHeatmapgrp1b, input$scBubbleHeatmapgrp1c, input$scBubbleHeatmapplt,
                           dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
-                          input$sc1d1scl, input$sc1d1row, input$sc1d1col,
-                          input$sc1d1cols, input$sc1d1fsz, save = TRUE,
+                          input$scBubbleHeatmapscl, input$scBubbleHeatmaprow, input$scBubbleHeatmapcol,
+                          input$scBubbleHeatmapcols, input$scBubbleHeatmapfsz, save = TRUE,
                           legendTitle=dataSource$terms['expression']) )
       })
-    output$sc1d1oup.png <- downloadHandler(
-      filename = function() { paste0(input$availableDatasets, "_",input$sc1d1plt,"_",input$sc1d1grp,".png") },
+    output$scBubbleHeatmapoup.png <- downloadHandler(
+      filename = function() { paste0(input$availableDatasets, "_",input$scBubbleHeatmapplt,"_",input$scBubbleHeatmapgrp,".png") },
       content = function(file) { ggsave(
-        file, device = "png", height = input$sc1d1oup.h, width = input$sc1d1oup.w,
-        plot = scBubbHeat(dataSource$sc1conf, dataSource$sc1meta, input$sc1d1inp, input$sc1d1grp,
-                          input$sc1d1grp1a, input$sc1d1grp1b, input$sc1d1grp1c, input$sc1d1plt,
+        file, device = "png", height = input$scBubbleHeatmapoup.h, width = input$scBubbleHeatmapoup.w,
+        plot = scBubbHeat(dataSource$sc1conf, dataSource$sc1meta, input$scBubbleHeatmapinp, input$scBubbleHeatmapgrp,
+                          input$scBubbleHeatmapgrp1a, input$scBubbleHeatmapgrp1b, input$scBubbleHeatmapgrp1c, input$scBubbleHeatmapplt,
                           dataSource$dataset, "sc1gexpr.h5", dataSource$sc1gene,
-                          input$sc1d1scl, input$sc1d1row, input$sc1d1col,
-                          input$sc1d1cols, input$sc1d1fsz, save = TRUE,
+                          input$scBubbleHeatmapscl, input$scBubbleHeatmaprow, input$scBubbleHeatmapcol,
+                          input$scBubbleHeatmapcols, input$scBubbleHeatmapfsz, save = TRUE,
                           legendTitle=dataSource$terms['expression']) )
       })
   }

@@ -1,6 +1,7 @@
 library(magrittr)
 library(shinyhelper)
 sortLevels <- function(lev, controls=c("control", "wildtype", "wt", "cont", "contr", "vehicle", "sham")){
+  if(length(lev)<2) return(lev)
   l0 <- lev[tolower(lev) %in% controls]
   l1 <- lev[!tolower(lev) %in% controls]
   ## find the same part of the levels

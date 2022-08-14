@@ -12,7 +12,7 @@ library(hdf5r)
 library(ggdendro)
 library(gridExtra)
 library(ggridges)
-VERSION = "2.0.12"
+VERSION = "2.0.13"
 if(names(dev.cur())!= "null device") dev.off()
 pdf(NULL)
 
@@ -309,6 +309,9 @@ server <- function(input, output, session) {
     updateSelectInput(session,"scProportioninp1", "Cell information to plot (X-axis):",
                       choices = dataSource$sc1conf[grp == TRUE]$UI,
                       selected = dataSource$sc1def$grp2)
+    updateSelectInput(session,"scProportioninp1a", "Cell information to subset by:",
+                      choices = c("N/A", dataSource$sc1conf[grp == TRUE]$UI),
+                      selected = "N/A")
     updateSelectInput(session,"scProportioninp2", "Cell information to group / colour by:",
                       choices = dataSource$sc1conf[grp == TRUE]$UI,
                       selected = dataSource$sc1def$grp1)
@@ -682,8 +685,17 @@ server <- function(input, output, session) {
 
     ### Plots for tab c2
     output$scProportionoup <- renderPlot({
-      scProp(dataSource$sc1conf, dataSource$sc1meta, input$scProportioninp1, input$scProportioninp2,
+      scProp(dataSource$sc1conf, dataSource$sc1meta, input$scProportioninp1, input$scProportioninp1a, input$scProportioninp1b, input$scProportioninp2,
              input$scProportiontyp, input$scProportionflp, input$scProportionfsz)
+    })
+    output$scProportioninp1b.ui <- renderUI({
+      if(input$scProportioninp1a!="N/A"){
+        sub = strsplit(dataSource$sc1conf[UI == input$scProportioninp1a]$fID, "\\|")[[1]]
+        checkboxGroupInput("scProportioninp1b", "Select which cells to show", inline = TRUE,
+                           choices = sub)
+      }else{
+        sub = NULL
+      }
     })
     output$scProportionoup.ui <- renderUI({
       plotOutput("scProportionoup", height = pList2[input$scProportionpsz])
@@ -693,7 +705,7 @@ server <- function(input, output, session) {
                                      input$scProportioninp2,".pdf") },
       content = function(file) { ggsave(
         file, device = "pdf", height = input$scProportionoup.h, width = input$scProportionoup.w, useDingbats = FALSE,
-        plot = scProp(dataSource$sc1conf, dataSource$sc1meta, input$scProportioninp1, input$scProportioninp2,
+        plot = scProp(dataSource$sc1conf, dataSource$sc1meta, input$scProportioninp1, input$scProportioninp1a, input$scProportioninp1b, input$scProportioninp2,
                       input$scProportiontyp, input$scProportionflp, input$scProportionfsz) )
       })
     output$scProportionoup.png <- downloadHandler(
@@ -701,11 +713,11 @@ server <- function(input, output, session) {
                                      input$scProportioninp2,".png") },
       content = function(file) { ggsave(
         file, device = "png", height = input$scProportionoup.h, width = input$scProportionoup.w,
-        plot = scProp(dataSource$sc1conf, dataSource$sc1meta, input$scProportioninp1, input$scProportioninp2,
+        plot = scProp(dataSource$sc1conf, dataSource$sc1meta, input$scProportioninp1, input$scProportioninp1a, input$scProportioninp1b, input$scProportioninp2,
                       input$scProportiontyp, input$scProportionflp, input$scProportionfsz) )
       })
     output$scProportion.dt <- renderDataTable({
-      ggData = scProp(dataSource$sc1conf, dataSource$sc1meta, input$scProportioninp1, input$scProportioninp2,
+      ggData = scProp(dataSource$sc1conf, dataSource$sc1meta, input$scProportioninp1, input$scProportioninp1a, input$scProportioninp1b, input$scProportioninp2,
                       input$scProportiontyp, input$scProportionflp, input$scProportionfsz)
       datatable(ggData$data, rownames = FALSE, extensions = "Buttons",
                 options = list(pageLength = -1, dom = "tB", buttons = c("copy", "csv", "excel")))

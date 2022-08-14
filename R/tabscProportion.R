@@ -15,6 +15,13 @@ tabscProportion <- function(){
                title = "Cell information to plot cells by",
                content = c("Select categorical cell information to plot cells by",
                            "- Plotted as the X-axis of the proportion plot")),
+      selectInput("scProportioninp1a", "Cell information to subset:",
+                  choices = NULL) %>%
+        shinyhelper::helper(type = "inline", size = "m", fade = TRUE,
+                            title = "Cell information to subset by:",
+                            content = c("Select categorical cell information to sebset cells by",
+                                        "- cells are shown in different subsets")),
+      uiOutput("scProportioninp1b.ui"),
       selectInput("scProportioninp2", "Cell information to group / colour by:",
                   choices = NULL) %>%
         shinyhelper::helper(type = "inline", size = "m", fade = TRUE,

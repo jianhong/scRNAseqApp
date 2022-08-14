@@ -1,9 +1,16 @@
 # Plot proportion plot
-scProp <- function(inpConf, inpMeta, inp1, inp2,
+scProp <- function(inpConf, inpMeta, inp1, inp1a, inp1b, inp2,
                    inptyp, inpflp, inpfsz){
   # Prepare ggData
-  ggData = inpMeta[, c(inpConf[UI == inp1]$ID, inpConf[UI == inp2]$ID),
-                   with = FALSE]
+  if(inp1a!="N/A" && length(inp1b)){
+    colN <- c(inpConf[UI == inp1]$ID, inpConf[UI == inp2]$ID, inpConf[UI == inp1a]$ID)
+  }else{
+    colN <- c(inpConf[UI == inp1]$ID, inpConf[UI == inp2]$ID)
+  }
+  ggData = inpMeta[, colN, with = FALSE]
+  if(inp1a!="N/A" && length(inp1b)){
+    ggData <- ggData[ggData[[inpConf[UI == inp1a]$ID]] %in% inp1b, c(1, 2), drop=FALSE]
+  }
   colnames(ggData) = c("X", "grp")
   ggData = ggData[, .(nCells = .N), by = c("X", "grp")]
   ggData = ggData[, {tot = sum(nCells)

@@ -8,7 +8,7 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp
   geneList = geneList[present == TRUE]
   shiny::validate(need(nrow(geneList) <= 500, "More than 500 genes to plot! Please reduce the gene list!"))
   shiny::validate(need(nrow(geneList) > 1, "Please input at least 2 genes to plot!"))
-  axis_fontsize <- min(c(500/nrow(geneList), 12), na.rm=TRUE)
+  axis_fontsize <- round(min(c(500/nrow(geneList), 12), na.rm=TRUE), digits = 1)
   bulb_pointsize <- min(c(round(400/nrow(geneList)), 8), na.rm=TRUE)
 
   # Prepare ggData
@@ -29,6 +29,8 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp
   }
   # Aggregate
   ggData$val = expm1(ggData$val)
+  ggData$val[is.infinite(ggData$val)] <-
+    max(ggData$val[!is.infinite(ggData$val)], na.rm = TRUE)
   ggData = ggData[, .(val = mean(val[val>=inpGrp1c]), prop = sum(val>0) / length(sampleID)),
                   by = c("geneName", "grpBy")]
   ggData$val = log1p(ggData$val)
@@ -95,7 +97,7 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp
                             limits = c(0, 1), breaks = c(0.00,0.25,0.50,0.75,1.00)) +
       scale_color_gradientn(legendTitle, limits = colRange, colours = cList[[inpcols]]) +
       guides(color = guide_colorbar(barwidth = 15)) +
-      theme(axis.title = element_blank(), axis.text=element_text(size=axis_fontsize), legend.box = "vertical")
+      theme(axis.title = element_blank(), axis.text.y=element_text(size=axis_fontsize), legend.box = "vertical")
   } else { # Heatmap
     ggOut = ggplot(ggData, aes(grpBy, geneName, fill = val)) +
       geom_tile() +
@@ -104,7 +106,7 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp
       scale_y_discrete(expand = c(0, 0.5)) +
       scale_fill_gradientn(legendTitle, limits = colRange, colours = cList[[inpcols]]) +
       guides(fill = guide_colorbar(barwidth = 15)) +
-      theme(axis.title = element_blank(), axis.text=element_text(size=axis_fontsize))
+      theme(axis.title = element_blank(), axis.text.y=element_text(size=axis_fontsize))
   }
 
   # Final tidy

@@ -2,7 +2,9 @@
 scDRgene <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
                      dataset, inpH5, inpGene,
                      inpsiz, inpcol, inpord, inpfsz, inpasp, inptxt,
-                     inpPlt="Dotplot", inpXlim, inpColRange=0){
+                     inpPlt="Dotplot", inpXlim, inpColRange=0,
+                     inpsub3, inpsub3filter,
+                     inpsub4, inpsub4filter){
   if(inp1[1]==""){
     return(ggplot())
   }
@@ -11,18 +13,48 @@ scDRgene <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
                        inpConf[UI == inpsub1]$ID),
                    with = FALSE]
   colnames(ggData) = c("X", "Y", "sub")
+  if(!missing(inpsub3) && !missing(inpsub3filter)){
+    ggData <- cbind(ggData, sub3=inpMeta[, inpConf[UI == inpsub3]$ID, with = FALSE])
+    colnames(ggData)[ncol(ggData)] <- "sub3"
+  }
+  if(!missing(inpsub4) && !missing(inpsub4filter)){
+    if(inpsub4 %in% inpConf$UI){
+      ggData <- cbind(ggData, sub4=inpMeta[, inpConf[UI == inpsub4]$ID, with = FALSE])
+      colnames(ggData)[ncol(ggData)] <- "sub4"
+    }
+  }
   rat = (max(ggData$X) - min(ggData$X)) / (max(ggData$Y) - min(ggData$Y))
 
   h5file <- H5File$new(file.path(datafolder, dataset, inpH5), mode = "r")
   h5data <- h5file[["grp"]][["data"]]
   ggData$val = h5data$read(args = list(inpGene[inp1], quote(expr=)))
   ggData[val < 0]$val = 0
+  if(!missing(inpsub4) && !missing(inpsub4filter)){
+    if(inpsub4 %in% names(inpGene)){
+      ggData$sub4 = h5data$read(args = list(inpGene[inpsub4], quote(expr=)))
+      ggData[sub4 < 0]$sub4 = 0
+    }
+  }
   h5file$close_all()
   bgCells = FALSE
-  if(length(inpsub2) != 0 & length(inpsub2) != nlevels(ggData$sub)){
+  keep <- rep(TRUE, nrow(ggData))
+  if(length(inpsub2) != 0 && length(inpsub2) != nlevels(ggData$sub)){
     bgCells = TRUE
-    ggData2 = ggData[!sub %in% inpsub2]
-    ggData = ggData[sub %in% inpsub2]
+    keep <- ggData$sub %in% inpsub2
+  }
+  if(!missing(inpsub3) && !missing(inpsub3filter)){
+    if(length(inpsub3filter) !=0 && length(inpsub3filter) != nlevels(ggData$sub3)){
+      bgCells = TRUE
+      keep <- keep & ggData$sub3 %in% inpsub3filter
+    }
+  }
+  if(!missing(inpsub4) && !missing(inpsub4filter)){
+    bgCells = TRUE
+    keep <- keep & ggData$sub4 >= inpsub4filter
+  }
+  if(bgCells){
+    ggData2 <- ggData[!keep]
+    ggData <- ggData[keep]
   }
   if(inpord == "Max-1st"){
     ggData = ggData[order(val)]

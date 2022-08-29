@@ -32,6 +32,7 @@ sortLevels <- function(lev, controls=c("control", "wildtype", "wt", "cont", "con
 source("R/tabcellInfoGeneExpr.R")
 source("R/tabcellInfoCellInfo.R")
 source("R/tabgeneExprGeneExpr.R")
+source("R/tabsubsetGeneExpr.R")
 source("R/tabscCoExpr.R")
 source("R/tabscVioBoxPlot.R")
 source("R/tabscProportion.R")

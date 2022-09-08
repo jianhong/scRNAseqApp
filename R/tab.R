@@ -29,13 +29,6 @@ sortLevels <- function(lev, controls=c("control", "wildtype", "wt", "cont", "con
   }
   c(l0, l1)
 }
-source("R/tabcellInfoGeneExpr.R")
-source("R/tabcellInfoCellInfo.R")
-source("R/tabgeneExprGeneExpr.R")
-source("R/tabsubsetGeneExpr.R")
-source("R/tabscCoExpr.R")
-source("R/tabscVioBoxPlot.R")
-source("R/tabscProportion.R")
-source("R/tabscBubbleHeatmap.R")
+
 source("R/tabChangeDataset.R")
 source("R/tabLogin.R")

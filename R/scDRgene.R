@@ -49,8 +49,10 @@ scDRgene <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
     }
   }
   if(!missing(inpsub4) && !missing(inpsub4filter)){
-    bgCells = TRUE
-    keep <- keep & ggData$sub4 >= inpsub4filter
+    if(length(inpsub4filter) !=0 && length(inpsub4filter) != nlevels(ggData$sub4)){
+      bgCells = TRUE
+      keep <- keep & ggData$sub4 >= inpsub4filter
+    }
   }
   if(bgCells){
     ggData2 <- ggData[!keep]

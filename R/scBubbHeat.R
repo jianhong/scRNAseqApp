@@ -1,7 +1,7 @@
 # Plot gene expression bubbleplot / heatmap
 scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp1c, inpPlt,
                        dataset, inpH5, inpGene, inpScl, inpRow, inpCol,
-                       inpcols, inpfsz, save = FALSE, legendTitle="expression"){
+                       inpcols, inpflp, inpfsz, save = FALSE, legendTitle="expression"){
   # Identify genes that are in our dataset
   if(missing(inpGrp1c)) inpGrp1c <- 0
   geneList = scGeneList(inp, inpGene)
@@ -108,37 +108,43 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp
       guides(fill = guide_colorbar(barwidth = 15)) +
       theme(axis.title = element_blank(), axis.text.y=element_text(size=axis_fontsize))
   }
-
   # Final tidy
   ggLeg = g_legend(ggOut)
   ggOut = ggOut + theme(legend.position = "none")
-  if(!save){
-    if(inpRow & inpCol){ggOut =
-      grid.arrange(ggOut, ggLeg, ggCol, ggRow, widths = c(7,1), heights = c(1,7,2),
-                   layout_matrix = rbind(c(3,NA),c(1,4),c(2,NA)))
-    } else if(inpRow){ggOut =
-      grid.arrange(ggOut, ggLeg, ggRow, widths = c(7,1), heights = c(7,2),
-                   layout_matrix = rbind(c(1,3),c(2,NA)))
-    } else if(inpCol){ggOut =
-      grid.arrange(ggOut, ggLeg, ggCol, heights = c(1,7,2),
-                   layout_matrix = rbind(c(3),c(1),c(2)))
-    } else {ggOut =
+  if(inpflp){
+    ggOut = ggOut + coord_flip()
+    ggOut =
       grid.arrange(ggOut, ggLeg, heights = c(7,2),
                    layout_matrix = rbind(c(1),c(2)))
-    }
-  } else {
-    if(inpRow & inpCol){ggOut =
-      arrangeGrob(ggOut, ggLeg, ggCol, ggRow, widths = c(7,1), heights = c(1,7,2),
-                  layout_matrix = rbind(c(3,NA),c(1,4),c(2,NA)))
-    } else if(inpRow){ggOut =
-      arrangeGrob(ggOut, ggLeg, ggRow, widths = c(7,1), heights = c(7,2),
-                  layout_matrix = rbind(c(1,3),c(2,NA)))
-    } else if(inpCol){ggOut =
-      arrangeGrob(ggOut, ggLeg, ggCol, heights = c(1,7,2),
-                  layout_matrix = rbind(c(3),c(1),c(2)))
-    } else {ggOut =
-      arrangeGrob(ggOut, ggLeg, heights = c(7,2),
-                  layout_matrix = rbind(c(1),c(2)))
+  }else{
+    if(!save){
+      if(inpRow & inpCol){ggOut =
+        grid.arrange(ggOut, ggLeg, ggCol, ggRow, widths = c(7,1), heights = c(1,7,2),
+                     layout_matrix = rbind(c(3,NA),c(1,4),c(2,NA)))
+      } else if(inpRow){ggOut =
+        grid.arrange(ggOut, ggLeg, ggRow, widths = c(7,1), heights = c(7,2),
+                     layout_matrix = rbind(c(1,3),c(2,NA)))
+      } else if(inpCol){ggOut =
+        grid.arrange(ggOut, ggLeg, ggCol, heights = c(1,7,2),
+                     layout_matrix = rbind(c(3),c(1),c(2)))
+      } else {ggOut =
+        grid.arrange(ggOut, ggLeg, heights = c(7,2),
+                     layout_matrix = rbind(c(1),c(2)))
+      }
+    } else {
+      if(inpRow & inpCol){ggOut =
+        arrangeGrob(ggOut, ggLeg, ggCol, ggRow, widths = c(7,1), heights = c(1,7,2),
+                    layout_matrix = rbind(c(3,NA),c(1,4),c(2,NA)))
+      } else if(inpRow){ggOut =
+        arrangeGrob(ggOut, ggLeg, ggRow, widths = c(7,1), heights = c(7,2),
+                    layout_matrix = rbind(c(1,3),c(2,NA)))
+      } else if(inpCol){ggOut =
+        arrangeGrob(ggOut, ggLeg, ggCol, heights = c(1,7,2),
+                    layout_matrix = rbind(c(3),c(1),c(2)))
+      } else {ggOut =
+        arrangeGrob(ggOut, ggLeg, heights = c(7,2),
+                    layout_matrix = rbind(c(1),c(2)))
+      }
     }
   }
   return(ggOut)

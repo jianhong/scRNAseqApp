@@ -31,6 +31,8 @@ plotBubbleHeatmapUI <- function(id){
         checkboxInput(NS(id, "plotscl"), "Scale gene expression", value = TRUE),
         checkboxInput(NS(id, "plotrow"), "Cluster rows (genes)", value = TRUE),
         checkboxInput(NS(id, "plotcol"), "Cluster columns (samples)", value = FALSE),
+        checkboxInput(NS(id, "plotflp"),
+                      "Flip X/Y", value = FALSE),
         br(),
         boxPlotControlUI(id, withPoints=FALSE, withColor=TRUE)
       ),
@@ -105,6 +107,7 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt, currentdataset){
         input$plotrow,
         input$plotcol,
         input$plotcols,
+        input$plotflp,
         input$plotfsz,
         legendTitle=dataSource()$terms['expression'])
     })

@@ -1,11 +1,6 @@
 datafolder <- "data"
-loadData <- function(dataSource){
-  dataSource$sc1conf = readRDS(file.path(datafolder, dataSource$dataset, "sc1conf.rds"))
-  dataSource$sc1def  = readRDS(file.path(datafolder, dataSource$dataset, "sc1def.rds"))
-  dataSource$sc1gene = readRDS(file.path(datafolder, dataSource$dataset, "sc1gene.rds"))
-  dataSource$sc1meta = readRDS(file.path(datafolder, dataSource$dataset, "sc1meta.rds"))
-  return(dataSource)
-}
+defaultDataset <- "GSM5023610_glial_app"
+
 ## datasets is a named vector with data folder names
 ## refs_xxxx is names vector of reference informations.
 #datasets <- c("GSE150871_spinal_cord_YiLi_etal_2020"="GSE150871_microglia")
@@ -16,7 +11,20 @@ loadData <- function(dataSource){
 #refs_pmids <- c("GSE150871"="33029008")
 
 ## the datalist file is described in data.R.
-source(file.path(datafolder, "datalist.R"))
-if(file.exists(file.path(datafolder, "token.R"))){
-  source(file.path(datafolder, "token.R"))
+# source(file.path(datafolder, "datalist.R"))
+# if(file.exists(file.path(datafolder, "token.R"))){
+#   source(file.path(datafolder, "token.R"))
+# }
+#' @include datalist.R
+#' @include token.R
+if(!defaultDataset %in% datasets){
+  defaultDataset <- datasets[1]
+}
+
+loadData <- function(dataSource){
+  dataSource$sc1conf = readRDS(file.path(datafolder, dataSource$dataset, "sc1conf.rds"))
+  dataSource$sc1def  = readRDS(file.path(datafolder, dataSource$dataset, "sc1def.rds"))
+  dataSource$sc1gene = readRDS(file.path(datafolder, dataSource$dataset, "sc1gene.rds"))
+  dataSource$sc1meta = readRDS(file.path(datafolder, dataSource$dataset, "sc1meta.rds"))
+  return(dataSource)
 }

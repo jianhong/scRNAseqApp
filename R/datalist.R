@@ -1,4 +1,5 @@
-datasets <- c("GSM5023610_5dpi_snSeq_glial_cells_KlattShaw_Saraswathy_Zhou_etal_2021"="GSM5023610_glial_app")
+datasets <- c("GSM5023610_5dpi_snSeq_glial_cells_KlattShaw_Saraswathy_Zhou_etal_2021"="GSM5023610_glial_app",
+              "Leslie_scRNAseq_brain"="Leslie_scRNAseq")
 
 refs_authors <- c(
   "GSM5023610"="Shaw, Dana Klatt and Saraswathy, Vishnu Muraleedharan and Zhou, Lili and McAdow, Anthony R and Burris, Brooke and Butka, Emily and Morris, Samantha A and Dietmann, Sabine and Mokalled, Mayssa H "

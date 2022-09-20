@@ -112,7 +112,6 @@ scRNAseqApp <- function(...){
     observe_helpers()
     optCrt="{ option_create: function(data,escape) {return('<div class=\"create\"><strong>' + '</strong></div>');} }"
     dataSource <- reactiveValues(dataset=defaultDataset,
-                                 geoAcc=NULL,
                                  sc1conf=NULL,
                                  sc1def=NULL,
                                  sc1gene=NULL,
@@ -165,7 +164,6 @@ scRNAseqApp <- function(...){
     ## change dataset
     observeEvent(input$availableDatasets,{
       dataSource$dataset <- input$availableDatasets
-      dataSource$geoAcc <- sub("^(.*?)_.*$", "\\1", input$availableDatasets)
       if(checkLockedDataset(dataSource$dataset)){
         if(dataSource$Username!="" && dataSource$Password!=""){
           if(checkUserNameAndPassword(dataSource$Username, dataSource$Password, dataSource$dataset)){
@@ -214,21 +212,21 @@ scRNAseqApp <- function(...){
     })
     ## refresh data when change dataset
     refreshData <- function(input, output, session){
-      hasRef <- dataSource$geoAcc %in% names(refs_pmids)
+      hasRef <- !is.na(getRef(dataSource$dataset, "title"))
       if(dataSource$dataset %in% names(data_types)){
         dataSource$terms <- terms[[data_types[[dataSource$dataset]]]]
       }
       dataSource <- loadData(dataSource, datafolder)
       output$dataTitle <- renderUI({HTML(names(datasets)[datasets==input$availableDatasets])})
-      output$ref_author <- renderText(ifelse(hasRef, refs_authors[dataSource$geoAcc], ""))
-      output$ref_title <- renderText(ifelse(hasRef, refs_titles[dataSource$geoAcc], ""))
-      output$ref_journal <- renderText(ifelse(hasRef, refs_journals[dataSource$geoAcc], ""))
-      output$ref_year <- renderText(ifelse(hasRef, refs_years[dataSource$geoAcc], ""))
+      output$ref_author <- renderText(ifelse(hasRef, getRef(dataSource$dataset, "authors"), ""))
+      output$ref_title <- renderText(ifelse(hasRef, getRef(dataSource$dataset, "title"), ""))
+      output$ref_journal <- renderText(ifelse(hasRef, getRef(dataSource$dataset, "journals"), ""))
+      output$ref_year <- renderText(ifelse(hasRef, getRef(dataSource$dataset, "years"), ""))
       output$ref_pmid <- renderUI({
         if(hasRef){
-          a(refs_pmids[dataSource$geoAcc],
+          a(getRef(dataSource$dataset, "pmids"),
             href = paste0("https://www.ncbi.nlm.nih.gov/pubmed/",
-                          refs_pmids[dataSource$geoAcc]))
+                          getRef(dataSource$dataset, "pmids")))
         }else{
           br()
         }

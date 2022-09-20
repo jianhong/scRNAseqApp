@@ -1,4 +1,4 @@
-#' @include data.R
+#' @include datalist.R
 my_password <- list()
 pwdfilename <- "passwd"
 for(d in datasets){

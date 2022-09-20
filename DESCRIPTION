@@ -33,13 +33,13 @@ Suggests: rmarkdown, knitr
 URL: https://github.com/jianhong/scRNAseqApp
 BugReports: https://github.com/jianhong/scRNAseqApp/issues
 Collate: 
+    'loadData.R'
     'sortLevels.R'
     'sctheme.R'
     'g_legend.R'
     'define.R'
     'token.R'
     'datalist.R'
-    'data.R'
     'userdata.R'
     'lang.R'
     'app.R'

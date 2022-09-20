@@ -11,5 +11,7 @@
 # library(gridExtra)
 # library(ggridges)
 # library(pkgload)
+usethis::use_package("shiny")
+usethis::use_package("pkgload")
 pkgload::load_all(".")
 scRNAseqApp()

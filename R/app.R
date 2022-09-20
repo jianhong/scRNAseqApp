@@ -28,13 +28,9 @@
 if(names(dev.cur())!= "null device") dev.off()
 pdf(NULL)
 
-# source("R/lang.R")
-# source("R/data.R")
 #' @include lang.R
-#' @include data.R
-
-# source("R/userdata.R")
 #' @include userdata.R
+#' @include datalist.R
 
 #library(sysfonts)
 #font_paths(file.path(getwd(), "inst/extdata/fonts"))
@@ -42,13 +38,11 @@ pdf(NULL)
 #library(showtext)
 #showtext.auto()
 
-# source("R/define.R")
-# source("R/g_legend.R")
-# source("R/sctheme.R")
 #' @include define.R
 #' @include g_legend.R
 #' @include sctheme.R
 #' @include sortLevels.R
+#' @include loadData.R
 
 ### Common plotting functions
 # source("R/scDRcell.R")
@@ -224,7 +218,7 @@ scRNAseqApp <- function(...){
       if(dataSource$dataset %in% names(data_types)){
         dataSource$terms <- terms[[data_types[[dataSource$dataset]]]]
       }
-      dataSource <- loadData(dataSource)
+      dataSource <- loadData(dataSource, datafolder)
       output$dataTitle <- renderUI({HTML(names(datasets)[datasets==input$availableDatasets])})
       output$ref_author <- renderText(ifelse(hasRef, refs_authors[dataSource$geoAcc], ""))
       output$ref_title <- renderText(ifelse(hasRef, refs_titles[dataSource$geoAcc], ""))

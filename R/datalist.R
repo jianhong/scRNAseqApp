@@ -1,6 +1,11 @@
 datafolder <- "data"
 defaultDataset <- "GSM5023610_glial_app"
 datasets <- dir(datafolder)
+token <- dir(datafolder, "token", recursive = TRUE, full.names = TRUE)
+token_n <- lapply(token, readLines)
+token <- rep(basename(dirname(token)), lengths(token_n))
+names(token) <- unlist(token_n)
+token <- as.list(token)
 ## the datalist file is described in data.R.
 # source(file.path(datafolder, "datalist.R"))
 # if(file.exists(file.path(datafolder, "token.R"))){
@@ -24,3 +29,4 @@ data_types <- vapply(appconf, function(.ele) .ele$types,
 getRef <- function(dataset, key){
   appconf[[dataset]][["ref"]][[key]]
 }
+

@@ -1,3 +1,5 @@
+#' @importFrom DT DTOutput
+#' @importFrom magrittr %>%
 coExprUI <- function(id){
   tabPanel(
     htmlOutput(NS(id, 'GeneExpr')),
@@ -26,12 +28,15 @@ coExprUI <- function(id){
       column(
         3,geneExprDotPlotUI(id, 2),
         br(), h4("Cell numbers"),
-        dataTableOutput(NS(id, "coExpr.dt"))
+        DTOutput(NS(id, "coExpr.dt"))
       )
     )
   )
 }
-coExprServer <- function(id, dataSource, optCrt, currentdataset){
+#' @importFrom DT renderDT
+#' @importFrom magrittr %>%
+coExprServer <- function(id, dataSource, optCrt, currentdataset,
+                         datafolder){
   moduleServer(id, function(input, output, session){
     ## title
     output$GeneExpr <-
@@ -106,7 +111,8 @@ coExprServer <- function(id, dataSource, optCrt, currentdataset){
         input$CoExprord1,
         input$GeneExprfsz,
         input$GeneExprasp,
-        input$GeneExprtxt)
+        input$GeneExprtxt,
+        datafolder=datafolder)
     })
     output$GeneExproup1 <- renderPlot({ plot1() })
     output$GeneExproup.ui1 <- renderUI({
@@ -171,7 +177,7 @@ coExprServer <- function(id, dataSource, optCrt, currentdataset){
         input$GeneName1,
         input$GeneName2)
 
-    output$coExpr.dt <- renderDataTable({
+    output$coExpr.dt <- renderDT({
       ggData <- scDRcoexNum(
         dataSource()$sc1conf,
         dataSource()$sc1meta,
@@ -181,7 +187,8 @@ coExprServer <- function(id, dataSource, optCrt, currentdataset){
         input$subsetCellVal,
         dataSource()$dataset,
         "sc1gexpr.h5",
-        dataSource()$sc1gene)
+        dataSource()$sc1gene,
+        datafolder=datafolder)
       datatable(ggData, rownames = FALSE, extensions = "Buttons",
                 options = list(pageLength = -1,
                                dom = "tB",

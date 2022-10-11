@@ -1,6 +1,8 @@
 outputFileName <- function(ext, ...){
   paste0(paste(..., sep="_"),".", ext)
 }
+#' @importFrom ggplot2 ggsave
+#' @importFrom shiny downloadHandler
 plotsDownloadHandler <- function(device, width, height, plot, ...){
   downloadHandler(
     filename = function() {
@@ -26,3 +28,28 @@ plotsDownloadHandler <- function(device, width, height, plot, ...){
     }
   )
 }
+#' @importFrom grDevices dev.off pdf
+heatmapDownloadHandler <- function(device, width, height, plot, ...){
+  downloadHandler(
+    filename = function() {
+      outputFileName(device, ...)
+    },
+    content = function(file) {
+      if(device=="pdf"){
+        pdf(
+          file,
+          height = height,
+          width = width,
+          useDingbats = FALSE)
+      }else{
+        get(device)(
+          file,
+          height = height,
+          width = width)
+      }
+      print(plot)
+      dev.off()
+    }
+  )
+}
+

@@ -38,7 +38,7 @@ graphicsControlUI <- function(id){
 NS0 <- function(namespace, id, postfix){
   NS(namespace, id=paste0(id, postfix))
 }
-geneExprPlotControlUI <- function(id, postfix=1){
+geneExprPlotControlUI <- function(id, postfix=1, colorNames=names(cList)){
   tagList(
     actionButton(NS0(id, "GeneExprtog", postfix), "Toggle plot controls"),
     conditionalPanel(
@@ -50,9 +50,8 @@ geneExprPlotControlUI <- function(id, postfix=1){
         condition = paste0("input.GeneExprtype", postfix, " == 'Dotplot'"),
         ns=NS(id),
         radioButtons(NS0(id, "GeneExprcol", postfix), "Colour:",
-                     choices = c("White-Red", "Blue-Yellow-Red",
-                                 "Yellow-Green-Purple"),
-                     selected = "White-Red"),
+                     choices = colorNames,
+                     selected = colorNames[1]),
         radioButtons(NS0(id, "GeneExprord", postfix), "Plot order:",
                      choices = c("Max-1st", "Min-1st",
                                  "Original", "Random"),
@@ -80,15 +79,14 @@ geneExprPlotControlUI <- function(id, postfix=1){
     )
   )
 }
-cellInfoPlotControlUI <- function(id, postfix=1){
+cellInfoPlotControlUI <- function(id, postfix=1, colorNames=names(cList)){
   tagList(
     actionButton(NS0(id, "CellInfotog", postfix), "Toggle plot controls"),
     conditionalPanel(
       condition = paste0("input.CellInfotog", postfix, " % 2 == 1"), ns=NS(id),
       radioButtons(NS0(id, "CellInfocol", postfix), "Colour (Continuous data):",
-                   choices = c("White-Red", "Blue-Yellow-Red",
-                               "Yellow-Green-Purple"),
-                   selected = "White-Red"),
+                   choices = colorNames,
+                   selected = colorNames[1]),
       radioButtons(NS0(id, "CellInfoord", postfix), "Plot order:",
                    choices = c("Max-1st", "Min-1st",
                                "Original", "Random"),
@@ -115,7 +113,8 @@ geneCoExprPlotControlUI <- function(id, postfix=1){
     )
   )
 }
-boxPlotControlUI <- function(id, withPoints=TRUE, withColor=FALSE){
+boxPlotControlUI <- function(id, withPoints=TRUE, withColor=FALSE,
+                             colorNames=names(cList)){
   tagList(
     actionButton(NS(id, "plottog"), "Toggle graphics controls"),
     conditionalPanel(
@@ -129,9 +128,8 @@ boxPlotControlUI <- function(id, withPoints=TRUE, withColor=FALSE){
       },
       if(withColor){
         radioButtons(NS(id, "plotcols"), "Colour scheme:",
-                     choices = c("White-Red", "Blue-Yellow-Red",
-                                 "Yellow-Green-Purple"),
-                     selected = "Blue-Yellow-Red")
+                     choices = colorNames,
+                     selected = colorNames[2])
       }else{
         span()
       },
@@ -158,6 +156,7 @@ dimensionReductionUI <- function(id){
     )
   )
 }
+#' @importFrom magrittr %>%
 subsetCellByInfoUI <- function(id, mini=FALSE){
   if(mini){
     tagList(
@@ -182,6 +181,7 @@ subsetCellByInfoUI <- function(id, mini=FALSE){
     )
   }
 }
+#' @importFrom magrittr %>%
 subsetCellByFilterUI <- function(id,
                                  label="Cell Info/Gene name to subset:",
                                  title=NULL,
@@ -211,6 +211,7 @@ geneExprDotPlotUI <- function(id, postfix=1){
   )
 }
 
+#' @importFrom magrittr %>%
 cellInfoUI <- function(id, postfix=1){
   tagList(
     selectInput(NS0(id, "CellInfo", postfix), "Cell information:",
@@ -218,6 +219,7 @@ cellInfoUI <- function(id, postfix=1){
       helper1(cat="cellInfo")
   )
 }
+#' @importFrom DT DTOutput
 cellInfoTblUI <- function(id, postfix=1){
   tagList(
     actionButton(NS0(id, "CellInfoTableTog", postfix),
@@ -230,11 +232,12 @@ cellInfoTblUI <- function(id, postfix=1){
                    "Split continuous cell info into:",
                    choices = c("Quartile", "Decile"),
                    selected = "Decile", inline = TRUE),
-      dataTableOutput(NS0(id, "GeneExpr.dt", postfix))
+      DTOutput(NS0(id, "GeneExpr.dt", postfix))
     )
   )
 }
 
+#' @importFrom magrittr %>%
 geneExprUI <- function(id, postfix=1){
   tagList(
     selectInput(NS0(id, "GeneName", postfix),
@@ -243,6 +246,7 @@ geneExprUI <- function(id, postfix=1){
   )
 }
 
+#' @importFrom magrittr %>%
 xaxisCellInfoUI <- function(id){
   tagList(
     selectInput(NS(id, "CellInfoX"), "Cell information (X-axis):",
@@ -251,6 +255,7 @@ xaxisCellInfoUI <- function(id){
   )
 }
 
+#' @importFrom magrittr %>%
 yaxisCellInfoUI <- function(id){
   tagList(
     selectInput(NS(id, "CellInfoY"), "Cell Info / Gene name (Y-axis):",

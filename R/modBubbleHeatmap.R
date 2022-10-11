@@ -33,6 +33,19 @@ plotBubbleHeatmapUI <- function(id){
         checkboxInput(NS(id, "plotcol"), "Cluster columns (samples)", value = FALSE),
         checkboxInput(NS(id, "plotflp"),
                       "Flip X/Y", value = FALSE),
+        conditionalPanel(
+          condition = paste0("input.plottyp == 'Heatmap'"), ns=NS(id),
+          checkboxInput(NS(id, "plotall"), "All cells (time consuming)", value = FALSE)
+          ),
+        actionButton(NS(id, "userbreaks"),
+                     "ColorKey range"),
+        conditionalPanel(
+          condition = paste0("input.userbreaks % 2 ==1"),
+          ns=NS(id),
+          numericInput(NS(id, "colorb1"), "min cutoff", value = -10),
+          numericInput(NS(id, "colorb2"), "max cutoff", value = 10),
+          actionButton(NS(id, "setcolrg"), "Apply colorkey range")
+        ),
         br(),
         boxPlotControlUI(id, withPoints=FALSE, withColor=TRUE)
       ),
@@ -42,8 +55,11 @@ plotBubbleHeatmapUI <- function(id){
     )
   )
 }
-plotBubbleHeatmapServer <- function(id, dataSource, optCrt, currentdataset){
+
+plotBubbleHeatmapServer <- function(id, dataSource, optCrt, currentdataset,
+                                    datafolder){
   moduleServer(id, function(input, output, session){
+    colrg <- reactiveVal(NA)
     ## input column
     updateTextAreaInput(session, "genelist",
                         value = paste0(dataSource()$sc1def$genes,
@@ -59,6 +75,41 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt, currentdataset){
                       choices = c("N/A", dataSource()$sc1conf[grp == TRUE]$UI),
                       selected = "N/A")
 
+    observeEvent(input$userbreaks, {
+      rg <- scBubbHeat(
+        dataSource()$sc1conf,
+        dataSource()$sc1meta,
+        input$genelist,
+        input$CellInfoX,
+        input$subsetCell,
+        input$subsetCellVal,
+        input$filterVal,
+        input$plottyp,
+        dataSource()$dataset,
+        "sc1gexpr.h5",
+        dataSource()$sc1gene,
+        input$plotscl,
+        input$plotrow,
+        input$plotcol,
+        input$plotcols,
+        input$plotflp,
+        input$plotfsz,
+        input$plotall,
+        legendTitle=dataSource()$terms['expression'],
+        datafolder=datafolder,
+        returnColorRange=TRUE)
+      rg <- round(rg, digits = 2)
+      updateNumericInput(session, "colorb1", value = rg[2],
+                         min = floor(rg[1]), max = ceiling(rg[4]),
+                         step = .01)
+      updateNumericInput(session, "colorb2", value = rg[3],
+                         min = ceiling(rg[1]), max=ceiling(rg[4]),
+                         step = .01)
+
+    })
+    observeEvent(input$setcolrg, {
+      colrg(sort(c(input$colorb1, input$colorb2)))
+    })
 
     ## update the ui
     output$subsetCell.ui <- renderUI({
@@ -91,7 +142,7 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt, currentdataset){
     ## plot region
     ### plots
     plot1 <- reactive({
-      scBubbHeat(
+      ht <- scBubbHeat(
         dataSource()$sc1conf,
         dataSource()$sc1meta,
         input$genelist,
@@ -109,7 +160,10 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt, currentdataset){
         input$plotcols,
         input$plotflp,
         input$plotfsz,
-        legendTitle=dataSource()$terms['expression'])
+        input$plotall,
+        colorBreaks=if(input$userbreaks %% 2==0 && !is.na(colrg()[1])) NA else colrg(),
+        legendTitle=dataSource()$terms['expression'],
+        datafolder=datafolder)
     })
     output$GeneExproup1 <- renderPlot({ plot1() })
     output$GeneExproup.ui1 <- renderUI({
@@ -117,7 +171,7 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt, currentdataset){
                  height = pList3[input$plotpsz])
     })
     output$GeneExproup.pdf1 <-
-      plotsDownloadHandler(
+      heatmapDownloadHandler(
         "pdf",
         width=input$GeneExproup.w1,
         height=input$GeneExproup.h1,
@@ -126,7 +180,7 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt, currentdataset){
         input$plottyp,
         input$CellInfoX)
     output$GeneExproup.png1 <-
-      plotsDownloadHandler(
+      heatmapDownloadHandler(
         "png",
         width=input$GeneExproup.w1,
         height=input$GeneExproup.h1,

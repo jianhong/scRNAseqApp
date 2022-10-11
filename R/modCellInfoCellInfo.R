@@ -30,7 +30,8 @@ cellInfoCellInfoUI <- function(id){
     )
   )
 }
-cellInfoCellInfoServer <- function(id, dataSource, optCrt, currentdataset){
+cellInfoCellInfoServer <- function(id, dataSource, optCrt, currentdataset,
+                                   datafolder){
   moduleServer(id, function(input, output, session){
     ## input column 1
     ### Dimension Reduction

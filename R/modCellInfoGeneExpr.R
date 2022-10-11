@@ -32,7 +32,10 @@ cellInfoGeneExprUI <- function(id){
     )
   )
 }
-cellInfoGeneExprServer <- function(id, dataSource, optCrt, currentdataset){
+#' @importFrom DT formatRound renderDT
+#' @importFrom magrittr %>%
+cellInfoGeneExprServer <- function(id, dataSource, optCrt, currentdataset,
+                                   datafolder){
   moduleServer(id, function(input, output, session){
     ## title
     output$GeneExpr <-
@@ -60,13 +63,15 @@ cellInfoGeneExprServer <- function(id, dataSource, optCrt, currentdataset){
 
     output$subsetCell.ui <- renderUI({
       if(input$subsetCell!=""){
-        sub = strsplit(dataSource()$sc1conf[UI == input$subsetCell]$fID,
-                       "\\|")[[1]]
-        checkboxGroupInput(NS(id, "subsetCellVal"),
-                           "Select which cells to show",
-                           inline = TRUE,
-                           choices = sub,
-                           selected = sub)
+        if(length(dataSource()$sc1conf[UI == input$subsetCell]$fID)>0){
+          sub = strsplit(dataSource()$sc1conf[UI == input$subsetCell]$fID,
+                         "\\|")[[1]]
+          checkboxGroupInput(NS(id, "subsetCellVal"),
+                             "Select which cells to show",
+                             inline = TRUE,
+                             choices = sub,
+                             selected = sub)
+        }
       }
     })
 
@@ -128,7 +133,7 @@ cellInfoGeneExprServer <- function(id, dataSource, optCrt, currentdataset){
         input$GeneExprdrY,
         input$CellInfo1)
 
-    output$GeneExpr.dt1 <- renderDataTable({
+    output$GeneExpr.dt1 <- renderDT({
       ggData <- scDRnum(dataSource()$sc1conf,
                         dataSource()$sc1meta,
                         input$CellInfo1,
@@ -138,7 +143,8 @@ cellInfoGeneExprServer <- function(id, dataSource, optCrt, currentdataset){
                         dataSource()$dataset,
                         "sc1gexpr.h5",
                         dataSource()$sc1gene,
-                        input$GeneExprsplt1)
+                        input$GeneExprsplt1,
+                        datafolder=datafolder)
       datatable(ggData, rownames = FALSE, extensions = "Buttons",
                 options = list(pageLength = -1,
                                dom = "tB",
@@ -166,7 +172,8 @@ cellInfoGeneExprServer <- function(id, dataSource, optCrt, currentdataset){
         input$GeneExprtxt,
         input$GeneExprtype2,
         if(input$GeneExprxlimb2 %% 2==0) 0 else input$GeneExprxlim2,
-        inpColRange=if(input$GeneExprrgb2 %% 2==0) 0 else input$GeneExprrg2)
+        inpColRange=if(input$GeneExprrgb2 %% 2==0) 0 else input$GeneExprrg2,
+        datafolder=datafolder)
     })
     output$GeneExproup2 <- renderPlot({ plot2() })
     output$GeneExproup.ui2 <- renderUI({

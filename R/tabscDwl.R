@@ -1,3 +1,4 @@
+#' @importFrom magrittr %>%
 tabDownloader <- function(){
   tabPanel(
     value="DownloadDataset",

@@ -1,84 +1,52 @@
-## BiocManager::install(c("shinyhelper", "DT", "ggplot2", "ggrepel", "Matrix",
-##                        "hdf5r", "ggdendro", "gridExtra", "ggridges"))
+#' scRNAseqApp main function
+#' @param datafolder the folder where saved the dataset for the app
+#' @param defaultDataset default dataset for the app.
+#' @param windowTitle The title that should be displayed by the browser window.
+#' @param ... parameters can be passed to shinyApp except ui and server.
 #' @import shiny
-#' @import shinyhelper
-#' @import data.table
-#' @import Matrix
-#' @import DT
-#' @import magrittr
-#' @import ggplot2
-#' @import ggrepel
-#' @import hdf5r
-#' @import ggdendro
-#' @import gridExtra
-#' @import ggridges
-# library(shiny)
-# library(shinyhelper)
-# library(data.table)
-# library(Matrix)
-# library(DT)
-# library(magrittr)
-# library(ggplot2)
-# library(ggrepel)
-# library(hdf5r)
-# library(ggdendro)
-# library(gridExtra)
-# library(ggridges)
+#' @importFrom utils packageVersion read.delim
+#' @importFrom shinyhelper observe_helpers
+#' @importFrom ggplot2 ggplot aes geom_bar theme_minimal xlab ylab
+#' @export
+#' @examples
+#' if(interactive()){
+#'   app_path=tempdir()
+#'   scInit(app_path=app_path)
+#'   setwd(app_path)
+#'   scRNAseqApp()
+#' }
+scRNAseqApp <- function(datafolder = "data",
+                        defaultDataset = "pbmc_small",
+                        windowTitle = "scRNAseq/scATACseq database",
+                        ...){
+  ## load default parameters
+  loginNavbarTitle <- "Switch User"
+  datasets <- getDataSets(datafolder = datafolder)
+  defaultDataset <- getDefaultDataset(defaultDataset=defaultDataset,
+                                      datafolder = datafolder)
+  appconf <- getAppConf(datafolder = datafolder)
+  datasets <- getDataSets(datafolder = datafolder, appconf = appconf)
+  data_types <- getDataType(appconf = appconf)
 
-if(names(dev.cur())!= "null device") dev.off()
-pdf(NULL)
-
-#' @include lang.R
-#' @include userdata.R
-#' @include datalist.R
-
-#library(sysfonts)
-#font_paths(file.path(getwd(), "inst/extdata/fonts"))
-#font_add(family = "Arial", regular = "Arial.ttf")
-#library(showtext)
-#showtext.auto()
-
-#' @include define.R
-#' @include g_legend.R
-#' @include sctheme.R
-#' @include sortLevels.R
-#' @include loadData.R
-
-### Common plotting functions
-# source("R/scDRcell.R")
-# source("R/scDRnum.R")
-# source("R/scDRgene.R")
-# source("R/scDRcoex.R")
-# source("R/scDRcoexLeg.R")
-# source("R/scDRcoexNum.R")
-# source("R/scVioBox.R")
-# source("R/scProp.R")
-# source("R/scGeneList.R")
-# source("R/scBubbHeat.R")
-
-### load modules
-## source("R/tab.R")
-# source("R/tabUIs.R")
-# source("R/helpers.R")
-# source("R/downloaders.R")
-## source("R/modules.R")
-
-scRNAseqApp <- function(...){
-  ui <- function(req){
+  ui0 <- function(req){
     fluidPage(
       ### HTML formatting of error messages
-      tags$head(tags$style(HTML(".shiny-output-error-validation {color: red; font-weight: bold;}")),
-                tags$style(HTML(".rightAlign{float:right;}")),
-                tags$script(src = "login.js"),
-                list(tags$style(HTML(".navbar-default .navbar-nav { font-weight: bold; font-size: 16px; }")))
+      tags$head(
+        tags$style(HTML(".shiny-output-error-validation {color: red; font-weight: bold;}")),
+        tags$style(HTML(".rightAlign{float:right;}")),
+        tags$style(HTML(".navbar-default .navbar-nav { font-weight: bold; font-size: 16px; }"))
       ),
 
-      ### Page title
-      titlePanel(htmlOutput("dataTitle"), windowTitle = "scRNAseq regeneration database"),
       navbarPage(
-        NULL,
+        selectInput('availableDatasets',
+                    label = NULL,
+                    choices = datasets,
+                    selected = defaultDataset,
+                    width = "90vw"),
+        windowTitle = windowTitle,
         id = "topnav",
-        footer = div(p(em("scRNAseq/scATACseq Database (Version:", VERSION, ")"),
+        footer = div(p(em(windowTitle, " (Version:",
+                          as.character(packageVersion("scRNAseqApp")), ")"),
                        HTML("&copy;"), "2020 -",
                        format(Sys.Date(), "%Y"),
                        "jianhong@duke"), class="rightAlign"),
@@ -99,51 +67,45 @@ scRNAseqApp <- function(...){
         ### Tab: Multiple gene expr
         plotBubbleHeatmapUI("bubbleHeatmap"),
         ### Tab: change dataset
-        tabChangeDataset(req),
+        aboutUI(req, "about"),
         ### Tab: Login form
-        tabLogin(),
-        br(),br(),br(),br(),br()
+        #tabLogin(),
+        loginUI(loginNavbarTitle)
       ))
   }
+  ## security_login
+  ui <- secureUI(ui0)
 
   ### Start server code
   server <- function(input, output, session) {
+    ### resize the max upload file size for admin
+    options(shiny.maxRequestSize=1*1024^3) # 1G
     ### For all tags and Server-side selectize
     observe_helpers()
     optCrt="{ option_create: function(data,escape) {return('<div class=\"create\"><strong>' + '</strong></div>');} }"
-    dataSource <- reactiveValues(dataset=defaultDataset,
-                                 sc1conf=NULL,
-                                 sc1def=NULL,
-                                 sc1gene=NULL,
-                                 sc1meta=NULL,
-                                 Logged=FALSE,
-                                 terms=terms[["scRNAseq"]],
-                                 Username="",
-                                 Password="",
-                                 token="")
+    dataSource <- reactiveValues(
+      available_datasets=datasets,
+      dataset=defaultDataset,
+      appconf=appconf,
+      data_types=data_types,
+      sc1conf=NULL,
+      sc1def=NULL,
+      sc1gene=NULL,
+      sc1meta=NULL,
+      Logged=FALSE,
+      terms=terms[["scRNAseq"]],
+      auth=NULL,
+      Username="",
+      Password="",
+      token="")
     ## login
-    observeEvent(input$Login, {
-      dataSource$Username <- isolate(input$userName)
-      dataSource$Password <- isolate(input$passwd)
-      if(!checkLockedDataset(dataSource$dataset)){
-        output$loginmsg <- renderText("No need to login yet.")
-        updateTabsetPanel(session, "topnav", selected = "ChangeDataset")
-      }
-      if (checkUserNameAndPassword(dataSource$Username,
-                                   dataSource$Password,
-                                   dataSource$dataset) ||
-          checkToken(token, dataSource$token, dataSource$dataset)) {
-        dataSource$Logged <- TRUE
-        output$loginmsg <- renderText("Logged!")
-        updateTabsetPanel(session, "topnav", selected = "ChangeDataset")
-      }else{
-        dataSource$Logged <- FALSE
-        dataSource$Username <- ""
-        dataSource$Password <- ""
-        dataSource$token <- ""
-        output$loginmsg <- renderText("Wrong Username, Password or Dataset!")
-      }
-    })
+    dataSource$auth <- loginServer(input, output, session)
+    ## manager
+    uploadServer("upload", datafolder)
+    editServer("editdata", datafolder)
+    aboutServer("about", reactive({dataSource}),
+                optCrt, input$availableDatasets,
+                datafolder)
     ## parse query strings
     observe({
       query <- parseQueryString(session$clientData$url_search)
@@ -151,6 +113,7 @@ scRNAseqApp <- function(...){
         updateSelectInput(session, "availableDatasets", selected=query[['data']])
       }
       if(!is.null(query[['token']])){
+        token <- getToken(datafolder)
         if(query[["token"]] %in% names(token)){
           dataSource$token <- query[["token"]]
           if(dataSource$token %in% names(token)){
@@ -163,27 +126,44 @@ scRNAseqApp <- function(...){
     })
     ## change dataset
     observeEvent(input$availableDatasets,{
-      dataSource$dataset <- input$availableDatasets
-      if(checkLockedDataset(dataSource$dataset)){
-        if(dataSource$Username!="" && dataSource$Password!=""){
-          if(checkUserNameAndPassword(dataSource$Username, dataSource$Password, dataSource$dataset)){
-            dataSource$Logged <- TRUE
-            output$loginmsg <- renderText("Logged!")
-          }else{
-            updateTabsetPanel(session, "topnav", selected = "Login")
-          }
-        }else{
+      if(!all(dataSource$available_datasets %in%
+              getDataSets(datafolder = datafolder))){
+        dataSource$available_datasets <- getDataSets(datafolder = datafolder)
+      }
+      if(!all(getDataSets(datafolder = datafolder) %in%
+              dataSource$available_datasets)){
+        updateSelectInput(session, "availableDatasets",
+                          choices =
+                            getDataSets(datafolder = datafolder,
+                                        appconf =
+                                          getAppConf(datafolder = datafolder)),
+                          selected = input$availableDatasets)
+      }
+      if(input$availableDatasets %in% getDataSets(datafolder = datafolder)){
+        dataSource$dataset <- input$availableDatasets
+        if(checkLockedDataset(dataSource$dataset, datafolder, lockfilename="LOCKER")){
+          dataSource$Logged <- FALSE
           if(dataSource$token!=""){
             if(checkToken(token, dataSource$token, dataSource$dataset)){
               dataSource$Logged <- TRUE
-              output$loginmsg <- renderText("Logged!")
             }
           }else{
-            updateTabsetPanel(session, "topnav", selected = "Login")
+            if(!is.null(dataSource$auth)){
+              if(checkPrivilege(dataSource$auth$privilege, dataSource$dataset)){
+                dataSource$Logged <- TRUE
+              }
+            }
+          }
+          if(!dataSource$Logged){
+            updateTabsetPanel(session, "topnav", selected = loginNavbarTitle)
           }
         }
+        refreshData(input, output, session)
+      }else{
+        updateSelectInput(session, "availableDatasets",
+                          choices = getDataSets(datafolder = datafolder),
+                          selected = getDataSets(datafolder = datafolder)[1])
       }
-      refreshData(input, output, session)
     })
     ## update visitor stats
     update_visitor <- function(){
@@ -212,45 +192,38 @@ scRNAseqApp <- function(...){
     })
     ## refresh data when change dataset
     refreshData <- function(input, output, session){
-      hasRef <- !is.na(getRef(dataSource$dataset, "title"))
       if(dataSource$dataset %in% names(data_types)){
         dataSource$terms <- terms[[data_types[[dataSource$dataset]]]]
       }
       dataSource <- loadData(dataSource, datafolder)
-      output$dataTitle <- renderUI({HTML(names(datasets)[datasets==input$availableDatasets])})
-      output$ref_author <- renderText(ifelse(hasRef, getRef(dataSource$dataset, "authors"), ""))
-      output$ref_title <- renderText(ifelse(hasRef, getRef(dataSource$dataset, "title"), ""))
-      output$ref_journal <- renderText(ifelse(hasRef, getRef(dataSource$dataset, "journals"), ""))
-      output$ref_year <- renderText(ifelse(hasRef, getRef(dataSource$dataset, "years"), ""))
-      output$ref_pmid <- renderUI({
-        if(hasRef){
-          a(getRef(dataSource$dataset, "pmids"),
-            href = paste0("https://www.ncbi.nlm.nih.gov/pubmed/",
-                          getRef(dataSource$dataset, "pmids")))
-        }else{
-          br()
-        }
+      output$dataTitle <- renderUI({
+        HTML(names(datasets)[datasets==input$availableDatasets])
       })
 
       ### Plots for tab cell info vs gene expression
       cellInfoGeneExprServer("cellInfoGeneExpr", reactive({dataSource}),
-                             optCrt, input$availableDatasets)
+                             optCrt, input$availableDatasets,
+                             datafolder)
 
       ### Plots for tab cell info vs cell info
       cellInfoCellInfoServer("cellInfoCellInfo", reactive({dataSource}),
-                             optCrt, input$availableDatasets)
+                             optCrt, input$availableDatasets,
+                             datafolder)
 
       ### Plots for tab gene expression vs gene expression
       geneExprGeneExprServer("geneExprGeneExpr", reactive({dataSource}),
-                             optCrt, input$availableDatasets)
+                             optCrt, input$availableDatasets,
+                             datafolder)
 
       ### Plots for tab co-expression
       coExprServer("coExpr", reactive({dataSource}),
-                   optCrt, input$availableDatasets)
+                   optCrt, input$availableDatasets,
+                   datafolder)
 
       ### Plots for tab subset
       subsetGeneExprServer("subsetGeneExpr", reactive({dataSource}),
-                           optCrt, input$availableDatasets)
+                           optCrt, input$availableDatasets,
+                           datafolder)
 
       ### Plots for tab violion
       plotVioBoxServer("vioBoxPlot", reactive({dataSource}),
@@ -259,18 +232,17 @@ scRNAseqApp <- function(...){
 
       ### Plots for tab proportion
       plotProportionServer("proportion", reactive({dataSource}),
-                           optCrt, input$availableDatasets)
+                           optCrt, input$availableDatasets,
+                           datafolder)
 
 
       ### Plots for tab bubble heatmap
       plotBubbleHeatmapServer("bubbleHeatmap", reactive({dataSource}),
-                              optCrt, input$availableDatasets)
+                              optCrt, input$availableDatasets,
+                              datafolder)
     }
   }
 
   shinyApp(ui=ui, server = server, ...)
 }
-
-
-
 

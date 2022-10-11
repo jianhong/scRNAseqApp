@@ -57,7 +57,8 @@ subsetGeneExprUI <- function(id){
     )
   )
 }
-subsetGeneExprServer <- function(id, dataSource, optCrt, currentdataset){
+subsetGeneExprServer <- function(id, dataSource, optCrt, currentdataset,
+                                 datafolder){
   moduleServer(id, function(input, output, session){
     ## title
     output$GeneExpr <-
@@ -201,7 +202,8 @@ subsetGeneExprServer <- function(id, dataSource, optCrt, currentdataset){
         inpsub3=input$subsetCell,
         inpsub3filter=input$subsetCellVal,
         inpsub4=input$filterCell,
-        inpsub4filter=input$filterCellVal)
+        inpsub4filter=input$filterCellVal,
+        datafolder=datafolder)
     })
     output$GeneExproup1 <- renderPlot({ plot1() })
     output$GeneExproup.ui1 <- renderUI({
@@ -254,7 +256,8 @@ subsetGeneExprServer <- function(id, dataSource, optCrt, currentdataset){
         inpsub3=input$subsetCell,
         inpsub3filter=input$subsetCellVal,
         inpsub4=input$filterCell,
-        inpsub4filter=input$filterCellVal)
+        inpsub4filter=input$filterCellVal,
+        datafolder=datafolder)
     })
     output$GeneExproup2 <- renderPlot({ plot2() })
     output$GeneExproup.ui2 <- renderUI({

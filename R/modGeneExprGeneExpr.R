@@ -32,7 +32,8 @@ geneExprGeneExprUI <- function(id){
     )
   )
 }
-geneExprGeneExprServer <- function(id, dataSource, optCrt, currentdataset){
+geneExprGeneExprServer <- function(id, dataSource, optCrt, currentdataset,
+                                   datafolder){
   moduleServer(id, function(input, output, session){
     ## title
     output$GeneExpr <-
@@ -111,7 +112,8 @@ geneExprGeneExprServer <- function(id, dataSource, optCrt, currentdataset){
         input$GeneExprtxt,
         input$GeneExprtype1,
         if(input$GeneExprxlimb1 %% 2==0) 0 else input$GeneExprxlim1,
-        inpColRange=if(input$GeneExprrgb1 %% 2==0) 0 else input$GeneExprrg1)
+        inpColRange=if(input$GeneExprrgb1 %% 2==0) 0 else input$GeneExprrg1,
+        datafolder=datafolder)
     })
     output$GeneExproup1 <- renderPlot({ plot1() })
     output$GeneExproup.ui1 <- renderUI({
@@ -159,7 +161,8 @@ geneExprGeneExprServer <- function(id, dataSource, optCrt, currentdataset){
         input$GeneExprtxt,
         input$GeneExprtype2,
         if(input$GeneExprxlimb2 %% 2==0) 0 else input$GeneExprxlim2,
-        inpColRange=if(input$GeneExprrgb2 %% 2==0) 0 else input$GeneExprrg2)
+        inpColRange=if(input$GeneExprrgb2 %% 2==0) 0 else input$GeneExprrg2,
+        datafolder=datafolder)
     })
     output$GeneExproup2 <- renderPlot({ plot2() })
     output$GeneExproup.ui2 <- renderUI({

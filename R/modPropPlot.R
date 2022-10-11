@@ -39,7 +39,9 @@ plotProportionUI <- function(id){
     )
   )
 }
-plotProportionServer <- function(id, dataSource, optCrt, currentdataset){
+#' @importFrom DT datatable
+plotProportionServer <- function(id, dataSource, optCrt, currentdataset,
+                                 datafolder){
   moduleServer(id, function(input, output, session){
     ## input column
     updateSelectInput(session,

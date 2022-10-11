@@ -100,7 +100,8 @@ plotVioBoxServer <- function(id, dataSource, optCrt, currentdataset, datafolder)
         input$plottyp,
         input$plotpts,
         input$plotsiz,
-        input$plotfsz)
+        input$plotfsz,
+        datafolder=datafolder)
     })
     output$GeneExproup1 <- renderPlot({ plot1() })
     output$GeneExproup.ui1 <- renderUI({

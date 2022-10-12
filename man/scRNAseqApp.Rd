@@ -20,8 +20,11 @@ scRNAseqApp(
 
 \item{...}{parameters can be passed to shinyApp except ui and server.}
 }
+\value{
+An object that represents the app.
+}
 \description{
-scRNAseqApp main function
+create a scRNAseqApp once the initialization is done.
 }
 \examples{
 if(interactive()){

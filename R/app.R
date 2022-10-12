@@ -1,4 +1,5 @@
 #' scRNAseqApp main function
+#' @description create a scRNAseqApp once the initialization is done.
 #' @param datafolder the folder where saved the dataset for the app
 #' @param defaultDataset default dataset for the app.
 #' @param windowTitle The title that should be displayed by the browser window.
@@ -8,6 +9,7 @@
 #' @importFrom shinyhelper observe_helpers
 #' @importFrom ggplot2 ggplot aes geom_bar theme_minimal xlab ylab
 #' @export
+#' @return An object that represents the app.
 #' @examples
 #' if(interactive()){
 #'   app_path=tempdir()

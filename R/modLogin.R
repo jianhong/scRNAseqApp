@@ -5,6 +5,11 @@ loginUI <- function(loginNavbarTitle){
     HTML(loginNavbarTitle),
     auth_ui(
       id = "auth",
+      tags_bottom = tags$div(
+        actionButton(inputId = ".shinymanager_app",
+                     label = lan$get("Go to application"),
+                     icon = icon("share"))
+      ),
       # set language ?
       lan = lan
     ),

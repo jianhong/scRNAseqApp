@@ -106,6 +106,8 @@ scRNAseqApp <- function(datafolder = "data",
     aboutServer("about", reactive({dataSource}),
                 optCrt, input$availableDatasets,
                 datafolder)
+    ## update visitor stats
+    updateVisitor(input, output, session)
     ## parse query strings
     observe({
       query <- parseQueryString(session$clientData$url_search)
@@ -126,6 +128,7 @@ scRNAseqApp <- function(datafolder = "data",
     })
     ## change dataset
     observeEvent(input$availableDatasets,{
+      ## update datasets if datasets changed by admin
       if(!all(dataSource$available_datasets %in%
               getDataSets(datafolder = datafolder))){
         dataSource$available_datasets <- getDataSets(datafolder = datafolder)
@@ -139,6 +142,7 @@ scRNAseqApp <- function(datafolder = "data",
                                           getAppConf(datafolder = datafolder)),
                           selected = input$availableDatasets)
       }
+
       if(input$availableDatasets %in% getDataSets(datafolder = datafolder)){
         dataSource$dataset <- input$availableDatasets
         if(checkLockedDataset(dataSource$dataset, datafolder, lockfilename="LOCKER")){
@@ -164,31 +168,6 @@ scRNAseqApp <- function(datafolder = "data",
                           choices = getDataSets(datafolder = datafolder),
                           selected = getDataSets(datafolder = datafolder)[1])
       }
-    })
-    ## update visitor stats
-    update_visitor <- function(){
-      req(input$remote_addr)
-      counter <- read.delim("www/counter.tsv", header = TRUE)
-      ips <- counter$ip
-      counter <- as.Date(counter$date)
-      visitors <- paste(format(counter, "%d/%m/%y %H"), ips)
-      current <- Sys.time()
-      ip <- isolate(input$remote_addr)
-      agent <- isolate(input$remote_agent)
-      if(!paste(format(current, "%d/%m/%y %H"), ip) %in% visitors){
-        write(paste(as.character(current), ip, agent, sep="\t"),
-              "www/counter.tsv", append = TRUE)
-      }
-    }
-    observeEvent(input$remote_addr, update_visitor())
-    output$total_visitor <- renderPlot({
-      counter <- read.delim("www/counter.tsv", header = TRUE)
-      counter <- as.Date(counter$date)
-      counter <- table(format(counter, "%m/%y"))
-      counter <- as.data.frame(counter)
-      ggplot(counter, aes(x=Var1, y=Freq)) +
-        geom_bar(stat = "identity", fill="darkorchid4") +
-        theme_minimal() + xlab("") + ylab("visitor counts")
     })
     ## refresh data when change dataset
     refreshData <- function(input, output, session){

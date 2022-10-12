@@ -27,6 +27,7 @@ Imports:
     grDevices,
     grid,
     hdf5r,
+    htmltools,
     magrittr,
     methods,
     RefManageR,

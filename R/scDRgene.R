@@ -70,10 +70,16 @@ scDRgene <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
   } else if(inpord == "Random"){
     ggData <- ggData[sample(nrow(ggData))]
   }
+  if(is.logical(inpColRange[1])){
+    return(range(ggData$val))
+  }
   # Actual ggplot
   if(inpPlt == "Dotplot"){
-    if(inpColRange>0){
-      ggData[ggData$val>inpColRange, "val"] <- inpColRange
+    if(length(inpColRange)==1){
+      inpColRange <- c(min(0, min(inpColRange)), inpColRange)
+    }
+    if(inpColRange[2]>0){
+      ggData[ggData$val>inpColRange[2], "val"] <- inpColRange[2]
     }
     ggOut <- ggplot(ggData, aes(X, Y, color = val))
     if(bgCells){
@@ -84,9 +90,9 @@ scDRgene <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
       geom_point(size = inpsiz, shape = 16) + xlab(inpdrX) + ylab(inpdrY) +
       sctheme(base_size = sList[inpfsz], XYval = inptxt) +
       guides(color = guide_colorbar(barwidth = 15))
-    if(inpColRange>0){
+    if(inpColRange[2]>0){
       ggOut <- ggOut +
-        scale_color_gradientn(inp1, colours = cList[[inpcol]], limits=c(0, inpColRange))
+        scale_color_gradientn(inp1, colours = cList[[inpcol]], limits=inpColRange)
     }else{
       ggOut <- ggOut +
         scale_color_gradientn(inp1, colours = cList[[inpcol]])

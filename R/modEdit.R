@@ -9,7 +9,11 @@ editUI <- function (id) {
           width = 6,
           selectInput(ns("data"),
                       label = "Available data",
-                      choices = c())
+                      choices = c()),
+          actionButton(ns("refresh"),
+                       label = "Refresh available data",
+                       icon = icon("refresh"),
+                       inline=TRUE)
         ),
         column(
           width = 6,
@@ -53,8 +57,17 @@ editUI <- function (id) {
                          choices = c()),
                selectInput(ns("grp2"),
                          label = "Secondary default info to show",
-                         choices = c())),
+                         choices = c()),
+               checkboxInput(ns("save"),
+                             label = "Save object for further analysis",
+                             value = FALSE)),
         column(width = 6,
+               selectInput(
+                 ns("species"),
+                 label = "Species",
+                 choices = supported_organisms,
+                 selected = NULL
+               ),
                checkboxGroupInput(
                  ns("meta_to_include"),
                  label = "Columns to include from the metadata"
@@ -86,6 +99,7 @@ editUI <- function (id) {
 updateAppConf <- function(datafolder, input){
   appconf <- list(title=input$title,
                   id=input$dir,
+                  species=input$species,
                   ref=list(
                     bib=input$reference,
                     doi=input$doi,
@@ -131,11 +145,18 @@ editServer <- function(id, datafolder) {
                              sc1meta=NULL,
                              sc1def=NULL,
                              appconf=NULL,
-                             locker=TRUE)
+                             locker=TRUE,
+                             save=FALSE)
     updateSelectInput(session,
                       "data",
                       choices = getDataSets(datafolder),
                       selected = getDataSets(datafolder)[1])
+    observeEvent(input$refresh, {
+      updateSelectInput(session,
+                        "data",
+                        choices = getDataSets(datafolder),
+                        selected = getDataSets(datafolder)[1])
+    })
     observeEvent(input$data, {
       if(!is.null(input$data)){
         if(input$data %in% getDataSets(datafolder)){
@@ -170,6 +191,13 @@ editServer <- function(id, datafolder) {
                         )
                       ))
           })
+          updateCheckboxGroupInput(
+            session,
+            "meta_to_include",
+            label = "Columns to include from the metadata",
+            choices = cellInfo,
+            selected = cellInfo
+          )
           global$sc1def <- readRDS(file.path(datafolder,
                                              input$data,
                                              "sc1def.rds"))
@@ -197,6 +225,8 @@ editServer <- function(id, datafolder) {
           updateTextInput(session, "dir", value=global$appconf$id)
           updateSelectInput(session, "datatype",
                             selected = global$appconf$types)
+          updateSelectInput(session, "species",
+                            selected = global$appconf$species)
           updateTextInput(session, "reference", value=global$appconf$ref$bib)
           updateTextInput(session, "doi", value=global$appconf$ref$doi)
           updateTextInput(session, "pmid", value=global$appconf$ref$pmid)
@@ -205,6 +235,11 @@ editServer <- function(id, datafolder) {
           updateCheckboxInput(
             session, "locker",
             value = global$locker)
+          global$save <-
+            file.exists(file.path(datafolder, input$data, "seu.rds"))
+          updateCheckboxInput(
+            session, "save",
+            value = global$save)
         }
       }
     })
@@ -313,6 +348,10 @@ editServer <- function(id, datafolder) {
         saveRDS(conf_new,
                 file.path(datafolder, input$data, "sc1conf.rds"))
       }
+      sc1conf <- readRDS(file.path(datafolder, input$data, "sc1conf.rds"))
+      sc1conf <- sc1conf[sc1conf$ID %in% input$meta_to_include, ]
+      saveRDS(sc1conf,
+              file.path(datafolder, input$data, "sc1conf.rds"))
       updateAppConf(datafolder, input)
       updateDef(datafolder, input)
       if(input$locker){
@@ -320,6 +359,11 @@ editServer <- function(id, datafolder) {
                    file.path(datafolder, input$data, "LOCKER"))
       }else{
         unlink(file.path(datafolder, input$data, "LOCKER"))
+      }
+      if(input$save){
+        adminMsg("There is no seurat object available", "warning")
+      }else{
+        unlink(file.path(datafolder, input$data, "seu.rds"))
       }
       adminMsg("Update done!", "message")
     })

@@ -26,8 +26,29 @@ uploadUI <- function (id) {
                textInput(ns("gene1"),
                          label = "Primary default gene to show"),
                textInput(ns("gene2"),
-                         label = "Secondary default gene to show")),
+                         label = "Secondary default gene to show"),
+               checkboxInput(ns("save"),
+                             label = "Save object for further analysis",
+                             value = FALSE)),
         column(width = 6,
+               selectInput(
+                 ns("species"),
+                 label = "Species",
+                 choices = supported_organisms,
+                 selected = "Homo sapiens"
+               ),
+               selectInput(
+                 ns("gexAssay"),
+                 label = "Gene expression assay",
+                 choices = c("SCT", "RNA"),
+                 selected = "SCT"
+               ),
+               selectInput(
+                 ns("gexSlot"),
+                 label = "Slot in single-cell assay",
+                 choices = c("data", "scale.data", "counts"),
+                 selected = "data"
+               ),
                checkboxGroupInput(
                  ns("meta_to_include"),
                  label = "Columns to include from the metadata"
@@ -47,6 +68,13 @@ uploadUI <- function (id) {
                textInput(
                  ns("pmid"),
                  label = "PubMed ID"
+               ))
+      ),
+      fluidRow(
+        column(width = 12,
+               actionButton(
+                 ns("cellcycle"),
+                 label = "Assign cell cycle"
                ))
       )
     )
@@ -80,7 +108,6 @@ updateRefIDs <- function(element, input, output, session){
 
   if(updateID){
     res <- idConverter(input[[element]], type=o_ele)
-    print(res)
     if(!is.null(res)){
       updateTextInput(session,
                       o_ele,
@@ -122,6 +149,7 @@ updateRefById <- function(id, element, FUN, input, output, session){
 #' @importFrom SeuratObject Reductions Idents Assays DefaultAssay GetAssayData
 #'  `DefaultAssay<-` VariableFeatures
 #' @importFrom Seurat FindAllMarkers FindVariableFeatures ScaleData
+#'  CellCycleScoring GetAssayData
 #' @importFrom ShinyCell makeShinyApp createConfig
 #' @importFrom RefManageR GetBibEntryWithDOI GetPubMedByID
 #' @importFrom utils head
@@ -145,6 +173,8 @@ uploadServer <- function(id, datafolder) {
                     "Please upload a seurat object saved in rds file"))
       isolate(global$filepath <- file$datapath)
       isolate(global$seu <- readRDS(file$datapath))
+      validate(need(is(global$seu, "Seurat"),
+                    "Please upload a seurat object"))
       progress$set(message="Handling data",
                    value=5)
       updateTextInput(session, "dir",
@@ -167,6 +197,9 @@ uploadServer <- function(id, datafolder) {
                                        several.ok = TRUE)[1]
       }
       defaultAssay <- DefaultAssay(global$seu)
+      updateSelectInput(session, "gexAssay",
+                        choices = assays,
+                        selected = defaultAssay)
       if(length(GetAssayData(global$seu, "scale.data"))==0){
         global$seu <- FindVariableFeatures(global$seu, selection.method = "vst",
                                     nfeatures=1000)
@@ -196,6 +229,23 @@ uploadServer <- function(id, datafolder) {
           value = rownames(global$seu)[seq.int(min(20, nrow(global$seu)))])
       }
     })
+    observeEvent(input$gexAssay,{
+      if(is(global$seu, "Seurat")){
+        slots <- c("data", "scale.data", "counts")
+        d <- lapply(slots, GetAssayData, object=global$seu)
+        d <- lapply(d, nrow)
+        d <- vapply(d, FUN=function(.d) .d>0, FUN.VALUE = logical(1L))
+        slots <- slots[d]
+        if(length(slots)==0){
+          adminMsg("There is no slots named as data, scale.data or counts",
+                   type = "error")
+        }else{
+          updateSelectInput(session, "gexSlot",
+                            choices = slots,
+                            selected = slots[1])
+        }
+      }
+    })
     observeEvent(input$doi,
                  updateRefById("reference", "doi", GetBibEntryWithDOI,
                                input, output, session))
@@ -215,6 +265,8 @@ uploadServer <- function(id, datafolder) {
                        global$seu,
                        meta.to.include = unique(input$meta_to_include)
                      ),
+                     gex.assay = input$gexAssay,
+                     gex.slot = input$gexSlot,
                      shiny.title = input$title,
                      shiny.dir = file.path(datafolder, input$dir),
                      default.gene1 = input$gene1,
@@ -223,6 +275,7 @@ uploadServer <- function(id, datafolder) {
         progress$set(message="set data config file", value=.97)
         appconf <- list(title=input$title,
                         id=input$dir,
+                        species=input$species,
                         ref=list(
                           bib=input$reference,
                           doi=input$doi,
@@ -230,6 +283,10 @@ uploadServer <- function(id, datafolder) {
                         ),
                         types=input$datatype)
         saveRDS(appconf, file.path(datafolder, input$dir, "appconf.rds"))
+        if(input$save){
+          file.rename(input$file$datapath,
+                      file.path(datafolder, input$dir, "seu.rds"))
+        }
         progress$set(message="Check file LOCKER", value=.98)
         if(input$locker){
           writeLines("", file.path(datafolder, input$dir, "LOCKER"))
@@ -260,6 +317,33 @@ uploadServer <- function(id, datafolder) {
         output$message <- renderText("Upload done!")
         adminMsg("Upload done!", "message")
       }
+    })
+    observeEvent(input$cellcycle, {
+      cc.genes.list <- readRDS(system.file("extdata", "cc.genes.list.rds",
+                                           package="scRNAseqApp"))
+      cc.genes <- cc.genes.list[[input$species]]
+      isENS <- vapply(cc.genes, FUN=function(.ele){
+        .ele <- unlist(.ele)
+        sum(.ele %in% rownames(global$seu))
+      }, FUN.VALUE = numeric(1L))
+      cc.genes <- cc.genes[[which.max(isENS)]]
+      tryCatch({
+        seu <- global$seu
+        DefaultAssay(seu) <- ifelse("SCT" %in% Assays(seu), "SCT", "RNA")
+        isolate(global$seu <- CellCycleScoring(seu,
+                                               s.features = cc.genes$s.genes,
+                                               g2m.features = cc.genes$g2m.genes,
+                                               set.ident = FALSE))
+        cellInfo <- colnames(global$seu[[]])
+        updateCheckboxGroupInput(
+          session,
+          "meta_to_include",
+          choices = cellInfo,
+          selected = cellInfo
+        )
+      },
+      error = function(.e) adminMsg(.e, type = "error")
+      )
     })
   })
 }

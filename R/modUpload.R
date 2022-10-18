@@ -2,7 +2,7 @@ uploadUI <- function (id) {
   ns <- NS(id)
   tagList(
     column(
-      width = 10, offset = 1,
+      width = 12,
       fluidRow(actionButton(ns('upload'),
                             label = "Upload",
                             icon = icon("upload")),
@@ -70,11 +70,55 @@ uploadUI <- function (id) {
                  label = "PubMed ID"
                ))
       ),
+      hr(),
       fluidRow(
-        column(width = 12,
+        column(width = 3,
+               h4("Assign cell cycle"),
                actionButton(
                  ns("cellcycle"),
-                 label = "Assign cell cycle"
+                 label = "CellCycleScoring"
+               ),
+               actionButton(
+                 ns("tricycle"),
+                 label = "Tricycle"
+               )),
+        column(width = 3,
+               h4("Assign cell type"),
+               actionButton(
+                 ns("singler"),
+                 label = "singleR"
+               ),
+               actionButton(
+                 ns("sctype"),
+                 label = "scType"
+               )),
+        column(width = 3,
+               h4("Trajectories"),
+               actionButton(
+                 ns("monocole"),
+                 label = "monocole"
+               ),
+               actionButton(
+                 ns("velocity"),
+                 label = "velocity"
+               ),
+               actionButton(
+                 ns("stream"),
+                 label = "stream"
+               ),
+               actionButton(
+                 ns("URD"),
+                 label = "URD"
+               )),
+        column(width = 3,
+               h4("Cell communications"),
+               actionButton(
+                 ns("cellchat"),
+                 label = "CellChat"
+               ),
+               actionButton(
+                 ns("nichenetr"),
+                 label = "NicheNet"
                ))
       )
     )
@@ -149,7 +193,7 @@ updateRefById <- function(id, element, FUN, input, output, session){
 #' @importFrom SeuratObject Reductions Idents Assays DefaultAssay GetAssayData
 #'  `DefaultAssay<-` VariableFeatures
 #' @importFrom Seurat FindAllMarkers FindVariableFeatures ScaleData
-#'  CellCycleScoring GetAssayData
+#'  CellCycleScoring GetAssayData as.SingleCellExperiment
 #' @importFrom ShinyCell makeShinyApp createConfig
 #' @importFrom RefManageR GetBibEntryWithDOI GetPubMedByID
 #' @importFrom utils head
@@ -157,6 +201,11 @@ uploadServer <- function(id, datafolder) {
   moduleServer(id, function(input, output, session){
     global <- reactiveValues(filepath=NULL,
                              seu=NULL)
+    getSeuObj <- function(){
+      seu <- global$seu
+      DefaultAssay(seu) <- ifelse("SCT" %in% Assays(seu), "SCT", "RNA")
+      seu
+    }
     observeEvent(input$file, {
       progress <- shiny::Progress$new()
       on.exit(progress$close())
@@ -328,8 +377,7 @@ uploadServer <- function(id, datafolder) {
       }, FUN.VALUE = numeric(1L))
       cc.genes <- cc.genes[[which.max(isENS)]]
       tryCatch({
-        seu <- global$seu
-        DefaultAssay(seu) <- ifelse("SCT" %in% Assays(seu), "SCT", "RNA")
+        seu <- getSeuObj()
         isolate(global$seu <- CellCycleScoring(seu,
                                                s.features = cc.genes$s.genes,
                                                g2m.features = cc.genes$g2m.genes,
@@ -341,6 +389,177 @@ uploadServer <- function(id, datafolder) {
           choices = cellInfo,
           selected = cellInfo
         )
+      },
+      error = function(.e) adminMsg(.e, type = "error")
+      )
+    })
+    observeEvent(input$tricycle, {
+      if(!input$species %in% c("Homo sapiens", "Mus musculus")){
+        adminMsg("Only support human and mouse data.", type="error")
+        return()
+      }
+      if(!require("tricycle")){
+        adminMsg("The tricycle package is required for this function!",
+                 type = "error")
+        return()
+      }
+      if(!require("SummarizedExperiment")){
+        adminMsg("The SummarizedExperiment package is
+                 required for this function!",
+                 type = "error")
+        return()
+      }
+      tryCatch({
+        seu <- getSeuObj()
+        exp <- as.SingleCellExperiment(seu)
+        exp <- tricycle::project_cycle_space(
+          exp,
+          gname.type=ifelse(grepl("ENS", rownames(exp)[1]),
+                            "ENSEMBL",
+                            "SYMBOL"),
+          species=ifelse(input$species=="Mus musculus",
+                         "mouse",
+                         "human")
+        )
+        exp <- tricycle::estimate_cycle_position(exp)
+        stopifnot(identical(rownames(seu[[]]),
+                            rownames(colData(exp))))
+        seu$tricyclePosition <- colData(exp)$tricyclePosition
+        seu$CCStage <- colData(exp)$CCStage
+        isolate(global$seu <- seu)
+        cellInfo <- colnames(global$seu[[]])
+        updateCheckboxGroupInput(
+          session,
+          "meta_to_include",
+          choices = cellInfo,
+          selected = cellInfo
+        )
+      },
+      error = function(.e) adminMsg(.e, type = "error")
+      )
+    })
+    observeEvent(input$monocole, {
+      if(!require("monocle3")){
+        adminMsg("The monocle3 package is required for this function!",
+                 type = "error")
+        return()
+      }
+      if(!require("SeuratWrappers")){
+        adminMsg("The SeuratWrappers package is required for this function!",
+                 type = "error")
+        return()
+      }
+      tryCatch({
+        seu <- getSeuObj()
+        cds <- SeuratWrappers::as.cell_data_set(seu)
+        reduction_method <- Reductions(seu)
+        if("umap" %in% reduction_method){
+          reduction_method <- "UMAP"
+        }else{
+          if("tsne" %in% reduction_method){
+            reduction_method <- "tSNE"
+          }else{
+            if("pca" %in% reduction_method){
+              reduction_method <- "PCA"
+            }else{
+              reduction_method <- "UMAP"
+            }
+          }
+        }
+        cds <- monocle3::cluster_cells(cds=cds,
+                                        reduction_method = reduction_method)
+
+        cds <- monocle3::learn_graph(cds)
+        ## TODO, return the metadata back to seu
+        getMiscData <- function(cds_x){
+          p <- plot_cells(cds_x,
+                          color_cells_by="pseudotime",
+                          show_trajectory_graph=TRUE)
+
+          # full data
+          meta_data <- p$data
+          #trajectory graph segment is layer 3
+          segments_layer_data <- p$layers[[3]]$data
+          # principal_points is layer 4
+          principal_points_data <- p$layer[[4]]$data
+          # leaves_lable is layer 6
+          mst_leaf_nodes <- p$layers[[6]]$data
+          # root lable is layer 8
+          mst_root_nodes <- p$layers[[8]]$data
+        }
+        # by principal points
+        ica_space_df <- t(cds@principal_graph_aux[[reduction_method]]$dp_mst)
+        cds_x <- lapply(rownames(ica_space_df),
+                        function(root_nodes){
+                          order_cells(cds,
+                                      reduction_method = reduction_method,
+                                      root_pr_nodes = root_nodes)})
+        # by group points
+        root_cells <- rownames(seu[[]][seu$ident %in% 'Glial-0', , drop=FALSE])
+        cds_x <- order_cells(cds, reduction_method = reduction_method,
+                             root_cells = root_cells)
+
+      },
+      error = function(.e) adminMsg(.e, type = "error")
+      )
+    })
+    observeEvent(input$cellchat, {
+      if(!input$species %in% c("Homo sapiens", "Mus musculus", "Danio rerio")){
+        adminMsg("Only support human, mouse and fish data.", type="error")
+        return()
+      }
+      if(!require("CellChat")){
+        adminMsg("The CellChat package is required for this function!",
+                 type = "error")
+        return()
+      }
+      if(!require("future")){
+        adminMsg("The future package is required for this function!",
+                 type = "error")
+        return()
+      }
+      tryCatch({
+        seu <- getSeuObj()
+        cellchat <- CellChat::createCellChat(object = seu, group.by="CellType")
+        cellchat <- CellChat::setIdent(cellchat, ident.use = "CellType")
+        groupSize <- as.numeric(table(cellchat@idents))
+        cellchat@DB <- switch(input$species,
+                              'Homo sapiens'= CellChatDB.human,
+                              'Mus musculus'= CellChatDB.mouse,
+                              'Danio rerio' = CellChatDB.zebrafish)
+        cellchat <- CellChat::subsetData(cellchat)
+        future::plan("multiprocess", workers = future::availableWorkers())
+        cellchat <- identifyOverExpressedGenes(cellchat)
+        cellchat <- identifyOverExpressedInteractions(cellchat)
+        cellchat <- computeCommunProb(cellchat)
+        cellchat <- filterCommunication(cellchat, min.cells = 10)
+        cellchat <- computeCommunProbPathway(cellchat)
+        cellchat <- aggregateNet(cellchat)
+        cellchat <- netAnalysis_computeCentrality(cellchat, slot.name = "netP")
+        ## TODO, return the metadata back to seu
+      },
+      error = function(.e) adminMsg(.e, type = "error")
+      )
+    })
+    observeEvent(input$nichenetr, {
+      if(!input$species %in% c("Homo sapiens", "Mus musculus", "Danio rerio")){
+        adminMsg("Only support human, mouse and fish data.", type="error")
+        return()
+      }
+      if(!require("CellChat")){
+        adminMsg("The CellChat package is required for this function!",
+                 type = "error")
+        return()
+      }
+      if(!require("future")){
+        adminMsg("The future package is required for this function!",
+                 type = "error")
+        return()
+      }
+      tryCatch({
+        seu <- getSeuObj()
+
+        ## TODO, return the metadata back to seu
       },
       error = function(.e) adminMsg(.e, type = "error")
       )

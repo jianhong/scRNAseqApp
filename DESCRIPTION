@@ -42,5 +42,11 @@ Imports:
     tools,
     xml2
 Suggests: rmarkdown, knitr
+Enhances:
+    CellChat,
+    future,
+    monocle3,
+    SummarizedExperiment,
+    tricycle
 URL: https://github.com/jianhong/scRNAseqApp
 BugReports: https://github.com/jianhong/scRNAseqApp/issues

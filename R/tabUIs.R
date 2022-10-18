@@ -230,7 +230,7 @@ cellInfoTblUI <- function(id, postfix=1){
                    "Split continuous cell info into:",
                    choices = c("Quartile", "Decile"),
                    selected = "Decile", inline = TRUE),
-      dataTableOutput(NS0(id, "GeneExpr.dt", postfix))
+      DTOutput(NS0(id, "GeneExpr.dt", postfix))
     )
   )
 }

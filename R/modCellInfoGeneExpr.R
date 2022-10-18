@@ -128,7 +128,7 @@ cellInfoGeneExprServer <- function(id, dataSource, optCrt, currentdataset){
         input$GeneExprdrY,
         input$CellInfo1)
 
-    output$GeneExpr.dt1 <- renderDataTable({
+    output$GeneExpr.dt1 <- renderDT({
       ggData <- scDRnum(dataSource()$sc1conf,
                         dataSource()$sc1meta,
                         input$CellInfo1,

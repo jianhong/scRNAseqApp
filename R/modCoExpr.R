@@ -26,7 +26,7 @@ coExprUI <- function(id){
       column(
         3,geneExprDotPlotUI(id, 2),
         br(), h4("Cell numbers"),
-        dataTableOutput(NS(id, "coExpr.dt"))
+        DTOutput(NS(id, "coExpr.dt"))
       )
     )
   )
@@ -171,7 +171,7 @@ coExprServer <- function(id, dataSource, optCrt, currentdataset){
         input$GeneName1,
         input$GeneName2)
 
-    output$coExpr.dt <- renderDataTable({
+    output$coExpr.dt <- renderDT({
       ggData <- scDRcoexNum(
         dataSource()$sc1conf,
         dataSource()$sc1meta,

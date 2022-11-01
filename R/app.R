@@ -204,7 +204,8 @@ scRNAseqApp <- function(...){
     output$total_visitor <- renderPlot({
       counter <- read.delim("www/counter.tsv", header = TRUE)
       counter <- as.Date(counter$date)
-      counter <- table(format(counter, "%m/%y"))
+      counter <- counter[as.numeric(difftime(as.Date(Sys.time()), counter, units = 'days'))<730]
+      counter <- table(format(counter, "%y-%m"))
       counter <- as.data.frame(counter)
       ggplot(counter, aes(x=Var1, y=Freq)) +
         geom_bar(stat = "identity", fill="darkorchid4") +

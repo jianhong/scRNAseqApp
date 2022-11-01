@@ -36,8 +36,8 @@ get_full_ref_list<- function(){
     paste(.ele$authors, paste0("<i>", .ele$title, "</i>"),
           .ele$journals, .ele$years,
           ifelse(!is.null(.ele$pmids),
-                 paste0("https://www.ncbi.nlm.nih.gov/pubmed/",
-                        .ele$pmids),
+                 paste0("<a href='https://www.ncbi.nlm.nih.gov/pubmed/",
+                        .ele$pmids, "'>PMID:", .ele$pmids, "</a>"),
                  ''), sep=",")
   })
   ord <- vapply(appconf, function(.ele) .ele$ref$authors,

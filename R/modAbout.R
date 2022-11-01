@@ -22,7 +22,9 @@ aboutUI <- function(req, id, doc="doc.txt"){
            br(), hr(), br(),
            includeHTML(doc),
            br(), hr(), br(),
-           p(imageOutput('total_visitor', width = "30%", height="100px")),
+           h4("Full reference list:"),
+           htmlOutput(ns('full_ref_list')),
+           p(imageOutput('total_visitor', width = "50%", height="150px")),
            div(style = "display:none;",
                textInput("remote_agent", "remote_agent",
                          value = req[["HTTP_USER_AGENT"]]),
@@ -40,6 +42,9 @@ aboutServer <- function(id, dataSource, optCrt, currentdataset,
     output$ref <- renderText(getRef(currentdataset,
                                     "bib",
                                     getAppConf(datafolder)))
+    output$full_ref_list <- renderUI(
+      get_full_ref_list(getAppConf(datafolder))
+    )
   })
 }
 updateVisitor <- function(input, output, session){
@@ -63,10 +68,12 @@ updateVisitor <- function(input, output, session){
   output$total_visitor <- renderPlot({
     counter <- read.delim(conterFilename, header = TRUE)
     counter <- as.Date(counter$date)
-    counter <- table(format(counter, "%m/%y"))
+    counter <- counter[as.numeric(difftime(as.Date(Sys.time()), counter, units = 'days'))<730]
+    counter <- table(format(counter, "%y-%m"))
     counter <- as.data.frame(counter)
     ggplot(counter, aes(x=Var1, y=Freq)) +
       geom_bar(stat = "identity", fill="darkorchid4") +
-      theme_minimal() + xlab("") + ylab("visitor counts")
+      theme_minimal() + xlab("") + ylab("visitor counts") +
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
   })
 }

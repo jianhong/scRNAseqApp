@@ -41,6 +41,29 @@ getRef <- function(dataset, key, appconf){
   }
 }
 
+get_full_ref_list <- function(appconf){
+  ref <- lapply(appconf, function(.ele){
+    .ele <- .ele$ref
+    if(!is.null(.ele$bib)){
+      bib <- sub("^\\[\\d+\\]\\s+", "", gsub("^\\s+", "", .ele$bib))
+      if(bib!="" && !is.na(bib)){
+        if(!is.null(.ele$doi)) bib <- paste(bib, paste0("<a href='https://doi.org/", .ele$doi, "'>", .ele$doi, "</a>"))
+        if(!is.null(.ele$pmid)) bib <- paste(bib, paste0("<a href='https://www.ncbi.nlm.nih.gov/pubmed", .ele$pmid, "'>PMID:", .ele$pmid, "</a>"))
+        return(list(TRUE, bib))
+      }
+    }
+    return(FALSE)
+  })
+  keep <- vapply(ref, function(.ele) .ele[[1]], logical(1L))
+  ref <- ref[keep]
+  ref <- unlist(lapply(ref, function(.ele) .ele[[2]]))
+  ref <- sort(ref)
+  ref <- unique(ref)
+  ref <- paste("<li>", ref, "</li>")
+  ref <- paste("<ol>\n", paste(ref, collapse = "\n"), "\n</ol>")
+  HTML(ref)
+}
+
 getToken <- function(datafolder="data"){
   token <- dir(datafolder, "token", recursive = TRUE, full.names = TRUE)
   token_n <- lapply(token, readLines)

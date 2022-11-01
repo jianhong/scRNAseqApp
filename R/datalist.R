@@ -30,3 +30,19 @@ getRef <- function(dataset, key){
   appconf[[dataset]][["ref"]][[key]]
 }
 
+get_full_ref_list<- function(){
+  ref <- lapply(appconf, function(.ele){
+    .ele <- .ele$ref
+    paste(.ele$authors, paste0("<i>", .ele$title, "</i>"),
+          .ele$journals, .ele$years,
+          ifelse(!is.null(.ele$pmids),
+                 paste0("https://www.ncbi.nlm.nih.gov/pubmed/",
+                        .ele$pmids),
+                 ''), sep=",")
+  })
+  ord <- order(vapply(appconf, function(.ele) .ele$ref$authors,
+                      FUN.VALUE = character(1L)))
+  ref <- unlist(ref[ord])
+  ref <- paste0("[", seq_along(ref), "] ", ref, "<br/><br/>")
+  HTML(ref)
+}

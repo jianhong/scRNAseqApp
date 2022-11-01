@@ -208,7 +208,8 @@ scRNAseqApp <- function(...){
       counter <- as.data.frame(counter)
       ggplot(counter, aes(x=Var1, y=Freq)) +
         geom_bar(stat = "identity", fill="darkorchid4") +
-        theme_minimal() + xlab("") + ylab("visitor counts")
+        theme_minimal() + xlab("") + ylab("visitor counts") +
+        theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
     })
     ## refresh data when change dataset
     refreshData <- function(input, output, session){

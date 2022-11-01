@@ -40,9 +40,13 @@ get_full_ref_list<- function(){
                         .ele$pmids),
                  ''), sep=",")
   })
-  ord <- order(vapply(appconf, function(.ele) .ele$ref$authors,
-                      FUN.VALUE = character(1L)))
-  ref <- unlist(ref[ord])
+  ord <- vapply(appconf, function(.ele) .ele$ref$authors,
+                FUN.VALUE = character(1L))
+  keep <- !is.na(ord)
+  ref <- ref[keep]
+  ord <- ord[keep]
+  ref <- unlist(ref[order(ord)])
+  ref <- unique(ref)
   ref <- paste0("[", seq_along(ref), "] ", ref, "<br/><br/>")
   HTML(ref)
 }

@@ -22,6 +22,11 @@ aboutUI <- function(req, id, doc="doc.txt"){
            br(), hr(), br(),
            includeHTML(doc),
            br(), hr(), br(),
+           p(
+             textInput(ns('search'), 'Search in database',
+                       placeholder = 'Type key words here'),
+             htmlOutput(ns('search_res'))
+           ),
            h4("Full reference list:"),
            htmlOutput(ns('full_ref_list')),
            p(imageOutput('total_visitor', width = "50%", height="150px")),
@@ -45,6 +50,32 @@ aboutServer <- function(id, dataSource, optCrt, currentdataset,
     output$full_ref_list <- renderUI(
       get_full_ref_list(getAppConf(datafolder))
     )
+    observeEvent(input$search, {
+      if(input$search != '' && input$search != "Type key words here"){
+        key_words = strsplit(input$search, '\\s+')[[1]]
+        key_words = gsub("[^a-zA-Z0-9._-]+", "", key_words)
+        key_words <- paste(key_words, collapse='|')
+        res_data <- lapply(getAppConf(datafolder), function(.ele){
+          if(grepl(key_words, paste(.ele$title, .ele$id, do.call(paste, .ele$ref)),
+                   ignore.case = TRUE)){
+            return(c(.ele$id, .ele$title))
+          }else{
+            return(NULL)
+          }
+        })
+        ## update search_res
+        res_data <- res_data[lengths(res_data)>0]
+        if(!is.null(res_data)){
+          output$search_res <- renderUI(HTML(
+            paste("<ul>",
+                  vapply(res_data, function(.ele){
+                    return(paste0("<li><a href='?data=", .ele[1], "'>", .ele[2], "</a>"))
+                  }, character(1L)),
+                  "</ul>")
+          ))
+        }
+      }
+    })
   })
 }
 updateVisitor <- function(input, output, session){

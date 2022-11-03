@@ -198,6 +198,7 @@ scRNAseqApp <- function(...){
           }
         })
         ## update search_res
+        res_data <- res_data[lengths(res_data)>0]
         if(!is.null(res_data)){
           output$search_res <- renderUI(HTML(
             paste("<ul>",

@@ -191,7 +191,8 @@ scRNAseqApp <- function(...){
         key_words = gsub("[^a-zA-Z0-9._-]+", "", key_words)
         key_words <- paste(key_words, collapse='|')
         res_data <- lapply(appconf, function(.ele){
-          if(grepl(key_words, paste(.ele$title, .ele$id, do.call(paste, .ele$ref)))){
+          if(grepl(key_words, paste(.ele$title, .ele$id, do.call(paste, .ele$ref)),
+                   ignore.case = TRUE)){
             return(c(.ele$id, .ele$title))
           }else{
             return(NULL)

@@ -11,7 +11,7 @@ scDRcell <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
                    with = FALSE]
   if(ncol(ggData)!=4) return(ggplot())
   colnames(ggData) <- c("X", "Y", "val", "sub")
-  rat <- (max(ggData$X) - min(ggData$X)) / (max(ggData$Y) - min(ggData$Y))
+  rat <- getRatio(ggData)
   bgCells <- FALSE
   if(length(inpsub2) != 0 & length(inpsub2) != nlevels(ggData$sub)){
     bgCells <- TRUE

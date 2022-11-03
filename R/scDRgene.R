@@ -1,3 +1,8 @@
+getRatio <- function(ggData){## help function
+  return((max(ggData$X, na.rm = TRUE) - min(ggData$X, na.rm = TRUE)) /
+    (max(ggData$Y, na.rm = TRUE) - min(ggData$Y, na.rm = TRUE)))
+}
+
 # Plot gene expression on dimred
 #' @importFrom ggplot2 ggplot aes geom_point xlab ylab guides guide_colorbar
 #' scale_color_gradientn coord_fixed scale_y_discrete scale_x_continuous xlim
@@ -28,7 +33,7 @@ scDRgene <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
       colnames(ggData)[ncol(ggData)] <- "sub4"
     }
   }
-  rat <- (max(ggData$X) - min(ggData$X)) / (max(ggData$Y) - min(ggData$Y))
+  rat <- getRatio(ggData)
 
   h5file <- H5File$new(file.path(datafolder, dataset, inpH5), mode = "r")
   h5data <- h5file[["grp"]][["data"]]

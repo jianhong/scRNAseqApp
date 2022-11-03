@@ -12,7 +12,8 @@ scDRcoex <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inp2,
                        inpConf[UI == inpsub1]$ID),
                    with = FALSE]
   colnames(ggData) = c("X", "Y", "sub")
-  rat = (max(ggData$X) - min(ggData$X)) / (max(ggData$Y) - min(ggData$Y))
+  rat = (max(ggData$X, na.rm = TRUE) - min(ggData$X, na.rm = TRUE)) /
+    (max(ggData$Y, na.rm=TRUE) - min(ggData$Y, na.rm = TRUE))
 
   h5file <- H5File$new(file.path(datafolder, dataset, inpH5), mode = "r")
   h5data <- h5file[["grp"]][["data"]]

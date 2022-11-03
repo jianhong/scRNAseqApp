@@ -23,7 +23,8 @@ scDRgene <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
       colnames(ggData)[ncol(ggData)] <- "sub4"
     }
   }
-  rat = (max(ggData$X) - min(ggData$X)) / (max(ggData$Y) - min(ggData$Y))
+  rat = (max(ggData$X, na.rm = TRUE) - min(ggData$X, na.rm = TRUE)) /
+    (max(ggData$Y, na.rm=TRUE) - min(ggData$Y, na.rm = TRUE))
 
   h5file <- H5File$new(file.path(datafolder, dataset, inpH5), mode = "r")
   h5data <- h5file[["grp"]][["data"]]

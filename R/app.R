@@ -185,6 +185,30 @@ scRNAseqApp <- function(...){
       }
       refreshData(input, output, session)
     })
+    observeEvent(input$search, {
+      if(input$search != '' && input$search != "search key words in data name"){
+        key_words = strsplit(input$search, '\\s+')[[1]]
+        key_words = gsub("[^a-zA-Z0-9._-]+", "", key_words)
+        key_words <- paste(key_words, collapse='|')
+        res_data <- lapply(appconf, function(.ele){
+          if(grepl(key_words, paste(.ele$title, .ele$id, do.call(paste, .ele$ref)))){
+            return(c(.ele$id, .ele$title))
+          }else{
+            return(NULL)
+          }
+        })
+        ## update search_res
+        if(!is.null(res_data)){
+          output$search_res <- renderUI(HTML(
+            paste("<ul>",
+                  vapply(res_data, function(.ele){
+                    return(paste0("<li><a href='?data='", .ele[1], "'>", .ele[2], "</a>"))
+                  }, character(1L)),
+                  "</ul>")
+          ))
+        }
+      }
+    })
     ## update visitor stats
     update_visitor <- function(){
       req(input$remote_addr)

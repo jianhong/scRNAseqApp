@@ -19,6 +19,11 @@ tabChangeDataset <- function(req){
            style = "font-size: 125%;"),
          br(), hr(), br(),
          includeHTML("inst/extdata/doc.txt"),
+         p(
+           textInput('search', 'Search in database:',
+                     value = "", placeholder = 'search key words in data name'),
+           htmlOutput('search_res')
+         ),
          p(strong("Full reference list:"), br(),
            get_full_ref_list()),
          br(), hr(), br(),

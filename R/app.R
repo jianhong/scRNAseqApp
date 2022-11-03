@@ -204,7 +204,7 @@ scRNAseqApp <- function(...){
           output$search_res <- renderUI(HTML(
             paste("<ul>",
                   vapply(res_data, function(.ele){
-                    return(paste0("<li><a href='?data='", .ele[1], "'>", .ele[2], "</a>"))
+                    return(paste0("<li><a href='?data=", .ele[1], "'>", .ele[2], "</a>"))
                   }, character(1L)),
                   "</ul>")
           ))

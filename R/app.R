@@ -3,11 +3,16 @@
 #' @param datafolder the folder where saved the dataset for the app
 #' @param defaultDataset default dataset for the app.
 #' @param windowTitle The title that should be displayed by the browser window.
+#' @param maxRequestSize Maximal upload file size. Default is 1G.
+#' @param theme A theme.
+#' @param use_bs_themer logical(1). Used to determine the theme.
 #' @param ... parameters can be passed to shinyApp except ui and server.
 #' @import shiny
 #' @importFrom utils packageVersion read.delim
 #' @importFrom shinyhelper observe_helpers
 #' @importFrom ggplot2 ggplot aes geom_bar theme_minimal xlab ylab
+#' @importFrom bslib bs_theme bs_themer
+#' @importFrom thematic thematic_shiny
 #' @export
 #' @return An object that represents the app.
 #' @examples
@@ -17,10 +22,16 @@
 #'   setwd(app_path)
 #'   scRNAseqApp()
 #' }
+
 scRNAseqApp <- function(datafolder = "data",
                         defaultDataset = "pbmc_small",
                         windowTitle = "scRNAseq/scATACseq database",
+                        maxRequestSize=1073741824,
+                        theme = bs_theme(bootswatch = 'lumen'),
+                        use_bs_themer = FALSE,
                         ...){
+  stopifnot(is(theme, "bs_theme"))
+  thematic_shiny(font = "auto")
   ## load default parameters
   loginNavbarTitle <- "Switch User"
   datasets <- getDataSets(datafolder = datafolder)
@@ -32,6 +43,8 @@ scRNAseqApp <- function(datafolder = "data",
 
   ui0 <- function(req){
     fluidPage(
+      ### theme
+      theme = theme,
       ### HTML formatting of error messages
       tags$head(
         tags$style(HTML(".shiny-output-error-validation {color: red; font-weight: bold;}")),
@@ -40,11 +53,7 @@ scRNAseqApp <- function(datafolder = "data",
       ),
 
       navbarPage(
-        selectInput('availableDatasets',
-                    label = NULL,
-                    choices = datasets,
-                    selected = defaultDataset,
-                    width = "90vw"),
+        title = NULL,
         windowTitle = windowTitle,
         id = "topnav",
         footer = div(p(em(windowTitle, " (Version:",
@@ -52,6 +61,8 @@ scRNAseqApp <- function(datafolder = "data",
                        HTML("&copy;"), "2020 -",
                        format(Sys.Date(), "%Y"),
                        "jianhong@duke"), class="rightAlign"),
+        ### Tab: change dataset
+        aboutUI(req, "about"),
         ### Tab: cellInfo vs geneExpr on dimRed
         cellInfoGeneExprUI("cellInfoGeneExpr"),
         ### Tab: cellInfo vs cellInfo on dimRed
@@ -68,8 +79,6 @@ scRNAseqApp <- function(datafolder = "data",
         plotProportionUI("proportion"),
         ### Tab: Multiple gene expr
         plotBubbleHeatmapUI("bubbleHeatmap"),
-        ### Tab: change dataset
-        aboutUI(req, "about"),
         ### Tab: Login form
         #tabLogin(),
         loginUI(loginNavbarTitle)
@@ -80,8 +89,18 @@ scRNAseqApp <- function(datafolder = "data",
 
   ### Start server code
   server <- function(input, output, session) {
+    ## load local storage
+    session$sendCustomMessage("load_key", "defaultDataset")
+    ## set theme
+    if(is.null(getShinyOption("bootstrapTheme"))){
+      shinyOptions("bootstrapTheme"=theme)
+    }
+    if(use_bs_themer && is(getShinyOption("bootstrapTheme"), "bs_theme")){
+      bs_themer()
+    }
+
     ### resize the max upload file size for admin
-    options(shiny.maxRequestSize=1*1024^3) # 1G
+    options(shiny.maxRequestSize=maxRequestSize) # 1G
     ### For all tags and Server-side selectize
     observe_helpers()
     optCrt="{ option_create: function(data,escape) {return('<div class=\"create\"><strong>' + '</strong></div>');} }"
@@ -105,27 +124,47 @@ scRNAseqApp <- function(datafolder = "data",
     ## manager
     uploadServer("upload", datafolder)
     editServer("editdata", datafolder)
-    aboutServer("about", reactive({dataSource}),
-                optCrt, input$availableDatasets,
-                datafolder)
     ## update visitor stats
     updateVisitor(input, output, session)
     ## parse query strings
     observe({
       query <- parseQueryString(session$clientData$url_search)
+      query_has_results <- FALSE
       if(!is.null(query[['data']])){
         updateSelectInput(session, "availableDatasets", selected=query[['data']])
-      }
-      if(!is.null(query[['token']])){
-        token <- getToken(datafolder)
-        if(query[["token"]] %in% names(token)){
-          dataSource$token <- query[["token"]]
-          if(dataSource$token %in% names(token)){
-            updateSelectInput(session,
-                              "availableDatasets",
-                              selected=token[[query[['token']]]])
+        session$userData[["defaultdata_init"]] <- TRUE
+        query_has_results <- TRUE
+      }else{
+        if(!is.null(query[['token']])){
+          token <- getToken(datafolder)
+          if(query[["token"]] %in% names(token)){
+            dataSource$token <- query[["token"]]
+            if(dataSource$token %in% names(token)){
+              updateSelectInput(session,
+                                "availableDatasets",
+                                selected=token[[query[['token']]]])
+              session$userData[["defaultdata_init"]] <- TRUE
+              query_has_results <- TRUE
+            }
           }
         }
+      }
+
+      if(!use_bs_themer & !query_has_results){ ## not work when load themer
+        observeEvent(input$default_defaultDataset, {
+          if (isTRUE(isolate(session$userData[["defaultdata_init"]]))) {
+            return()
+          } else {
+            session$userData[["defaultdata_init"]] <- TRUE
+            dd <- isolate(input$default_defaultDataset)
+            if(!is.null(dd)){
+              if(dd %in% getDataSets(datafolder = datafolder) &&
+                 dd!=defaultDataset){
+                updateSelectInput(session, 'availableDatasets', selected = dd)
+              }
+            }
+          }
+        })
       }
     })
     ## change dataset
@@ -170,6 +209,7 @@ scRNAseqApp <- function(datafolder = "data",
                           choices = getDataSets(datafolder = datafolder),
                           selected = getDataSets(datafolder = datafolder)[1])
       }
+      session$sendCustomMessage("save_key", paste("defaultDataset", isolate(input$availableDatasets), sep = "|"))
     })
     ## refresh data when change dataset
     refreshData <- function(input, output, session){
@@ -181,6 +221,9 @@ scRNAseqApp <- function(datafolder = "data",
         HTML(names(datasets)[datasets==input$availableDatasets])
       })
 
+      aboutServer("about", reactive({dataSource}),
+                  optCrt, input$availableDatasets,
+                  datafolder)
       ### Plots for tab cell info vs gene expression
       cellInfoGeneExprServer("cellInfoGeneExpr", reactive({dataSource}),
                              optCrt, input$availableDatasets,
@@ -222,6 +265,7 @@ scRNAseqApp <- function(datafolder = "data",
                               optCrt, input$availableDatasets,
                               datafolder)
     }
+
   }
 
   shinyApp(ui=ui, server = server, ...)

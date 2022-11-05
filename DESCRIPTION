@@ -17,6 +17,7 @@ Depends:
     R (>= 4.0.0)
 Imports:
     bibtex,
+    bslib,
     circlize,
     ComplexHeatmap,
     data.table,
@@ -39,6 +40,7 @@ Imports:
     shinyhelper,
     shinymanager,
     stats,
+    thematic,
     tools,
     xml2
 Suggests: rmarkdown, knitr

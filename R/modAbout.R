@@ -9,18 +9,17 @@ visitorDependencies <- function(){
 }
 #' @importFrom bibtex read.bib
 #' @importFrom RefManageR GetBibEntryWithDOI PrintBibliography
-aboutUI <- function(req, id, doc="doc.txt"){
+aboutUI <- function(request, id, doc="doc.txt"){
   ns <- NS(id)
-  tabPanel(value="About",
-           HTML("About"),
-           h4("About the dataset"),
-           "In this tab will introduce the details about current dataset.",
-           "And the details about the database.",
-           br(),br(),
-
-           textOutput(ns("ref")),
-           br(), hr(), br(),
+  tabPanel(title=div(selectInput('availableDatasets',
+                                 label = NULL,
+                                 choices = c(),
+                                 selected = NULL,
+                                 width = "90vw")),
            includeHTML(doc),
+           br(), hr(), br(),
+           h4("Reference for current data"),
+           textOutput(ns("ref")),
            br(), hr(), br(),
            p(
              textInput(ns('search'), 'Search in database',
@@ -32,7 +31,7 @@ aboutUI <- function(req, id, doc="doc.txt"){
            p(imageOutput('total_visitor', width = "50%", height="150px")),
            div(style = "display:none;",
                textInput("remote_agent", "remote_agent",
-                         value = req[["HTTP_USER_AGENT"]]),
+                         value = request[["HTTP_USER_AGENT"]]),
                visitorDependencies()
            ),
            hr(),
@@ -44,6 +43,7 @@ aboutUI <- function(req, id, doc="doc.txt"){
 aboutServer <- function(id, dataSource, optCrt, currentdataset,
                         datafolder){
   moduleServer(id, function(input, output, session){
+
     output$ref <- renderText(getRef(currentdataset,
                                     "bib",
                                     getAppConf(datafolder)))

@@ -8,6 +8,9 @@ scRNAseqApp(
   datafolder = "data",
   defaultDataset = "pbmc_small",
   windowTitle = "scRNAseq/scATACseq database",
+  maxRequestSize = 1073741824,
+  theme = bs_theme(bootswatch = "lumen"),
+  use_bs_themer = FALSE,
   ...
 )
 }
@@ -17,6 +20,12 @@ scRNAseqApp(
 \item{defaultDataset}{default dataset for the app.}
 
 \item{windowTitle}{The title that should be displayed by the browser window.}
+
+\item{maxRequestSize}{Maximal upload file size. Default is 1G.}
+
+\item{theme}{A theme.}
+
+\item{use_bs_themer}{logical(1). Used to determine the theme.}
 
 \item{...}{parameters can be passed to shinyApp except ui and server.}
 }

@@ -63,11 +63,12 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp
                        names = FALSE)
   if(inpScl){
     ggData[, val:= scale(val), keyby = "geneName"]
-    colRange <- range(ggData$val)
+    colRange <- range(ggData$val, na.rm=TRUE)
     if(colRange[1]<0){
-      colRange <- c(-max(abs(range(ggData$val))), max(abs(range(ggData$val))))
+      colRange <- c(-max(abs(range(ggData$val, na.rm=TRUE))),
+                    max(abs(range(ggData$val, na.rm=TRUE))))
     }else{
-      colRange <- c(0, max(abs(range(ggData$val))))
+      colRange <- c(0, max(abs(range(ggData$val, na.rm=TRUE))))
     }
     colRange1 <- quantile(ggData$val, probs = c(0, .01, .5, .99, 1),
                          na.rm = TRUE,

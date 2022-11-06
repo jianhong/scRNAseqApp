@@ -1,0 +1,17 @@
+.shiny-output-error-validation {color: red; font-weight: bold;}
+.rightAlign{float:right;}
+.navbar-default .navbar-nav { font-weight: bold; font-size: 16px; }
+/*About icon stats*/
+.about-container:after,.about-container:before,.about-clear:after,.about-clear:before{content:"";display:table;clear:both}
+.about-margin-bottom{margin-bottom:16px!important}
+.about-quarter{float:left;width:24.99999%;padding-right:16px!important}
+.about-red{color:#fff!important;background-color:#f44336!important}
+.about-orange{color:#000!important;background-color:#ff9800!important}
+.about-teal{color:#fff!important;background-color:#009688!important}
+.about-blue{color:#fff!important;background-color:#2196F3!important}
+.about-padding-16{padding-top:16px!important;padding-bottom:16px!important}
+.about-container{padding:0.01em 16px}
+.about-left{float:left!important}
+.about-right{float:right!important}
+.about-xxxlarge{font-size:48px!important}
+div.about-right>div{font-size:24px!important;magin:10px 0!important;font-weight:400;font-family:"Raleway", sans-serif;display:block;}

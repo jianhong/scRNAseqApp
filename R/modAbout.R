@@ -4,28 +4,95 @@ visitorDependencies <- function(){
                  package = "scRNAseqApp",
                  src = "assets",
                  script = "js/login.js",
-                 stylesheet = c()
+                 stylesheet = c("css/style.css")
   )
 }
 #' @importFrom bibtex read.bib
 #' @importFrom RefManageR GetBibEntryWithDOI PrintBibliography
-aboutUI <- function(request, id, doc="doc.txt"){
+aboutUI <- function(request, id, datafolder, doc="doc.txt"){
   ns <- NS(id)
   tabPanel(title=div(selectInput('availableDatasets',
                                  label = NULL,
-                                 choices = c(),
+                                 choices = getDataSets(datafolder = datafolder),
                                  selected = NULL,
                                  width = "90vw")),
            includeHTML(doc),
-           br(), hr(), br(),
-           h4("Reference for current data"),
-           textOutput(ns("ref")),
-           br(), hr(), br(),
+           hr(),
+           htmlOutput(ns("ref")),
+           hr(),
            p(
              textInput(ns('search'), 'Search in database',
                        placeholder = 'Type key words here'),
              htmlOutput(ns('search_res'))
            ),
+           hr(),
+           div(class = "about-row-padding about-margin-bottom",
+             div(
+               class = "about-quarter",
+               div(
+                 class = "about-container about-red about-padding-16",
+                 div(
+                   class = "about-left",
+                   icon('database', class="about-xxxlarge")
+                 ),
+                 div(
+                   class = "about-right",
+                   textOutput(ns('dataset_counts'))
+                 ),
+                 div(class="about-clear"),
+                 h4("datasets")
+               )
+             ),
+             div(
+               class = "about-quarter",
+               div(
+                 class = "about-container about-orange about-padding-16",
+                 div(
+                   class = "about-left",
+                   icon('sourcetree', class="about-xxxlarge")
+                 ),
+                 div(
+                   class = "about-right",
+                   textOutput(ns('reference_count'))
+                 ),
+                 div(class="about-clear"),
+                 h4("references")
+               )
+             ),
+             div(
+               class = "about-quarter",
+               div(
+                 class = "about-container about-teal about-padding-16",
+                 div(
+                   class = "about-left",
+                   icon('eye', class="about-xxxlarge")
+                 ),
+                 div(
+                   class = "about-right",
+                   textOutput(ns('visitor_count'))
+                 ),
+                 div(class="about-clear"),
+                 h4("visitor")
+               )
+             ),
+             div(
+               class = "about-quarter",
+               div(
+                 class = "about-container about-blue about-padding-16",
+                 div(
+                   class = "about-left",
+                   icon('fish', class="about-xxxlarge")
+                 ),
+                 div(
+                   class = "about-right",
+                   textOutput(ns('species_count'))
+                 ),
+                 div(class="about-clear"),
+                 h4('species')
+               )
+             )
+           ),
+           hr(),
            h4("Full reference list:"),
            htmlOutput(ns('full_ref_list')),
            p(imageOutput('total_visitor', width = "50%", height="150px")),
@@ -43,10 +110,15 @@ aboutUI <- function(request, id, doc="doc.txt"){
 aboutServer <- function(id, dataSource, optCrt, currentdataset,
                         datafolder){
   moduleServer(id, function(input, output, session){
+    ref <- getRef(currentdataset,
+                  "bib",
+                  getAppConf(datafolder))
+    if(!is.na(ref)){
+      output$ref <- renderUI(tagList(
+        h4("Reference for current data"),
+        p(ref)))
+    }
 
-    output$ref <- renderText(getRef(currentdataset,
-                                    "bib",
-                                    getAppConf(datafolder)))
     output$full_ref_list <- renderUI(
       get_full_ref_list(getAppConf(datafolder))
     )
@@ -75,6 +147,19 @@ aboutServer <- function(id, dataSource, optCrt, currentdataset,
           ))
         }
       }
+    })
+    output$dataset_counts <- renderText({
+      length(getDataSets(datafolder))
+    })
+    output$visitor_count <- renderText({
+      counter <- read.delim("www/counter.tsv", header = TRUE)
+      length(unique(counter$ip))
+    })
+    output$reference_count <- renderText({
+      get_full_ref_list(getAppConf(datafolder), returnLen=TRUE)
+    })
+    output$species_count <- renderText({
+      length(unique(lapply(getAppConf(datafolder), `[[`, i="species")))
     })
   })
 }

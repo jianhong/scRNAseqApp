@@ -45,13 +45,6 @@ scRNAseqApp <- function(datafolder = "data",
     fluidPage(
       ### theme
       theme = theme,
-      ### HTML formatting of error messages
-      tags$head(
-        tags$style(HTML(".shiny-output-error-validation {color: red; font-weight: bold;}")),
-        tags$style(HTML(".rightAlign{float:right;}")),
-        tags$style(HTML(".navbar-default .navbar-nav { font-weight: bold; font-size: 16px; }"))
-      ),
-
       navbarPage(
         title = NULL,
         windowTitle = windowTitle,
@@ -60,9 +53,9 @@ scRNAseqApp <- function(datafolder = "data",
                           as.character(packageVersion("scRNAseqApp")), ")"),
                        HTML("&copy;"), "2020 -",
                        format(Sys.Date(), "%Y"),
-                       "jianhong@duke"), class="rightAlign"),
+                       "jianhong@duke", style='text-align:right;'), class="rightAlign"),
         ### Tab: change dataset
-        aboutUI(req, "about"),
+        aboutUI(req, "about", datafolder),
         ### Tab: cellInfo vs geneExpr on dimRed
         cellInfoGeneExprUI("cellInfoGeneExpr"),
         ### Tab: cellInfo vs cellInfo on dimRed
@@ -126,7 +119,7 @@ scRNAseqApp <- function(datafolder = "data",
     editServer("editdata", datafolder)
     ## update visitor stats
     updateVisitor(input, output, session)
-    ## parse query strings
+    ## parse query strings, and lood old session
     observe({
       query <- parseQueryString(session$clientData$url_search)
       query_has_results <- FALSE
@@ -186,7 +179,8 @@ scRNAseqApp <- function(datafolder = "data",
 
       if(input$availableDatasets %in% getDataSets(datafolder = datafolder)){
         dataSource$dataset <- input$availableDatasets
-        if(checkLockedDataset(dataSource$dataset, datafolder, lockfilename="LOCKER")){
+        if(checkLockedDataset(dataSource$dataset, datafolder,
+                              lockfilename="LOCKER")){
           dataSource$Logged <- FALSE
           if(dataSource$token!=""){
             if(checkToken(token, dataSource$token, dataSource$dataset)){
@@ -209,7 +203,10 @@ scRNAseqApp <- function(datafolder = "data",
                           choices = getDataSets(datafolder = datafolder),
                           selected = getDataSets(datafolder = datafolder)[1])
       }
-      session$sendCustomMessage("save_key", paste("defaultDataset", isolate(input$availableDatasets), sep = "|"))
+      session$sendCustomMessage("save_key",
+                                paste("defaultDataset",
+                                      isolate(input$availableDatasets),
+                                      sep = "|"))
     })
     ## refresh data when change dataset
     refreshData <- function(input, output, session){

@@ -41,7 +41,7 @@ getRef <- function(dataset, key, appconf){
   }
 }
 
-get_full_ref_list <- function(appconf){
+get_full_ref_list <- function(appconf, returnLen=FALSE){
   ref <- lapply(appconf, function(.ele){
     .ele <- .ele$ref
     if(!is.null(.ele$bib)){
@@ -59,6 +59,7 @@ get_full_ref_list <- function(appconf){
   ref <- unlist(lapply(ref, function(.ele) .ele[[2]]))
   ref <- sort(ref)
   ref <- unique(ref)
+  if(returnLen) return(length(ref))
   ref <- paste("<li>", ref, "</li>")
   ref <- paste("<ol>\n", paste(ref, collapse = "\n"), "\n</ol>")
   HTML(ref)

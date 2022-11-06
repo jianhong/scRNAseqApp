@@ -7,10 +7,42 @@ visitorDependencies <- function(){
                  stylesheet = c("css/style.css")
   )
 }
+summaryBox <- function(title, value, width = 4, icon = "fas fa-chart-bar", style = "info", border = "left") {
+  div(
+    class = c(paste0("col-md-", width), "about-left-border"),
+    div(
+      class = paste0("card border-", border, "-", style, " shadow h-100 py-2"),
+      div(
+        class = "card-body",
+        div(
+          class = "row no-gutters align-items-center",
+          div(
+            class = "col mr-2",
+            div(
+              class = paste0("text-xs font-weight-bold text-", style, " text-uppercase mb-1"),
+              toupper(title)
+            ),
+            div(
+              class = "h5 mb-0 font-weight-bold text-gray-800",
+              value
+            )
+          ),
+          div(
+            class = "col-auto about-large-icon about-right",
+            icon(icon)
+          )
+        )
+      )
+    )
+  )
+}
 #' @importFrom bibtex read.bib
 #' @importFrom RefManageR GetBibEntryWithDOI PrintBibliography
 aboutUI <- function(request, id, datafolder, doc="doc.txt"){
   ns <- NS(id)
+  addResourcePath(prefix="pics",
+                  directoryPath = system.file(
+                    "assets", "images", package="scRNAseqApp"))
   tabPanel(title=div(selectInput('availableDatasets',
                                  label = NULL,
                                  choices = getDataSets(datafolder = datafolder),
@@ -20,77 +52,36 @@ aboutUI <- function(request, id, datafolder, doc="doc.txt"){
            hr(),
            htmlOutput(ns("ref")),
            hr(),
-           p(
-             textInput(ns('search'), 'Search in database',
-                       placeholder = 'Type key words here'),
-             htmlOutput(ns('search_res'))
-           ),
-           hr(),
-           div(class = "about-row-padding about-margin-bottom",
-             div(
-               class = "about-quarter",
-               div(
-                 class = "about-container about-red about-padding-16",
-                 div(
-                   class = "about-left",
-                   icon('database', class="about-xxxlarge")
-                 ),
-                 div(
-                   class = "about-right",
-                   textOutput(ns('dataset_counts'))
-                 ),
-                 div(class="about-clear"),
-                 h4("datasets")
-               )
-             ),
-             div(
-               class = "about-quarter",
-               div(
-                 class = "about-container about-orange about-padding-16",
-                 div(
-                   class = "about-left",
-                   icon('sourcetree', class="about-xxxlarge")
-                 ),
-                 div(
-                   class = "about-right",
-                   textOutput(ns('reference_count'))
-                 ),
-                 div(class="about-clear"),
-                 h4("references")
-               )
-             ),
-             div(
-               class = "about-quarter",
-               div(
-                 class = "about-container about-teal about-padding-16",
-                 div(
-                   class = "about-left",
-                   icon('eye', class="about-xxxlarge")
-                 ),
-                 div(
-                   class = "about-right",
-                   textOutput(ns('visitor_count'))
-                 ),
-                 div(class="about-clear"),
-                 h4("visitor")
-               )
-             ),
-             div(
-               class = "about-quarter",
-               div(
-                 class = "about-container about-blue about-padding-16",
-                 div(
-                   class = "about-left",
-                   icon('fish', class="about-xxxlarge")
-                 ),
-                 div(
-                   class = "about-right",
-                   textOutput(ns('species_count'))
-                 ),
-                 div(class="about-clear"),
-                 h4('species')
+           div(
+             class="about-display-container about-content",
+             style='width:100%;min-height:300px;',
+             img(class="about-image about-glass", src="pics/banner.png"),
+             absolutePanel(
+               top = "15%",
+               left = "10%",
+               width = "80%",
+               draggable = TRUE,
+               div(class =
+                     "panel panel-danger about-glass",
+                   div(class =
+                         "panel-heading about-container about-padding-16",
+                       textInput(ns('search'), label=NULL,
+                                 width = "96%",
+                                 placeholder = 'Search the database')),
+                   div(class = "panel-body about-bar border-bottom-info
+                       shadow h-100 py-2",
+                       htmlOutput(ns('search_res'))
+                   )
                )
              )
+           ),
+           hr(),
+           div(
+             class="about-container",
+             summaryBox("datasets", textOutput(ns('dataset_counts')), width = 3, icon = "database", style = "success", border = "bottom"),
+             summaryBox("references", textOutput(ns('reference_count')), width = 3, icon = "sourcetree", style = "danger", border = "bottom"),
+             summaryBox("visitors", textOutput(ns('visitor_count')), width = 3, icon = "eye", style = "primary", border = "bottom"),
+             summaryBox("species", textOutput(ns('species_count')), width = 3, icon = "fish", style = "warning", border = "bottom")
            ),
            hr(),
            h4("Full reference list:"),
@@ -128,7 +119,7 @@ aboutServer <- function(id, dataSource, optCrt, currentdataset,
         key_words = gsub("[^a-zA-Z0-9._-]+", "", key_words)
         key_words <- paste(key_words, collapse='|')
         res_data <- lapply(getAppConf(datafolder), function(.ele){
-          if(grepl(key_words, paste(.ele$title, .ele$id, do.call(paste, .ele$ref)),
+          if(grepl(key_words, paste(.ele$title, .ele$id, .ele$species, do.call(paste, .ele$ref)),
                    ignore.case = TRUE)){
             return(c(.ele$id, .ele$title))
           }else{
@@ -139,7 +130,7 @@ aboutServer <- function(id, dataSource, optCrt, currentdataset,
         res_data <- res_data[lengths(res_data)>0]
         if(!is.null(res_data)){
           output$search_res <- renderUI(HTML(
-            paste("<ul>",
+            paste("<ul class='about-ul'>",
                   vapply(res_data, function(.ele){
                     return(paste0("<li><a href='?data=", .ele[1], "'>", .ele[2], "</a>"))
                   }, character(1L)),

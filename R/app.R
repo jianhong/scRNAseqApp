@@ -3,12 +3,14 @@
 #' @param datafolder the folder where saved the dataset for the app
 #' @param defaultDataset default dataset for the app.
 #' @param windowTitle The title that should be displayed by the browser window.
+#' @param banner The banner image.
 #' @param maxRequestSize Maximal upload file size. Default is 1G.
 #' @param theme A theme.
 #' @param use_bs_themer logical(1). Used to determine the theme.
 #' @param ... parameters can be passed to shinyApp except ui and server.
 #' @import shiny
 #' @importFrom utils packageVersion read.delim
+#' @importFrom xfun base64_uri
 #' @importFrom shinyhelper observe_helpers
 #' @importFrom ggplot2 ggplot aes geom_bar theme_minimal xlab ylab
 #' @importFrom bslib bs_theme bs_themer
@@ -26,12 +28,16 @@
 scRNAseqApp <- function(datafolder = "data",
                         defaultDataset = "pbmc_small",
                         windowTitle = "scRNAseq/scATACseq database",
+                        banner = system.file('assets', 'images', 'banner.png',
+                                             package='scRNAseqApp'),
                         maxRequestSize=1073741824,
                         theme = bs_theme(bootswatch = 'lumen'),
                         use_bs_themer = FALSE,
                         ...){
   stopifnot(is(theme, "bs_theme"))
   thematic_shiny(font = "auto")
+  ## load banner
+  banner <- base64_uri(banner)
   ## load default parameters
   loginNavbarTitle <- "Switch User"
   datasets <- getDataSets(datafolder = datafolder)
@@ -53,9 +59,10 @@ scRNAseqApp <- function(datafolder = "data",
                           as.character(packageVersion("scRNAseqApp")), ")"),
                        HTML("&copy;"), "2020 -",
                        format(Sys.Date(), "%Y"),
-                       "jianhong@duke", style='text-align:right;'), class="rightAlign"),
+                       "jianhong@duke", style='text-align:right;'),
+                     class="about-right border-top-info"),
         ### Tab: change dataset
-        aboutUI(req, "about", datafolder),
+        aboutUI(req, "about", datafolder, banner),
         ### Tab: cellInfo vs geneExpr on dimRed
         cellInfoGeneExprUI("cellInfoGeneExpr"),
         ### Tab: cellInfo vs cellInfo on dimRed

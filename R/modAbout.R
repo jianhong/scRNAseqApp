@@ -38,11 +38,11 @@ summaryBox <- function(title, value, width = 4, icon = "fas fa-chart-bar", style
 }
 #' @importFrom bibtex read.bib
 #' @importFrom RefManageR GetBibEntryWithDOI PrintBibliography
-aboutUI <- function(request, id, datafolder, doc="doc.txt"){
+aboutUI <- function(request, id, datafolder, banner, doc="doc.txt"){
   ns <- NS(id)
-  addResourcePath(prefix="pics",
-                  directoryPath = system.file(
-                    "assets", "images", package="scRNAseqApp"))
+  # addResourcePath(prefix="pics",
+  #                 directoryPath = system.file(
+  #                   "assets", "images", package="scRNAseqApp"))
   tabPanel(title=div(selectInput('availableDatasets',
                                  label = NULL,
                                  choices = getDataSets(datafolder = datafolder),
@@ -55,7 +55,7 @@ aboutUI <- function(request, id, datafolder, doc="doc.txt"){
            div(
              class="about-display-container about-content",
              style='width:100%;min-height:300px;',
-             img(class="about-image about-glass", src="pics/banner.png"),
+             img(class="about-image about-glass", src=banner),
              absolutePanel(
                top = "15%",
                left = "10%",
@@ -79,7 +79,7 @@ aboutUI <- function(request, id, datafolder, doc="doc.txt"){
            div(
              class="about-container",
              summaryBox("datasets", textOutput(ns('dataset_counts')), width = 3, icon = "database", style = "success", border = "bottom"),
-             summaryBox("references", textOutput(ns('reference_count')), width = 3, icon = "sourcetree", style = "danger", border = "bottom"),
+             summaryBox("references", textOutput(ns('reference_count')), width = 3, icon = "book-open", style = "danger", border = "bottom"),
              summaryBox("visitors", textOutput(ns('visitor_count')), width = 3, icon = "eye", style = "primary", border = "bottom"),
              summaryBox("species", textOutput(ns('species_count')), width = 3, icon = "fish", style = "warning", border = "bottom")
            ),
@@ -117,25 +117,28 @@ aboutServer <- function(id, dataSource, optCrt, currentdataset,
       if(input$search != '' && input$search != "Type key words here"){
         key_words = strsplit(input$search, '\\s+')[[1]]
         key_words = gsub("[^a-zA-Z0-9._-]+", "", key_words)
-        key_words <- paste(key_words, collapse='|')
         res_data <- lapply(getAppConf(datafolder), function(.ele){
-          if(grepl(key_words, paste(.ele$title, .ele$id, .ele$species, do.call(paste, .ele$ref)),
-                   ignore.case = TRUE)){
-            return(c(.ele$id, .ele$title))
-          }else{
-            return(NULL)
-          }
+          x <- paste(.ele$title, .ele$id, .ele$species,
+                     do.call(paste, .ele$ref))
+          m <- vapply(key_words, grepl, logical(1L), x = x, ignore.case=TRUE)
+          m <- sum(m)
+          return(c(m, .ele$id, .ele$title))
         })
         ## update search_res
-        res_data <- res_data[lengths(res_data)>0]
-        if(!is.null(res_data)){
-          output$search_res <- renderUI(HTML(
-            paste("<ul class='about-ul'>",
-                  vapply(res_data, function(.ele){
-                    return(paste0("<li><a href='?data=", .ele[1], "'>", .ele[2], "</a>"))
-                  }, character(1L)),
-                  "</ul>")
-          ))
+        res_data <- do.call(rbind, res_data)
+        res_data <- res_data[res_data[, 1]>0, , drop=FALSE]
+        res_data <- res_data[order(res_data[, 1], decreasing = TRUE),
+                             -1, drop=FALSE]
+        if(nrow(res_data)>0){
+          output$search_res <- renderUI(
+            tags$ul(class='about-ul',
+                  apply(res_data, 1, function(.ele){
+                    return(tags$li(
+                      tags$a(href=paste0('?data=', .ele[1]),
+                             .ele[2])))
+                  })
+               )
+          )
         }
       }
     })

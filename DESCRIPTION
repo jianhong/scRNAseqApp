@@ -42,6 +42,7 @@ Imports:
     stats,
     thematic,
     tools,
+    xfun,
     xml2
 Suggests: rmarkdown, knitr
 Enhances:

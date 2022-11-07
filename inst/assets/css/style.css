@@ -1,5 +1,4 @@
 .shiny-output-error-validation {color: red; font-weight: bold;}
-.rightAlign{float:right;}
 .navbar-default .navbar-nav { font-weight: bold; font-size: 16px; }
 /*About icon stats*/
 .about-container:after,.about-container:before,.about-clear:after,.about-clear:before{content:"";display:table;clear:both}
@@ -40,3 +39,4 @@ div.about-right>div{font-size:24px!important;magin:10px 0!important;font-weight:
 .border-left-dark{border-left:.25rem solid #5a5c69!important}
 .border-bottom-dark{border-bottom:.25rem solid #5a5c69!important}
 .text-gray-300 {color: #dddfeb!important;}
+.border-top-info{border-top:.25rem solid #36b9cc!important}

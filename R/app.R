@@ -63,6 +63,7 @@ scRNAseqApp <- function(datafolder = "data",
                      class="about-right border-top-info"),
         ### Tab: change dataset
         aboutUI(req, "about", datafolder, banner),
+        homeUI(), ## fake home
         ### Tab: cellInfo vs geneExpr on dimRed
         cellInfoGeneExprUI("cellInfoGeneExpr"),
         ### Tab: cellInfo vs cellInfo on dimRed

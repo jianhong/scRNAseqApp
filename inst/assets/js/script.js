@@ -12,4 +12,9 @@ $(document).on('shiny:sessioninitialized', function(){
     if(value === null) return false;
     Shiny.setInputValue('default_'+key, value);
   });
+  $('a[data-value="home"]').on("click", function(e) {
+        e.preventDefault();
+        $('a[data-value="about"]').trigger('click');
+        return false;
+      }).attr("class", $('a[data-value="about"]').attr("class"));
 });

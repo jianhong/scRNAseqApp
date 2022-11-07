@@ -3,7 +3,7 @@ visitorDependencies <- function(){
   htmlDependency(name = "scRNAseqApp-assets", version = "0.0.1",
                  package = "scRNAseqApp",
                  src = "assets",
-                 script = "js/login.js",
+                 script = "js/script.js",
                  stylesheet = c("css/style.css")
   )
 }
@@ -29,13 +29,21 @@ summaryBox <- function(title, value, width = 4, icon = "fas fa-chart-bar", style
           ),
           div(
             class = "col-auto about-large-icon about-right",
-            icon(icon)
+            icon(class=paste0("about-", style), icon)
           )
         )
       )
     )
   )
 }
+homeUI <- function(){
+  tabPanel(## fack home
+    title = "",
+    value = "home",
+    icon = icon("home")
+  )
+}
+
 #' @importFrom bibtex read.bib
 #' @importFrom RefManageR GetBibEntryWithDOI PrintBibliography
 aboutUI <- function(request, id, datafolder, banner, doc="doc.txt"){
@@ -48,12 +56,13 @@ aboutUI <- function(request, id, datafolder, banner, doc="doc.txt"){
                                  choices = getDataSets(datafolder = datafolder),
                                  selected = NULL,
                                  width = "90vw")),
+           value = 'about',
            includeHTML(doc),
            hr(),
            htmlOutput(ns("ref")),
            hr(),
            div(
-             class="about-display-container about-content",
+             class="about-display-container about-content about-top",
              style='width:100%;min-height:300px;',
              img(class="about-image about-glass", src=banner),
              absolutePanel(

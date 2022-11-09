@@ -1,14 +1,14 @@
 #' @importFrom shinymanager auth_ui secure_server use_language check_credentials
-loginUI <- function(loginNavbarTitle){
+loginUI <- function(loginNavbarTitle, defaultDataset){
   lan <- use_language("en")
   tabPanel(
     HTML(loginNavbarTitle),
     auth_ui(
       id = "auth",
       tags_bottom = tags$div(
-        actionButton(inputId = ".shinymanager_app",
-                     label = lan$get("Go to application"),
-                     icon = icon("share"))
+        tags$a(href = paste0('?data=', defaultDataset),
+              "Go to application",
+              icon = icon("share"))
       ),
       # set language ?
       lan = lan

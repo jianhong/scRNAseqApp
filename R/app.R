@@ -82,7 +82,7 @@ scRNAseqApp <- function(datafolder = "data",
         plotBubbleHeatmapUI("bubbleHeatmap"),
         ### Tab: Login form
         #tabLogin(),
-        loginUI(loginNavbarTitle)
+        loginUI(loginNavbarTitle, defaultDataset)
       ))
   }
   ## security_login
@@ -110,6 +110,7 @@ scRNAseqApp <- function(datafolder = "data",
       dataset=defaultDataset,
       appconf=appconf,
       data_types=data_types,
+      genelist=NULL,
       sc1conf=NULL,
       sc1def=NULL,
       sc1gene=NULL,
@@ -131,8 +132,15 @@ scRNAseqApp <- function(datafolder = "data",
     observe({
       query <- parseQueryString(session$clientData$url_search)
       query_has_results <- FALSE
+      if(!is.null(query[['gene']])){
+        genes <- strsplit(query[['gene']], ";")[[1]]
+        dataSource$genelist <- genes
+      }else{
+        dataSource$genelist <- NULL
+      }
       if(!is.null(query[['data']])){
-        updateSelectInput(session, "availableDatasets", selected=query[['data']])
+        updateSelectInput(session, "availableDatasets",
+                          selected=query[['data']])
         session$userData[["defaultdata_init"]] <- TRUE
         query_has_results <- TRUE
       }else{
@@ -206,6 +214,13 @@ scRNAseqApp <- function(datafolder = "data",
           }
         }
         refreshData(input, output, session)
+        if(length(dataSource$genelist)==1){
+          updateTabsetPanel(session, 'topnav', selected ="cellInfoGeneExpr")
+        }else{
+          if(length(dataSource$genelist)>1){
+            updateTabsetPanel(session, 'topnav', selected ="bubbleHeatmap")
+          }
+        }
       }else{
         updateSelectInput(session, "availableDatasets",
                           choices = getDataSets(datafolder = datafolder),

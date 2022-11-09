@@ -125,7 +125,7 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp
   if(inpPlt == "Bubbleplot"){
     ggProp <- reshapeMat(value.var = "prop")
     layer_fun <- function(j, i, x, y, width, height, fill) {
-      r <- min(unit.c(width, height))
+      r <- min(unit.c(width, height), na.rm = TRUE)
       idx <- i+(j-1)*ncol(ggProp)
       g_prop <- as.vector(ggProp)[idx]
       grid.circle(x = x, y = y, r = abs(g_prop)/2 * r,
@@ -229,7 +229,6 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp
   # }
   #
   #
-  saveRDS(as.list(environment()), "tmp.rds")
 
   return(draw(ht_list,
               heatmap_legend_side = "bottom",

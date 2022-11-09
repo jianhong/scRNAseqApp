@@ -1,5 +1,6 @@
 plotBubbleHeatmapUI <- function(id){
   tabPanel(
+    value = id,
     HTML("Bubbleplot / Heatmap"),
     h4("Gene expression bubbleplot / heatmap"),
     "In this tab, users can visualise the gene expression patterns of ",
@@ -61,8 +62,16 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt, currentdataset,
   moduleServer(id, function(input, output, session){
     colrg <- reactiveVal(NA)
     ## input column
+    genelist <- dataSource()$sc1def$genes
+    if(!is.null(dataSource()$genelist)){
+      if(length(dataSource()$genelist)>1){
+        genelist <- dataSource()$genelist
+      }else{
+        genelist <- c(dataSource()$genelist, genelist)
+      }
+    }
     updateTextAreaInput(session, "genelist",
-                        value = paste0(dataSource()$sc1def$genes,
+                        value = paste0(genelist,
                                        collapse = ", "))
     updateSelectInput(session,
                       "CellInfoX",

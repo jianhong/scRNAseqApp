@@ -7,7 +7,7 @@ editUI <- function (id) {
       fluidRow(
         column(
           width = 6,
-          selectInput(ns("data"),
+          selectInput(ns("dir"),
                       label = "Available data",
                       choices = c()),
           actionButton(ns("refresh"),
@@ -27,8 +27,6 @@ editUI <- function (id) {
         column(width = 6,
                textInput(ns("title"),
                          label = "Title for the data"),
-               textInput(ns("dir"),
-                         label = "data folder (must be unique)"),
                checkboxInput(ns("locker"),
                              label = "Require privilege for the data",
                              value = TRUE),
@@ -77,6 +75,10 @@ editUI <- function (id) {
                  label = "Default genes to show in bubbleplot/heatmap"
                ),
                textAreaInput(
+                 ns("keywords"),
+                 label = "The key words for this work"
+               ),
+               textAreaInput(
                  ns("reference"),
                  label = "BibTeX string"
                ),
@@ -96,19 +98,22 @@ editUI <- function (id) {
     )
   )
 }
-updateAppConf <- function(datafolder, input){
+updateAppConf <- function(datafolder, input, global){
   appconf <- list(title=input$title,
                   id=input$dir,
                   species=input$species,
                   ref=list(
                     bib=input$reference,
                     doi=input$doi,
-                    pmid=input$pmid
+                    pmid=input$pmid,
+                    entry=global()$ref
                   ),
-                  types=input$datatype)
-  if(!is.null(input$data)){
-    if(input$data!=""){
-      saveRDS(appconf, file.path(datafolder, input$data, "appconf.rds"))
+                  types=input$datatype,
+                  markers = global()$markers,
+                  keywords = input$keywords)
+  if(!is.null(input$dir)){
+    if(input$dir!=""){
+      saveRDS(appconf, file.path(datafolder, input$dir, "appconf.rds"))
     }
   }
 }
@@ -123,9 +128,9 @@ updateDef <- function(datafolder, input){
     grp1 = input$grp1,
     grp2 = input$grp2
   )
-  if(!is.null(input$data)){
-    if(input$data!=""){
-      saveRDS(sc1def, file.path(datafolder, input$data, "sc1def.rds"))
+  if(!is.null(input$dir)){
+    if(input$dir!=""){
+      saveRDS(sc1def, file.path(datafolder, input$dir, "sc1def.rds"))
     }
   }
 }
@@ -145,27 +150,32 @@ editServer <- function(id, datafolder) {
                              sc1meta=NULL,
                              sc1def=NULL,
                              appconf=NULL,
+                             markers=NULL,
+                             ref=NULL,
                              locker=TRUE,
                              save=FALSE)
     updateSelectInput(session,
-                      "data",
+                      "dir",
                       choices = getDataSets(datafolder),
                       selected = getDataSets(datafolder)[1])
     observeEvent(input$refresh, {
       updateSelectInput(session,
-                        "data",
+                        "dir",
                         choices = getDataSets(datafolder),
                         selected = getDataSets(datafolder)[1])
     })
-    observeEvent(input$data, {
-      if(!is.null(input$data)){
-        if(input$data %in% getDataSets(datafolder)){
+    observeEvent(input$multigene, {
+      global$markers <- strsplit(input$multigene, "\\s+|,|;")[[1]]
+    })
+    observeEvent(input$dir, {
+      if(!is.null(input$dir)){
+        if(input$dir %in% getDataSets(datafolder)){
           global$sc1meta <- readRDS(file.path(
-            datafolder, input$data, "sc1meta.rds"
+            datafolder, input$dir, "sc1meta.rds"
           ))
           global$sc1conf_orig <-
             readRDS(file.path(datafolder,
-                              input$data,
+                              input$dir,
                               "sc1conf.rds"))
           global$sc1conf_orig$fID <- formatfID_CL(global$sc1conf_orig$fID)
           global$sc1conf_orig$fCL <- formatfID_CL(global$sc1conf_orig$fCL)
@@ -199,7 +209,7 @@ editServer <- function(id, datafolder) {
             selected = cellInfo
           )
           global$sc1def <- readRDS(file.path(datafolder,
-                                             input$data,
+                                             input$dir,
                                              "sc1def.rds"))
           updateTextInput(session, "gene1", value=global$sc1def$gene1)
           updateTextInput(session, "gene2", value=global$sc1def$gene2)
@@ -219,8 +229,10 @@ editServer <- function(id, datafolder) {
           updateSelectInput(session, "grp2", choices = grp,
                             selected = global$sc1def$grp2)
           global$appconf <- readRDS(file.path(datafolder,
-                                              input$data,
+                                              input$dir,
                                               "appconf.rds"))
+          updateTextAreaInput(session, "keywords",
+                              value=global$appconf$keywords)
           updateTextInput(session, "title", value=global$appconf$title)
           updateTextInput(session, "dir", value=global$appconf$id)
           updateSelectInput(session, "datatype",
@@ -231,12 +243,12 @@ editServer <- function(id, datafolder) {
           updateTextInput(session, "doi", value=global$appconf$ref$doi)
           updateTextInput(session, "pmid", value=global$appconf$ref$pmid)
           global$locker <-
-            file.exists(file.path(datafolder, input$data, "LOCKER"))
+            file.exists(file.path(datafolder, input$dir, "LOCKER"))
           updateCheckboxInput(
             session, "locker",
             value = global$locker)
           global$save <-
-            file.exists(file.path(datafolder, input$data, "seu.rds"))
+            file.exists(file.path(datafolder, input$dir, "seu.rds"))
           updateCheckboxInput(
             session, "save",
             value = global$save)
@@ -247,9 +259,9 @@ editServer <- function(id, datafolder) {
       showModal(modalDialog(
         tagList(
           p("Are you sure you want to delete the data: ",
-            input$data)
+            input$dir)
         ),
-        title=paste("Delete data", input$data),
+        title=paste("Delete data", input$dir),
         footer=tagList(
           actionButton(NS(id, "confirmDelete"),
                        "Delete"),
@@ -258,10 +270,10 @@ editServer <- function(id, datafolder) {
       ))
     })
     observeEvent(input$confirmDelete, {
-      req(input$data)
-      unlink(file.path(datafolder, input$data), recursive = TRUE)
+      req(input$dir)
+      unlink(file.path(datafolder, input$dir), recursive = TRUE)
       updateSelectInput(session,
-                        "data",
+                        "dir",
                         choices = getDataSets(datafolder),
                         selected = getDataSets(datafolder)[1])
       removeModal()
@@ -271,7 +283,7 @@ editServer <- function(id, datafolder) {
                     input, output, session)
       })
     observeEvent(input$pmid,{
-      updateRefById("reference", "pmid", GetPubMedByID,
+      global$ref <- updateRefById("reference", "pmid", GetPubMedByID,
                     input, output, session)
     })
 
@@ -280,24 +292,24 @@ editServer <- function(id, datafolder) {
       clmn <- input$conf_cell_edit$col
       global$sc1conf_data[row, clmn] <- input$conf_cell_edit$value
       saveRDS(global$sc1conf_data,
-              file.path(datafolder, input$data, "sc1conf.rds"))
+              file.path(datafolder, input$dir, "sc1conf.rds"))
     })
 
     observeEvent(input$reset, {
       global$sc1conf_data <- global$sc1conf_orig
       saveRDS(global$sc1meta,
-              file.path(datafolder, input$data, "sc1meta.rds"))
+              file.path(datafolder, input$dir, "sc1meta.rds"))
       saveRDS(global$sc1conf_orig,
-              file.path(datafolder, input$data, "sc1conf.rds"))
+              file.path(datafolder, input$dir, "sc1conf.rds"))
       saveRDS(global$appconf,
-              file.path(datafolder, input$data, "appconf.rds"))
+              file.path(datafolder, input$dir, "appconf.rds"))
       saveRDS(global$sc1def,
-              file.path(datafolder, input$data, "sc1def.rds"))
+              file.path(datafolder, input$dir, "sc1def.rds"))
       if(global$locker){
         writeLines(character(0),
-                   file.path(datafolder, input$data, "LOCKER"))
+                   file.path(datafolder, input$dir, "LOCKER"))
       }else{
-        unlink(file.path(datafolder, input$data, "LOCKER"))
+        unlink(file.path(datafolder, input$dir, "LOCKER"))
       }
       adminMsg("Rollback done!", "message")
     })
@@ -344,26 +356,26 @@ editServer <- function(id, datafolder) {
           }
         }
         saveRDS(meta,
-                file.path(datafolder, input$data, "sc1meta.rds"))
+                file.path(datafolder, input$dir, "sc1meta.rds"))
         saveRDS(conf_new,
-                file.path(datafolder, input$data, "sc1conf.rds"))
+                file.path(datafolder, input$dir, "sc1conf.rds"))
       }
-      sc1conf <- readRDS(file.path(datafolder, input$data, "sc1conf.rds"))
+      sc1conf <- readRDS(file.path(datafolder, input$dir, "sc1conf.rds"))
       sc1conf <- sc1conf[sc1conf$ID %in% input$meta_to_include, ]
       saveRDS(sc1conf,
-              file.path(datafolder, input$data, "sc1conf.rds"))
-      updateAppConf(datafolder, input)
+              file.path(datafolder, input$dir, "sc1conf.rds"))
+      updateAppConf(datafolder, input, reactive({global}))
       updateDef(datafolder, input)
       if(input$locker){
         writeLines(character(0),
-                   file.path(datafolder, input$data, "LOCKER"))
+                   file.path(datafolder, input$dir, "LOCKER"))
       }else{
-        unlink(file.path(datafolder, input$data, "LOCKER"))
+        unlink(file.path(datafolder, input$dir, "LOCKER"))
       }
       if(input$save){
         adminMsg("There is no seurat object available", "warning")
       }else{
-        unlink(file.path(datafolder, input$data, "seu.rds"))
+        unlink(file.path(datafolder, input$dir, "seu.rds"))
       }
       adminMsg("Update done!", "message")
     })

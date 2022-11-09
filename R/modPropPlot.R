@@ -1,5 +1,6 @@
 plotProportionUI <- function(id){
   tabPanel(
+    value=id,
     HTML("Proportion plot"),
     h4("Proportion / cell numbers across different cell information"),
     "In this tab, users can visualise the composition of single cells based on one discrete ",

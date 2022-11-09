@@ -1,5 +1,6 @@
 geneExprGeneExprUI <- function(id){
   tabPanel(
+    value = id,
     htmlOutput(NS(id, 'GeneExpr')),
     tabsubTitleUI(id, 'GeneExpr',
                   description = paste(

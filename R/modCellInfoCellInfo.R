@@ -1,5 +1,6 @@
 cellInfoCellInfoUI <- function(id){
   tabPanel(
+    value = id,
     HTML("CellInfo vs CellInfo"),
     h4("Cell information vs cell information on dimension reduction"),
     "In this tab, users can visualise two cell informations side-by-side ",

@@ -10,7 +10,7 @@
 .about-right{float:right!important}
 .about-large-icon{font-size:24px!important}
 .about-bar{z-index:-1}
-.about-top{z-index:10000!important}
+.about-top{z-index:1000!important}
 div.about-right>div{font-size:24px!important;magin:10px 0!important;font-weight:400;font-family:"Raleway", sans-serif;display:block;}
 .about-image{max-width:100%;height:auto}
 .about-glass{background: rgba(255,255,255,0.8); backdrop-filter:saturate(180%) blur(10px)}

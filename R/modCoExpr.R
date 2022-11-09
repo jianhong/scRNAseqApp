@@ -2,6 +2,7 @@
 #' @importFrom magrittr %>%
 coExprUI <- function(id){
   tabPanel(
+    value = id,
     htmlOutput(NS(id, 'GeneExpr')),
     tabsubTitleUI(id, 'GeneExpr',
                   description = paste(
@@ -22,19 +23,26 @@ coExprUI <- function(id){
         geneCoExprPlotControlUI(id, 1)
       ),
       column(
-        6, style="border-right: 2px solid black",
-        geneExprDotPlotUI(id, 1)
-      ),
-      column(
-        3,geneExprDotPlotUI(id, 2),
-        br(), h4("Cell numbers"),
-        DTOutput(NS(id, "coExpr.dt"))
+        9,
+        fluidRow(column(12, uiOutput(NS0(id, "GeneExpr3Doup.ui", 1)))),
+        fluidRow(
+          column(
+            8, style="border-right: 2px solid black",
+            geneExprDotPlotUI(id, 1)
+          ),
+          column(
+            4,geneExprDotPlotUI(id, 2),
+            br(), h4("Cell numbers"),
+            DTOutput(NS(id, "coExpr.dt"))
+          )
+        )
       )
     )
   )
 }
 #' @importFrom DT renderDT
 #' @importFrom magrittr %>%
+#' @importFrom plotly plotlyOutput renderPlotly
 coExprServer <- function(id, dataSource, optCrt, currentdataset,
                          datafolder){
   moduleServer(id, function(input, output, session){
@@ -93,7 +101,7 @@ coExprServer <- function(id, dataSource, optCrt, currentdataset,
                          options = list(maxOptions = 6, create = TRUE,
                                         persist = TRUE, render = I(optCrt)))
     ### plots
-    plot1 <- reactive({
+    output$GeneExpr3Doup1 <- renderPlotly({ reactive({
       scDRcoex(
         dataSource()$sc1conf,
         dataSource()$sc1meta,
@@ -107,18 +115,48 @@ coExprServer <- function(id, dataSource, optCrt, currentdataset,
         "sc1gexpr.h5",
         dataSource()$sc1gene,
         input$GeneExprsiz,
+        "3D",
         input$CoExprcol1,
         input$CoExprord1,
         input$GeneExprfsz,
         input$GeneExprasp,
         input$GeneExprtxt,
         datafolder=datafolder)
+    })() })
+    output$GeneExpr3Doup.ui1 <- renderUI({
+      plotlyOutput(NS0(id, "GeneExpr3Doup", 1),
+                   height = pList[input$GeneExprpsz])
     })
+
+    plot1 <- reactive({
+        scDRcoex(
+          dataSource()$sc1conf,
+          dataSource()$sc1meta,
+          input$GeneExprdrX,
+          input$GeneExprdrY,
+          input$GeneName1,
+          input$GeneName2,
+          input$subsetCell,
+          input$subsetCellVal,
+          dataSource()$dataset,
+          "sc1gexpr.h5",
+          dataSource()$sc1gene,
+          input$GeneExprsiz,
+          "2D",
+          input$CoExprcol1,
+          input$CoExprord1,
+          input$GeneExprfsz,
+          input$GeneExprasp,
+          input$GeneExprtxt,
+          datafolder=datafolder)
+    })
+
     output$GeneExproup1 <- renderPlot({ plot1() })
     output$GeneExproup.ui1 <- renderUI({
       plotOutput(NS0(id, "GeneExproup", 1),
                  height = pList[input$GeneExprpsz])
     })
+
     output$GeneExproup.pdf1 <-
       plotsDownloadHandler(
         "pdf",

@@ -58,6 +58,10 @@ uploadUI <- function (id) {
                  label = "Default genes to show in bubbleplot/heatmap"
                ),
                textAreaInput(
+                 ns("keywords"),
+                 label = "The key words for this work"
+               ),
+               textAreaInput(
                  ns("reference"),
                  label = "BibTeX string"
                ),
@@ -172,9 +176,10 @@ updateRefById <- function(id, element, FUN, input, output, session){
           if(is(bibentry, "bibentry")){
             updateTextAreaInput(session,
                                 id,
-                                value = format(bibentry, style = 'text'))
+                                value = format(bibentry, style = 'html'))
           }
           updateRefIDs(element, input, output, session)
+          return(bibentry)
         },
         error = function(e){
           adminMsg(e, 'error')
@@ -202,7 +207,9 @@ uploadServer <- function(id, datafolder) {
   moduleServer(id, function(input, output, session){
     global <- reactiveValues(filepath = NULL,
                              seu = NULL,
-                             config = NULL)
+                             config = NULL,
+                             ref = NULL,
+                             markers = NULL)
     getSeuObj <- function(){
       seu <- global$seu
       DefaultAssay(seu) <- ifelse("SCT" %in% Assays(seu), "SCT", "RNA")
@@ -335,9 +342,13 @@ uploadServer <- function(id, datafolder) {
     observeEvent(input$doi,
                  updateRefById("reference", "doi", GetBibEntryWithDOI,
                                input, output, session))
-    observeEvent(input$pmid,
-                 updateRefById("reference", "pmid", GetPubMedByID,
-                               input, output, session))
+    observeEvent(input$pmid,{
+      global$ref <- updateRefById("reference", "pmid", GetPubMedByID,
+                                  input, output, session)
+    })
+    observeEvent(input$multigene, {
+      global$markers <- strsplit(input$multigene, "\\s+|,|;")[[1]]
+    })
     observeEvent(input$upload, {
       if(!is.null(global$seu)){
           # Create a Progress object
@@ -354,18 +365,9 @@ uploadServer <- function(id, datafolder) {
                      shiny.dir = file.path(datafolder, input$dir),
                      default.gene1 = input$gene1,
                      default.gene2 = input$gene2,
-                     default.multigene = strsplit(input$multigene, "\\s+|,|;")[[1]])
+                     default.multigene = global$markers)
         progress$set(message="set data config file", value=.97)
-        appconf <- list(title=input$title,
-                        id=input$dir,
-                        species=input$species,
-                        ref=list(
-                          bib=input$reference,
-                          doi=input$doi,
-                          pmid=input$pmid
-                        ),
-                        types=input$datatype)
-        saveRDS(appconf, file.path(datafolder, input$dir, "appconf.rds"))
+        updateAppConf(datafolder, input, reactive({global}))
         saveMisc("monocle3_pseudotime")
         saveMisc("cellchat")
         if(input$save){

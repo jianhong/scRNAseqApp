@@ -1,5 +1,6 @@
 cellInfoGeneExprUI <- function(id){
   tabPanel(
+    value = id,
     htmlOutput(NS(id, 'GeneExpr')),
     tabsubTitleUI(id, 'GeneExpr',
                   description = paste(
@@ -83,10 +84,14 @@ cellInfoGeneExprServer <- function(id, dataSource, optCrt, currentdataset,
     updateSelectInput(session, "CellInfo1", "Cell information:",
                       choices = dataSource()$sc1conf$UI,
                       selected = dataSource()$sc1def$meta1)
+    selectedGene <- dataSource()$sc1def$gene1
+    if(!is.null(dataSource()$genelist)){
+      selectedGene <- dataSource()$genelist[1]
+    }
     updateSelectizeInput(session, "GeneName2",
                          choices = sort(names(dataSource()$sc1gene)),
                          server = TRUE,
-                         selected = dataSource()$sc1def$gene1,
+                         selected = selectedGene,
                          options = list(maxOptions = 6, create = TRUE,
                                         persist = TRUE, render = I(optCrt)))
     ### plots

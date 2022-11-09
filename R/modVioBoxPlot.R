@@ -1,5 +1,6 @@
 plotVioBoxUI <- function(id){
   tabPanel(
+    value=id,
     HTML("Violinplot / Boxplot"),
     h4("Cell information / gene expression violin plot / box plot"),
     "In this tab, users can visualise the gene expression or continuous cell information ",

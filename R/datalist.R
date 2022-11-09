@@ -44,6 +44,10 @@ getRef <- function(dataset, key, appconf){
 get_full_ref_list <- function(appconf, returnLen=FALSE){
   ref <- lapply(appconf, function(.ele){
     .ele <- .ele$ref
+    if(!is.null(.ele$entry)){
+      bib <- format(.ele$entry, style="html")
+      return(list(TRUE, bib))
+    }
     if(!is.null(.ele$bib)){
       bib <- sub("^\\[\\d+\\]\\s+", "", gsub("^\\s+", "", .ele$bib))
       if(bib!="" && !is.na(bib)){

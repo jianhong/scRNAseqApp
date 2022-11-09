@@ -110,45 +110,42 @@ aboutUI <- function(request, id, datafolder, banner, doc="doc.txt"){
 aboutServer <- function(id, dataSource, optCrt, currentdataset,
                         datafolder){
   moduleServer(id, function(input, output, session){
-    ref <- getRef(currentdataset,
-                  "bib",
-                  getAppConf(datafolder))
-    if(!is.na(ref)){
+    bibentry <- getRef(currentdataset,
+                       "entry",
+                       getAppConf(datafolder))
+    if(is(bibentry, "bibentry")){
       output$ref <- renderUI(tagList(
-        h4("Reference for current data"),
-        p(ref)))
+        if(!is.null(bibentry$abstract)){
+          if(!grepl("^The abstract of a scientific paper represents a concise",
+                    bibentry$abstract)){
+            tagList(
+              h5("Details for current data"),
+              HTML(format(bibentry$abstract, style="html")))
+          }else{
+            h5("Reference for current data")
+          }
+        }else{
+          h5("Reference for current data")
+        },
+        HTML(format(bibentry, style="html"))
+      ))
+    }else{
+      ref <- getRef(currentdataset,
+                    "bib",
+                    getAppConf(datafolder))
+      if(!is.na(ref)){
+        output$ref <- renderUI(tagList(
+          h5("Reference for current data"),
+          HTML(ref)))
+      }
     }
-
     output$full_ref_list <- renderUI(
       get_full_ref_list(getAppConf(datafolder))
     )
     observeEvent(input$search, {
       if(input$search != '' && input$search != "Type key words here"){
-        key_words = strsplit(input$search, '\\s+')[[1]]
-        key_words = gsub("[^a-zA-Z0-9._-]+", "", key_words)
-        res_data <- lapply(getAppConf(datafolder), function(.ele){
-          x <- paste(.ele$title, .ele$id, .ele$species,
-                     do.call(paste, .ele$ref))
-          m <- vapply(key_words, grepl, logical(1L), x = x, ignore.case=TRUE)
-          m <- sum(m)
-          return(c(m, .ele$id, .ele$title))
-        })
-        ## update search_res
-        res_data <- do.call(rbind, res_data)
-        res_data <- res_data[res_data[, 1]>0, , drop=FALSE]
-        res_data <- res_data[order(res_data[, 1], decreasing = TRUE),
-                             -1, drop=FALSE]
-        if(nrow(res_data)>0){
-          output$search_res <- renderUI(
-            tags$ul(class='about-ul',
-                  apply(res_data, 1, function(.ele){
-                    return(tags$li(
-                      tags$a(href=paste0('?data=', .ele[1]),
-                             .ele[2])))
-                  })
-               )
-          )
-        }
+        key_words <- strsplit(input$search, '\\s+')[[1]]
+        updateSearch(key_words, datafolder, output)
       }
     })
     output$dataset_counts <- renderText({
@@ -165,6 +162,66 @@ aboutServer <- function(id, dataSource, optCrt, currentdataset,
       length(unique(lapply(getAppConf(datafolder), `[[`, i="species")))
     })
   })
+}
+
+updateSearch <- function(key_words, datafolder, output){
+  key_words = gsub("[^a-zA-Z0-9._-]+", "", key_words)
+  res_data <- lapply(getAppConf(datafolder), function(.ele){
+    x <- paste(unlist(.ele), collapse = " ")
+    m <- vapply(key_words, grepl, logical(1L), x = x, ignore.case=TRUE)
+    m <- sum(m)
+    return(c(m, .ele$id, .ele$title))
+  })
+  ## update search_res
+  res_data <- do.call(rbind, res_data)
+  res_data <- res_data[res_data[, 1]>0, , drop=FALSE]
+  res_data <- res_data[order(res_data[, 1], decreasing = TRUE),
+                       -1, drop=FALSE]
+  if(nrow(res_data)>0){
+    output$search_res <- renderUI(
+      tags$ul(class='about-ul',
+              apply(res_data, 1, function(.ele){
+                return(tags$li(
+                  tags$a(href=paste0('?data=', .ele[1]),
+                         .ele[2])))
+              })
+      )
+    )
+  }else{
+    if(length(key_words)==1 && nchar(key_words)>1){## check if it is a gene
+        output$search_res <-
+          renderUI(checkGene(key_words, datafolder))
+    }else{
+      output$search_res <- renderUI(
+        tagList()
+      )
+    }
+  }
+}
+checkGene <- function(gene, datafolder){
+  appconfs <- getAppConf(datafolder = datafolder)
+  exprs <- lapply(appconfs, function(.ele){
+    expr <- readRDS(file.path(datafolder, .ele$id, "sc1gene.rds"))
+    expr <- expr[grepl(gene, names(expr), ignore.case = TRUE)]
+    if(length(expr)>0){
+      tags$li(
+        tags$a(href=paste0('?data=', .ele$id, '&gene=',
+                         paste(names(expr), collapse=";")),
+               .ele$title))
+    }else{
+      NULL
+    }
+  })
+  exprs <- exprs[lengths(exprs)>0]
+  if(length(exprs)==0){
+    return(tagList())
+  }else{
+    return(tagList(
+      tags$ul(
+        tagList(exprs)
+      )
+    ))
+  }
 }
 updateVisitor <- function(input, output, session){
   conterFilename <- "www/counter.tsv"

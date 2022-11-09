@@ -6,16 +6,18 @@ bilinear <- function(x,y,xy,Q11,Q21,Q12,Q22){
 }
 #' @importFrom grDevices rgb
 #' @importFrom data.table data.table
+#' @importFrom plotly plot_ly
 #' @importFrom ggplot2 ggplot aes geom_point xlab ylab scale_color_gradientn
 #' guides guide_colorbar coord_fixed
 scDRcoex <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inp2,
                      inpsub1, inpsub2, dataset, inpH5, inpGene,
-                     inpsiz, inpcol, inpord, inpfsz, inpasp, inptxt,
+                     inpsiz, inptype, inpcol, inpord, inpfsz, inpasp, inptxt,
                      datafolder){
   # Prepare ggData
   ggData <- inpMeta[, c(inpConf[UI == inpdrX]$ID, inpConf[UI == inpdrY]$ID,
                        inpConf[UI == inpsub1]$ID),
                    with = FALSE]
+  if(nrow(ggData)==0) return(NULL)
   colnames(ggData) <- c("X", "Y", "sub")
   rat <- getRatio(ggData)
 
@@ -31,6 +33,16 @@ scDRcoex <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inp2,
     bgCells <- TRUE
     ggData2 <- ggData[!sub %in% inpsub2]
     ggData <- ggData[sub %in% inpsub2]
+  }
+  ## color for group
+  # Do factoring if required
+  ggCol <- NULL
+  if(!is.na(inpConf[UI == inpsub1]$fCL)){
+    ggCol <- strsplit(inpConf[UI == inpsub1]$fCL, "\\|")[[1]]
+    names(ggCol) <- levels(ggData$sub)
+    ggLvl <- levels(ggData$sub)[levels(ggData$sub) %in% unique(ggData$sub)]
+    ggData$sub <- factor(ggData$sub, levels = ggLvl)
+    ggCol <- ggCol[ggLvl]
   }
 
   # Generate coex color palette
@@ -79,6 +91,20 @@ scDRcoex <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inp2,
   }
 
   # Actual ggplot
+  if(inptype=="3D"){
+    nTot <- max(c(ggData$val1, ggData$val2), na.rm = TRUE)
+    ggData$norm1 <- round(nTot * ggData$val1 / max(ggData$val1, na.rm = TRUE))
+    ggData$norm2 <- round(nTot * ggData$val2 / max(ggData$val2, na.rm = TRUE))
+    ggData$Z <- log2(ggData$norm1+1)-log2(ggData$norm2+1)
+    return(plot_ly(x=ggData$X, y=ggData$Y, z=ggData$Z,
+                   type="scatter3d",
+                   mode="markers",
+                   color=ggData$sub,
+                   colors=ggCol,
+                   text = paste0(inp1, ": ", ggData$val1, "\n",
+                                 inp2, ": ", ggData$val2),
+                   size = 1))
+  }
   ggOut <- ggplot(ggData, aes(X, Y))
   if(bgCells){
     ggOut <- ggOut +

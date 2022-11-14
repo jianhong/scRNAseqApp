@@ -40,6 +40,6 @@ scDRcoexLeg <- function(inp1, inp2, inpcol, inpfsz){
     xlab(inp1) + ylab(inp2) + coord_fixed(ratio = 1) +
     scale_x_continuous(breaks = c(0, nTot), labels = c("low", "high")) +
     scale_y_continuous(breaks = c(0, nTot), labels = c("low", "high")) +
-    sctheme(base_size = sList[inpfsz], XYval = TRUE)
+    sctheme(base_size = .globals$sList[inpfsz], XYval = TRUE)
   return(ggOut)
 }

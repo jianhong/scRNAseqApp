@@ -94,14 +94,17 @@ scDRgene <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
     }
     ggOut <- ggOut +
       geom_point(size = inpsiz, shape = 16) + xlab(inpdrX) + ylab(inpdrY) +
-      sctheme(base_size = sList[inpfsz], XYval = inptxt) +
+      sctheme(base_size = .globals$sList[inpfsz], XYval = inptxt) +
       guides(color = guide_colorbar(barwidth = 15))
     if(inpColRange[2]>0){
       ggOut <- ggOut +
-        scale_color_gradientn(inp1, colours = cList[[inpcol]], limits=inpColRange)
+        scale_color_gradientn(inp1,
+                              colours = .globals$cList[[inpcol]],
+                              limits=inpColRange)
     }else{
       ggOut <- ggOut +
-        scale_color_gradientn(inp1, colours = cList[[inpcol]])
+        scale_color_gradientn(inp1,
+                              colours = .globals$cList[[inpcol]])
     }
     if(inpasp == "Square") {
       ggOut <- ggOut + coord_fixed(ratio = rat)

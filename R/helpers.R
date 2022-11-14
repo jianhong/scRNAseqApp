@@ -1,3 +1,4 @@
+#' @noRd
 #' @importFrom shinyhelper helper
 helper1 <- function(..., cat, title=NULL, content=NULL){
   if(missing(cat)) cat <- "geneName"

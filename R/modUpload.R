@@ -36,7 +36,7 @@ uploadUI <- function (id) {
                selectInput(
                  ns("species"),
                  label = "Species",
-                 choices = supported_organisms,
+                 choices = .globals$supported_organisms,
                  selected = "Homo sapiens"
                ),
                selectInput(

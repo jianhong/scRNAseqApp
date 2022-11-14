@@ -38,7 +38,8 @@ graphicsControlUI <- function(id){
 NS0 <- function(namespace, id, postfix){
   NS(namespace, id=paste0(id, postfix))
 }
-geneExprPlotControlUI <- function(id, postfix=1, colorNames=names(cList)){
+geneExprPlotControlUI <- function(id, postfix=1,
+                                  colorNames=names(.globals$cList)){
   tagList(
     actionButton(NS0(id, "GeneExprtog", postfix), "Toggle plot controls"),
     conditionalPanel(
@@ -79,7 +80,8 @@ geneExprPlotControlUI <- function(id, postfix=1, colorNames=names(cList)){
     )
   )
 }
-cellInfoPlotControlUI <- function(id, postfix=1, colorNames=names(cList)){
+cellInfoPlotControlUI <- function(id, postfix=1,
+                                  colorNames=names(.globals$cList)){
   tagList(
     actionButton(NS0(id, "CellInfotog", postfix), "Toggle plot controls"),
     conditionalPanel(
@@ -116,7 +118,7 @@ geneCoExprPlotControlUI <- function(id, postfix=1){
   )
 }
 boxPlotControlUI <- function(id, withPoints=TRUE, withColor=FALSE,
-                             colorNames=names(cList)){
+                             colorNames=names(.globals$cList)){
   tagList(
     actionButton(NS(id, "plottog"), "Toggle graphics controls"),
     conditionalPanel(

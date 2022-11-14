@@ -118,8 +118,8 @@ scDRcoex <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inp2,
   ggOut <- ggOut +
     geom_point(size = inpsiz, shape = 16, color = ggData$cMix) +
     xlab(inpdrX) + ylab(inpdrY) +
-    sctheme(base_size = sList[inpfsz], XYval = inptxt) +
-    scale_color_gradientn(inp1, colours = cList[[1]]) +
+    sctheme(base_size = .globals$sList[inpfsz], XYval = inptxt) +
+    scale_color_gradientn(inp1, colours = .globals$cList[[1]]) +
     guides(color = guide_colorbar(barwidth = 15))
   if(inpasp == "Square") {
     ggOut <- ggOut + coord_fixed(ratio = rat)

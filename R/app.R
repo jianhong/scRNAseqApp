@@ -116,7 +116,7 @@ scRNAseqApp <- function(datafolder = "data",
       sc1gene=NULL,
       sc1meta=NULL,
       Logged=FALSE,
-      terms=terms[["scRNAseq"]],
+      terms=.globals$terms[["scRNAseq"]],
       symbolDict=NULL,
       auth=NULL,
       Username="",
@@ -238,7 +238,7 @@ scRNAseqApp <- function(datafolder = "data",
     ## refresh data when change dataset
     refreshData <- function(input, output, session){
       if(dataSource$dataset %in% names(data_types)){
-        dataSource$terms <- terms[[data_types[[dataSource$dataset]]]]
+        dataSource$terms <- .globals$terms[[data_types[[dataSource$dataset]]]]
       }
       dataSource <- loadData(dataSource, datafolder)
       output$dataTitle <- renderUI({

@@ -177,7 +177,7 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt, currentdataset,
     output$GeneExproup1 <- renderPlot({ plot1() })
     output$GeneExproup.ui1 <- renderUI({
       plotOutput(NS0(id, "GeneExproup", 1),
-                 height = pList3[input$plotpsz])
+                 height = .globals$pList3[input$plotpsz])
     })
     output$GeneExproup.pdf1 <-
       heatmapDownloadHandler(

@@ -117,7 +117,7 @@ cellInfoGeneExprServer <- function(id, dataSource, optCrt, currentdataset,
     output$GeneExproup1 <- renderPlot({ plot1() })
     output$GeneExproup.ui1 <- renderUI({
       plotOutput(NS0(id, "GeneExproup", 1),
-                 height = pList[input$GeneExprpsz])
+                 height = .globals$pList1[input$GeneExprpsz])
     })
     output$GeneExproup.pdf1 <-
       plotsDownloadHandler(
@@ -185,7 +185,7 @@ cellInfoGeneExprServer <- function(id, dataSource, optCrt, currentdataset,
     output$GeneExproup2 <- renderPlot({ plot2() })
     output$GeneExproup.ui2 <- renderUI({
       plotOutput(NS0(id, "GeneExproup", 2),
-                 height = pList[input$GeneExprpsz])
+                 height = .globals$pList1[input$GeneExprpsz])
     })
     output$GeneExproup.pdf2 <-
       plotsDownloadHandler(

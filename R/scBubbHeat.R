@@ -85,14 +85,16 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp
     if(colorBreaks[2]>colRange[2]) colorBreaks[2] <- colRange[2]
     ggData$val[ggData$val<colorBreaks[1]] <- colorBreaks[1]
     ggData$val[ggData$val>colorBreaks[2]] <- colorBreaks[2]
-    col_fun <- colorRamp2(breaks=seq(colorBreaks[1],
-                                    colorBreaks[2],
-                                    length.out=length(cList[[inpcols]])),
-                         colors = cList[[inpcols]])
+    col_fun <- colorRamp2(
+      breaks=seq(colorBreaks[1],
+                 colorBreaks[2],
+                 length.out=length(.globals$cList[[inpcols]])),
+      colors = .globals$cList[[inpcols]])
   }else{
-    col_fun <- colorRamp2(breaks=seq(colRange[1], colRange[2],
-                                    length.out=length(cList[[inpcols]])),
-                         colors = cList[[inpcols]])
+    col_fun <- colorRamp2(
+      breaks=seq(colRange[1], colRange[2],
+                 length.out=length(.globals$cList[[inpcols]])),
+      colors = .globals$cList[[inpcols]])
   }
 
   # reshape the data to matrix

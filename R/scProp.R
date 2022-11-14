@@ -41,7 +41,7 @@ scProp <- function(inpConf, inpMeta, inp1, inp1a, inp1b, inp2,
     ggOut <- ggOut + coord_flip()
   }
   ggOut <- ggOut + xlab(inp1) +
-    sctheme(base_size = sList[inpfsz], Xang = 45, XjusH = 1) +
+    sctheme(base_size = .globals$sList[inpfsz], Xang = 45, XjusH = 1) +
     scale_fill_manual("", values = ggCol) +
     theme(legend.position = "right")
   return(ggOut)

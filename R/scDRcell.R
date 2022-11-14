@@ -47,7 +47,7 @@ scDRcell <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
   }
   ggOut <- ggOut +
     geom_point(size = inpsiz, shape = 16) + xlab(inpdrX) + ylab(inpdrY) +
-    sctheme(base_size = sList[inpfsz], XYval = inptxt)
+    sctheme(base_size = .globals$sList[inpfsz], XYval = inptxt)
   # slingshot
   if(inpSlingshot){
     if(file.exists(slingshotFilename)){
@@ -114,11 +114,12 @@ scDRcell <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
   }
   # label
   if(is.na(inpConf[UI == inp1]$fCL)){
-    ggOut <- ggOut + scale_color_gradientn("", colours = cList[[inpcol]]) +
+    ggOut <- ggOut +
+      scale_color_gradientn("", colours = .globals$cList[[inpcol]]) +
       guides(color = guide_colorbar(barwidth = 15))
   } else {
     sListX <- min(nchar(paste0(levels(ggData$val), collapse = "")), 200)
-    sListX <- 0.75 * (sList - (1.5 * floor(sListX/50)))
+    sListX <- 0.75 * (.globals$sList - (1.5 * floor(sListX/50)))
     ggOut <- ggOut + scale_color_manual("", values = ggCol) +
       guides(color = guide_legend(override.aes = list(size = 5),
                                   nrow = inpConf[UI == inp1]$fRow)) +
@@ -126,7 +127,7 @@ scDRcell <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
     if(inplab){
       ggData3 <- ggData[, .(X = mean(X), Y = mean(Y)), by = "val"]
       lListX <- min(nchar(paste0(ggData3$val, collapse = "")), 200)
-      lListX <- lList - (0.25 * floor(lListX/50))
+      lListX <- .globals$lList - (0.25 * floor(lListX/50))
       ggOut <- ggOut +
         geom_text_repel(data = ggData3, aes(X, Y, label = val),
                         color = "grey10", bg.color = "grey95", bg.r = 0.15,

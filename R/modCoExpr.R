@@ -125,7 +125,7 @@ coExprServer <- function(id, dataSource, optCrt, currentdataset,
     })() })
     output$GeneExpr3Doup.ui1 <- renderUI({
       plotlyOutput(NS0(id, "GeneExpr3Doup", 1),
-                   height = pList[input$GeneExprpsz])
+                   height = .globals$pList1[input$GeneExprpsz])
     })
 
     plot1 <- reactive({
@@ -154,7 +154,7 @@ coExprServer <- function(id, dataSource, optCrt, currentdataset,
     output$GeneExproup1 <- renderPlot({ plot1() })
     output$GeneExproup.ui1 <- renderUI({
       plotOutput(NS0(id, "GeneExproup", 1),
-                 height = pList[input$GeneExprpsz])
+                 height = .globals$pList1[input$GeneExprpsz])
     })
 
     output$GeneExproup.pdf1 <-

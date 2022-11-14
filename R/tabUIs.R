@@ -92,7 +92,9 @@ cellInfoPlotControlUI <- function(id, postfix=1, colorNames=names(cList)){
                                "Original", "Random"),
                    selected = "Original", inline = TRUE),
       checkboxInput(NS0(id, "CellInfolab", postfix),
-                    "Show cell info labels", value = TRUE)
+                    "Show cell info labels", value = TRUE),
+      checkboxInput(NS0(id, "CellInfoslingshot", postfix),
+                    "Show lineages", value = TRUE)
     )
   )
 }

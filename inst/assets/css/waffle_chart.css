@@ -1,0 +1,3 @@
+ul.waffle {clear: both; margin-top: 20px; list-style: none; height: 40px;}
+ul.waffle li { float: left; display: block;  line-height: 40px; padding: 4px;}
+ul.waffle:after {content:"";clear: both;}

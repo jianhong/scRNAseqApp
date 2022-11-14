@@ -110,7 +110,9 @@ cellInfoGeneExprServer <- function(id, dataSource, optCrt, currentdataset,
         input$GeneExprfsz,
         input$GeneExprasp,
         input$GeneExprtxt,
-        input$CellInfolab1)
+        input$CellInfolab1,
+        input$CellInfoslingshot1,
+        file.path(datafolder, currentdataset, 'slingshot.rds'))
     })
     output$GeneExproup1 <- renderPlot({ plot1() })
     output$GeneExproup.ui1 <- renderUI({

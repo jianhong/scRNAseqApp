@@ -14,6 +14,7 @@ scDRgene <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
                      inpsub3, inpsub3filter,
                      inpsub4, inpsub4filter,
                      datafolder){
+  saveRDS(as.list(environment()), "tmp.rds")
   if(inp1[1]==""){
     return(ggplot())
   }

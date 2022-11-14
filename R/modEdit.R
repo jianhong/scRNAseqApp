@@ -51,11 +51,11 @@ editUI <- function (id) {
                            label = "Secondary default reduction dim to show",
                            choices = c()),
                selectInput(ns("grp1"),
-                         label = "Primary default info to show",
-                         choices = c()),
+                           label = "Primary default info to show",
+                           choices = c()),
                selectInput(ns("grp2"),
-                         label = "Secondary default info to show",
-                         choices = c()),
+                           label = "Secondary default info to show",
+                           choices = c()),
                checkboxInput(ns("save"),
                              label = "Save object for further analysis",
                              value = FALSE)),
@@ -91,6 +91,58 @@ editUI <- function (id) {
                  label = "PubMed ID"
                ))
       ),
+      hr(),
+      fluidRow(
+        column(width = 3,
+               h4("Assign cell cycle"),
+               actionButton(
+                 ns("cellcycle"),
+                 label = "CellCycleScoring"
+               ),
+               actionButton(
+                 ns("tricycle"),
+                 label = "Tricycle"
+               )),
+        column(width = 3,
+               h4("Assign cell type"),
+               selectInput(
+                 ns("celldex"),
+                 label = NULL,
+                 choices = c("HumanPrimaryCellAtlasData",
+                             "BlueprintEncodeData",
+                             "MouseRNAseqData",
+                             "ImmGenData",
+                             "DatabaseImmuneCellExpressionData",
+                             "NovershternHematopoieticData",
+                             "MonacoImmuneData"),
+                 selected = "HumanPrimaryCellAtlasData"
+               ),
+               actionButton(
+                 ns("singler"),
+                 label = "singleR"
+               )),
+        column(width = 3,
+               h4("Trajectories"),
+               actionButton(
+                 ns("monocle"),
+                 label = "monocle"
+               ),
+               actionButton(
+                 ns("slingshot"),
+                 label = "slingshot"
+               )),
+        column(width = 3,
+               h4("Cell communications"),
+               actionButton(
+                 ns("cellchat"),
+                 label = "CellChat"
+               ),
+               actionButton(
+                 ns("nichenetr"),
+                 label = "NicheNet"
+               ))
+      ),
+      hr(),
       fluidRow(
         h4("Danger Zone"),
         DTOutput(ns('conf'))
@@ -378,6 +430,55 @@ editServer <- function(id, datafolder) {
         unlink(file.path(datafolder, input$dir, "seu.rds"))
       }
       adminMsg("Update done!", "message")
+    })
+
+    findReductionMethod <- function(){
+      global$sc1conf_data$ID[global$sc1conf_data$UI %in%
+                               global$sc1def$dimred]
+    }
+    getReductionData <- function(){
+      data <- global$sc1meta[, mget(findReductionMethod())]
+      rownames(data) <- global$sc1meta$sampleID
+      data
+    }
+    findGrpIDs <- function(){
+      x <- isolate(global$sc1conf_data$ID[global$sc1conf_data$grp])
+      names(x) <- x
+      x
+    }
+    writeMisc <- function(misc, slot){
+      if(!is.null(misc)){
+        saveRDS(misc,
+                file.path(datafolder, input$dir,
+                          paste0(slot, ".rds")))
+      }
+    }
+    observeEvent(input$slingshot, {
+      tryCatch({
+        progress <- shiny::Progress$new()
+        on.exit(progress$close())
+        progress$set(message="Doing SlingShot",
+                     value=0)
+        askNamespace("slingshot")
+        misc_slingshot <- NULL
+        dimred <- getReductionData()
+        # by group points
+        grp_ids <- lapply(findGrpIDs(), function(id){
+          data <- global$sc1meta[, get(id)]
+          names(data) <- global$sc1meta$sampleID
+          data
+        })
+        lineages <- addSlingshot(dimred, grp_ids)
+        progress$set(message="Assign slingshot to miscellaneous data",
+                     value=99)
+        ## assign slingshot to meta data
+        writeMisc(lineages, "slingshot")
+        progress$close()
+        on.exit()
+        adminMsg("slingshot done!", type = "message", duration=5)
+      },
+      error = function(.e) adminMsg(.e, type = "error")
+      )
     })
   })
 }

@@ -30,6 +30,12 @@ getDataType <- function(appconf){
                        FUN.VALUE = character(1))
 }
 
+updateSymbolDict <- function(datafolder="data"){
+  symbols <- lapply(getDataSets(datafolder = datafolder), function(.ele){
+    names(readRDS(file.path(datafolder, .ele, "sc1gene.rds")))
+  })
+  sort(unique(unlist(symbols)))
+}
 getRef <- function(dataset, key, appconf){
   stopifnot(!missing(appconf))
   stopifnot(!missing(dataset))

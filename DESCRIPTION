@@ -31,6 +31,7 @@ Imports:
     htmltools,
     magrittr,
     methods,
+    plotly,
     RefManageR,
     scrypt,
     Seurat,
@@ -39,6 +40,8 @@ Imports:
     ShinyCell,
     shinyhelper,
     shinymanager,
+    slingshot,
+    SingleCellExperiment,
     stats,
     thematic,
     tools,
@@ -47,9 +50,11 @@ Imports:
 Suggests: rmarkdown, knitr
 Enhances:
     CellChat,
+    celldex,
     future,
     monocle3,
     SummarizedExperiment,
+    SeuratWrappers,
     tricycle
 URL: https://github.com/jianhong/scRNAseqApp
 BugReports: https://github.com/jianhong/scRNAseqApp/issues

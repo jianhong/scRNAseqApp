@@ -3,8 +3,8 @@ visitorDependencies <- function(){
   htmlDependency(name = "scRNAseqApp-assets", version = "0.0.1",
                  package = "scRNAseqApp",
                  src = "assets",
-                 script = "js/script.js",
-                 stylesheet = c("css/style.css")
+                 script = c("js/script.js", "js/waffle_chart.js"),
+                 stylesheet = c("css/style.css", "css/waffle_chart.css")
   )
 }
 summaryBox <- function(title, value, width = 4, icon = "fas fa-chart-bar", style = "info", border = "left") {
@@ -145,7 +145,7 @@ aboutServer <- function(id, dataSource, optCrt, currentdataset,
     observeEvent(input$search, {
       if(input$search != '' && input$search != "Type key words here"){
         key_words <- strsplit(input$search, '\\s+')[[1]]
-        updateSearch(key_words, datafolder, output)
+        updateSearch(key_words, datafolder, output, dataSource()$symbolDict)
       }
     })
     output$dataset_counts <- renderText({
@@ -164,65 +164,40 @@ aboutServer <- function(id, dataSource, optCrt, currentdataset,
   })
 }
 
-updateSearch <- function(key_words, datafolder, output){
+updateSearch <- function(key_words, datafolder, output, symbolDict){
   key_words = gsub("[^a-zA-Z0-9._-]+", "", key_words)
-  res_data <- lapply(getAppConf(datafolder), function(.ele){
-    x <- paste(unlist(.ele), collapse = " ")
-    m <- vapply(key_words, grepl, logical(1L), x = x, ignore.case=TRUE)
-    m <- sum(m)
-    return(c(m, .ele$id, .ele$title))
-  })
-  ## update search_res
-  res_data <- do.call(rbind, res_data)
-  res_data <- res_data[res_data[, 1]>0, , drop=FALSE]
-  res_data <- res_data[order(res_data[, 1], decreasing = TRUE),
-                       -1, drop=FALSE]
-  if(nrow(res_data)>0){
-    output$search_res <- renderUI(
-      tags$ul(class='about-ul',
-              apply(res_data, 1, function(.ele){
-                return(tags$li(
-                  tags$a(href=paste0('?data=', .ele[1]),
-                         .ele[2])))
-              })
-      )
-    )
+  if(length(key_words)==1 && nchar(key_words)>1 && isGene(key_words, symbolDict)){## check if it is a gene
+    output$search_res <-
+      renderUI(checkGene(key_words, datafolder))
   }else{
-    if(length(key_words)==1 && nchar(key_words)>1){## check if it is a gene
-        output$search_res <-
-          renderUI(checkGene(key_words, datafolder))
-    }else{
+    res_data <- lapply(getAppConf(datafolder), function(.ele){
+      x <- paste(unlist(.ele), collapse = " ")
+      m <- vapply(key_words, grepl, logical(1L), x = x, ignore.case=TRUE)
+      m <- sum(m)
+      return(c(m, .ele$id, .ele$title))
+    })
+    ## update search_res
+    res_data <- do.call(rbind, res_data)
+    res_data <- res_data[res_data[, 1]>0, , drop=FALSE]
+    res_data <- res_data[order(res_data[, 1], decreasing = TRUE),
+                         -1, drop=FALSE]
+    if(nrow(res_data)>0){
       output$search_res <- renderUI(
-        tagList()
+        tags$ul(class='about-ul',
+                apply(res_data, 1, function(.ele){
+                  return(tags$li(
+                    tags$a(href=paste0('?data=', .ele[1]),
+                           .ele[2])))
+                })
+        )
       )
-    }
-  }
-}
-checkGene <- function(gene, datafolder){
-  appconfs <- getAppConf(datafolder = datafolder)
-  exprs <- lapply(appconfs, function(.ele){
-    expr <- readRDS(file.path(datafolder, .ele$id, "sc1gene.rds"))
-    expr <- expr[grepl(gene, names(expr), ignore.case = TRUE)]
-    if(length(expr)>0){
-      tags$li(
-        tags$a(href=paste0('?data=', .ele$id, '&gene=',
-                         paste(names(expr), collapse=";")),
-               .ele$title))
     }else{
-      NULL
+      output$search_res <- renderUI(tags$div())
     }
-  })
-  exprs <- exprs[lengths(exprs)>0]
-  if(length(exprs)==0){
-    return(tagList())
-  }else{
-    return(tagList(
-      tags$ul(
-        tagList(exprs)
-      )
-    ))
   }
 }
+
+
 updateVisitor <- function(input, output, session){
   conterFilename <- "www/counter.tsv"
   ## update visitor stats

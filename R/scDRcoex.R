@@ -6,7 +6,7 @@ bilinear <- function(x,y,xy,Q11,Q21,Q12,Q22){
 }
 #' @importFrom grDevices rgb
 #' @importFrom data.table data.table
-#' @importFrom plotly plot_ly
+#' @importFrom plotly plot_ly layout
 #' @importFrom ggplot2 ggplot aes geom_point xlab ylab scale_color_gradientn
 #' guides guide_colorbar coord_fixed
 scDRcoex <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inp2,
@@ -78,8 +78,8 @@ scDRcoex <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inp2,
   gg <- gg[, c("v1", "v2", "cMix")]
 
   # Map colours
-  ggData$v1 <- round(nTot * ggData$val1 / max(ggData$val1))
-  ggData$v2 <- round(nTot * ggData$val2 / max(ggData$val2))
+  ggData$v1 <- round(nTot * ggData$val1 / max(ggData$val1, na.rm = TRUE))
+  ggData$v2 <- round(nTot * ggData$val2 / max(ggData$val2, na.rm = TRUE))
   ggData$v0 <- ggData$v1 + ggData$v2
   ggData <- gg[ggData, on = c("v1", "v2")]
   if(inpord == "Max-1st"){
@@ -96,14 +96,19 @@ scDRcoex <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inp2,
     ggData$norm1 <- round(nTot * ggData$val1 / max(ggData$val1, na.rm = TRUE))
     ggData$norm2 <- round(nTot * ggData$val2 / max(ggData$val2, na.rm = TRUE))
     ggData$Z <- log2(ggData$norm1+1)-log2(ggData$norm2+1)
-    return(plot_ly(x=ggData$X, y=ggData$Y, z=ggData$Z,
+    return(layout(plot_ly(x=ggData$X, y=ggData$Y, z=ggData$Z,
                    type="scatter3d",
                    mode="markers",
                    color=ggData$sub,
                    colors=ggCol,
                    text = paste0(inp1, ": ", ggData$val1, "\n",
                                  inp2, ": ", ggData$val2),
-                   size = 1))
+                   size = 1),
+                  scene =
+                    list(xaxis = list(title = inpdrX),
+                         yaxis = list(title = inpdrY),
+                         zaxis = list(title = paste0('Log2 Fold Change (',
+                                                     inp1, '/', inp2, ')')))))
   }
   ggOut <- ggplot(ggData, aes(X, Y))
   if(bgCells){

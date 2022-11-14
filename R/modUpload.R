@@ -2,7 +2,7 @@ uploadUI <- function (id) {
   ns <- NS(id)
   tagList(
     column(
-      width = 12,
+      width = 10, offset = 1,
       fluidRow(actionButton(ns('upload'),
                             label = "Upload",
                             icon = icon("upload")),
@@ -29,7 +29,9 @@ uploadUI <- function (id) {
                          label = "Secondary default gene to show"),
                checkboxInput(ns("save"),
                              label = "Save object for further analysis",
-                             value = FALSE)),
+                             value = FALSE),
+               div(class="consoleOutput",
+                   verbatimTextOutput(ns('consoleOutput')))),
         column(width = 6,
                selectInput(
                  ns("species"),
@@ -88,31 +90,31 @@ uploadUI <- function (id) {
                )),
         column(width = 3,
                h4("Assign cell type"),
+               selectInput(
+                 ns("celldex"),
+                 label = NULL,
+                 choices = c("HumanPrimaryCellAtlasData",
+                             "BlueprintEncodeData",
+                             "MouseRNAseqData",
+                             "ImmGenData",
+                             "DatabaseImmuneCellExpressionData",
+                             "NovershternHematopoieticData",
+                             "MonacoImmuneData"),
+                 selected = "HumanPrimaryCellAtlasData"
+               ),
                actionButton(
                  ns("singler"),
                  label = "singleR"
-               ),
-               actionButton(
-                 ns("sctype"),
-                 label = "scType"
                )),
         column(width = 3,
                h4("Trajectories"),
                actionButton(
-                 ns("monocole"),
-                 label = "monocole"
+                 ns("monocle"),
+                 label = "monocle"
                ),
                actionButton(
-                 ns("velocity"),
-                 label = "velocity"
-               ),
-               actionButton(
-                 ns("stream"),
-                 label = "stream"
-               ),
-               actionButton(
-                 ns("urd"),
-                 label = "URD"
+                 ns("slingshot"),
+                 label = "slingshot"
                )),
         column(width = 3,
                h4("Cell communications"),
@@ -134,6 +136,34 @@ adminMsg <- function(msg, type, duration=30, close=TRUE){
                    closeButton = close,
                    type = type)
 }
+
+askNamespace <- function(...){
+  pkgs <- list(...)
+  lapply(pkgs, function(pkg){
+    if(!requireNamespace(pkg)){
+      adminMsg(paste("The", pkg, "package is required for this function!"),
+               type = "error")
+      return()
+    }
+  })
+}
+
+redirectOutput <- function(input, output, session, open=TRUE,
+                           tmpf = tempfile()){
+  if(open){
+    sink(tmpf)
+    autoInvalidate <- reactiveTimer(1000)
+    observe({
+      autoInvalidate()
+      output$consoleOutput <- renderText(readLines(tmpf), sep = "\n")
+    })
+
+  }else{
+    sink()
+    autoInvalidate <- reactiveTimer(1000000)
+  }
+}
+
 #' @importFrom xml2 read_xml as_list
 idConverter <-
   function(id, type=c("doi", "pmid"),
@@ -193,10 +223,9 @@ updateRefById <- function(id, element, FUN, input, output, session){
   }
 }
 
-
 #' @importFrom tools file_ext
 #' @importFrom SeuratObject Reductions Idents Assays DefaultAssay GetAssayData
-#'  `DefaultAssay<-` VariableFeatures Misc
+#'  `DefaultAssay<-` VariableFeatures Misc `Misc<-` Embeddings
 #' @importFrom Seurat FindAllMarkers FindVariableFeatures ScaleData
 #'  CellCycleScoring GetAssayData as.SingleCellExperiment
 #' @importFrom ShinyCell makeShinyApp createConfig
@@ -209,14 +238,35 @@ uploadServer <- function(id, datafolder) {
                              seu = NULL,
                              config = NULL,
                              ref = NULL,
-                             markers = NULL)
+                             markers = NULL,
+                             tmpf = tempfile())
     getSeuObj <- function(){
       seu <- global$seu
       DefaultAssay(seu) <- ifelse("SCT" %in% Assays(seu), "SCT", "RNA")
       seu
     }
     getGrpIDs <- function(){
-      global$config$ID[global$config$grp]
+      x <- global$config$ID[global$config$grp]
+      names(x) <- x
+      x
+    }
+    getReductionMethod <- function(seu, forMonocole=TRUE){
+      reduction_method <- Reductions(seu)
+      if("umap" %in% reduction_method){
+        reduction_method <- "UMAP"
+      }else{
+        if("tsne" %in% reduction_method){
+          reduction_method <- "tSNE"
+        }else{
+          if("pca" %in% reduction_method){
+            reduction_method <- "PCA"
+          }else{
+            reduction_method <- "UMAP"
+          }
+        }
+      }
+      if(!forMonocole) reduction_method <- tolower(reduction_method)
+      reduction_method
     }
     saveMisc <- function(slot){
       misc <- Misc(global$seu, slot)
@@ -226,95 +276,95 @@ uploadServer <- function(id, datafolder) {
                           paste0(slot, ".rds")))
       }
     }
-    askNamespace <- function(...){
-      pkgs <- list(...)
-      lapply(pkgs, function(pkg){
-        if(!requireNamespace(pkg)){
-          adminMsg(paste("The", pkg, "package is required for this function!"),
-                   type = "error")
-          return()
-        }
-      })
-    }
     observeEvent(input$file, {
-      progress <- shiny::Progress$new()
-      on.exit(progress$close())
-      progress$set(message="Uploading data",
-                   value=0)
-      file <- input$file
-      ext <- tolower(file_ext(file$datapath))
-      filename <- sub(paste0(".", ext), "", basename(file$name))
-      uniqueFilename <- make.names(c(dir(datafolder), filename),
-                                   unique = TRUE,
-                                   allow_ = TRUE)[length(dir(datafolder))+1]
-      req(file)
-      validate(need(ext=="rds",
-                    "Please upload a seurat object saved in rds file"))
-      isolate(global$filepath <- file$datapath)
-      isolate(global$seu <- readRDS(file$datapath))
-      validate(need(is(global$seu, "Seurat"),
-                    "Please upload a seurat object"))
-      progress$set(message="Handling data",
-                   value=5)
-      updateTextInput(session, "dir",
-                      value = uniqueFilename)
-      updateTextInput(session, "title",
-                      value = filename)
-      cellInfo <- colnames(global$seu[[]])
-      updateCheckboxGroupInput(
-        session,
-        "meta_to_include",
-        label = "Columns to include from the metadata",
-        choices = cellInfo,
-        selected = cellInfo
+      tryCatch({
+        redirectOutput(input, output, session, open = TRUE, tmpf = global$tmpf)
+        progress <- shiny::Progress$new()
+        on.exit({
+          progress$close()
+          redirectOutput(input, output, session, open = FALSE, tmpf = global$tmpf)
+          })
+        progress$set(message="Uploading data",
+                     value=0)
+        file <- input$file
+        ext <- tolower(file_ext(file$datapath))
+        filename <- sub(paste0(".", ext), "", basename(file$name))
+        uniqueFilename <- make.names(c(dir(datafolder), filename),
+                                     unique = TRUE,
+                                     allow_ = TRUE)[length(dir(datafolder))+1]
+        req(file)
+        validate(need(ext=="rds",
+                      "Please upload a seurat object saved in rds file"))
+        isolate(global$filepath <- file$datapath)
+        isolate(global$seu <- readRDS(file$datapath))
+        validate(need(is(global$seu, "Seurat"),
+                      "Please upload a seurat object"))
+        progress$set(message="Handling data",
+                     value=5)
+        updateTextInput(session, "dir",
+                        value = uniqueFilename)
+        updateTextInput(session, "title",
+                        value = filename)
+        cellInfo <- colnames(global$seu[[]])
+        updateCheckboxGroupInput(
+          session,
+          "meta_to_include",
+          label = "Columns to include from the metadata",
+          choices = cellInfo,
+          selected = cellInfo
+        )
+        assays <- Assays(global$seu)
+        validate(need(any(c("SCT", "RNA") %in% assays),
+                      "Please upload a seurat object with 'SCT' or 'RNA' assay"))
+        if(!DefaultAssay(global$seu) %in% c("SCT", "RNA")){
+          DefaultAssay(global$seu) <- match.arg(assays, choices = c("SCT", "RNA"),
+                                                several.ok = TRUE)[1]
+        }
+        defaultAssay <- DefaultAssay(global$seu)
+        updateSelectInput(session, "gexAssay",
+                          choices = assays,
+                          selected = defaultAssay)
+        progress$set(message="Check scale.data slot",
+                     value=10)
+        if(length(GetAssayData(global$seu, "scale.data"))==0){
+          global$seu <- FindVariableFeatures(global$seu, selection.method = "vst",
+                                             nfeatures=1000)
+          global$seu <- ScaleData(global$seu)
+        }
+        top2 <- head(VariableFeatures(global$seu), 2)
+        if(length(top2)==2){
+          updateTextInput(session, "gene1", value = top2[1])
+          updateTextInput(session, "gene2", value = top2[2])
+        }else{
+          updateTextInput(session, "gene1", value = rownames(global$seu)[1])
+          updateTextInput(session, "gene2", value = rownames(global$seu)[2])
+        }
+        progress$set(message="Find all markers",
+                     value=20)
+        markers <- FindAllMarkers(global$seu, only.pos=TRUE,
+                                  min.pct=.25, logfc.threshold =.25)
+        Misc(global$seu, "markers") <- markers
+        markers <- split(markers, markers$cluster)
+        markers <- lapply(markers, head, n=min(5, ceiling(50/length(markers))))
+        markers <- lapply(markers, rownames)
+        markers <- unique(unlist(markers))
+        progress$set(message="Update all inputs",
+                     value=99)
+        if(length(markers)>1){
+          updateTextAreaInput(
+            session, "multigene",
+            value = markers)
+        }else{
+          updateTextAreaInput(
+            session, "multigene",
+            value = rownames(global$seu)[seq.int(min(20, nrow(global$seu)))])
+        }
+        progress$close()
+        redirectOutput(input, output, session, open = FALSE, tmpf = global$tmpf)
+        on.exit()
+      },
+      error = function(.e) adminMsg(.e, type = "error")
       )
-      assays <- Assays(global$seu)
-      validate(need(any(c("SCT", "RNA") %in% assays),
-                    "Please upload a seurat object with 'SCT' or 'RNA' assay"))
-      if(!DefaultAssay(global$seu) %in% c("SCT", "RNA")){
-        DefaultAssay(global$seu) <- match.arg(assays, choices = c("SCT", "RNA"),
-                                       several.ok = TRUE)[1]
-      }
-      defaultAssay <- DefaultAssay(global$seu)
-      updateSelectInput(session, "gexAssay",
-                        choices = assays,
-                        selected = defaultAssay)
-      progress$set(message="Check scale.data slot",
-                   value=10)
-      if(length(GetAssayData(global$seu, "scale.data"))==0){
-        global$seu <- FindVariableFeatures(global$seu, selection.method = "vst",
-                                    nfeatures=1000)
-        global$seu <- ScaleData(global$seu)
-      }
-      top2 <- head(VariableFeatures(global$seu), 2)
-      if(length(top2)==2){
-        updateTextInput(session, "gene1", value = top2[1])
-        updateTextInput(session, "gene2", value = top2[2])
-      }else{
-        updateTextInput(session, "gene1", value = rownames(global$seu)[1])
-        updateTextInput(session, "gene2", value = rownames(global$seu)[2])
-      }
-      progress$set(message="Find all markers",
-                   value=20)
-      markers <- FindAllMarkers(global$seu, only.pos=TRUE,
-                                min.pct=.25, logfc.threshold =.25)
-      markers <- split(markers, markers$cluster)
-      markers <- lapply(markers, head, n=min(5, ceiling(50/length(markers))))
-      markers <- lapply(markers, rownames)
-      markers <- unique(unlist(markers))
-      progress$set(message="Update all inputs",
-                   value=99)
-      if(length(markers)>1){
-        updateTextAreaInput(
-          session, "multigene",
-          value = markers)
-      }else{
-        updateTextAreaInput(
-          session, "multigene",
-          value = rownames(global$seu)[seq.int(min(20, nrow(global$seu)))])
-      }
-      progress$close()
-      on.exit()
     })
     observeEvent(input$meta_to_include, {
       global$config <- createConfig(
@@ -350,60 +400,64 @@ uploadServer <- function(id, datafolder) {
       global$markers <- strsplit(input$multigene, "\\s+|,|;")[[1]]
     })
     observeEvent(input$upload, {
-      if(!is.null(global$seu)){
+      tryCatch({
+        if(!is.null(global$seu)){
           # Create a Progress object
-        progress <- shiny::Progress$new()
-        on.exit(progress$close())
-        progress$set(message="Create data by ShinyCell::makeShinyApp",
-                     value=0)
-        dir.create(file.path(datafolder, input$dir))
-        makeShinyApp(global$seu,
-                     scConf = global$config,
-                     gex.assay = input$gexAssay,
-                     gex.slot = input$gexSlot,
-                     shiny.title = input$title,
-                     shiny.dir = file.path(datafolder, input$dir),
-                     default.gene1 = input$gene1,
-                     default.gene2 = input$gene2,
-                     default.multigene = global$markers)
-        progress$set(message="set data config file", value=.97)
-        updateAppConf(datafolder, input, reactive({global}))
-        saveMisc("monocle3_pseudotime")
-        saveMisc("cellchat")
-        if(input$save){
-          file.rename(input$file$datapath,
-                      file.path(datafolder, input$dir, "seu.rds"))
+          progress <- shiny::Progress$new()
+          on.exit(progress$close())
+          progress$set(message="Create data by ShinyCell::makeShinyApp",
+                       value=0)
+          dir.create(file.path(datafolder, input$dir))
+          makeShinyApp(global$seu,
+                       scConf = global$config,
+                       gex.assay = input$gexAssay,
+                       gex.slot = input$gexSlot,
+                       shiny.title = input$title,
+                       shiny.dir = file.path(datafolder, input$dir),
+                       default.gene1 = input$gene1,
+                       default.gene2 = input$gene2,
+                       default.multigene = global$markers)
+          progress$set(message="set data config file", value=.97)
+          updateAppConf(datafolder, input, reactive({global}))
+          for(slot in names(Misc(global$seu))){
+            saveMisc(slot)
+          }
+          if(input$save){
+            file.rename(input$file$datapath,
+                        file.path(datafolder, input$dir, "seu.rds"))
+          }
+          progress$set(message="Check file LOCKER", value=.98)
+          if(input$locker){
+            writeLines("", file.path(datafolder, input$dir, "LOCKER"))
+          }
+          progress$set(message="Clean up unused files", value=.99)
+          unlink(file.path(datafolder, input$dir, "ui.R"))
+          unlink(file.path(datafolder, input$dir, "server.R"))
+          updateTextInput(session, "dir",
+                          value = "")
+          updateTextInput(session, "title",
+                          value = "")
+          updateCheckboxGroupInput(
+            session,
+            "meta_to_include",
+            label = "Columns to include from the metadata",
+            choices = character(0),
+            selected = character(0))
+          updateTextInput(session, "gene1", value = "")
+          updateTextInput(session, "gene2", value = "")
+          updateTextAreaInput(
+            session, "multigene",
+            value = "")
+          updateTextInput(session, "doi", value = "")
+          updateTextInput(session, "pmid", value = "")
+          updateTextInput(session, "reference", value = "")
+          progress$close()
+          on.exit()
+          output$message <- renderText("Upload done!")
+          adminMsg("Upload done!", "message")
         }
-        progress$set(message="Check file LOCKER", value=.98)
-        if(input$locker){
-          writeLines("", file.path(datafolder, input$dir, "LOCKER"))
-        }
-        progress$set(message="Clean up unused files", value=.99)
-        unlink(file.path(datafolder, input$dir, "ui.R"))
-        unlink(file.path(datafolder, input$dir, "server.R"))
-        updateTextInput(session, "dir",
-                        value = "")
-        updateTextInput(session, "title",
-                        value = "")
-        updateCheckboxGroupInput(
-          session,
-          "meta_to_include",
-          label = "Columns to include from the metadata",
-          choices = character(0),
-          selected = character(0))
-        updateTextInput(session, "gene1", value = "")
-        updateTextInput(session, "gene2", value = "")
-        updateTextAreaInput(
-          session, "multigene",
-          value = "")
-        updateTextInput(session, "doi", value = "")
-        updateTextInput(session, "pmid", value = "")
-        updateTextInput(session, "reference", value = "")
-        progress$close()
-        on.exit()
-        output$message <- renderText("Upload done!")
-        adminMsg("Upload done!", "message")
-      }
+      },
+      error = function(.e) adminMsg(.e, type = "error"))
     })
     ## cell cycle
     observeEvent(input$cellcycle, {
@@ -442,20 +496,27 @@ uploadServer <- function(id, datafolder) {
       tryCatch({
         seu <- getSeuObj()
         exp <- as.SingleCellExperiment(seu)
-        exp <- tricycle::project_cycle_space(
-          exp,
-          gname.type=ifelse(grepl("ENS", rownames(exp)[1]),
-                            "ENSEMBL",
-                            "SYMBOL"),
-          species=ifelse(input$species=="Mus musculus",
+        gname.type <- ifelse(grepl("ENS", rownames(exp)[1]),
+                             "ENSEMBL",
+                             "SYMBOL")
+        species<- ifelse(input$species=="Mus musculus",
                          "mouse",
                          "human")
+        exp <- tricycle::project_cycle_space(
+          exp,
+          gname.type=gname.type,
+          species=species
         )
         exp <- tricycle::estimate_cycle_position(exp)
+        exp <- tricycle::estimate_Schwabe_stage(
+          exp,
+          gname.type = gname.type,
+          species = species
+        )
         stopifnot(identical(rownames(seu[[]]),
-                            rownames(colData(exp))))
-        seu$tricyclePosition <- colData(exp)$tricyclePosition
-        seu$CCStage <- colData(exp)$CCStage
+                            rownames(SummarizedExperiment::colData(exp))))
+        seu$tricyclePosition <- SummarizedExperiment::colData(exp)$tricyclePosition
+        seu$CCStage <- SummarizedExperiment::colData(exp)$CCStage
         isolate(global$seu <- seu)
         cellInfo <- colnames(global$seu[[]])
         updateCheckboxGroupInput(
@@ -471,52 +532,51 @@ uploadServer <- function(id, datafolder) {
     })
     ## cell type
     observeEvent(input$singler, {
-      askNamespace("SingleR")
+      askNamespace("SingleR", "celldex", "SummarizedExperiment")
+      if(!input$species %in% c("Homo sapiens", "Mus musculus", "Danio rerio")){
+        adminMsg("Only support human, mouse and fish data.", type="error")
+        return()
+      }
       tryCatch({
         seu <- getSeuObj()
+        try(attachNamespace("celldex"))
+        ref <- get(input$celldex, envir=as.environment("package:celldex"))()
+        sce <- as.SingleCellExperiment(seu)
+        pred <- SingleR::SingleR(test = sce, ref = ref,
+                                 labels = ref$label.fine)
         ## assign singler to meta data
+        seu$SingleR_labels <- pred$labels
+        isolate(global$seu <- seu)
+        cellInfo <- colnames(global$seu[[]])
+        updateCheckboxGroupInput(
+          session,
+          "meta_to_include",
+          choices = cellInfo,
+          selected = cellInfo
+        )
         adminMsg("SingleR done!", type = "message", duration=5)
       },
       error = function(.e) adminMsg(.e, type = "error")
       )
     })
-    observeEvent(input$sctype, {
-      tryCatch({
-        seu <- getSeuObj()
-        misc_nichenetr <- NULL
-        ## assign SingleR to meta data
-        adminMsg("ScType done!", type = "message", duration=5)
-      },
-      error = function(.e) adminMsg(.e, type = "error")
-      )
-    })
     ## pseudo time
-    observeEvent(input$monocole, {
+    observeEvent(input$monocle, {
       askNamespace("monocle3", "SeuratWrappers")
       tryCatch({
+        progress <- shiny::Progress$new()
+        on.exit(progress$close())
+        progress$set(message="Doing monocle",
+                     value=0)
         seu <- getSeuObj()
         cds <- SeuratWrappers::as.cell_data_set(seu)
-        reduction_method <- Reductions(seu)
-        if("umap" %in% reduction_method){
-          reduction_method <- "UMAP"
-        }else{
-          if("tsne" %in% reduction_method){
-            reduction_method <- "tSNE"
-          }else{
-            if("pca" %in% reduction_method){
-              reduction_method <- "PCA"
-            }else{
-              reduction_method <- "UMAP"
-            }
-          }
-        }
+        reduction_method <- getReductionMethod(seu)
         cds <- monocle3::cluster_cells(cds=cds,
                                         reduction_method = reduction_method)
 
         cds <- monocle3::learn_graph(cds)
         ## return the metadata back to seu
         getMiscData <- function(cds_x){
-          p <- plot_cells(cds_x,
+          p <- monocle3::plot_cells(cds_x,
                           color_cells_by="pseudotime",
                           show_trajectory_graph=TRUE)
           list(
@@ -537,7 +597,7 @@ uploadServer <- function(id, datafolder) {
         ica_space_df <- t(cds@principal_graph_aux[[reduction_method]]$dp_mst)
         cds_x <- lapply(rownames(ica_space_df),
                         function(root_nodes){
-                          order_cells(cds,
+                          monocle3::order_cells(cds,
                                       reduction_method = reduction_method,
                                       root_pr_nodes = root_nodes)})
         # by group points
@@ -545,55 +605,49 @@ uploadServer <- function(id, datafolder) {
         root_cells <- lapply(grp_ids, function(.ele){
           split(rownames(seu[[]]), seu[[]][, .ele])
         })
-        names(root_cells) <- grp_ids
         cds_x1 <- lapply(root_cells, function(.ele){
           lapply(.ele, function(.e){
-            order_cells(cds,
+            monocle3::order_cells(cds,
                         reduction_method = reduction_method,
                         root_cells = .e)
           })
         })
         cds_x <- c(list(root_nodes=cds_x), cds_x1)
         miscData <- lapply(cds_x, function(.ele) lapply(.ele, getMiscData))
+        progress$set(message="Assign pseudotime to miscellaneous data",
+                     value=99)
         ## assign pseudotime to miscellaneous data
         Misc(global$seu, "monocle3_pseudotime") <- miscData
+        progress$close()
+        on.exit()
         adminMsg("Monocle3 done!", type = "message", duration=5)
       },
       error = function(.e) adminMsg(.e, type = "error")
       )
     })
-    observeEvent(input$velocity, {
-      askNamespace("velocyto.R")
+    observeEvent(input$slingshot, {
       tryCatch({
+        progress <- shiny::Progress$new()
+        on.exit(progress$close())
+        progress$set(message="Doing SlingShot",
+                     value=0)
+        askNamespace("slingshot")
         seu <- getSeuObj()
-        misc_velocyto <- NULL
-        ## assign velocyto.R to miscellaneous data
-        Misc(global$seu, "velocyto.R") <- misc_velocyto
-        adminMsg("velocyto.R done!", type = "message", duration=5)
-      },
-      error = function(.e) adminMsg(.e, type = "error")
-      )
-    })
-    observeEvent(input$stream, {
-      askNamespace("stream")
-      tryCatch({
-        seu <- getSeuObj()
-        misc_stream <- NULL
-        ## assign stream to miscellaneous data
-        Misc(global$seu, "stream") <- misc_stream
-        adminMsg("stream done!", type = "message", duration=5)
-      },
-      error = function(.e) adminMsg(.e, type = "error")
-      )
-    })
-    observeEvent(input$urd, {
-      askNamespace("URD")
-      tryCatch({
-        seu <- getSeuObj()
-        misc_urd <- NULL
-        ## assign URD to miscellaneous data
-        Misc(global$seu, "urd") <- misc_urd
-        adminMsg("URD done!", type = "message", duration=5)
+        misc_slingshot <- NULL
+        reduction_method <- getReductionMethod(seu, FALSE)
+        dimred <- Embeddings(seu, reduction = reduction_method)
+        # by group points
+        grp_ids <- lapply(getGrpIDs(), function(id){
+          seu[[]][[id]]
+        })
+        lineages <- addSlingshot(dimred, grp_ids)
+        progress$set(message="Assign slingshot to miscellaneous data",
+                     value=99)
+        ## assign slingshot to meta data
+        Misc(global$seu, "slingshot") <- lineages
+        progress$close()
+        on.exit()
+        adminMsg("slingshot done!", type = "message", duration=5)
       },
       error = function(.e) adminMsg(.e, type = "error")
       )
@@ -606,10 +660,20 @@ uploadServer <- function(id, datafolder) {
       }
       askNamespace("CellChat", "future")
       tryCatch({
+        progress <- shiny::Progress$new()
+        on.exit(progress$close())
+        progress$set(message="Doing CellChat",
+                     value=0)
         seu <- getSeuObj()
         grp_ids <- getGrpIDs()
+        keep <- vapply(grp_ids, FUN=function(.ele){
+          all(is.na(as.numeric(unique(seu[[]][[.ele]]))))
+        }, FUN.VALUE = logical(1L))
+        grp_ids <- grp_ids[keep]
+        stopifnot("no proper group name for analysis"=length(grp_ids)>0)
         misc_cellchat <- lapply(grp_ids, function(grp){
-          cellchat <- CellChat::createCellChat(object = seu, group.by=grp)
+          cellchat <- CellChat::createCellChat(object = seu,
+                                               group.by=grp)
           cellchat <- CellChat::setIdent(cellchat, ident.use = grp)
           groupSize <- as.numeric(table(cellchat@idents))
           cellchat@DB <- switch(input$species,
@@ -634,9 +698,13 @@ uploadServer <- function(id, datafolder) {
             slot(cellchat, name = .ele)
           })
         })
+        progress$set(message="Assign cellchat to miscellaneous data",
+                     value=99)
         names(misc_cellchat) <- grp_ids
         ## assign cellchat to miscellaneous data
         Misc(global$seu, "cellchat") <- misc_cellchat
+        progress$close()
+        on.exit()
         adminMsg("CellChat done!", type = "message", duration=5)
       },
       error = function(.e) adminMsg(.e, type = "error")
@@ -654,6 +722,5 @@ uploadServer <- function(id, datafolder) {
       error = function(.e) adminMsg(.e, type = "error")
       )
     })
-
   })
 }

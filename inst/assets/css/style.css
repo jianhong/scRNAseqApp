@@ -1,5 +1,6 @@
 .shiny-output-error-validation {color: red; font-weight: bold;}
 .navbar-default .navbar-nav { font-weight: bold; font-size: 16px; }
+.consoleOutput>pre {max-height: 400px;}
 /*About icon stats*/
 .about-container:after,.about-container:before,.about-clear:after,.about-clear:before{content:"";display:table;clear:both}
 .about-margin-bottom{margin-bottom:16px!important}

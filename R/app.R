@@ -117,6 +117,7 @@ scRNAseqApp <- function(datafolder = "data",
       sc1meta=NULL,
       Logged=FALSE,
       terms=terms[["scRNAseq"]],
+      symbolDict=NULL,
       auth=NULL,
       Username="",
       Password="",
@@ -176,6 +177,8 @@ scRNAseqApp <- function(datafolder = "data",
         })
       }
     })
+    ## update gene symbol list
+    dataSource$symbolDict <- updateSymbolDict(datafolder)
     ## change dataset
     observeEvent(input$availableDatasets,{
       ## update datasets if datasets changed by admin
@@ -185,6 +188,7 @@ scRNAseqApp <- function(datafolder = "data",
       }
       if(!all(getDataSets(datafolder = datafolder) %in%
               dataSource$available_datasets)){
+        dataSource$symbolDict <- updateSymbolDict(datafolder)
         updateSelectInput(session, "availableDatasets",
                           choices =
                             getDataSets(datafolder = datafolder,

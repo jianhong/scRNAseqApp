@@ -5,13 +5,12 @@ scDRcoexNum <- function(inpConf, inpMeta, inp1, inp2,
   # Prepare ggData
   ggData <- inpMeta[, c(inpConf[UI == inpsub1]$ID), with = FALSE]
   colnames(ggData) <- c("sub")
-  h5file <- H5File$new(file.path(datafolder, dataset, inpH5), mode = "r")
-  h5data <- h5file[["grp"]][["data"]]
-  ggData$val1 <- h5data$read(args = list(inpGene[inp1], quote(expr=)))
+  ggData$val1 <- read_exprs(file.path(datafolder, dataset, inpH5),
+                           inpGene[inp1], valueOnly=TRUE)
+  ggData$val2 <- read_exprs(file.path(datafolder, dataset, inpH5),
+                           inpGene[inp2], valueOnly=TRUE)
   ggData[val1 < 0]$val1 <- 0
-  ggData$val2 <- h5data$read(args = list(inpGene[inp2], quote(expr=)))
   ggData[val2 < 0]$val2 <- 0
-  h5file$close_all()
   if(length(inpsub2) != 0 & length(inpsub2) != nlevels(ggData$sub)){
     ggData <- ggData[sub %in% inpsub2]
   }

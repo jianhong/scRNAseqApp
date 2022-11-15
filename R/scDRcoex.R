@@ -7,7 +7,7 @@ bilinear <- function(x,y,xy,Q11,Q21,Q12,Q22){
 #' @importFrom grDevices rgb
 #' @importFrom data.table data.table
 #' @importFrom plotly plot_ly layout
-#' @importFrom ggplot2 ggplot aes geom_point xlab ylab scale_color_gradientn
+#' @importFrom ggplot2 ggplot aes_string geom_point xlab ylab scale_color_gradientn
 #' guides guide_colorbar coord_fixed
 scDRcoex <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inp2,
                      inpsub1, inpsub2, dataset, inpH5, inpGene,
@@ -21,13 +21,12 @@ scDRcoex <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inp2,
   colnames(ggData) <- c("X", "Y", "sub")
   rat <- getRatio(ggData)
 
-  h5file <- H5File$new(file.path(datafolder, dataset, inpH5), mode = "r")
-  h5data <- h5file[["grp"]][["data"]]
-  ggData$val1 <- h5data$read(args = list(inpGene[inp1], quote(expr=)))
+  ggData$val1 <- read_exprs(file.path(datafolder, dataset, inpH5),
+                            inpGene[inp1], valueOnly=TRUE)
+  ggData$val2 <- read_exprs(file.path(datafolder, dataset, inpH5),
+                            inpGene[inp2], valueOnly=TRUE)
   ggData[val1 < 0]$val1 <- 0
-  ggData$val2 <- h5data$read(args = list(inpGene[inp2], quote(expr=)))
   ggData[val2 < 0]$val2 <- 0
-  h5file$close_all()
   bgCells <- FALSE
   if(length(inpsub2) != 0 & length(inpsub2) != nlevels(ggData$sub)){
     bgCells <- TRUE
@@ -110,7 +109,7 @@ scDRcoex <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inp2,
                          zaxis = list(title = paste0('Log2 Fold Change (',
                                                      inp1, '/', inp2, ')')))))
   }
-  ggOut <- ggplot(ggData, aes(X, Y))
+  ggOut <- ggplot(ggData, aes_string("X", "Y"))
   if(bgCells){
     ggOut <- ggOut +
       geom_point(data = ggData2, color = "snow2", size = inpsiz, shape = 16)

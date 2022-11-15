@@ -1,10 +1,12 @@
 # Plot cell information on dimred
-#' @importFrom ggplot2 ggplot aes geom_point xlab ylab scale_color_gradientn
+#' @importFrom ggplot2 ggplot aes_string geom_point xlab ylab scale_color_gradientn
 #' guides guide_colorbar scale_color_manual guide_legend theme element_text
 #' coord_fixed geom_segment
 #' @importFrom ggrepel geom_text_repel
+#' @importFrom stats weighted.mean
 #' @importFrom slingshot SlingshotDataSet slingLineages slingClusterLabels
 #' slingMST slingParams
+#' @importFrom data.table .SD
 #' @importFrom SingleCellExperiment reducedDim
 scDRcell <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
                      inpsiz, inpcol, inpord, inpfsz, inpasp, inptxt, inplab,
@@ -40,7 +42,7 @@ scDRcell <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
   }
 
   # Actual ggplot
-  ggOut <- ggplot(ggData, aes(X, Y, color = val))
+  ggOut <- ggplot(ggData, aes_string("X", "Y", color = "val"))
   if(bgCells){
     ggOut <- ggOut +
       geom_point(data = ggData2, color = "snow2", size = inpsiz, shape = 16)
@@ -103,9 +105,10 @@ scDRcell <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
             }
           }
           ggOut <- ggOut +
-            geom_segment(data=lineDf, aes(x=x, y=y, xend=xend, yend=yend),
+            geom_segment(data=lineDf, aes_string(x="x", y="y",
+                                                 xend="xend", yend="yend"),
                          inherit.aes=FALSE) +
-            geom_point(data=pts, aes(x=x, y=y, color=color),
+            geom_point(data=pts, aes_string(x="x", y="y", color="color"),
                        size = inpsiz*3, alpha=.5,
                        inherit.aes = FALSE)
         }
@@ -125,11 +128,13 @@ scDRcell <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
                                   nrow = inpConf[UI == inp1]$fRow)) +
       theme(legend.text = element_text(size = sListX[inpfsz]))
     if(inplab){
-      ggData3 <- ggData[, .(X = mean(X), Y = mean(Y)), by = "val"]
+      ggData3 <- ggData[, .(X = mean(.SD$X),
+                            Y = mean(.SD$Y)),
+                        by = "val"]
       lListX <- min(nchar(paste0(ggData3$val, collapse = "")), 200)
       lListX <- .globals$lList - (0.25 * floor(lListX/50))
       ggOut <- ggOut +
-        geom_text_repel(data = ggData3, aes(X, Y, label = val),
+        geom_text_repel(data = ggData3, aes_string("X", "Y", label = "val"),
                         color = "grey10", bg.color = "grey95", bg.r = 0.15,
                         size = lListX[inpfsz], seed = 42)
     }

@@ -3,8 +3,8 @@ visitorDependencies <- function(){
   htmlDependency(name = "scRNAseqApp-assets", version = "0.0.1",
                  package = "scRNAseqApp",
                  src = "assets",
-                 script = c("js/script.js", "js/waffle_chart.js"),
-                 stylesheet = c("css/style.css", "css/waffle_chart.css")
+                 script = c("js/script.js"),
+                 stylesheet = c("css/style.css")
   )
 }
 summaryBox <- function(title, value, width = 4, icon = "fas fa-chart-bar", style = "info", border = "left") {
@@ -144,8 +144,13 @@ aboutServer <- function(id, dataSource, optCrt, currentdataset,
     )
     observeEvent(input$search, {
       if(input$search != '' && input$search != "Type key words here"){
+        output$search_res <- renderUI(tags$div('searching...'))
         key_words <- strsplit(input$search, '\\s+')[[1]]
-        updateSearch(key_words, datafolder, output, dataSource()$symbolDict)
+        updateSearch(key_words,
+                     datafolder,
+                     output,
+                     dataSource()$symbolDict,
+                     id)
       }
     })
     output$dataset_counts <- renderText({
@@ -164,11 +169,17 @@ aboutServer <- function(id, dataSource, optCrt, currentdataset,
   })
 }
 
-updateSearch <- function(key_words, datafolder, output, symbolDict){
+updateSearch <- function(key_words, datafolder, output, symbolDict, id){
   key_words = gsub("[^a-zA-Z0-9._-]+", "", key_words)
   if(length(key_words)==1 && nchar(key_words)>1 && isGene(key_words, symbolDict)){## check if it is a gene
+    search_res <- checkGene(key_words, datafolder, id=id)
     output$search_res <-
-      renderUI(checkGene(key_words, datafolder))
+      renderUI(search_res$UI)
+    for(i in seq_along(search_res$PLOT)){
+      local({
+        output[[names(search_res$PLOT)[i]]] <- search_res$PLOT[[i]]
+      })
+    }
   }else{
     res_data <- lapply(getAppConf(datafolder), function(.ele){
       x <- paste(unlist(.ele), collapse = " ")
@@ -192,7 +203,7 @@ updateSearch <- function(key_words, datafolder, output, symbolDict){
         )
       )
     }else{
-      output$search_res <- renderUI(tags$div())
+      output$search_res <- renderUI(tags$div("No records."))
     }
   }
 }

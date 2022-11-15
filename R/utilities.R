@@ -23,9 +23,13 @@ g_legend <- function(a.gplot){
 read_exprs <- function(h5filename, genesID, meta,
                        config, groupName, valueOnly=FALSE){
   h5file <- H5File$new(h5filename, mode = "r")
+  on.exit(h5file$close_all())
   h5data <- h5file[["grp"]][["data"]]
   if(valueOnly){
-    return(h5data$read(args = list(genesID[1], quote(expr=))))
+    expr <- h5data$read(args = list(genesID[1], quote(expr=)))
+    h5file$close_all()
+    on.exit()
+    return(expr)
   }
   exprs <- data.table()
   for(idx in seq_along(genesID)){
@@ -38,6 +42,7 @@ read_exprs <- function(h5filename, genesID, meta,
     exprs <- rbindlist(list(exprs, tmp))
   }
   h5file$close_all()
+  on.exit()
   exprs
 }
 #' check if a symbol is a gene
@@ -45,7 +50,8 @@ read_exprs <- function(h5filename, genesID, meta,
 #' @param symbol the character to be checked
 #' @param dict the gene symbol dictionary available in the data folder
 isGene <- function(symbol, dict){
-  symbol %in% dict
+  g <- sum(grepl(symbol, dict))
+  g > 0 && g < 3
 }
 #' get cell type column name
 #' @noRd
@@ -60,23 +66,24 @@ getCelltypeCol <- function(config, celltypePattern='celltype'){
 #' waffle plot
 #' @noRd
 #' @param expres expression table returned by `read_exprs`
-wafflePlot <- function(expres){
-  # should I change it to ggplot2 or plotly object?
-  return(tags$ul(class='waffle',
-          tags$li(data_hist='1.1', "test1"),
-          tags$li(data_hist='1.2', "test2"),
-          tags$li(data_hist='1.3', "test3")))
+#' @importFrom utils adist
+wafflePlot <- function(expres, plotname){
+  list(
+    UI = plotOutput(plotname, width = '100%', height = '280px'),
+    PLOT = renderPlot(scWafflePlot(expres))
+  )
 }
 #' get search result by gene name
 #' @noRd
 #' @param gene character(1L), gene name
 #' @param datafolder the data folder
+#' @param id namespace
 #' @param geneIdFilename gene id file name
 #' @param metaFilename meta data file name
 #' @param configFilename config file name
 #' @return Html tags for search results
 #' @param exprsFilename gene expression h5 file name
-checkGene <- function(gene, datafolder,
+checkGene <- function(gene, datafolder, id,
                       geneIdFilename='sc1gene.rds',
                       metaFilename='sc1meta.rds',
                       configFilename='sc1conf.rds',
@@ -94,29 +101,39 @@ checkGene <- function(gene, datafolder,
                    readRDS(file.path(datafolder, .ele$id, metaFilename)),
                    config, groupName, valueOnly=FALSE)
       ggData[val < 0]$val <- 0
-      tags$li(
+      #waffle plot
+      plotname = paste0('search-plot', .ele$id)
+      wp <- wafflePlot(ggData, NS(id, plotname))
+      list(
+        UI = tags$li(
           tags$a(href=paste0('?data=', .ele$id, '&gene=',
                              paste(names(genenames), collapse=";")),
                  .ele$title),
-          #waffle plot
-          wafflePlot(ggData)
-        )
+          wp$UI
+        ),
+        PLOT = wp$PLOT,
+        NAME = plotname
+      )
     }else{
       NULL
     }
   })
   exprs <- exprs[lengths(exprs)>0]
   if(length(exprs)==0){
-    return(tagList())
+    return(list(UI=tagList(), PLOT=NULL))
   }else{
-    return(tagList(
-      tags$ul(exprs),
-      tags$script(
-        "$('ul.waffle li').hottie({
-        readValue: function(e){
-          return $(e).attr('data_hist');
-        }
-      });"
-    )))
+    plots <- lapply(exprs, function(.ele){
+      .ele$PLOT
+    })
+    names(plots) <- vapply(exprs, function(.ele) .ele$NAME, character(1L))
+    exprs <- lapply(exprs, function(.ele){
+      .ele$UI
+    })
+    return(
+      list(
+        UI=tags$ul(exprs),
+        PLOT=plots
+        )
+      )
   }
 }

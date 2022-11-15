@@ -10,8 +10,8 @@ scDRnum <- function(inpConf, inpMeta, inpCellInfo, inpGeneName,
     inpCellInfoSubGroup <- NULL
   }
   # Prepare ggData
-  ggData <- inpMeta[, c(inpConf[UI == inpCellInfo]$ID,
-                        inpConf[UI == inpsubName]$ID),
+  ggData <- inpMeta[, c(inpConf[inpConf$UI == inpCellInfo]$ID,
+                        inpConf[inpConf$UI == inpsubName]$ID),
                    with = FALSE, drop=FALSE]
   if(nrow(ggData)<1){
     dt <- data.frame("group"=numeric(), "nCells"=numeric(),
@@ -19,11 +19,9 @@ scDRnum <- function(inpConf, inpMeta, inpCellInfo, inpGeneName,
     return(dt)
   }
   colnames(ggData) <- c("group", "sub")
-  h5file <- H5File$new(file.path(datafolder, dataset, inpH5), mode = "r")
-  h5data <- h5file[["grp"]][["data"]]
-  ggData$val2 <- h5data$read(args = list(inpGene[inpGeneName], quote(expr=)))
+  ggData$val2 <- read_exprs(file.path(datafolder, dataset, inpH5),
+                            inpGene[inpGeneName], valueOnly=TRUE)
   ggData[val2 < 0]$val2 <- 0
-  h5file$close_all()
   if(length(inpsubValue) != 0 & length(inpsubValue) != nlevels(ggData$sub)){
     ggData <- ggData[ggData$sub %in% inpsubValue]
   }
@@ -33,7 +31,7 @@ scDRnum <- function(inpConf, inpMeta, inpCellInfo, inpGeneName,
   }
 
   # Split inpCellInfo if necessary
-  if(is.na(inpConf[UI == inpCellInfo]$fCL)){
+  if(is.na(inpConf[inpConf$UI == inpCellInfo]$fCL)){
     if(inpsplt == "Quartile"){nBk <- 4}
     if(inpsplt == "Decile"){nBk <- 10}
     ggData$group <- cut(ggData$group, breaks = nBk)

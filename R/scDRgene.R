@@ -4,8 +4,9 @@ getRatio <- function(ggData){## help function
 }
 
 # Plot gene expression on dimred
-#' @importFrom ggplot2 ggplot aes geom_point xlab ylab guides guide_colorbar
-#' scale_color_gradientn coord_fixed scale_y_discrete scale_x_continuous xlim
+#' @importFrom ggplot2 ggplot aes_string geom_point xlab ylab guides
+#' guide_colorbar scale_color_gradientn coord_fixed scale_y_discrete
+#' scale_x_continuous xlim
 #' @importFrom ggridges geom_density_ridges theme_ridges
 scDRgene <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
                      dataset, inpH5, inpGene,
@@ -36,17 +37,16 @@ scDRgene <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
   }
   rat <- getRatio(ggData)
 
-  h5file <- H5File$new(file.path(datafolder, dataset, inpH5), mode = "r")
-  h5data <- h5file[["grp"]][["data"]]
-  ggData$val <- h5data$read(args = list(inpGene[inp1], quote(expr=)))
+  ggData$val <- read_exprs(file.path(datafolder, dataset, inpH5),
+                           inpGene[inp1], valueOnly=TRUE)
   ggData[val < 0]$val <- 0
   if(!missing(inpsub4) && !missing(inpsub4filter)){
     if(inpsub4 %in% names(inpGene)){
-      ggData$sub4 <- h5data$read(args = list(inpGene[inpsub4], quote(expr=)))
+      ggData$sub4 <- read_exprs(file.path(datafolder, dataset, inpH5),
+                                inpGene[inpsub4], valueOnly=TRUE)
       ggData[sub4 < 0]$sub4 <- 0
     }
   }
-  h5file$close_all()
   bgCells <- FALSE
   keep <- rep(TRUE, nrow(ggData))
   if(length(inpsub2) != 0 && length(inpsub2) != nlevels(ggData$sub)){
@@ -87,7 +87,7 @@ scDRgene <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
     if(inpColRange[2]>0){
       ggData[ggData$val>inpColRange[2], "val"] <- inpColRange[2]
     }
-    ggOut <- ggplot(ggData, aes(X, Y, color = val))
+    ggOut <- ggplot(ggData, aes_string("X", "Y", color = "val"))
     if(bgCells){
       ggOut <- ggOut +
         geom_point(data = ggData2, color = "snow2", size = inpsiz, shape = 16)
@@ -115,7 +115,7 @@ scDRgene <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
     #print(inpXlim)
     ggData$sub <- factor(ggData$sub,
                          levels=rev(sortLevels(as.character(unique(ggData$sub)))))
-    ggOut <- ggplot(ggData, aes(x = val, y = sub, fill = sub)) +
+    ggOut <- ggplot(ggData, aes_string(x = "val", y = "sub", fill = "sub")) +
       geom_density_ridges(scale = 4, show.legend = FALSE) +
       theme_ridges() +
       scale_y_discrete(expand = c(0.01, 0)) +

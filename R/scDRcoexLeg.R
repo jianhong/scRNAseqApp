@@ -23,11 +23,11 @@ scDRcoexLeg <- function(inp1, inp2, inpcol, inpfsz){
   nTot <- nGrid + nPad * 2
   gg <- data.table(v1 = rep(0:nTot,nTot+1), v2 = sort(rep(0:nTot,nTot+1)))
   gg$vv1 <- gg$v1 - nPad
-  gg[vv1 < 0]$vv1 <- 0
-  gg[vv1 > nGrid]$vv1 <- nGrid
+  gg[gg$vv1 < 0]$vv1 <- 0
+  gg[gg$vv1 > nGrid]$vv1 <- nGrid
   gg$vv2 <- gg$v2 - nPad
-  gg[vv2 < 0]$vv2 <- 0
-  gg[vv2 > nGrid]$vv2 <- nGrid
+  gg[gg$vv2 < 0]$vv2 <- 0
+  gg[gg$vv2 > nGrid]$vv2 <- nGrid
   gg$cR <- bilinear(gg$vv1, gg$vv2, nGrid, c00[1], c10[1], c01[1], c11[1])
   gg$cG <- bilinear(gg$vv1, gg$vv2, nGrid, c00[2], c10[2], c01[2], c11[2])
   gg$cB <- bilinear(gg$vv1, gg$vv2, nGrid, c00[3], c10[3], c01[3], c11[3])

@@ -51,7 +51,7 @@ aboutUI <- function(request, id, datafolder, banner, doc="doc.txt"){
   # addResourcePath(prefix="pics",
   #                 directoryPath = system.file(
   #                   "assets", "images", package="scRNAseqApp"))
-  tabPanel(title=div(selectInput('availableDatasets',
+  tabPanel(title=div(selectInput('selectedDatasets',
                                  label = NULL,
                                  choices = getDataSets(datafolder = datafolder),
                                  selected = NULL,
@@ -233,7 +233,7 @@ updateVisitor <- function(input, output, session){
     counter <- counter[as.numeric(difftime(as.Date(Sys.time()), counter, units = 'days'))<730]
     counter <- table(format(counter, "%y-%m"))
     counter <- as.data.frame(counter)
-    ggplot(counter, aes(x=Var1, y=Freq)) +
+    ggplot(counter, aes_string(x="Var1", y="Freq")) +
       geom_bar(stat = "identity", fill="darkorchid4") +
       theme_minimal() + xlab("") + ylab("visitor counts") +
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))

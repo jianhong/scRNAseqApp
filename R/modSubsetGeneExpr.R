@@ -59,8 +59,7 @@ subsetGeneExprUI <- function(id){
     )
   )
 }
-subsetGeneExprServer <- function(id, dataSource, optCrt, currentdataset,
-                                 datafolder){
+subsetGeneExprServer <- function(id, dataSource, optCrt){
   moduleServer(id, function(input, output, session){
     ## title
     output$GeneExpr <-
@@ -73,12 +72,7 @@ subsetGeneExprServer <- function(id, dataSource, optCrt, currentdataset,
                  "on dimension reduction"))})
     ## input column 1
     ### Dimension Reduction
-    updateSelectInput(session, "GeneExprdrX", "X-axis:",
-                      choices = dataSource()$sc1conf[dimred == TRUE]$UI,
-                      selected = dataSource()$sc1def$dimred[1])
-    updateSelectInput(session,"GeneExprdrY", "Y-axis:",
-                      choices = dataSource()$sc1conf[dimred == TRUE]$UI,
-                      selected = dataSource()$sc1def$dimred[2])
+    updateDimRedSelInputPair(session, dataSource)
     ### Information to show
     #### gene name to plot
     updateSelectizeInput(session, "GeneName",
@@ -94,123 +88,17 @@ subsetGeneExprServer <- function(id, dataSource, optCrt, currentdataset,
     updateSelectInput(session,
                       "CellInfo",
                       "Cell information to show:",
-                      choices = dataSource()$sc1conf[grp == TRUE]$UI,
+                      choices = dataSource()$sc1conf[
+                        dataSource()$sc1conf$grp == TRUE]$UI,
                       selected = dataSource()$sc1def$grp1)
+
     ## input column 2
-    updateSelectInput(session,
-                      "subsetCell",
-                      "Cell information to subset:",
-                      choices = dataSource()$sc1conf[grp == TRUE]$UI,
-                      selected = dataSource()$sc1def$grp1)
-
-    getSubGroupName <- function(){
-      sub = strsplit(dataSource()$sc1conf[UI == input$CellInfo]$fID,
-                     "\\|")
-      if(length(sub)){
-        sub <- sub[[1]]
-      }
-      sub
-    }
-    output$subsetCell.ui <- renderUI({
-      if(input$subsetCell!=""){
-        sub = getSubGroupName()
-        checkboxGroupInput(NS(id, "subsetCellVal"),
-                           "Select which cells to show",
-                           inline = TRUE,
-                           choices = sub,
-                           selected = sub)
-      }
-    })
-
-    updateSelectizeInput(session,
-                         "filterCell",
-                         server = TRUE,
-                         choices = c(dataSource()$sc1conf[is.na(fID)]$UI,
-                                     sort(names(dataSource()$sc1gene))),
-                         selected = dataSource()$sc1conf[is.na(fID)]$UI[1],
-                         options = list(
-                           maxOptions =
-                             length(dataSource()$sc1conf[is.na(fID)]$UI) + 3,
-                           create = TRUE,
-                           persist = TRUE,
-                           render = I(optCrt)))
-    output$filterCell.ui <- renderUI({
-      if(!input$filterCell %in% dataSource()$sc1conf$UI){
-        h5file <- H5File$new(file.path(datafolder,
-                                       dataSource()$dataset,
-                                       "sc1gexpr.h5"),
-                             mode = "r")
-        h5data <- h5file[["grp"]][["data"]]
-        val = h5data$read(
-          args = list(dataSource()$sc1gene[input$filterCell],
-                      quote(expr=)))
-        val <- max(val, na.rm = TRUE)
-        h5file$close_all()
-      }else{
-        val = dataSource()$sc1meta[[
-          dataSource()$sc1conf[UI == input$filterCell]$ID]]
-        val <- max(val, na.rm = TRUE)
-      }
-      if(val<=1) maxv <- round(val, digits = 3)
-      if(val>1 && val<=10) maxv <- round(val, digits = 1)
-      if(val>10) maxv <- round(val, digits = 0)
-      sliderInput(NS(id, "filterCellVal"), "Filter the cells by value",
-                  min = 0, max = maxv, value = 0)
-    })
+    updateSubsetCellUI(id, input, output, session, dataSource)
+    updateFilterCellUI(id, optCrt, input, output, session, dataSource)
 
     ## plot region
-    ### sub region title
-    output$subPlotTitle1 <-
-      renderUI({h4(paste("Gene", dataSource()$terms['expression']))})
-    output$subPlotTitle2 <-
-      renderUI({h4(paste("Gene", dataSource()$terms['expression']))})
-    ### select which cells to show
-    output$GeneExprgrp.ui1 <- renderUI({
-      sub = getSubGroupName()
-      checkboxGroupInput(NS(id, "GeneExprsub1b"),
-                         "Select which cells to show",
-                         inline = TRUE,
-                         choices = sub,
-                         selected = sub[1])
-    })
-    output$GeneExprgrp.ui2 <- renderUI({
-      sub = getSubGroupName()
-      checkboxGroupInput(NS(id, "GeneExprsub2b"),
-                         "Select which cells to show",
-                         inline = TRUE,
-                         choices = sub,
-                         selected = ifelse(length(sub)>1, sub[2], sub[1]))
-    })
     ### update the Color Range to make two plots comparable
     inpColRange <- reactive({
-      scDRgene(
-      dataSource()$sc1conf,
-      dataSource()$sc1meta,
-      input$GeneExprdrX,
-      input$GeneExprdrY,
-      input$GeneName,
-      input$CellInfo,
-      c(input$GeneExprsub1b,input$GeneExprsub2b),
-      dataSource()$dataset,
-      "sc1gexpr.h5",
-      dataSource()$sc1gene,
-      input$GeneExprsiz,
-      input$GeneExprcol1,
-      input$GeneExprord1,
-      input$GeneExprfsz,
-      input$GeneExprasp,
-      input$GeneExprtxt,
-      input$GeneExprtype1,
-      if(input$GeneExprxlimb1 %% 2==0) 0 else input$GeneExprxlim1,
-      inpColRange=TRUE,
-      inpsub3=input$subsetCell,
-      inpsub3filter=input$subsetCellVal,
-      inpsub4=input$filterCell,
-      inpsub4filter=input$filterCellVal,
-      datafolder=datafolder
-      )
-    })
-    plot1 <- reactive({
       scDRgene(
         dataSource()$sc1conf,
         dataSource()$sc1meta,
@@ -218,7 +106,7 @@ subsetGeneExprServer <- function(id, dataSource, optCrt, currentdataset,
         input$GeneExprdrY,
         input$GeneName,
         input$CellInfo,
-        input$GeneExprsub1b,
+        c(input$GeneExprsub1b,input$GeneExprsub2b),
         dataSource()$dataset,
         "sc1gexpr.h5",
         dataSource()$sc1gene,
@@ -230,94 +118,28 @@ subsetGeneExprServer <- function(id, dataSource, optCrt, currentdataset,
         input$GeneExprtxt,
         input$GeneExprtype1,
         if(input$GeneExprxlimb1 %% 2==0) 0 else input$GeneExprxlim1,
-        inpColRange=if(input$GeneExprrgb1 %% 2==0) inpColRange() else input$GeneExprrg1,
+        inpColRange=TRUE,
         inpsub3=input$subsetCell,
         inpsub3filter=input$subsetCellVal,
         inpsub4=input$filterCell,
         inpsub4filter=input$filterCellVal,
-        datafolder=datafolder)
+        datafolder=dataSource()$datafolder
+      )
     })
-    output$GeneExproup1 <- renderPlot({ plot1() })
-    output$GeneExproup.ui1 <- renderUI({
-      plotOutput(NS0(id, "GeneExproup", 1),
-                 height = .globals$pList1[input$GeneExprpsz])
-    })
-    output$GeneExproup.pdf1 <-
-      plotsDownloadHandler(
-        "pdf",
-        width=input$GeneExproup.w1,
-        height=input$GeneExproup.h1,
-        plot1(),
-        currentdataset,
-        input$GeneExprdrX,
-        input$GeneExprdrY,
-        input$GeneName,
-        input$CellInfo)
-    output$GeneExproup.png1 <-
-      plotsDownloadHandler(
-        "png",
-        width=input$GeneExproup.w1,
-        height=input$GeneExproup.h1,
-        plot1(),
-        currentdataset,
-        input$GeneExprdrX,
-        input$GeneExprdrY,
-        input$GeneName,
-        input$CellInfo)
-    plot2 <- reactive({
-      scDRgene(
-        dataSource()$sc1conf,
-        dataSource()$sc1meta,
-        input$GeneExprdrX,
-        input$GeneExprdrY,
-        input$GeneName,
-        input$CellInfo,
-        input$GeneExprsub2b,
-        dataSource()$dataset,
-        "sc1gexpr.h5",
-        dataSource()$sc1gene,
-        input$GeneExprsiz,
-        input$GeneExprcol2,
-        input$GeneExprord2,
-        input$GeneExprfsz,
-        input$GeneExprasp,
-        input$GeneExprtxt,
-        input$GeneExprtype2,
-        if(input$GeneExprxlimb2 %% 2==0) 0 else input$GeneExprxlim2,
-        inpColRange=if(input$GeneExprrgb2 %% 2==0) inpColRange() else input$GeneExprrg2,
-        inpsub3=input$subsetCell,
-        inpsub3filter=input$subsetCellVal,
-        inpsub4=input$filterCell,
-        inpsub4filter=input$filterCellVal,
-        datafolder=datafolder)
-    })
-    output$GeneExproup2 <- renderPlot({ plot2() })
-    output$GeneExproup.ui2 <- renderUI({
-      plotOutput(NS0(id, "GeneExproup", 2),
-                 height = .globals$pList1[input$GeneExprpsz])
-    })
-    output$GeneExproup.pdf2 <-
-      plotsDownloadHandler(
-        "pdf",
-        width=input$GeneExproup.w2,
-        height=input$GeneExproup.h2,
-        plot2(),
-        currentdataset,
-        input$GeneExprdrX,
-        input$GeneExprdrY,
-        input$GeneName,
-        input$CellInfo)
-    output$GeneExproup.png2 <-
-      plotsDownloadHandler(
-        "png",
-        width=input$GeneExproup.w2,
-        height=input$GeneExproup.h2,
-        plot2(),
-        currentdataset,
-        input$GeneExprdrX,
-        input$GeneExprdrY,
-        input$GeneName,
-        input$CellInfo)
+    ## plots
+    getSubGroupName <- function(dataSource, input){
+      sub = strsplit(dataSource()$sc1conf[
+        dataSource()$sc1conf$UI == input$CellInfo]$fID,
+        "\\|")
+      if(length(sub)){
+        sub <- sub[[1]]
+      }
+      sub
+    }
+    updateSubsetGeneExprPlot(1, getSubGroupName, optCrt, inpColRange,
+                             id, input, output, session, dataSource)
+    updateSubsetGeneExprPlot(2, getSubGroupName, optCrt, inpColRange,
+                             id, input, output, session, dataSource)
 
     ## cell stats
     observeEvent(input$GeneExprsub1b, updateGeneExprDT())
@@ -336,7 +158,7 @@ subsetGeneExprServer <- function(id, dataSource, optCrt, currentdataset,
                           "sc1gexpr.h5",
                           dataSource()$sc1gene,
                           input$GeneExprsplt1,
-                          datafolder=datafolder)
+                          datafolder=dataSource()$datafolder)
         datatable(ggData, rownames = FALSE, extensions = "Buttons",
                   options = list(pageLength = -1,
                                  dom = "tB",

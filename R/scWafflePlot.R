@@ -1,19 +1,23 @@
 #' waffle plot for single cell expressions
+#' @noRd
+#' @importFrom stats as.formula
+#' @importFrom ggplot2 coord_equal facet_grid unit scale_fill_gradientn
+#' @importFrom grDevices hcl.colors
 scWafflePlot <- function(expr){
   data <- expr[order(expr$geneName, expr$grpBy, -1*expr$val),
                c("geneName", "grpBy", "val"), with=FALSE]
   data <- data[!is.na(data$val), ]
   groupMax <- data[, {
-    .(N=max(.SD[, .(N=.N), by='grpBy']$N))
+    list(N=max(.SD[, list(N=.N), by='grpBy']$N))
   }, by='geneName']
   data <- merge(data, groupMax)
   ggData <- data[, {
     cellPerGridCell <- ceiling(.SD$N[1]/100)
     .SD[, {
-      .(idx <- rep(seq.int(ceiling(.N/cellPerGridCell)),
+      list(idx <- rep(seq.int(ceiling(.N/cellPerGridCell)),
                    each=cellPerGridCell)[seq.int(.N)])
       .SD[, {
-        .(exprs=mean(.SD$val, na.rm=TRUE))
+        list(exprs=mean(.SD$val, na.rm=TRUE))
       }, by='idx']
     }, by='grpBy']
   }, by='geneName']

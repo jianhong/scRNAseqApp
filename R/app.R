@@ -14,7 +14,6 @@
 #' @importFrom shinyhelper observe_helpers
 #' @importFrom ggplot2 ggplot aes geom_bar theme_minimal xlab ylab
 #' @importFrom bslib bs_theme bs_themer
-#' @importFrom thematic thematic_shiny
 #' @export
 #' @return An object that represents the app.
 #' @examples
@@ -35,7 +34,6 @@ scRNAseqApp <- function(datafolder = "data",
                         use_bs_themer = FALSE,
                         ...){
   stopifnot(is(theme, "bs_theme"))
-  thematic_shiny(font = "auto")
   ## load banner
   banner <- base64_uri(banner)
   ## load default parameters
@@ -106,22 +104,23 @@ scRNAseqApp <- function(datafolder = "data",
     observe_helpers()
     optCrt="{ option_create: function(data,escape) {return('<div class=\"create\"><strong>' + '</strong></div>');} }"
     dataSource <- reactiveValues(
-      available_datasets=datasets,
-      dataset=defaultDataset,
-      appconf=appconf,
-      data_types=data_types,
-      genelist=NULL,
-      sc1conf=NULL,
-      sc1def=NULL,
-      sc1gene=NULL,
-      sc1meta=NULL,
-      Logged=FALSE,
-      terms=.globals$terms[["scRNAseq"]],
-      symbolDict=NULL,
-      auth=NULL,
-      Username="",
-      Password="",
-      token="")
+      datafolder=datafolder,
+      available_datasets=datasets, # all available datasets, need to change to interval values
+      dataset=defaultDataset, # currentdataset
+      appconf=appconf, # data configs
+      data_types=data_types, # data type
+      genelist=NULL, # genelist for cellInfoGeneExpr or heatmap plot from query string
+      sc1conf=NULL, # config for current sc data
+      sc1def=NULL, # def for current sc data
+      sc1gene=NULL, # gene for current sc data
+      sc1meta=NULL, # meta for current sc data
+      Logged=FALSE, # user logged
+      terms=.globals$terms[["scRNAseq"]], # tab UI for scRNAseq/scATACseq
+      symbolDict=NULL, # gene symbol dictionary
+      auth=NULL, # authority
+      Username="", # username
+      Password="", # passward
+      token="") # toekn
     ## login
     dataSource$auth <- loginServer(input, output, session)
     ## manager
@@ -180,7 +179,7 @@ scRNAseqApp <- function(datafolder = "data",
     ## update gene symbol list
     dataSource$symbolDict <- updateSymbolDict(datafolder)
     ## change dataset
-    observeEvent(input$availableDatasets,{
+    observeEvent(input$selectedDatasets,{
       ## update datasets if datasets changed by admin
       if(!all(dataSource$available_datasets %in%
               getDataSets(datafolder = datafolder))){
@@ -194,11 +193,11 @@ scRNAseqApp <- function(datafolder = "data",
                             getDataSets(datafolder = datafolder,
                                         appconf =
                                           getAppConf(datafolder = datafolder)),
-                          selected = input$availableDatasets)
+                          selected = input$selectedDatasets)
       }
 
-      if(input$availableDatasets %in% getDataSets(datafolder = datafolder)){
-        dataSource$dataset <- input$availableDatasets
+      if(input$selectedDatasets %in% getDataSets(datafolder = datafolder)){
+        dataSource$dataset <- input$selectedDatasets
         if(checkLockedDataset(dataSource$dataset, datafolder,
                               lockfilename="LOCKER")){
           dataSource$Logged <- FALSE
@@ -232,7 +231,7 @@ scRNAseqApp <- function(datafolder = "data",
       }
       session$sendCustomMessage("save_key",
                                 paste("defaultDataset",
-                                      isolate(input$availableDatasets),
+                                      isolate(input$selectedDatasets),
                                       sep = "|"))
     })
     ## refresh data when change dataset
@@ -242,52 +241,53 @@ scRNAseqApp <- function(datafolder = "data",
       }
       dataSource <- loadData(dataSource, datafolder)
       output$dataTitle <- renderUI({
-        HTML(names(datasets)[datasets==input$availableDatasets])
+        HTML(names(datasets)[datasets==input$selectedDatasets])
       })
 
       aboutServer("about", reactive({dataSource}),
-                  optCrt, input$availableDatasets,
+                  optCrt, input$selectedDatasets,
                   datafolder)
       ### Plots for tab cell info vs gene expression
-      cellInfoGeneExprServer("cellInfoGeneExpr", reactive({dataSource}),
-                             optCrt, input$availableDatasets,
-                             datafolder)
+      cellInfoGeneExprServer("cellInfoGeneExpr",
+                             reactive({dataSource}),
+                             optCrt)
 
       ### Plots for tab cell info vs cell info
-      cellInfoCellInfoServer("cellInfoCellInfo", reactive({dataSource}),
-                             optCrt, input$availableDatasets,
-                             datafolder)
+      cellInfoCellInfoServer("cellInfoCellInfo",
+                             reactive({dataSource}),
+                             optCrt)
 
       ### Plots for tab gene expression vs gene expression
-      geneExprGeneExprServer("geneExprGeneExpr", reactive({dataSource}),
-                             optCrt, input$availableDatasets,
-                             datafolder)
+      geneExprGeneExprServer("geneExprGeneExpr",
+                             reactive({dataSource}),
+                             optCrt)
 
       ### Plots for tab co-expression
-      coExprServer("coExpr", reactive({dataSource}),
-                   optCrt, input$availableDatasets,
-                   datafolder)
+      coExprServer("coExpr",
+                   reactive({dataSource}),
+                   optCrt)
 
       ### Plots for tab subset
-      subsetGeneExprServer("subsetGeneExpr", reactive({dataSource}),
-                           optCrt, input$availableDatasets,
-                           datafolder)
+      subsetGeneExprServer("subsetGeneExpr",
+                           reactive({dataSource}),
+                           optCrt)
 
       ### Plots for tab violion
-      plotVioBoxServer("vioBoxPlot", reactive({dataSource}),
-                       optCrt, input$availableDatasets, datafolder)
+      plotVioBoxServer("vioBoxPlot",
+                       reactive({dataSource}),
+                       optCrt)
 
 
       ### Plots for tab proportion
-      plotProportionServer("proportion", reactive({dataSource}),
-                           optCrt, input$availableDatasets,
-                           datafolder)
+      plotProportionServer("proportion",
+                           reactive({dataSource}),
+                           optCrt)
 
 
       ### Plots for tab bubble heatmap
-      plotBubbleHeatmapServer("bubbleHeatmap", reactive({dataSource}),
-                              optCrt, input$availableDatasets,
-                              datafolder)
+      plotBubbleHeatmapServer("bubbleHeatmap",
+                              reactive({dataSource}),
+                              optCrt)
     }
 
   }

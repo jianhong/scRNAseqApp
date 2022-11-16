@@ -33,9 +33,11 @@ read_exprs <- function(h5filename, genesID, meta,
   }
   exprs <- data.table()
   for(idx in seq_along(genesID)){
-    tmp <- meta[, c("sampleID", config[grp == TRUE]$ID), with = FALSE]
+    tmp <- meta[, c("sampleID",
+                    config[config$grp == TRUE]$ID),
+                with = FALSE]
     if(!missing(groupName)){
-      tmp$grpBy <- meta[[config[UI == groupName]$ID]]
+      tmp$grpBy <- meta[[config[config$UI == groupName]$ID]]
     }
     tmp$geneName <- names(genesID)[idx]
     tmp$val <- h5data$read(args = list(genesID[idx], quote(expr=)))
@@ -100,7 +102,7 @@ checkGene <- function(gene, datafolder, id,
                    genenames,
                    readRDS(file.path(datafolder, .ele$id, metaFilename)),
                    config, groupName, valueOnly=FALSE)
-      ggData[val < 0]$val <- 0
+      ggData[ggData$val < 0]$val <- 0
       #waffle plot
       plotname = paste0('search-plot', .ele$id)
       wp <- wafflePlot(ggData, NS(id, plotname))

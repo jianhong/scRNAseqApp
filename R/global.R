@@ -1,11 +1,3 @@
-### Useful stuff
-# globalVariables(c(".", "Freq", "UI", "Var1", "X", "Y",
-#                   "fID", "gene", "geneName", "group", "grp", "grpBy",
-#                   "nCells", "nExpress", "pctCells", "sampleID",
-#                   "sub4", "v0", "v1", "v2",
-#                   "val", "val1", "val2", "vv1", "vv2",
-#                   "x", "xend", "y", "yend",
-#                   "present", "prop", "dimred", "express"))
 # global variables
 .globals <- new.env(parent = emptyenv())
 # Colour palette

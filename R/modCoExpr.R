@@ -43,8 +43,7 @@ coExprUI <- function(id){
 #' @importFrom DT renderDT
 #' @importFrom magrittr %>%
 #' @importFrom plotly plotlyOutput renderPlotly
-coExprServer <- function(id, dataSource, optCrt, currentdataset,
-                         datafolder){
+coExprServer <- function(id, dataSource, optCrt){
   moduleServer(id, function(input, output, session){
     ## title
     output$GeneExpr <-
@@ -58,30 +57,9 @@ coExprServer <- function(id, dataSource, optCrt, currentdataset,
                  "of two genes on reduced dimensions"))})
     ## input column 1
     ### Dimension Reduction
-    updateSelectInput(session, "GeneExprdrX", "X-axis:",
-                      choices = dataSource()$sc1conf[dimred == TRUE]$UI,
-                      selected = dataSource()$sc1def$dimred[1])
-    updateSelectInput(session,"GeneExprdrY", "Y-axis:",
-                      choices = dataSource()$sc1conf[dimred == TRUE]$UI,
-                      selected = dataSource()$sc1def$dimred[2])
+    updateDimRedSelInputPair(session, dataSource)
     ## input column 2
-    updateSelectInput(session,
-                      "subsetCell",
-                      "Cell information to subset:",
-                      choices = dataSource()$sc1conf[grp == TRUE]$UI,
-                      selected = dataSource()$sc1def$grp1)
-
-    output$subsetCell.ui <- renderUI({
-      if(input$subsetCell!=""){
-        sub = strsplit(dataSource()$sc1conf[UI == input$subsetCell]$fID,
-                       "\\|")[[1]]
-        checkboxGroupInput(NS(id, "subsetCellVal"),
-                           "Select which cells to show",
-                           inline = TRUE,
-                           choices = sub,
-                           selected = sub)
-      }
-    })
+    updateSubsetCellUI(id, input, output, session, dataSource)
 
     ## plot region
     ### sub region title
@@ -121,7 +99,7 @@ coExprServer <- function(id, dataSource, optCrt, currentdataset,
         input$GeneExprfsz,
         input$GeneExprasp,
         input$GeneExprtxt,
-        datafolder=datafolder)
+        datafolder=dataSource()$datafolder)
     })() })
     output$GeneExpr3Doup.ui1 <- renderUI({
       plotlyOutput(NS0(id, "GeneExpr3Doup", 1),
@@ -148,37 +126,16 @@ coExprServer <- function(id, dataSource, optCrt, currentdataset,
           input$GeneExprfsz,
           input$GeneExprasp,
           input$GeneExprtxt,
-          datafolder=datafolder)
+          datafolder=dataSource()$datafolder)
     })
-
-    output$GeneExproup1 <- renderPlot({ plot1() })
-    output$GeneExproup.ui1 <- renderUI({
-      plotOutput(NS0(id, "GeneExproup", 1),
-                 height = .globals$pList1[input$GeneExprpsz])
-    })
-
-    output$GeneExproup.pdf1 <-
-      plotsDownloadHandler(
-        "pdf",
-        width=input$GeneExproup.w1,
-        height=input$GeneExproup.h1,
-        plot1(),
-        currentdataset,
-        input$GeneExprdrX,
-        input$GeneExprdrY,
-        input$GeneName1,
-        input$GeneName2)
-    output$GeneExproup.png1 <-
-      plotsDownloadHandler(
-        "png",
-        width=input$GeneExproup.w1,
-        height=input$GeneExproup.h1,
-        plot1(),
-        currentdataset,
-        input$GeneExprdrX,
-        input$GeneExprdrY,
-        input$GeneName1,
-        input$GeneName2)
+    updateGeneExprDotPlotUI(postfix=1, id, input, output, session,
+                            plot1,
+                            .globals$pList1[input$GeneExprpsz],
+                            dataSource()$dataset,
+                            input$GeneExprdrX,
+                            input$GeneExprdrY,
+                            input$GeneName1,
+                            input$GeneName2)
 
     plot2 <- reactive({
       scDRcoexLeg(
@@ -187,33 +144,14 @@ coExprServer <- function(id, dataSource, optCrt, currentdataset,
         input$CoExprcol1,
         input$GeneExprfsz)
     })
-    output$GeneExproup2 <- renderPlot({ plot2() })
-    output$GeneExproup.ui2 <- renderUI({
-      plotOutput(NS0(id, "GeneExproup", 2),
-                 height = 300)
-    })
-    output$GeneExproup.pdf2 <-
-      plotsDownloadHandler(
-        "pdf",
-        width=input$GeneExproup.w2,
-        height=input$GeneExproup.h2,
-        plot2(),
-        currentdataset,
-        input$GeneExprdrX,
-        input$GeneExprdrY,
-        input$GeneName1,
-        input$GeneName2)
-    output$GeneExproup.png2 <-
-      plotsDownloadHandler(
-        "png",
-        width=input$GeneExproup.w2,
-        height=input$GeneExproup.h2,
-        plot2(),
-        currentdataset,
-        input$GeneExprdrX,
-        input$GeneExprdrY,
-        input$GeneName1,
-        input$GeneName2)
+    updateGeneExprDotPlotUI(postfix=2, id, input, output, session,
+                            plot2,
+                            300,
+                            dataSource()$dataset,
+                            input$GeneExprdrX,
+                            input$GeneExprdrY,
+                            input$GeneName1,
+                            input$GeneName2)
 
     output$coExpr.dt <- renderDT({
       ggData <- scDRcoexNum(
@@ -226,7 +164,7 @@ coExprServer <- function(id, dataSource, optCrt, currentdataset,
         dataSource()$dataset,
         "sc1gexpr.h5",
         dataSource()$sc1gene,
-        datafolder=datafolder)
+        datafolder=dataSource()$datafolder)
       datatable(ggData, rownames = FALSE, extensions = "Buttons",
                 options = list(pageLength = -1,
                                dom = "tB",

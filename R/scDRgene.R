@@ -20,18 +20,23 @@ scDRgene <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
     return(ggplot())
   }
   # Prepare ggData
-  ggData <- inpMeta[, c(inpConf[UI == inpdrX]$ID, inpConf[UI == inpdrY]$ID,
-                       inpConf[UI == inpsub1]$ID),
-                   with = FALSE]
+  ggData <- inpMeta[, c(inpConf[inpConf$UI == inpdrX]$ID,
+                        inpConf[inpConf$UI == inpdrY]$ID,
+                        inpConf[inpConf$UI == inpsub1]$ID),
+                    with = FALSE]
   if(ncol(ggData)!=3) return(ggplot())
   colnames(ggData) <- c("X", "Y", "sub")
   if(!missing(inpsub3) && !missing(inpsub3filter)){
-    ggData <- cbind(ggData, sub3=inpMeta[, inpConf[UI == inpsub3]$ID, with = FALSE])
+    ggData <- cbind(ggData,
+                    sub3=inpMeta[, inpConf[inpConf$UI == inpsub3]$ID,
+                                 with = FALSE])
     colnames(ggData)[ncol(ggData)] <- "sub3"
   }
   if(!missing(inpsub4) && !missing(inpsub4filter)){
     if(inpsub4 %in% inpConf$UI){
-      ggData <- cbind(ggData, sub4=inpMeta[, inpConf[UI == inpsub4]$ID, with = FALSE])
+      ggData <- cbind(ggData,
+                      sub4=inpMeta[, inpConf[inpConf$UI == inpsub4]$ID,
+                                   with = FALSE])
       colnames(ggData)[ncol(ggData)] <- "sub4"
     }
   }
@@ -39,12 +44,12 @@ scDRgene <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
 
   ggData$val <- read_exprs(file.path(datafolder, dataset, inpH5),
                            inpGene[inp1], valueOnly=TRUE)
-  ggData[val < 0]$val <- 0
+  ggData[ggData$val < 0]$val <- 0
   if(!missing(inpsub4) && !missing(inpsub4filter)){
     if(inpsub4 %in% names(inpGene)){
       ggData$sub4 <- read_exprs(file.path(datafolder, dataset, inpH5),
                                 inpGene[inpsub4], valueOnly=TRUE)
-      ggData[sub4 < 0]$sub4 <- 0
+      ggData[ggData$sub4 < 0]$sub4 <- 0
     }
   }
   bgCells <- FALSE
@@ -70,9 +75,9 @@ scDRgene <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
     ggData <- ggData[keep]
   }
   if(inpord == "Max-1st"){
-    ggData <- ggData[order(val)]
+    ggData <- ggData[order(ggData$val)]
   } else if(inpord == "Min-1st"){
-    ggData <- ggData[order(-val)]
+    ggData <- ggData[order(-ggData$val)]
   } else if(inpord == "Random"){
     ggData <- ggData[sample(nrow(ggData))]
   }
@@ -82,7 +87,9 @@ scDRgene <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
   # Actual ggplot
   if(inpPlt == "Dotplot"){
     if(length(inpColRange)==1){
-      inpColRange <- c(min(0, min(inpColRange)), inpColRange)
+      inpColRange <- c(min(0, min(inpColRange, na.rm = TRUE),
+                           na.rm = TRUE),
+                       inpColRange)
     }
     if(inpColRange[2]>0){
       ggData[ggData$val>inpColRange[2], "val"] <- inpColRange[2]

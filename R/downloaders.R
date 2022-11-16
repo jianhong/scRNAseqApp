@@ -1,6 +1,7 @@
 outputFileName <- function(ext, ...){
   paste0(paste(..., sep="_"),".", ext)
 }
+#' @noRd
 #' @importFrom ggplot2 ggsave
 #' @importFrom shiny downloadHandler
 plotsDownloadHandler <- function(device, width, height, plot, ...){
@@ -16,14 +17,14 @@ plotsDownloadHandler <- function(device, width, height, plot, ...){
           height = height,
           width = width,
           useDingbats = FALSE,
-          plot = plot )
+          plot = plot)
       }else{
         ggsave(
           file,
           device = device,
           height = height,
           width = width,
-          plot = plot )
+          plot = plot)
       }
     }
   )

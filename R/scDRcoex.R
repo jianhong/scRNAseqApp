@@ -14,8 +14,9 @@ scDRcoex <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inp2,
                      inpsiz, inptype, inpcol, inpord, inpfsz, inpasp, inptxt,
                      datafolder){
   # Prepare ggData
-  ggData <- inpMeta[, c(inpConf[UI == inpdrX]$ID, inpConf[UI == inpdrY]$ID,
-                       inpConf[UI == inpsub1]$ID),
+  ggData <- inpMeta[, c(inpConf[inpConf$UI == inpdrX]$ID,
+                        inpConf[inpConf$UI == inpdrY]$ID,
+                        inpConf[inpConf$UI == inpsub1]$ID),
                    with = FALSE]
   if(nrow(ggData)==0) return(NULL)
   colnames(ggData) <- c("X", "Y", "sub")
@@ -25,19 +26,19 @@ scDRcoex <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inp2,
                             inpGene[inp1], valueOnly=TRUE)
   ggData$val2 <- read_exprs(file.path(datafolder, dataset, inpH5),
                             inpGene[inp2], valueOnly=TRUE)
-  ggData[val1 < 0]$val1 <- 0
-  ggData[val2 < 0]$val2 <- 0
+  ggData[ggData$val1 < 0]$val1 <- 0
+  ggData[ggData$val2 < 0]$val2 <- 0
   bgCells <- FALSE
   if(length(inpsub2) != 0 & length(inpsub2) != nlevels(ggData$sub)){
     bgCells <- TRUE
-    ggData2 <- ggData[!sub %in% inpsub2]
-    ggData <- ggData[sub %in% inpsub2]
+    ggData2 <- ggData[!ggData$sub %in% inpsub2]
+    ggData <- ggData[ggData$sub %in% inpsub2]
   }
   ## color for group
   # Do factoring if required
   ggCol <- NULL
-  if(!is.na(inpConf[UI == inpsub1]$fCL)){
-    ggCol <- strsplit(inpConf[UI == inpsub1]$fCL, "\\|")[[1]]
+  if(!is.na(inpConf[inpConf$UI == inpsub1]$fCL)){
+    ggCol <- strsplit(inpConf[inpConf$UI == inpsub1]$fCL, "\\|")[[1]]
     names(ggCol) <- levels(ggData$sub)
     ggLvl <- levels(ggData$sub)[levels(ggData$sub) %in% unique(ggData$sub)]
     ggData$sub <- factor(ggData$sub, levels = ggLvl)
@@ -63,13 +64,14 @@ scDRcoex <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inp2,
   nGrid <- 16
   nPad <- 2
   nTot <- nGrid + nPad * 2
-  gg <- data.table(v1 = rep(0:nTot,nTot+1), v2 = sort(rep(0:nTot,nTot+1)))
+  gg <- data.table(v1 = rep(0:nTot,nTot+1),
+                   v2 = sort(rep(0:nTot,nTot+1)))
   gg$vv1 <- gg$v1 - nPad
-  gg[vv1 < 0]$vv1 <- 0
-  gg[vv1 > nGrid]$vv1 <- nGrid
+  gg[gg$vv1 < 0]$vv1 <- 0
+  gg[gg$vv1 > nGrid]$vv1 <- nGrid
   gg$vv2 <- gg$v2 - nPad
-  gg[vv2 < 0]$vv2 <- 0
-  gg[vv2 > nGrid]$vv2 <- nGrid
+  gg[gg$vv2 < 0]$vv2 <- 0
+  gg[gg$vv2 > nGrid]$vv2 <- nGrid
   gg$cR <- bilinear(gg$vv1, gg$vv2, nGrid, c00[1], c10[1], c01[1], c11[1])
   gg$cG <- bilinear(gg$vv1, gg$vv2, nGrid, c00[2], c10[2], c01[2], c11[2])
   gg$cB <- bilinear(gg$vv1, gg$vv2, nGrid, c00[3], c10[3], c01[3], c11[3])
@@ -82,9 +84,9 @@ scDRcoex <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inp2,
   ggData$v0 <- ggData$v1 + ggData$v2
   ggData <- gg[ggData, on = c("v1", "v2")]
   if(inpord == "Max-1st"){
-    ggData <- ggData[order(v0)]
+    ggData <- ggData[order(ggData$v0)]
   } else if(inpord == "Min-1st"){
-    ggData <- ggData[order(-v0)]
+    ggData <- ggData[order(-ggData$v0)]
   } else if(inpord == "Random"){
     ggData <- ggData[sample(nrow(ggData))]
   }

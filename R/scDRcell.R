@@ -12,8 +12,10 @@ scDRcell <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
                      inpsiz, inpcol, inpord, inpfsz, inpasp, inptxt, inplab,
                      inpSlingshot, slingshotFilename){
   # Prepare ggData
-  ggData <- inpMeta[, c(inpConf[UI == inpdrX]$ID, inpConf[UI == inpdrY]$ID,
-                       inpConf[UI == inp1]$ID, inpConf[UI == inpsub1]$ID),
+  ggData <- inpMeta[, c(inpConf[inpConf$UI == inpdrX]$ID,
+                        inpConf[inpConf$UI == inpdrY]$ID,
+                        inpConf[inpConf$UI == inp1]$ID,
+                        inpConf[inpConf$UI == inpsub1]$ID),
                    with = FALSE]
   if(ncol(ggData)!=4) return(ggplot())
   colnames(ggData) <- c("X", "Y", "val", "sub")
@@ -21,20 +23,20 @@ scDRcell <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
   bgCells <- FALSE
   if(length(inpsub2) != 0 & length(inpsub2) != nlevels(ggData$sub)){
     bgCells <- TRUE
-    ggData2 <- ggData[!sub %in% inpsub2]
-    ggData <- ggData[sub %in% inpsub2]
+    ggData2 <- ggData[!ggData$sub %in% inpsub2]
+    ggData <- ggData[ggData$sub %in% inpsub2]
   }
   if(inpord == "Max-1st"){
-    ggData <- ggData[order(val)]
+    ggData <- ggData[order(ggData$val)]
   } else if(inpord == "Min-1st"){
-    ggData <- ggData[order(-val)]
+    ggData <- ggData[order(-ggData$val)]
   } else if(inpord == "Random"){
     ggData <- ggData[sample(nrow(ggData))]
   }
 
   # Do factoring if required
-  if(!is.na(inpConf[UI == inp1]$fCL)){
-    ggCol <- strsplit(inpConf[UI == inp1]$fCL, "\\|")[[1]]
+  if(!is.na(inpConf[inpConf$UI == inp1]$fCL)){
+    ggCol <- strsplit(inpConf[inpConf$UI == inp1]$fCL, "\\|")[[1]]
     names(ggCol) <- levels(ggData$val)
     ggLvl <- levels(ggData$val)[levels(ggData$val) %in% unique(ggData$val)]
     ggData$val <- factor(ggData$val, levels = ggLvl)
@@ -48,7 +50,8 @@ scDRcell <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
       geom_point(data = ggData2, color = "snow2", size = inpsiz, shape = 16)
   }
   ggOut <- ggOut +
-    geom_point(size = inpsiz, shape = 16) + xlab(inpdrX) + ylab(inpdrY) +
+    geom_point(size = inpsiz, shape = 16) +
+    xlab(inpdrX) + ylab(inpdrY) +
     sctheme(base_size = .globals$sList[inpfsz], XYval = inptxt)
   # slingshot
   if(inpSlingshot){
@@ -116,7 +119,7 @@ scDRcell <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
     }
   }
   # label
-  if(is.na(inpConf[UI == inp1]$fCL)){
+  if(is.na(inpConf[inpConf$UI == inp1]$fCL)){
     ggOut <- ggOut +
       scale_color_gradientn("", colours = .globals$cList[[inpcol]]) +
       guides(color = guide_colorbar(barwidth = 15))
@@ -125,18 +128,22 @@ scDRcell <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
     sListX <- 0.75 * (.globals$sList - (1.5 * floor(sListX/50)))
     ggOut <- ggOut + scale_color_manual("", values = ggCol) +
       guides(color = guide_legend(override.aes = list(size = 5),
-                                  nrow = inpConf[UI == inp1]$fRow)) +
+                                  nrow = inpConf[inpConf$UI == inp1]$fRow)) +
       theme(legend.text = element_text(size = sListX[inpfsz]))
     if(inplab){
-      ggData3 <- ggData[, .(X = mean(.SD$X),
-                            Y = mean(.SD$Y)),
+      ggData3 <- ggData[, list(X = mean(.SD$X),
+                               Y = mean(.SD$Y)),
                         by = "val"]
       lListX <- min(nchar(paste0(ggData3$val, collapse = "")), 200)
       lListX <- .globals$lList - (0.25 * floor(lListX/50))
       ggOut <- ggOut +
-        geom_text_repel(data = ggData3, aes_string("X", "Y", label = "val"),
-                        color = "grey10", bg.color = "grey95", bg.r = 0.15,
-                        size = lListX[inpfsz], seed = 42)
+        geom_text_repel(data = ggData3,
+                        aes_string("X", "Y", label = "val"),
+                        color = "grey10",
+                        bg.color = "grey95",
+                        bg.r = 0.15,
+                        size = lListX[inpfsz],
+                        seed = 123)
     }
   }
   if(inpasp == "Square") {

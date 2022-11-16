@@ -22,7 +22,7 @@ scVioBox <- function(inpConf, inpMeta, inp1, inp1a, inp1b, inp1c, inp2, dataset,
     if(length(inp1c)){
       ggData <- ggData[ggData$val>=inp1c[1], , drop=FALSE]
     }
-    ggData[val < 0]$val <- 0
+    ggData[ggData$val < 0]$val <- 0
     tmpNoise <- rnorm(length(ggData$val)) * diff(range(ggData$val)) / 1000
     ggData$val <- ggData$val + tmpNoise
   }

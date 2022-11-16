@@ -19,9 +19,9 @@ scProp <- function(inpConf, inpMeta, inp1, inp1a, inp1b, inp2,
                      c(1, 2), drop=FALSE]
   }
   colnames(ggData) <- c("X", "grp")
-  ggData <- ggData[, .(nCells = .N), by = c("X", "grp")]
+  ggData <- ggData[, list(nCells = .N), by = c("X", "grp")]
   ggData <- ggData[, {tot = sum(.SD$nCells)
-  .SD[,.(pctCells = 100 * sum(.SD$nCells) / tot,
+  .SD[,list(pctCells = 100 * sum(.SD$nCells) / tot,
          nCells = .SD$nCells), by = "grp"]}, by = "X"]
 
   # Do factoring

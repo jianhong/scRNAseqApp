@@ -1,5 +1,5 @@
 # Plot gene expression bubbleplot / heatmap
-#' @importFrom stats as.dendrogram dist hclust quantile
+#' @importFrom stats as.dendrogram dist hclust quantile as.formula
 #' @importFrom ComplexHeatmap merge_dendrogram Heatmap draw rowAnnotation
 #' HeatmapAnnotation
 #' @importFrom circlize colorRamp2
@@ -19,7 +19,7 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp
     inpall <- FALSE
   }
   geneList <- scGeneList(inp, inpGene)
-  geneList <- geneList[present == TRUE]
+  geneList <- geneList[geneList$present == TRUE]
   shiny::validate(need(nrow(geneList) <= 500, "More than 500 genes to plot! Please reduce the gene list!"))
   shiny::validate(need(nrow(geneList) > 1, "Please input at least 2 genes to plot!"))
   #axis_fontsize <- round(min(c(500/nrow(geneList), 12), na.rm=TRUE), digits = 1)
@@ -30,8 +30,10 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp
   h5data <- h5file[["grp"]][["data"]]
   ggData <- data.table()
   for(iGene in geneList$gene){
-    tmp <- inpMeta[, c("sampleID", inpConf[grp == TRUE]$ID), with = FALSE]
-    tmp$grpBy <- inpMeta[[inpConf[UI == inpGrp]$ID]]
+    tmp <- inpMeta[, c("sampleID",
+                       inpConf[inpConf$grp == TRUE]$ID),
+                   with = FALSE]
+    tmp$grpBy <- inpMeta[[inpConf[inpConf$UI == inpGrp]$ID]]
     tmp$geneName <- iGene
     tmp$val <- h5data$read(args = list(inpGene[iGene], quote(expr=)))
     ggData <- rbindlist(list(ggData, tmp))
@@ -39,18 +41,21 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp
   h5file$close_all()
 
   if(inpGrp1a!="N/A" && length(inpGrp1b)){
-    ggData <- ggData[ggData[[inpConf[UI == inpGrp1a]$ID]] %in% inpGrp1b, , drop=FALSE]
+    ggData <- ggData[ggData[[inpConf[inpConf$UI == inpGrp1a]$ID]] %in%
+                       inpGrp1b, , drop=FALSE]
   }
   # Aggregate
   ggData$val <- expm1(ggData$val)
   ggData$val[is.infinite(ggData$val)] <-
     max(ggData$val[!is.infinite(ggData$val)], na.rm = TRUE)
   if(!inpall){
-    ggData <- ggData[, .(val = mean(val[val>=inpGrp1c]), prop = sum(val>0) / length(sampleID)),
+    ggData <- ggData[, list(val = mean(.SD$val[.SD$val>=inpGrp1c]),
+                            prop = sum(.SD$val>0) / length(.SD$sampleID)),
                     by = c("geneName", "grpBy")]
     ggDataAvg <- NULL
   }else{
-    ggDataAvg <- ggData[, .(val = mean(val[val>=inpGrp1c]), prop = sum(val>0) / length(sampleID)),
+    ggDataAvg <- ggData[, list(val = mean(.SD$val[.SD$val>=inpGrp1c]),
+                               prop = sum(.SD$val>0) / length(.SD$sampleID)),
                        by = c("geneName", "grpBy")]
     ggDataAvg$val <- log1p(ggDataAvg$val)
   }
@@ -62,7 +67,7 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp
                        na.rm = TRUE,
                        names = FALSE)
   if(inpScl){
-    ggData[, val:= scale(val), keyby = "geneName"]
+    ggData[, "val":= scale(.SD$val), keyby = "geneName"]
     colRange <- range(ggData$val, na.rm=TRUE)
     if(colRange[1]<0){
       colRange <- c(-max(abs(range(ggData$val, na.rm=TRUE))),
@@ -70,9 +75,10 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp
     }else{
       colRange <- c(0, max(abs(range(ggData$val, na.rm=TRUE))))
     }
-    colRange1 <- quantile(ggData$val, probs = c(0, .01, .5, .99, 1),
-                         na.rm = TRUE,
-                         names = FALSE)
+    colRange1 <- quantile(ggData$val,
+                          probs = c(0, .01, .5, .99, 1),
+                          na.rm = TRUE,
+                          names = FALSE)
     colRange1 <- c(colRange[1], colRange1[-c(1, 5)], colRange[2])
   }
   if(returnColorRange){
@@ -102,7 +108,9 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp
     ggData$grpBy <- paste(ggData$grpBy, ggData$sampleID, sep="__")
   }
   reshapeMat <- function(value.var){
-    ggMatrix <- dcast.data.table(ggData, geneName~grpBy, value.var = value.var)
+    ggMatrix <- dcast.data.table(ggData,
+                                 as.formula("geneName~grpBy"),
+                                 value.var = value.var)
     tmp <- ggMatrix$geneName
     ggMatrix <- as.matrix(ggMatrix[, -1])
     ggMatrix[is.na(ggMatrix)] <- 0
@@ -143,10 +151,13 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp
                                   ggData$grpBy)]
       anno <- rowAnnotation(group=group, show_legend = FALSE,
                                 show_annotation_name = FALSE)
-      ht_list <- Heatmap(ggMat, name = legendTitle, col = col_fun,
-                         heatmap_legend_param = list(title=legendTitle,
-                                                     direction = "horizontal",
-                                                     title_position = "lefttop"),
+      ht_list <- Heatmap(ggMat,
+                         name = legendTitle,
+                         col = col_fun,
+                         heatmap_legend_param =
+                           list(title=legendTitle,
+                                direction = "horizontal",
+                                title_position = "lefttop"),
                          cluster_rows = TRUE,
                          cluster_row_slices = inpCol,
                          cluster_columns = cluster_rows,
@@ -160,10 +171,13 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp
                          rect_gp = rect_gp,
                          use_raster = TRUE)
     }else{
-      ht_list <- Heatmap(ggMat, name = legendTitle, col = col_fun,
-                         heatmap_legend_param = list(title=legendTitle,
-                                                     direction = "horizontal",
-                                                     title_position = "lefttop"),
+      ht_list <- Heatmap(ggMat,
+                         name = legendTitle,
+                         col = col_fun,
+                         heatmap_legend_param =
+                           list(title=legendTitle,
+                                direction = "horizontal",
+                                title_position = "lefttop"),
                          cluster_rows = cluster_columns,
                          cluster_columns = cluster_rows,
                          show_row_names = !inpall,
@@ -177,10 +191,13 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp
                                   ggData$grpBy)]
       anno <- HeatmapAnnotation(group=group, show_legend = FALSE,
                                 show_annotation_name = FALSE)
-      ht_list <- Heatmap(ggMat, name = legendTitle, col = col_fun,
-                         heatmap_legend_param = list(title=legendTitle,
-                                                     direction = "horizontal",
-                                                     title_position = "lefttop"),
+      ht_list <- Heatmap(ggMat,
+                         name = legendTitle,
+                         col = col_fun,
+                         heatmap_legend_param =
+                           list(title=legendTitle,
+                                direction = "horizontal",
+                                title_position = "lefttop"),
                          cluster_rows = cluster_rows,
                          cluster_columns = TRUE,
                          cluster_column_slices = inpCol,
@@ -193,10 +210,13 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp
                          rect_gp = rect_gp,
                          use_raster = TRUE)
     }else{
-      ht_list <- Heatmap(ggMat, name = legendTitle, col = col_fun,
-                         heatmap_legend_param = list(title=legendTitle,
-                                                     direction = "horizontal",
-                                                     title_position = "lefttop"),
+      ht_list <- Heatmap(ggMat,
+                         name = legendTitle,
+                         col = col_fun,
+                         heatmap_legend_param =
+                           list(title=legendTitle,
+                                direction = "horizontal",
+                                title_position = "lefttop"),
                          cluster_rows = cluster_rows,
                          cluster_columns = cluster_columns,
                          show_column_names = !inpall,

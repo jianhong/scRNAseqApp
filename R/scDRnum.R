@@ -21,7 +21,7 @@ scDRnum <- function(inpConf, inpMeta, inpCellInfo, inpGeneName,
   colnames(ggData) <- c("group", "sub")
   ggData$val2 <- read_exprs(file.path(datafolder, dataset, inpH5),
                             inpGene[inpGeneName], valueOnly=TRUE)
-  ggData[val2 < 0]$val2 <- 0
+  ggData[ggData$val2 < 0]$val2 <- 0
   if(length(inpsubValue) != 0 & length(inpsubValue) != nlevels(ggData$sub)){
     ggData <- ggData[ggData$sub %in% inpsubValue]
   }
@@ -39,14 +39,14 @@ scDRnum <- function(inpConf, inpMeta, inpCellInfo, inpGeneName,
 
   # Actual data.table
   ggData$express <- FALSE
-  ggData[val2 > 0]$express <- TRUE
-  ggData1 <- ggData[express == TRUE, .(nExpress = .N), by = "group"]
-  ggData <- ggData[, .(nCells = .N), by = "group"]
+  ggData[ggData$val2 > 0]$express <- TRUE
+  ggData1 <- ggData[ggData$express == TRUE, list(nExpress = .N), by = "group"]
+  ggData <- ggData[, list(nCells = .N), by = "group"]
   ggData <- ggData1[ggData, on = "group"]
   ggData <- ggData[, c("group", "nCells", "nExpress"), with = FALSE]
-  ggData[is.na(nExpress)]$nExpress <- 0
+  ggData[is.na(ggData$nExpress)]$nExpress <- 0
   ggData$pctExpress <- 100 * ggData$nExpress / ggData$nCells
-  ggData <- ggData[order(group)]
+  ggData <- ggData[order(ggData$group)]
   colnames(ggData)[3] <- paste0(colnames(ggData)[3], "_", inpGeneName)
   return(ggData)
 }

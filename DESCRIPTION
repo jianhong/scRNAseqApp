@@ -43,7 +43,6 @@ Imports:
     slingshot,
     SingleCellExperiment,
     stats,
-    thematic,
     tools,
     xfun,
     xml2

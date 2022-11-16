@@ -16,5 +16,5 @@ $(document).on('shiny:sessioninitialized', function(){
         e.preventDefault();
         $('a[data-value="about"]').trigger('click');
         return false;
-      }).attr("class", $('a[data-value="about"]').attr("class"));
+      });
 });

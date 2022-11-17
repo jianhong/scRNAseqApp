@@ -171,7 +171,9 @@ aboutServer <- function(id, dataSource, optCrt, currentdataset,
 
 updateSearch <- function(key_words, datafolder, output, symbolDict, id){
   key_words = gsub("[^a-zA-Z0-9._-]+", "", key_words)
-  if(length(key_words)==1 && nchar(key_words)>1 && isGene(key_words, symbolDict)){## check if it is a gene
+  if(length(key_words)==1 &&
+     nchar(key_words)>1 &&
+     isGene(key_words, symbolDict)){## check if it is a gene
     search_res <- checkGene(key_words, datafolder, id=id)
     output$search_res <-
       renderUI(search_res$UI)

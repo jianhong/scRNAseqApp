@@ -4,6 +4,7 @@
 #' @param app_path path, a directory where do you want to create the app
 #' @param root character(1), the user name for administrator
 #' @param password character(1), the password for administrator
+#' @param datafolder the folder where saved the dataset for the app
 #' @param overwrite logical(1), overwrite the `app_path` if there is a project.
 #' @export
 #' @importFrom shinymanager create_db
@@ -16,6 +17,7 @@
 scInit <- function(app_path=getwd(),
                    root='admin',
                    password='scRNAseqApp',
+                   datafolder='data',
                    overwrite = FALSE){
   stopifnot(is.logical(overwrite) && length(overwrite) == 1)
   if(!dir.exists(app_path)){
@@ -23,8 +25,9 @@ scInit <- function(app_path=getwd(),
   }
   message("Now copy files")
   for(f in c("www", "doc.txt", "data")){
+    to = ifelse(f=="data", datafolder, f)
     file.copy(system.file("extdata", f, package = "scRNAseqApp"),
-              to=app_path, recursive=TRUE,
+              to=file.path(app_path, to), recursive=TRUE,
               overwrite = overwrite)
   }
   # define credentials

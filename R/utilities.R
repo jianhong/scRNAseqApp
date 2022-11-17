@@ -69,9 +69,11 @@ getCelltypeCol <- function(config, celltypePattern='celltype'){
 #' @noRd
 #' @param expres expression table returned by `read_exprs`
 #' @importFrom utils adist
-wafflePlot <- function(expres, plotname){
+wafflePlot <- function(expres, plotname, numGene){
   list(
-    UI = plotOutput(plotname, width = '100%', height = '280px'),
+    UI = plotOutput(plotname,
+                    width = '100%',
+                    height = paste0(numGene, '00px')),
     PLOT = renderPlot(scWafflePlot(expres))
   )
 }
@@ -105,7 +107,7 @@ checkGene <- function(gene, datafolder, id,
       ggData[ggData$val < 0]$val <- 0
       #waffle plot
       plotname = paste0('search-plot', .ele$id)
-      wp <- wafflePlot(ggData, NS(id, plotname))
+      wp <- wafflePlot(ggData, NS(id, plotname), length(genenames))
       list(
         UI = tags$li(
           tags$a(href=paste0('?data=', .ele$id, '&gene=',

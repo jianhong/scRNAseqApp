@@ -96,10 +96,6 @@ editUI <- function (id) {
         column(width = 3,
                h4("Assign cell cycle"),
                actionButton(
-                 ns("cellcycle"),
-                 label = "CellCycleScoring"
-               ),
-               actionButton(
                  ns("tricycle"),
                  label = "Tricycle"
                )),
@@ -136,10 +132,6 @@ editUI <- function (id) {
                actionButton(
                  ns("cellchat"),
                  label = "CellChat"
-               ),
-               actionButton(
-                 ns("nichenetr"),
-                 label = "NicheNet"
                ))
       ),
       hr(),
@@ -150,50 +142,6 @@ editUI <- function (id) {
     )
   )
 }
-updateAppConf <- function(datafolder, input, global){
-  appconf <- list(title=input$title,
-                  id=input$dir,
-                  species=input$species,
-                  ref=list(
-                    bib=input$reference,
-                    doi=input$doi,
-                    pmid=input$pmid,
-                    entry=global()$ref
-                  ),
-                  types=input$datatype,
-                  markers = global()$markers,
-                  keywords = input$keywords)
-  if(!is.null(input$dir)){
-    if(input$dir!=""){
-      saveRDS(appconf, file.path(datafolder, input$dir, "appconf.rds"))
-    }
-  }
-}
-updateDef <- function(datafolder, input){
-  sc1def <- list(
-    meta1 = input$meta1,
-    meta2 = input$meta2,
-    gene1 = input$gene1,
-    gene2 = input$gene2,
-    genes = input$multigene,
-    dimred = c(input$dimred1, input$dimred2),
-    grp1 = input$grp1,
-    grp2 = input$grp2
-  )
-  if(!is.null(input$dir)){
-    if(input$dir!=""){
-      saveRDS(sc1def, file.path(datafolder, input$dir, "sc1def.rds"))
-    }
-  }
-}
-formatfID_CL <- function(x, rev=FALSE){
-  if(rev){
-    x[!is.na(x)] <- gsub(";\\s+", "|", x[!is.na(x)])
-    return(x)
-  }
-  x[!is.na(x)] <- gsub("\\|", "; ", x[!is.na(x)])
-  x
-}
 #' @importFrom DT renderDT JS
 editServer <- function(id, datafolder) {
   moduleServer(id, function(input, output, session){
@@ -203,6 +151,7 @@ editServer <- function(id, datafolder) {
                              sc1def=NULL,
                              appconf=NULL,
                              markers=NULL,
+                             metaAdditional=NULL,
                              ref=NULL,
                              locker=TRUE,
                              save=FALSE)
@@ -222,88 +171,90 @@ editServer <- function(id, datafolder) {
     observeEvent(input$dir, {
       if(!is.null(input$dir)){
         if(input$dir %in% getDataSets(datafolder)){
-          global$sc1meta <- readRDS(file.path(
-            datafolder, input$dir, "sc1meta.rds"
-          ))
-          global$sc1conf_orig <-
-            readRDS(file.path(datafolder,
-                              input$dir,
-                              "sc1conf.rds"))
-          global$sc1conf_orig$fID <- formatfID_CL(global$sc1conf_orig$fID)
-          global$sc1conf_orig$fCL <- formatfID_CL(global$sc1conf_orig$fCL)
-          global$sc1conf_data <- global$sc1conf_orig
-          cellInfo <- global$sc1conf_data$ID
-          dimred <- gsub("_", "", cellInfo[global$sc1conf_data$dimred])
-          grp <- cellInfo[global$sc1conf_data$grp]
-          output$conf <- renderDT({
-            datatable(global$sc1conf_data, editable = TRUE,
-                      options = list(
-                        columnDefs = list(
-                          list(
-                            targets = c(6, 7),
-                            render = JS(
-                              "function(data, type, row, meta){",
-                              "  if(type === 'display'){",
-                              "    return data ? '<input type=\"checkbox\" checked/>' : '<input type=\"checkbox\"/>';",
-                              "  }",
-                              "  return data;",
-                              "}"
+          adminProcess({
+            global$sc1meta <- readRDS(file.path(
+              datafolder, input$dir, "sc1meta.rds"
+            ))
+            global$sc1conf_orig <-
+              readRDS(file.path(datafolder,
+                                input$dir,
+                                "sc1conf.rds"))
+            global$sc1conf_orig$fID <- formatfID_CL(global$sc1conf_orig$fID)
+            global$sc1conf_orig$fCL <- formatfID_CL(global$sc1conf_orig$fCL)
+            global$sc1conf_data <- global$sc1conf_orig
+            cellInfo <- global$sc1conf_data$ID
+            dimred <- gsub("_", "", cellInfo[global$sc1conf_data$dimred])
+            grp <- cellInfo[global$sc1conf_data$grp]
+            output$conf <- renderDT({
+              datatable(global$sc1conf_data, editable = TRUE,
+                        options = list(
+                          columnDefs = list(
+                            list(
+                              targets = c(6, 7),
+                              render = JS(
+                                "function(data, type, row, meta){",
+                                "  if(type === 'display'){",
+                                "    return data ? '<input type=\"checkbox\" checked/>' : '<input type=\"checkbox\"/>';",
+                                "  }",
+                                "  return data;",
+                                "}"
+                              )
                             )
                           )
-                        )
-                      ))
-          })
-          updateCheckboxGroupInput(
-            session,
-            "meta_to_include",
-            label = "Columns to include from the metadata",
-            choices = cellInfo,
-            selected = cellInfo
-          )
-          global$sc1def <- readRDS(file.path(datafolder,
-                                             input$dir,
-                                             "sc1def.rds"))
-          updateTextInput(session, "gene1", value=global$sc1def$gene1)
-          updateTextInput(session, "gene2", value=global$sc1def$gene2)
-          updateTextAreaInput(session, "multigene",
-                              value=paste(global$sc1def$genes,
-                                          collapse = ", "))
-          updateSelectInput(session, "meta1", choices =cellInfo,
-                            selected = global$sc1def$meta1)
-          updateSelectInput(session, "meta2", choices = cellInfo,
-                            selected = global$sc1def$meta2)
-          updateSelectInput(session, "dimred1", choices =dimred,
-                            selected = global$sc1def$dimred[1])
-          updateSelectInput(session, "dimred2", choices = dimred,
-                            selected = global$sc1def$dimred[2])
-          updateSelectInput(session, "grp1", choices =grp,
-                            selected = global$sc1def$grp1)
-          updateSelectInput(session, "grp2", choices = grp,
-                            selected = global$sc1def$grp2)
-          global$appconf <- readRDS(file.path(datafolder,
-                                              input$dir,
-                                              "appconf.rds"))
-          updateTextAreaInput(session, "keywords",
-                              value=global$appconf$keywords)
-          updateTextInput(session, "title", value=global$appconf$title)
-          updateTextInput(session, "dir", value=global$appconf$id)
-          updateSelectInput(session, "datatype",
-                            selected = global$appconf$types)
-          updateSelectInput(session, "species",
-                            selected = global$appconf$species)
-          updateTextInput(session, "reference", value=global$appconf$ref$bib)
-          updateTextInput(session, "doi", value=global$appconf$ref$doi)
-          updateTextInput(session, "pmid", value=global$appconf$ref$pmid)
-          global$locker <-
-            file.exists(file.path(datafolder, input$dir, "LOCKER"))
-          updateCheckboxInput(
-            session, "locker",
-            value = global$locker)
-          global$save <-
-            file.exists(file.path(datafolder, input$dir, "seu.rds"))
-          updateCheckboxInput(
-            session, "save",
-            value = global$save)
+                        ))
+            })
+            updateCheckboxGroupInput(
+              session,
+              "meta_to_include",
+              label = "Columns to include from the metadata",
+              choices = cellInfo,
+              selected = cellInfo
+            )
+            global$sc1def <- readRDS(file.path(datafolder,
+                                               input$dir,
+                                               "sc1def.rds"))
+            updateTextInput(session, "gene1", value=global$sc1def$gene1)
+            updateTextInput(session, "gene2", value=global$sc1def$gene2)
+            updateTextAreaInput(session, "multigene",
+                                value=paste(global$sc1def$genes,
+                                            collapse = ", "))
+            updateSelectInput(session, "meta1", choices =cellInfo,
+                              selected = global$sc1def$meta1)
+            updateSelectInput(session, "meta2", choices = cellInfo,
+                              selected = global$sc1def$meta2)
+            updateSelectInput(session, "dimred1", choices =dimred,
+                              selected = global$sc1def$dimred[1])
+            updateSelectInput(session, "dimred2", choices = dimred,
+                              selected = global$sc1def$dimred[2])
+            updateSelectInput(session, "grp1", choices =grp,
+                              selected = global$sc1def$grp1)
+            updateSelectInput(session, "grp2", choices = grp,
+                              selected = global$sc1def$grp2)
+            global$appconf <- readRDS(file.path(datafolder,
+                                                input$dir,
+                                                "appconf.rds"))
+            updateTextAreaInput(session, "keywords",
+                                value=global$appconf$keywords)
+            updateTextInput(session, "title", value=global$appconf$title)
+            updateTextInput(session, "dir", value=global$appconf$id)
+            updateSelectInput(session, "datatype",
+                              selected = global$appconf$types)
+            updateSelectInput(session, "species",
+                              selected = global$appconf$species)
+            updateTextInput(session, "reference", value=global$appconf$ref$bib)
+            updateTextInput(session, "doi", value=global$appconf$ref$doi)
+            updateTextInput(session, "pmid", value=global$appconf$ref$pmid)
+            global$locker <-
+              file.exists(file.path(datafolder, input$dir, "LOCKER"))
+            updateCheckboxInput(
+              session, "locker",
+              value = global$locker)
+            global$save <-
+              file.exists(file.path(datafolder, input$dir, "seu.rds"))
+            updateCheckboxInput(
+              session, "save",
+              value = global$save)
+          }, "Loading data", "Done loading!")
         }
       }
     })
@@ -348,90 +299,98 @@ editServer <- function(id, datafolder) {
     })
 
     observeEvent(input$reset, {
-      global$sc1conf_data <- global$sc1conf_orig
-      saveRDS(global$sc1meta,
-              file.path(datafolder, input$dir, "sc1meta.rds"))
-      saveRDS(global$sc1conf_orig,
-              file.path(datafolder, input$dir, "sc1conf.rds"))
-      saveRDS(global$appconf,
-              file.path(datafolder, input$dir, "appconf.rds"))
-      saveRDS(global$sc1def,
-              file.path(datafolder, input$dir, "sc1def.rds"))
-      if(global$locker){
-        writeLines(character(0),
-                   file.path(datafolder, input$dir, "LOCKER"))
-      }else{
-        unlink(file.path(datafolder, input$dir, "LOCKER"))
-      }
-      adminMsg("Rollback done!", "message")
-    })
-
-    observeEvent(input$edit, {
-      if(!identical(global$sc1conf_data, global$sc1conf_orig)){
-        ## update meta if conf changed
-        meta <- global$sc1meta
-        conf_new <- global$sc1conf_data
-        conf_orig <- global$sc1conf_orig
-        if(!identical(conf_new$ID, conf_orig$ID)){
-          colnames(meta)[match(conf_orig$ID, colnames(meta))] <- conf_new$ID
-        }
-        conf_orig$fID <- formatfID_CL(conf_orig$fID, rev = TRUE)
-        conf_orig$fCL <- formatfID_CL(conf_orig$fCL, rev = TRUE)
-        conf_new$fID <- formatfID_CL(conf_new$fID, rev = TRUE)
-        conf_new$fCL <- formatfID_CL(conf_new$fCL, rev = TRUE)
-        if(!identical(conf_new$fID, conf_orig$fID)){
-          o_fID <- strsplit(conf_orig$fID, "\\|")
-          n_fID <- strsplit(conf_new$fID, "\\|")
-          if(!identical(lengths(o_fID), lengths(n_fID))){
-            adminMsg("fID lengths are not identical!", "error")
-            return(NULL)
-          }
-          mapply(o_fID, n_fID, conf_new$ID, FUN=function(.old, .new, .id){
-            if(!all(.old==.new)){
-              for(i in which(.old!=.new)){
-                meta[meta[, .id]==.old[i], .id] <- .new[i]## need to check
-              }
-            }
-          })
-        }
-        if(!identical(conf_new$fCL, conf_orig$fCL)){
-          o_fCL <- strsplit(conf_orig$fCL, "\\|")
-          n_fCL <- strsplit(conf_new$fCL, "\\|")
-          n_fID <- strsplit(conf_new$fID, "\\|")
-          if(!identical(lengths(o_fCL), lengths(n_fCL))){
-            adminMsg("fCL lengths are not identical!", "error")
-            return(NULL)
-          }
-          if(!identical(lengths(n_fID), lengths(n_fCL))){
-            adminMsg("fCL lengths are not identical with fID!", "error")
-            return(NULL)
-          }
-        }
-        saveRDS(meta,
+      adminProcess({
+        global$sc1conf_data <- global$sc1conf_orig
+        saveRDS(global$sc1meta,
                 file.path(datafolder, input$dir, "sc1meta.rds"))
-        saveRDS(conf_new,
+        saveRDS(global$sc1conf_orig,
                 file.path(datafolder, input$dir, "sc1conf.rds"))
-      }
-      sc1conf <- readRDS(file.path(datafolder, input$dir, "sc1conf.rds"))
-      sc1conf <- sc1conf[sc1conf$ID %in% input$meta_to_include, ]
-      saveRDS(sc1conf,
-              file.path(datafolder, input$dir, "sc1conf.rds"))
-      updateAppConf(datafolder, input, reactive({global}))
-      updateDef(datafolder, input)
-      if(input$locker){
-        writeLines(character(0),
-                   file.path(datafolder, input$dir, "LOCKER"))
-      }else{
-        unlink(file.path(datafolder, input$dir, "LOCKER"))
-      }
-      if(input$save){
-        adminMsg("There is no seurat object available", "warning")
-      }else{
-        unlink(file.path(datafolder, input$dir, "seu.rds"))
-      }
-      adminMsg("Update done!", "message")
+        saveRDS(global$appconf,
+                file.path(datafolder, input$dir, "appconf.rds"))
+        saveRDS(global$sc1def,
+                file.path(datafolder, input$dir, "sc1def.rds"))
+        if(global$locker){
+          writeLines(character(0),
+                     file.path(datafolder, input$dir, "LOCKER"))
+        }else{
+          unlink(file.path(datafolder, input$dir, "LOCKER"))
+        }
+      }, "Starting rollback", "Rollback done!")
     })
 
+    getUpdatedMetaAndConf <- function(){
+      meta <- global$sc1meta
+      conf_new <- global$sc1conf_data
+      conf_orig <- global$sc1conf_orig
+      if(!identical(conf_new$ID, conf_orig$ID)){
+        colnames(meta)[match(conf_orig$ID, colnames(meta))] <- conf_new$ID
+      }
+      conf_orig$fID <- formatfID_CL(conf_orig$fID, rev = TRUE)
+      conf_orig$fCL <- formatfID_CL(conf_orig$fCL, rev = TRUE)
+      conf_new$fID <- formatfID_CL(conf_new$fID, rev = TRUE)
+      conf_new$fCL <- formatfID_CL(conf_new$fCL, rev = TRUE)
+      if(!identical(conf_new$fID, conf_orig$fID)){
+        o_fID <- strsplit(conf_orig$fID, "\\|")
+        n_fID <- strsplit(conf_new$fID, "\\|")
+        if(!identical(lengths(o_fID), lengths(n_fID))){
+          adminMsg("fID lengths are not identical!", "error")
+          return(NULL)
+        }
+        mapply(o_fID, n_fID, conf_new$ID, FUN=function(.old, .new, .id){
+          if(!all(.old==.new)){
+            for(i in which(.old!=.new)){
+              meta[meta[, .id]==.old[i], .id] <- .new[i]## need to check
+            }
+          }
+        })
+      }
+      if(!identical(conf_new$fCL, conf_orig$fCL)){
+        o_fCL <- strsplit(conf_orig$fCL, "\\|")
+        n_fCL <- strsplit(conf_new$fCL, "\\|")
+        n_fID <- strsplit(conf_new$fID, "\\|")
+        if(!identical(lengths(o_fCL), lengths(n_fCL))){
+          adminMsg("fCL lengths are not identical!", "error")
+          return(NULL)
+        }
+        if(!identical(lengths(n_fID), lengths(n_fCL))){
+          adminMsg("fCL lengths are not identical with fID!", "error")
+          return(NULL)
+        }
+      }
+      if(!is.null(global$metaAdditional)){
+        meta <- cbind(meta, do.call(cbind, global$metaAdditional))
+      }
+      return(list(meta=meta, config=conf_new))
+    }
+    getExprMetaConf <- function(){
+      new_meta_conf <- getUpdatedMetaAndConf()
+      meta <- new_meta_conf$meta
+      rownames(meta) <- meta$sampleID
+      meta$sampleID <- NULL
+      gene <- readRDS(file.path(
+        datafolder, input$dir, "sc1gene.rds"
+      ))
+      expr <- readDataMatrix(
+        file.path(
+          datafolder, input$dir, "sc1gexpr.h5"
+        ),
+        names(gene), rownames(meta)
+      )
+      return(list(expr=expr, meta=meta, config=new_meta_conf$config))
+    }
+    toSingleCellExperiment <- function(expr_meta_conf){
+      askNamespace("SingleCellExperiment", "S4Vectors")
+      SingleCellExperiment::SingleCellExperiment(
+        assays = S4Vectors::SimpleList(
+          counts=expr_meta_conf$expr,
+          logcounts = log2(expr_meta_conf$expr+1)),
+        colData = S4Vectors::DataFrame(expr_meta_conf$meta),
+        rowData = S4Vectors::DataFrame(
+          gene = rownames(expr_meta_conf$expr),
+          row.names = rownames(expr_meta_conf$expr)
+        )
+      )
+    }
     findReductionMethod <- function(){
       global$sc1conf_data$ID[global$sc1conf_data$UI %in%
                                global$sc1def$dimred]
@@ -446,6 +405,17 @@ editServer <- function(id, datafolder) {
       names(x) <- x
       x
     }
+    addAditionalMeta <- function(additionalMeta){
+      global$metaAdditional <- c(global$metaAdditional,
+                                         additionalMeta)
+      cellInfo <-  c(global$sc1conf_data$ID, names(global$metaAdditional))
+      updateCheckboxGroupInput(
+        session,
+        "meta_to_include",
+        choices = cellInfo,
+        selected = cellInfo
+      )
+    }
     writeMisc <- function(misc, slot){
       if(!is.null(misc)){
         saveRDS(misc,
@@ -453,12 +423,95 @@ editServer <- function(id, datafolder) {
                           paste0(slot, ".rds")))
       }
     }
+    observeEvent(input$edit, {
+      adminProcess({
+        if(!identical(global$sc1conf_data, global$sc1conf_orig)){
+          ## update meta if conf changed
+          new_meta_conf <- getUpdatedMetaAndConf()
+          saveRDS(new_meta_conf$meta,
+                  file.path(datafolder, input$dir, "sc1meta.rds"))
+          saveRDS(new_meta_conf$config,
+                  file.path(datafolder, input$dir, "sc1conf.rds"))
+        }
+        sc1conf <- readRDS(file.path(datafolder, input$dir, "sc1conf.rds"))
+        sc1conf <- sc1conf[sc1conf$ID %in% input$meta_to_include, ]
+        saveRDS(sc1conf,
+                file.path(datafolder, input$dir, "sc1conf.rds"))
+        updateAppConf(datafolder, input, reactive({global}))
+        updateDef(datafolder, input)
+        if(input$locker){
+          writeLines(character(0),
+                     file.path(datafolder, input$dir, "LOCKER"))
+        }else{
+          unlink(file.path(datafolder, input$dir, "LOCKER"))
+        }
+        if(input$save){
+          warning("There is no seurat object available")
+        }else{
+          unlink(file.path(datafolder, input$dir, "seu.rds"))
+        }
+      }, "Starting Update.", "Update done!")
+    })
+    observeEvent(input$tricycle, {
+      if(!input$species %in% c("Homo sapiens", "Mus musculus")){
+        adminMsg("Only support human and mouse data.", type="error")
+        return()
+      }
+      askNamespace("tricycle", "SingleCellExperiment", "S4Vectors")
+      adminProcess({
+        expr_meta_conf <- getExprMetaConf()
+        gname.type <- ifelse(grepl("ENS", rownames(expr_meta_conf$expr)[1]),
+                             "ENSEMBL",
+                             "SYMBOL")
+        species<- ifelse(input$species=="Mus musculus",
+                         "mouse",
+                         "human")
+        exp <- toSingleCellExperiment(expr_meta_conf)
+        tricyle <- addTricycle(
+          exp=exp,
+          gname.type=gname.type,
+          species=species,
+          meta=expr_meta_conf$meta)
+        addAditionalMeta(tricyle)
+      }, "Starting Tricycle!","Tricycle done!")
+    })
+    observeEvent(input$singler, {
+      askNamespace("SingleR", "celldex", "SingleCellExperiment", "S4Vectors")
+      if(!input$species %in% c("Homo sapiens", "Mus musculus", "Danio rerio")){
+        adminMsg("Only support human, mouse and fish data.", type="error")
+        return()
+      }
+      adminProcess({
+        try(attachNamespace("celldex"))
+        ref <- get(input$celldex, envir=as.environment("package:celldex"))()
+        expr_meta_conf <- getExprMetaConf()
+        sce <- toSingleCellExperiment(expr_meta_conf)
+        pred <- SingleR::SingleR(test = sce, ref = ref,
+                                 labels = ref$label.fine)
+        ## assign singler to meta data
+        addAditionalMeta(list(SingleR_labels=pred$labels))
+      }, "Starting SingleR!", "SingleR done!")
+    })
+    observeEvent(input$monocle, {
+      askNamespace("monocle3")
+      adminProcess({
+        expr_meta_conf <- getExprMetaConf()
+        cds <- monocle3::new_cell_data_set(
+          expression_data = expr_meta_conf$expr,
+          cell_metadata = expr_meta_conf$meta)
+        reduction_method <- getReductionMethod(
+          sub("\\d+$", "", findReductionMethod()[1]))
+        miscData <- addMonocle(cds,
+                               reduction_method,
+                               expr_meta_conf$meta,
+                               expr_meta_conf$config)
+        message("Assign pseudotime to miscellaneous data")
+        ## assign pseudotime to miscellaneous data
+        writeMisc(miscData, "monocle3_pseudotime")
+      },"Starting Monocle3", "Monocle3 done!")
+    })
     observeEvent(input$slingshot, {
-      tryCatch({
-        progress <- shiny::Progress$new()
-        on.exit(progress$close())
-        progress$set(message="Doing SlingShot",
-                     value=0)
+      adminProcess({
         askNamespace("slingshot")
         misc_slingshot <- NULL
         dimred <- getReductionData()
@@ -469,16 +522,33 @@ editServer <- function(id, datafolder) {
           data
         })
         lineages <- addSlingshot(dimred, grp_ids)
-        progress$set(message="Assign slingshot to miscellaneous data",
-                     value=99)
+        message("Assign slingshot to miscellaneous data")
         ## assign slingshot to meta data
         writeMisc(lineages, "slingshot")
-        progress$close()
-        on.exit()
-        adminMsg("slingshot done!", type = "message", duration=5)
-      },
-      error = function(.e) adminMsg(.e, type = "error")
-      )
+      },"Starting SlingShot","SlingShot done!")
+    })
+    observeEvent(input$cellchat, {
+      if(!input$species %in% c("Homo sapiens", "Mus musculus", "Danio rerio")){
+        adminMsg("Only support human, mouse and fish data.", type="error")
+        return()
+      }
+      askNamespace("CellChat", "future")
+      adminProcess({
+        expr_meta_conf <- getExprMetaConf()
+        grp_ids <- filterGrpIDs(getGrpIDs(expr_meta_conf$config),
+                                expr_meta_conf$meta)
+        stopifnot("no proper group name for analysis"=length(grp_ids)>0)
+
+        future::plan("multisession", workers =
+                       max(1, length(future::availableWorkers())-1))
+        misc_cellchat <- lapply(grp_ids, function(grp){
+          addCellChat(expr_meta_conf$expr,
+                      expr_meta_conf$meta,
+                      grp, input$species)
+        })
+        ## assign cellchat to miscellaneous data
+        writeMisc(misc_cellchat, "cellchat")
+      }, "Starting CellChat", "CellChat done!")
     })
   })
 }

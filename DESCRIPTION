@@ -12,7 +12,7 @@ Description: scRNAseqApp is a Shiny app package that allows users to visualize
 License: GPL-3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.2
 Depends:
     R (>= 4.0.0)
 Imports:
@@ -46,7 +46,7 @@ Imports:
     tools,
     xfun,
     xml2
-Suggests: rmarkdown, knitr
+Suggests: rmarkdown, knitr, shinytest2
 Enhances:
     CellChat,
     celldex,

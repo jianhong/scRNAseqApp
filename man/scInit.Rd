@@ -8,6 +8,7 @@ scInit(
   app_path = getwd(),
   root = "admin",
   password = "scRNAseqApp",
+  datafolder = "data",
   overwrite = FALSE
 )
 }
@@ -17,6 +18,8 @@ scInit(
 \item{root}{character(1), the user name for administrator}
 
 \item{password}{character(1), the password for administrator}
+
+\item{datafolder}{the folder where saved the dataset for the app}
 
 \item{overwrite}{logical(1), overwrite the \code{app_path} if there is a project.}
 }

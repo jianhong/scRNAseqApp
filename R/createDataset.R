@@ -1,7 +1,42 @@
 #' Create a dataset
 #' Create a dataset from an object
-createDataSet <- function(..., species, pmid, type, markers, keywords){
-
+createDataSet <- function(datafolder="data", # app data folder
+                          appconf, # an appconf object
+                          seu, # an suerat object
+                          config, # config file for makeShinyApp
+                          LOCKER=FALSE,
+                          ...){
+  pf <- file.path(datafolder, appconf$id)
+  dir.create(pf)
+  markers <- appconf$markers
+  if(length(markers)==0){
+    markers <- rownames(seu)[1:2]
+  }else{
+    if(length(markers)==1){
+      markers <- c(markers, markers)
+    }
+  }
+  ## make shiny app
+  makeShinyApp(seu,
+               scConf = config,
+               ...,
+               shiny.title = appconf$title,
+               shiny.dir = pf,
+               default.gene1 = markers[1],
+               default.gene2 = markers[2],
+               default.multigene = markers)
+  saveAppConf(appconf, pf)
+  ## save misc data
+  for(slot in names(Misc(seu))){
+    saveMisc(slot)
+  }
+  ## "Locker"
+  if(LOCKER){
+    writeLines("", file.path(pf, "LOCKER"))
+  }
+  ## "Clean up unused files"
+  unlink(file.path(pf, "ui.R"))
+  unlink(file.path(pf, "server.R"))
 }
 
 #' Create a metadata to describe the dataset

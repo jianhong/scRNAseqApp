@@ -5,7 +5,7 @@
 \title{Create a dataset
 Create a dataset from an object}
 \usage{
-createDataSet(..., species, pmid, type, markers, keywords)
+createDataSet(datafolder = "data", appconf, seu, config, LOCKER = FALSE, ...)
 }
 \description{
 Create a dataset

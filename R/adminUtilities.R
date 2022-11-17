@@ -23,6 +23,7 @@ conditionHandler <- function(cond){
   }
 }
 
+#' @noRd
 #' @param startMsg,endMsg messages for start and end of the progress
 #' @param expr expression for the process
 adminProcess <- function(expr, startMsg, endMsg){

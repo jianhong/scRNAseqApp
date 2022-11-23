@@ -1,10 +1,11 @@
 .shiny-output-error-validation {color: red; font-weight: bold;}
 .navbar-default .navbar-nav { font-weight: bold; font-size: 16px; }
 .consoleOutput>pre {max-height: 400px;}
-.align-action-button {margin-top: 25px!important;}
+.align-action-button {margin-top: 31px!important;}
 /*About icon stats*/
 .about-container:after,.about-container:before,.about-clear:after,.about-clear:before{content:"";display:table;clear:both}
 .about-margin-bottom{margin-bottom:16px!important}
+.about-margin-right{margin-right:27px!important}
 .about-left-border{float:left;padding-right:16px!important}
 .about-padding-16{padding-top:16px!important;padding-bottom:16px!important}
 .about-container{padding:0.01em 16px}

@@ -1,4 +1,5 @@
 # Plot cell information on dimred
+#' @noRd
 #' @importFrom ggplot2 ggplot aes_string geom_point xlab ylab scale_color_gradientn
 #' guides guide_colorbar scale_color_manual guide_legend theme element_text
 #' coord_fixed geom_segment

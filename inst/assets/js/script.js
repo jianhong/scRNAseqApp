@@ -18,3 +18,23 @@ $(document).on('shiny:sessioninitialized', function(){
         return false;
       });
 });
+
+(function(){
+  function show_loader(event){
+    var id = event.target.id;
+    if (id === undefined) {
+      return;
+    }
+    $('#'+id+'-loader').show();
+  }
+  function hide_loader(event){
+    var id = event.target.id;
+    if (id === undefined) {
+      return;
+    }
+    $('#'+id+'-loader').hide();
+  }
+  $(document).on('shiny:outputinvalidated', show_loader);
+  $(document).on('shiny:bound', show_loader);
+  $(document).on('shiny:value shiny:error', hide_loader);
+}())

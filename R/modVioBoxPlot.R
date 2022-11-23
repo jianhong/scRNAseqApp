@@ -52,13 +52,11 @@ plotVioBoxServer <- function(id, dataSource, optCrt){
         input$filterCellVal,
         input$filterCell,
         dataSource()$dataset,
-        "sc1gexpr.h5",
         dataSource()$sc1gene,
         input$plottyp,
         input$plotpts,
         input$plotsiz,
-        input$plotfsz,
-        datafolder=dataSource()$datafolder)
+        input$plotfsz)
     })
     updateGeneExprDotPlotUI(postfix=1, id, input, output, session,
                             plot1, .globals$pList2[input$plotpsz],

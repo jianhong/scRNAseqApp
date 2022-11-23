@@ -33,6 +33,7 @@ Imports:
     methods,
     plotly,
     RefManageR,
+    S4Vectors,
     scrypt,
     Seurat,
     SeuratObject,
@@ -52,6 +53,7 @@ Enhances:
     celldex,
     future,
     monocle3,
+    SingleR,
     SummarizedExperiment,
     SeuratWrappers,
     tricycle

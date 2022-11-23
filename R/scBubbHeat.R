@@ -7,11 +7,10 @@
 #' @importFrom hdf5r H5File
 #' @importFrom data.table rbindlist dcast.data.table data.table :=
 scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp1c, inpPlt,
-                       dataset, inpH5, inpGene, inpScl, inpRow, inpCol,
+                       dataset, inpGene, inpScl, inpRow, inpCol,
                        inpcols, inpflp, inpfsz, inpall = FALSE, save = FALSE,
                        colorBreaks,
                        legendTitle="expression",
-                       datafolder,
                        returnColorRange=FALSE){
   # Identify genes that are in our dataset
   if(missing(inpGrp1c)) inpGrp1c <- 0
@@ -26,7 +25,9 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp
   #bulb_pointsize <- min(c(round(400/nrow(geneList)), 8), na.rm=TRUE)
 
   # Prepare ggData
-  h5file <- H5File$new(file.path(datafolder, dataset, inpH5), mode = "r")
+  h5file <- H5File$new(file.path(.globals$datafolder, dataset,
+                                 .globals$filenames$sc1gexpr),
+                       mode = "r")
   h5data <- h5file[["grp"]][["data"]]
   ggData <- data.table()
   for(iGene in geneList$gene){
@@ -62,12 +63,16 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp
   ggData$val <- log1p(ggData$val)
 
   # Scale if required
-  colRange <- range(ggData$val)
+  colRange <- range(ggData$val, na.rm=TRUE)
   colRange1 <- quantile(ggData$val, probs = c(0, .01, .5, .99, 1),
                        na.rm = TRUE,
                        names = FALSE)
   if(inpScl){
-    ggData[, "val":= scale(.SD$val), keyby = "geneName"]
+    ggData[, "val":= if(length(unique(.SD$val))==1){
+        0
+      } else {
+        scale(.SD$val)
+      }, keyby = "geneName"]
     colRange <- range(ggData$val, na.rm=TRUE)
     if(colRange[1]<0){
       colRange <- c(-max(abs(range(ggData$val, na.rm=TRUE))),
@@ -85,22 +90,29 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp
     colRange1 <- colRange1[c(-3)]
     return(colRange1)
   }
-
   if(!is.na(colorBreaks[1])){
     if(colorBreaks[1]<colRange[1]) colorBreaks[1] <- colRange[1]
     if(colorBreaks[2]>colRange[2]) colorBreaks[2] <- colRange[2]
     ggData$val[ggData$val<colorBreaks[1]] <- colorBreaks[1]
     ggData$val[ggData$val>colorBreaks[2]] <- colorBreaks[2]
-    col_fun <- colorRamp2(
-      breaks=seq(colorBreaks[1],
-                 colorBreaks[2],
-                 length.out=length(.globals$cList[[inpcols]])),
-      colors = .globals$cList[[inpcols]])
+    if(colorBreaks[1]==colorBreaks[2]){
+      col_fun <- .globals$cList[[inpcols]][1]
+    }else{
+      col_fun <- colorRamp2(
+        breaks=seq(colorBreaks[1],
+                   colorBreaks[2],
+                   length.out=length(.globals$cList[[inpcols]])),
+        colors = .globals$cList[[inpcols]])
+    }
   }else{
-    col_fun <- colorRamp2(
-      breaks=seq(colRange[1], colRange[2],
-                 length.out=length(.globals$cList[[inpcols]])),
-      colors = .globals$cList[[inpcols]])
+    if(colRange[1]==colRange[2]){
+      col_fun <- .globals$cList[[inpcols]][1]
+    }else{
+      col_fun <- colorRamp2(
+        breaks=seq(colRange[1], colRange[2],
+                   length.out=length(.globals$cList[[inpcols]])),
+        colors = .globals$cList[[inpcols]])
+    }
   }
 
   # reshape the data to matrix

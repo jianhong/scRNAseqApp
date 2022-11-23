@@ -27,9 +27,6 @@ uploadUI <- function (id) {
                          label = "Primary default gene to show"),
                textInput(ns("gene2"),
                          label = "Secondary default gene to show"),
-               checkboxInput(ns("save"),
-                             label = "Save object for further analysis",
-                             value = FALSE),
                div(class="consoleOutput",
                    verbatimTextOutput(ns('consoleOutput')))),
         column(width = 6,
@@ -136,7 +133,7 @@ uploadUI <- function (id) {
 #' @importFrom RefManageR GetBibEntryWithDOI GetPubMedByID
 #' @importFrom utils head
 #' @importFrom methods slot
-uploadServer <- function(id, datafolder) {
+uploadServer <- function(id) {
   moduleServer(id, function(input, output, session){
     global <- reactiveValues(filepath = NULL,
                              seu = NULL,
@@ -155,20 +152,17 @@ uploadServer <- function(id, datafolder) {
     }
     saveMisc <- function(slot){
       misc <- Misc(global$seu, slot)
-      if(!is.null(misc)){
-        saveRDS(misc,
-                file.path(datafolder, input$dir,
-                          paste0(slot, ".rds")))
-      }
+      writeMisc(misc, input$dir, slot)
     }
     observeEvent(input$file, {
       adminProcess({
         file <- input$file
         ext <- tolower(file_ext(file$datapath))
         filename <- sub(paste0(".", ext), "", basename(file$name))
-        uniqueFilename <- make.names(c(dir(datafolder), filename),
+        uniqueFilename <- make.names(c(dir(.globals$datafolder), filename),
                                      unique = TRUE,
-                                     allow_ = TRUE)[length(dir(datafolder))+1]
+                                     allow_ = TRUE)[
+                                       length(dir(.globals$datafolder))+1]
         req(file)
         validate(need(ext=="rds",
                       "Please upload a seurat object saved in rds file"))
@@ -202,7 +196,8 @@ uploadServer <- function(id, datafolder) {
                           selected = defaultAssay)
         message("Check scale.data slot")
         if(length(GetAssayData(global$seu, "scale.data"))==0){
-          global$seu <- FindVariableFeatures(global$seu, selection.method = "vst",
+          global$seu <- FindVariableFeatures(global$seu,
+                                             selection.method = "vst",
                                              nfeatures=1000)
           global$seu <- ScaleData(global$seu)
         }
@@ -215,12 +210,35 @@ uploadServer <- function(id, datafolder) {
           updateTextInput(session, "gene2", value = rownames(global$seu)[2])
         }
         message("Find all markers")
-        markers <- FindAllMarkers(global$seu, only.pos=TRUE,
-                                  min.pct=.25, logfc.threshold =.25)
-        Misc(global$seu, "markers") <- markers
+        if(!is.null(Misc(global$seu, "markers"))){
+          ## the markers is available at Misc(seu, "markers") slot
+          markers <- Misc(global$seu, "markers")
+          if(is.list(markers)&&!is.data.frame(markers)){
+            markers <- as.data.frame(markers[[1]])
+          }
+        }else{
+          if(!is.factor(Idents(global$seu))){
+            grp <- cellInfo[grepl('cluster|cell(.*)type',
+                                  cellInfo,
+                                  ignore.case = TRUE)]
+            grp_d <- adist('celltype', grp)
+            Idents(global$seu) <- grp[which.min(grp_d)][1]
+          }
+          markers <- FindAllMarkers(global$seu, only.pos=TRUE,
+                                    min.pct=.25, logfc.threshold =.25)
+          if(length(markers)){
+            Misc(global$seu, "markers") <- markers
+          }
+        }
         markers <- split(markers, markers$cluster)
         markers <- lapply(markers, head, n=min(5, ceiling(50/length(markers))))
-        markers <- lapply(markers, rownames)
+        markers <- lapply(markers, function(.ele)(
+          if(!is.null(.ele$gene)){
+            return(.ele$gene)
+          }else{
+            return(rownames(.ele))
+          }
+        ))
         markers <- unique(unlist(markers))
         message("Update all inputs")
         if(length(markers)>1){
@@ -270,32 +288,30 @@ uploadServer <- function(id, datafolder) {
     observeEvent(input$upload, {
       if(!is.null(global$seu)){
         adminProcess({
-          dir.create(file.path(datafolder, input$dir))
+          dir.create(file.path(.globals$datafolder, input$dir))
+          message("set data config file")
+          updateAppConf(input, reactive({global}))
+          message("makeShinyApp")
           makeShinyApp(global$seu,
                        scConf = global$config,
                        gex.assay = input$gexAssay,
                        gex.slot = input$gexSlot,
                        shiny.title = input$title,
-                       shiny.dir = file.path(datafolder, input$dir),
+                       shiny.dir = file.path(.globals$datafolder, input$dir),
                        default.gene1 = input$gene1,
                        default.gene2 = input$gene2,
                        default.multigene = global$markers)
-          message("set data config file")
-          updateAppConf(datafolder, input, reactive({global}))
+          message("set misc files")
           for(slot in names(Misc(global$seu))){
             saveMisc(slot)
           }
-          if(input$save){
-            file.rename(input$file$datapath,
-                        file.path(datafolder, input$dir, "seu.rds"))
-          }
           message("Check file LOCKER")
           if(input$locker){
-            writeLines("", file.path(datafolder, input$dir, "LOCKER"))
+            setLocker(input$dir)
           }
           message("Clean up unused files")
-          unlink(file.path(datafolder, input$dir, "ui.R"))
-          unlink(file.path(datafolder, input$dir, "server.R"))
+          unlink(file.path(.globals$datafolder, input$dir, "ui.R"))
+          unlink(file.path(.globals$datafolder, input$dir, "server.R"))
           message("reset the inputs")
           updateTextInput(session, "dir",
                           value = "")

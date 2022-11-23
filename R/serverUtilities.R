@@ -65,9 +65,7 @@ updateFilterCellUI <-
                            render = I(optCrt)))
     output$filterCell.ui <- renderUI({
       if(!input$filterCell %in% dataSource()$sc1conf$UI){
-        val <- read_exprs(file.path(dataSource()$datafolder,
-                                    dataSource()$dataset,
-                                    "sc1gexpr.h5"),
+        val <- read_exprs(dataSource()$dataset,
                           dataSource()$sc1gene[input$filterCell],
                           valueOnly=TRUE)
       }else{
@@ -106,7 +104,8 @@ updateGeneExprDotPlotUI <-
         height=input[[paste0("GeneExproup.h", postfix)]],
         plotX(),
         ...)
-}
+  }
+
 updateCellInfoPlot <-
   function(postfix=1, id, input, output, session, dataSource){
     cellInfoLabel <- paste0('CellInfo', postfix)
@@ -130,9 +129,9 @@ updateCellInfoPlot <-
         input$GeneExprtxt,
         input[[paste0("CellInfolab", postfix)]],
         input[[paste0("CellInfoslingshot", postfix)]],
-        file.path(dataSource()$datafolder,
+        file.path(.globals$datafolder,
                   dataSource()$dataset,
-                  'slingshot.rds'))
+                  .globals$filenames[["slingshot"]]))
     })
     updateGeneExprDotPlotUI(postfix, id, input, output, session,
                             plotX,
@@ -164,7 +163,6 @@ updateGeneExprPlot <-
         input$subsetCell,
         input$subsetCellVal,
         dataSource()$dataset,
-        "sc1gexpr.h5",
         dataSource()$sc1gene,
         input$GeneExprsiz,
         input[[paste0("GeneExprcol", postfix)]],
@@ -176,8 +174,7 @@ updateGeneExprPlot <-
         if(input[[paste0("GeneExprxlimb", postfix)]] %% 2==0) 0 else
           input[[paste0("GeneExprxlim", postfix)]],
         inpColRange=if(input[[paste0("GeneExprrgb", postfix)]] %% 2==0) 0 else
-          input[[paste0("GeneExprrg", postfix)]],
-        datafolder=dataSource()$datafolder)
+          input[[paste0("GeneExprrg", postfix)]])
     })
     updateGeneExprDotPlotUI(postfix, id, input, output, session,
                             plotX,
@@ -217,7 +214,6 @@ updateSubsetGeneExprPlot <-
         input$CellInfo,
         input[[GeneNameLabel]],
         dataSource()$dataset,
-        "sc1gexpr.h5",
         dataSource()$sc1gene,
         input$GeneExprsiz,
         input[[paste0("GeneExprcol", postfix)]],
@@ -234,8 +230,7 @@ updateSubsetGeneExprPlot <-
         inpsub3=input$subsetCell,
         inpsub3filter=input$subsetCellVal,
         inpsub4=input$filterCell,
-        inpsub4filter=input$filterCellVal,
-        datafolder=dataSource()$datafolder)
+        inpsub4filter=input$filterCellVal)
     })
     updateGeneExprDotPlotUI(postfix, id, input, output, session,
                             plotX,

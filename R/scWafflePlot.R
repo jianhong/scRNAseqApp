@@ -3,7 +3,14 @@
 #' @importFrom stats as.formula
 #' @importFrom ggplot2 coord_equal facet_grid unit scale_fill_gradientn
 #' @importFrom grDevices hcl.colors
-scWafflePlot <- function(expr){
+scWafflePlot <- function(expr, groupCol='treatment'){
+  if(groupCol[1] %in% colnames(expr)){
+    if(!all(as.character(expr[[groupCol]]) ==
+            as.character(expr$grpBy))){
+      expr$geneName <- paste(as.character(expr$geneName),
+                             as.character(expr[[groupCol]]))
+    }
+  }
   data <- expr[order(expr$geneName, expr$grpBy, -1*expr$val),
                c("geneName", "grpBy", "val"), with=FALSE]
   data <- data[!is.na(data$val), ]

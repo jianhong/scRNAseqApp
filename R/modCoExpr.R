@@ -90,7 +90,6 @@ coExprServer <- function(id, dataSource, optCrt){
         input$subsetCell,
         input$subsetCellVal,
         dataSource()$dataset,
-        "sc1gexpr.h5",
         dataSource()$sc1gene,
         input$GeneExprsiz,
         "3D",
@@ -98,8 +97,7 @@ coExprServer <- function(id, dataSource, optCrt){
         input$CoExprord1,
         input$GeneExprfsz,
         input$GeneExprasp,
-        input$GeneExprtxt,
-        datafolder=dataSource()$datafolder)
+        input$GeneExprtxt)
     })() })
     output$GeneExpr3Doup.ui1 <- renderUI({
       plotlyOutput(NS0(id, "GeneExpr3Doup", 1),
@@ -117,7 +115,6 @@ coExprServer <- function(id, dataSource, optCrt){
           input$subsetCell,
           input$subsetCellVal,
           dataSource()$dataset,
-          "sc1gexpr.h5",
           dataSource()$sc1gene,
           input$GeneExprsiz,
           "2D",
@@ -125,8 +122,7 @@ coExprServer <- function(id, dataSource, optCrt){
           input$CoExprord1,
           input$GeneExprfsz,
           input$GeneExprasp,
-          input$GeneExprtxt,
-          datafolder=dataSource()$datafolder)
+          input$GeneExprtxt)
     })
     updateGeneExprDotPlotUI(postfix=1, id, input, output, session,
                             plot1,
@@ -162,9 +158,7 @@ coExprServer <- function(id, dataSource, optCrt){
         input$subsetCell,
         input$subsetCellVal,
         dataSource()$dataset,
-        "sc1gexpr.h5",
-        dataSource()$sc1gene,
-        datafolder=dataSource()$datafolder)
+        dataSource()$sc1gene)
       datatable(ggData, rownames = FALSE, extensions = "Buttons",
                 options = list(pageLength = -1,
                                dom = "tB",

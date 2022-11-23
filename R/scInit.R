@@ -20,6 +20,7 @@ scInit <- function(app_path=getwd(),
                    datafolder='data',
                    overwrite = FALSE){
   stopifnot(is.logical(overwrite) && length(overwrite) == 1)
+  .globals$datafolder <- datafolder
   if(!dir.exists(app_path)){
     dir.create(app_path, recursive = TRUE)
   }

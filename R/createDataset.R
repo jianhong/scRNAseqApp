@@ -1,11 +1,23 @@
 #' Create a dataset
-#' Create a dataset from an object
-createDataSet <- function(datafolder="data", # app data folder
-                          appconf, # an appconf object
-                          seu, # an suerat object
-                          config, # config file for makeShinyApp
+#' Create a dataset from an seurat object
+#' @param datafolder app data folder
+#' @param appconf a list object represent the information about the dataset
+#' @param seu an seurat object
+#' @param config config file for makeShinyApp
+#' @param ident The default group
+#' @param contrast The contrast group
+#' @param LOCKER Set locker if the file is required login
+#' @param ... parameters passed to makeShinyApp
+#' @importFrom ShinyCell makeShinyApp
+createDataSet <- function(datafolder="data",
+                          appconf,
+                          seu,
+                          config,
+                          ident,
+                          contrast,
                           LOCKER=FALSE,
                           ...){
+  .globals$datafolder <- datafolder
   pf <- file.path(datafolder, appconf$id)
   dir.create(pf)
   markers <- appconf$markers
@@ -39,6 +51,7 @@ createDataSet <- function(datafolder="data", # app data folder
   unlink(file.path(pf, "server.R"))
 }
 
+
 #' Create a metadata to describe the dataset
 #' 1. must contain condition, cell type, tissue, species information
 #' 2. the conditions must be a keyword in database, used for whole database comparison
@@ -47,6 +60,80 @@ createDataSet <- function(datafolder="data", # app data folder
 #'
 createMetadata <- function(){
 
+}
+
+#' load data from cellRanger
+createSeuFromCellRanger <- function(outsFolder){
+  analysisFolder <- file.path(outsFolder, "analysis")
+  matrixFolder <- file.path(outsFolder, "filtered_feature_bc_matrix")
+  stopifnot("'analysis' folder must exits"=
+              file.exists(analysisFolder))
+  stopifnot("'filtered_feature_bc_matrix' folder must exits"=
+              file.exists(matrixFolder))
+  seu <- CreateSeuratObject(Read10X(matrixFolder))
+  projections <- dir(analysisFolder, "projection.csv",
+                     recursive = TRUE, full.names = TRUE)
+  # projections name will be
+  # analysisFolder/pca/gene_expression_x_components/projection.csv
+  projs <- basename(dirname(dirname(
+    sub(analysisFolder, "", projections, fixed=TRUE))))
+  for(i in seq_along(projections)){
+    projection <- read.csv(projections[i], row.names = 1)
+    colnames(projection) <- sub("\\.", "_", colnames(projection))
+    seu[[projs[i]]] <- CreateDimReducObject(embeddings=as.matrix(projection),
+                                            assay="RNA")
+  }
+  clusters <- dir(analysisFolder, "clusters.csv",
+                  recursive = TRUE, full.names = TRUE)
+  clus <- sub("^.*gene_expression_(.*?)\\/clusters.csv", "\\1", clusters)
+  for(i in seq_along(clusters)){
+    cluster <- read.csv(clusters[i], row.names = 1)
+    colnames(cluster) <- clus[i]
+    seu[[clus[i]]] <- as.factor(cluster[, 1])
+  }
+  de_tbls <- dir(analysisFolder, "differential_expression.csv",
+                 recursive = TRUE, full.names = TRUE)
+  names(de_tbls) <-
+    sub("^.*gene_expression_(.*?)\\/differential_expression.csv",
+        "\\1", clusters)
+  misc <- lapply(de_tbls, read.csv, row.names = 1)
+  ## reformat
+  misc <- lapply(misc, function(.ele){
+    gene <- .ele$Feature.Name
+    .ele <- .ele[, -1, drop=FALSE]
+    .ele <- lapply(seq.int(ncol(.ele)/3), function(.e){
+      .e <- .ele[, (.e-1)*3+seq.int(3)]
+      cluster <- sub("Cluster.(.*?).Mean.Counts", "\\1", colnames(.e)[1])
+      colnames(.e) <- sub("Cluster.(.*?)\\.", "", colnames(.e))
+      cbind(.e, cluster, gene)
+    })
+    .ele <- do.call(rbind, .ele)
+    .ele <- .ele[.ele[, 3]<0.05, , drop=FALSE]
+  })
+  Misc(seu, "markers") <- misc
+  seu
+}
+
+
+cteateSeuFromMatrix <- function(matrix, meta, genes, cluster){
+  mat <- fread(matrix)
+  meta <- read.delim(meta, header=TRUE)
+  mat <- mat[!duplicated(mat[, 1][[1]]), ]
+  genes = mat[,1][[1]]
+  mat = data.frame(mat[,-1], row.names=genes)
+  rownames(meta) <- colnames(mat)
+  identical(colnames(mat), make.names(meta[, 1], unique=TRUE))
+  meta <- meta[, -1]
+  # create seu
+  seu <- CreateSeuratObject(mat, meta.data = meta)
+  clusterfile <- read.delim(cluster, header=FALSE)
+  identical(colnames(mat), make.names(clusterfile$V1, unique=TRUE))
+  clusterfile <- clusterfile[, -1]
+  rownames(clusterfile) <- colnames(mat)
+  colnames(clusterfile) <- c("tSNE_1", "tSNE_2")
+  clusters <- CreateDimReducObject(embeddings=as.matrix(clusterfile))
+  seu[["tsne"]] <- clusters
+  seu
 }
 
 #' Add slingshot lineages to the dataset
@@ -101,6 +188,7 @@ addCellChat <- function(expr, meta, grp, species, min.cells = 10){
 }
 #' Add monocle3 results to the dataset
 #' monocle3 is not a R/Bioconductor available package
+#' TODO: need to create a metadata for UI, and real data for plot
 #' DO NOT export
 #' @noRd
 #' @param cds a cell_data_set object
@@ -153,7 +241,7 @@ addMonocle <- function(cds, reduction_method, meta, config){
                             root_cells = .e)
     })
   })
-  cds_x <- c(list(root_nodes=cds_x), cds_x1)
+  cds_x <- c(list(reduction_method=reduction_method, root_nodes=cds_x), cds_x1)
   miscData <- lapply(cds_x, function(.ele) lapply(.ele, getMiscData))
 }
 
@@ -206,3 +294,4 @@ addTricycle <- function(exp, gname.type, species, meta){
 #'
 #' integrated by corralm for one species
 #'
+#' treatment must be celltype, and contrasts must be injured vs uninjured

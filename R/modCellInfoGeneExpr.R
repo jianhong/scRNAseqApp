@@ -67,10 +67,8 @@ cellInfoGeneExprServer <- function(id, dataSource, optCrt){
                         input$subsetCell,
                         input$subsetCellVal,
                         dataSource()$dataset,
-                        "sc1gexpr.h5",
                         dataSource()$sc1gene,
-                        input$GeneExprsplt1,
-                        datafolder=dataSource()$datafolder)
+                        input$GeneExprsplt1)
       datatable(ggData, rownames = FALSE, extensions = "Buttons",
                 options = list(pageLength = -1,
                                dom = "tB",

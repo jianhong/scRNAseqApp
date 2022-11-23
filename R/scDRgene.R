@@ -9,13 +9,11 @@ getRatio <- function(ggData){## help function
 #' scale_x_continuous xlim
 #' @importFrom ggridges geom_density_ridges theme_ridges
 scDRgene <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
-                     dataset, inpH5, inpGene,
+                     dataset, inpGene,
                      inpsiz, inpcol, inpord, inpfsz, inpasp, inptxt,
                      inpPlt="Dotplot", inpXlim, inpColRange=0,
                      inpsub3, inpsub3filter,
-                     inpsub4, inpsub4filter,
-                     datafolder){
-  saveRDS(as.list(environment()), "tmp.rds")
+                     inpsub4, inpsub4filter){
   if(inp1[1]==""){
     return(ggplot())
   }
@@ -42,13 +40,11 @@ scDRgene <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
   }
   rat <- getRatio(ggData)
 
-  ggData$val <- read_exprs(file.path(datafolder, dataset, inpH5),
-                           inpGene[inp1], valueOnly=TRUE)
+  ggData$val <- read_exprs(dataset, inpGene[inp1], valueOnly=TRUE)
   ggData[ggData$val < 0]$val <- 0
   if(!missing(inpsub4) && !missing(inpsub4filter)){
     if(inpsub4 %in% names(inpGene)){
-      ggData$sub4 <- read_exprs(file.path(datafolder, dataset, inpH5),
-                                inpGene[inpsub4], valueOnly=TRUE)
+      ggData$sub4 <- read_exprs(dataset, inpGene[inpsub4], valueOnly=TRUE)
       ggData[ggData$sub4 < 0]$sub4 <- 0
     }
   }

@@ -1,4 +1,4 @@
-adminMsg <- function(msg, type, duration=30, close=TRUE){
+adminMsg <- function(msg, type, duration=5, close=TRUE){
   showNotification(toString(msg)[1], duration = duration,
                    closeButton = close,
                    type = type)
@@ -34,14 +34,12 @@ adminProcess <- function(expr, startMsg, endMsg){
   get("progress", envir = .globals)$set(message=startMsg,
                                         value=0)
   withCallingHandlers(
-    withRestarts({expr}, muffleStop=function(){
-      message("error!")
-    }),
+    withRestarts({expr}, muffleStop=function() NULL),
     message = conditionHandler,
     warning = conditionHandler,
     error = function(e){
-      invokeRestart("muffleStop")
       conditionHandler(e)
+      invokeRestart("muffleStop")
     }
   )
   get("progress", envir = .globals)$close()
@@ -147,26 +145,26 @@ filterGrpIDs <- function(grp_ids, meta){
   grp_ids[keep]
 }
 
-updateAppConf <- function(datafolder, input, global){
+updateAppConf <- function(input, global){
   appconf <- list(title=input$title,
-                  id=input$dir,
-                  species=input$species,
-                  ref=list(
-                    bib=input$reference,
-                    doi=input$doi,
-                    pmid=input$pmid,
-                    entry=global()$ref
-                  ),
-                  types=input$datatype,
-                  markers = global()$markers,
-                  keywords = input$keywords)
+                     id=input$dir,
+                     species=input$species,
+                     ref=list(
+                       bib=input$reference,
+                       doi=input$doi,
+                       pmid=input$pmid,
+                       entry=global()$ref
+                     ),
+                     types=input$datatype,
+                     markers = global()$markers,
+                     keywords = input$keywords)
   if(!is.null(input$dir)){
     if(input$dir!=""){
-      saveRDS(appconf, file.path(datafolder, input$dir, "appconf.rds"))
+      saveAppConf(appconf, input$dir)
     }
   }
 }
-updateDef <- function(datafolder, input){
+updateDef <- function(input){
   sc1def <- list(
     meta1 = input$meta1,
     meta2 = input$meta2,
@@ -179,7 +177,7 @@ updateDef <- function(datafolder, input){
   )
   if(!is.null(input$dir)){
     if(input$dir!=""){
-      saveRDS(sc1def, file.path(datafolder, input$dir, "sc1def.rds"))
+      saveData(sc1def, input$dir, "sc1def")
     }
   }
 }
@@ -193,13 +191,16 @@ formatfID_CL <- function(x, rev=FALSE){
 }
 #' read expression matrix from sc1gexpr.h5
 #' @noRd
-#' @param h5filename Filename of h5 file
+#' @param h5filename Parent foldername of h5 file
 #' @param rown,coln rownames and colnames for the expression file.
 #' rownames = names(readRDS('sc1gene.rds'));
 #' colnames = readRDS('sc1meta.rds')$sampleID
 #' @importFrom hdf5r readDataSet
 readDataMatrix <- function(h5filename, rown, coln){
-  h5file <- H5File$new(h5filename, mode = "r")
+  h5file <- H5File$new(file.path(.globals$datafolder,
+                                 h5filename,
+                                 .globals$filenames$sc1gexpr),
+                       mode = "r")
   on.exit(h5file$close_all())
   h5data <- h5file[["grp"]][["data"]]
   expr <- readDataSet(h5data)

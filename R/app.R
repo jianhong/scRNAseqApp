@@ -34,15 +34,15 @@ scRNAseqApp <- function(datafolder = "data",
                         use_bs_themer = FALSE,
                         ...){
   stopifnot(is(theme, "bs_theme"))
+  .globals$datafolder <- datafolder
   ## load banner
   banner <- base64_uri(banner)
   ## load default parameters
   loginNavbarTitle <- "Switch User"
-  datasets <- getDataSets(datafolder = datafolder)
-  defaultDataset <- getDefaultDataset(defaultDataset=defaultDataset,
-                                      datafolder = datafolder)
-  appconf <- getAppConf(datafolder = datafolder)
-  datasets <- getDataSets(datafolder = datafolder, appconf = appconf)
+  datasets <- getDataSets()
+  defaultDataset <- getDefaultDataset(defaultDataset=defaultDataset)
+  appconf <- getAppConf()
+  datasets <- getDataSets(appconf = appconf)
   data_types <- getDataType(appconf = appconf)
 
   ui0 <- function(req){
@@ -60,7 +60,7 @@ scRNAseqApp <- function(datafolder = "data",
                        "jianhong@duke", style='text-align:right;'),
                      class="about-right border-top-info"),
         ### Tab: change dataset
-        aboutUI(req, "about", datafolder, banner),
+        aboutUI(req, "about", banner),
         homeUI(), ## fake home
         ### Tab: cellInfo vs geneExpr on dimRed
         cellInfoGeneExprUI("cellInfoGeneExpr"),
@@ -78,6 +78,9 @@ scRNAseqApp <- function(datafolder = "data",
         plotProportionUI("proportion"),
         ### Tab: Multiple gene expr
         plotBubbleHeatmapUI("bubbleHeatmap"),
+        ### Tab: monocle
+        #plotMonocleUI("monocle"),
+        #subsetPlotsUI('test'),
         ### Tab: Login form
         #tabLogin(),
         loginUI(loginNavbarTitle, defaultDataset)
@@ -102,12 +105,13 @@ scRNAseqApp <- function(datafolder = "data",
     options(shiny.maxRequestSize=maxRequestSize) # 1G
     ### For all tags and Server-side selectize
     observe_helpers()
-    optCrt="{ option_create: function(data,escape) {return('<div class=\"create\"><strong>' + '</strong></div>');} }"
+    optCrt="{ option_create: function(data,escape) {
+    return('<div class=\"create\"><strong>' + '</strong></div>');
+    } }"
     dataSource <- reactiveValues(
-      datafolder=datafolder,
       available_datasets=datasets, # all available datasets, need to change to interval values
       dataset=defaultDataset, # currentdataset
-      appconf=appconf, # data configs
+      appconf=appconf, # all data configs, used for search
       data_types=data_types, # data type
       genelist=NULL, # genelist for cellInfoGeneExpr or heatmap plot from query string
       sc1conf=NULL, # config for current sc data
@@ -121,11 +125,33 @@ scRNAseqApp <- function(datafolder = "data",
       Username="", # username
       Password="", # passward
       token="") # toekn
+
+    ### check available data
+    checkAvailableDatasets <- reactivePoll(
+      1000, session,
+      checkFunc = getNamedDataSets,
+      valueFunc = getNamedDataSets)
+    observeEvent(checkAvailableDatasets(),
+                 ignoreNULL = TRUE,
+                 ignoreInit = TRUE, {
+                   ## update datasets if datasets changed by admin
+                   ad <- getNamedDataSets()
+                   if(!all(dataSource$available_datasets %in% ad) ||
+                      !all(ad %in% dataSource$available_datasets)){
+                     dataSource$available_datasets <- ad
+                     dataSource$symbolDict <-
+                       updateSymbolDict()
+                     updateSelectInput(
+                       session, "selectedDatasets",
+                       choices = ad,
+                       selected = input$selectedDatasets)
+                   }
+                 })
     ## login
     dataSource$auth <- loginServer(input, output, session)
     ## manager
-    uploadServer("upload", datafolder)
-    editServer("editdata", datafolder)
+    uploadServer("upload")
+    editServer("editdata")
     ## update visitor stats
     updateVisitor(input, output, session)
     ## parse query strings, and lood old session
@@ -139,18 +165,18 @@ scRNAseqApp <- function(datafolder = "data",
         dataSource$genelist <- NULL
       }
       if(!is.null(query[['data']])){
-        updateSelectInput(session, "availableDatasets",
+        updateSelectInput(session, "selectedDatasets",
                           selected=query[['data']])
         session$userData[["defaultdata_init"]] <- TRUE
         query_has_results <- TRUE
       }else{
         if(!is.null(query[['token']])){
-          token <- getToken(datafolder)
+          token <- getToken()
           if(query[["token"]] %in% names(token)){
             dataSource$token <- query[["token"]]
             if(dataSource$token %in% names(token)){
               updateSelectInput(session,
-                                "availableDatasets",
+                                "selectedDatasets",
                                 selected=token[[query[['token']]]])
               session$userData[["defaultdata_init"]] <- TRUE
               query_has_results <- TRUE
@@ -167,9 +193,9 @@ scRNAseqApp <- function(datafolder = "data",
             session$userData[["defaultdata_init"]] <- TRUE
             dd <- isolate(input$default_defaultDataset)
             if(!is.null(dd)){
-              if(dd %in% getDataSets(datafolder = datafolder) &&
+              if(dd %in% getDataSets() &&
                  dd!=defaultDataset){
-                updateSelectInput(session, 'availableDatasets', selected = dd)
+                updateSelectInput(session, 'selectedDatasets', selected = dd)
               }
             }
           }
@@ -177,29 +203,12 @@ scRNAseqApp <- function(datafolder = "data",
       }
     })
     ## update gene symbol list
-    dataSource$symbolDict <- updateSymbolDict(datafolder)
+    dataSource$symbolDict <- updateSymbolDict()
     ## change dataset
     observeEvent(input$selectedDatasets,{
-      ## update datasets if datasets changed by admin
-      if(!all(dataSource$available_datasets %in%
-              getDataSets(datafolder = datafolder))){
-        dataSource$available_datasets <- getDataSets(datafolder = datafolder)
-      }
-      if(!all(getDataSets(datafolder = datafolder) %in%
-              dataSource$available_datasets)){
-        dataSource$symbolDict <- updateSymbolDict(datafolder)
-        updateSelectInput(session, "availableDatasets",
-                          choices =
-                            getDataSets(datafolder = datafolder,
-                                        appconf =
-                                          getAppConf(datafolder = datafolder)),
-                          selected = input$selectedDatasets)
-      }
-
-      if(input$selectedDatasets %in% getDataSets(datafolder = datafolder)){
+      if(input$selectedDatasets %in% getDataSets()){
         dataSource$dataset <- input$selectedDatasets
-        if(checkLockedDataset(dataSource$dataset, datafolder,
-                              lockfilename="LOCKER")){
+        if(checkLocker(dataSource$dataset)){
           dataSource$Logged <- FALSE
           if(dataSource$token!=""){
             if(checkToken(token, dataSource$token, dataSource$dataset)){
@@ -225,9 +234,9 @@ scRNAseqApp <- function(datafolder = "data",
           }
         }
       }else{
-        updateSelectInput(session, "availableDatasets",
-                          choices = getDataSets(datafolder = datafolder),
-                          selected = getDataSets(datafolder = datafolder)[1])
+        updateSelectInput(session, "selectedDatasets",
+                          choices = getDataSets(),
+                          selected = getDataSets()[1])
       }
       session$sendCustomMessage("save_key",
                                 paste("defaultDataset",
@@ -239,14 +248,12 @@ scRNAseqApp <- function(datafolder = "data",
       if(dataSource$dataset %in% names(data_types)){
         dataSource$terms <- .globals$terms[[data_types[[dataSource$dataset]]]]
       }
-      dataSource <- loadData(dataSource, datafolder)
+      dataSource <- loadData(dataSource)
       output$dataTitle <- renderUI({
         HTML(names(datasets)[datasets==input$selectedDatasets])
       })
 
-      aboutServer("about", reactive({dataSource}),
-                  optCrt, input$selectedDatasets,
-                  datafolder)
+      aboutServer("about", reactive({dataSource}), optCrt)
       ### Plots for tab cell info vs gene expression
       cellInfoGeneExprServer("cellInfoGeneExpr",
                              reactive({dataSource}),
@@ -288,6 +295,14 @@ scRNAseqApp <- function(datafolder = "data",
       plotBubbleHeatmapServer("bubbleHeatmap",
                               reactive({dataSource}),
                               optCrt)
+
+      ### Plots for monocle
+      # plotMonocleServer("monocle",
+      #                  reactive({dataSource}),
+      #                  optCrt)
+      # subsetPlotsServer('test',
+      #                   reactive({dataSource}),
+      #                   optCrt)
     }
 
   }

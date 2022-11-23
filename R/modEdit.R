@@ -55,10 +55,7 @@ editUI <- function (id) {
                            choices = c()),
                selectInput(ns("grp2"),
                            label = "Secondary default info to show",
-                           choices = c()),
-               checkboxInput(ns("save"),
-                             label = "Save object for further analysis",
-                             value = FALSE)),
+                           choices = c())),
         column(width = 6,
                selectInput(
                  ns("species"),
@@ -143,7 +140,8 @@ editUI <- function (id) {
   )
 }
 #' @importFrom DT renderDT JS
-editServer <- function(id, datafolder) {
+#' @importFrom S4Vectors SimpleList DataFrame
+editServer <- function(id) {
   moduleServer(id, function(input, output, session){
     global <- reactiveValues(sc1conf_data=NULL,
                              sc1conf_orig=NULL,
@@ -153,32 +151,27 @@ editServer <- function(id, datafolder) {
                              markers=NULL,
                              metaAdditional=NULL,
                              ref=NULL,
-                             locker=TRUE,
-                             save=FALSE)
+                             locker=TRUE)
     updateSelectInput(session,
                       "dir",
-                      choices = getDataSets(datafolder),
-                      selected = getDataSets(datafolder)[1])
+                      choices = getDataSets(),
+                      selected = getDataSets()[1])
     observeEvent(input$refresh, {
       updateSelectInput(session,
                         "dir",
-                        choices = getDataSets(datafolder),
-                        selected = getDataSets(datafolder)[1])
+                        choices = getDataSets(),
+                        selected = getDataSets()[1])
     })
     observeEvent(input$multigene, {
       global$markers <- strsplit(input$multigene, "\\s+|,|;")[[1]]
     })
     observeEvent(input$dir, {
       if(!is.null(input$dir)){
-        if(input$dir %in% getDataSets(datafolder)){
+        if(input$dir %in% getDataSets()){
           adminProcess({
-            global$sc1meta <- readRDS(file.path(
-              datafolder, input$dir, "sc1meta.rds"
-            ))
+            global$sc1meta <- readData("sc1meta", input$dir)
             global$sc1conf_orig <-
-              readRDS(file.path(datafolder,
-                                input$dir,
-                                "sc1conf.rds"))
+              readData("sc1conf", input$dir)
             global$sc1conf_orig$fID <- formatfID_CL(global$sc1conf_orig$fID)
             global$sc1conf_orig$fCL <- formatfID_CL(global$sc1conf_orig$fCL)
             global$sc1conf_data <- global$sc1conf_orig
@@ -210,9 +203,7 @@ editServer <- function(id, datafolder) {
               choices = cellInfo,
               selected = cellInfo
             )
-            global$sc1def <- readRDS(file.path(datafolder,
-                                               input$dir,
-                                               "sc1def.rds"))
+            global$sc1def <- readData("sc1def", input$dir)
             updateTextInput(session, "gene1", value=global$sc1def$gene1)
             updateTextInput(session, "gene2", value=global$sc1def$gene2)
             updateTextAreaInput(session, "multigene",
@@ -230,9 +221,7 @@ editServer <- function(id, datafolder) {
                               selected = global$sc1def$grp1)
             updateSelectInput(session, "grp2", choices = grp,
                               selected = global$sc1def$grp2)
-            global$appconf <- readRDS(file.path(datafolder,
-                                                input$dir,
-                                                "appconf.rds"))
+            global$appconf <- readData("appconf",input$dir)
             updateTextAreaInput(session, "keywords",
                                 value=global$appconf$keywords)
             updateTextInput(session, "title", value=global$appconf$title)
@@ -244,16 +233,10 @@ editServer <- function(id, datafolder) {
             updateTextInput(session, "reference", value=global$appconf$ref$bib)
             updateTextInput(session, "doi", value=global$appconf$ref$doi)
             updateTextInput(session, "pmid", value=global$appconf$ref$pmid)
-            global$locker <-
-              file.exists(file.path(datafolder, input$dir, "LOCKER"))
+            global$locker <- checkLocker(input$dir)
             updateCheckboxInput(
               session, "locker",
               value = global$locker)
-            global$save <-
-              file.exists(file.path(datafolder, input$dir, "seu.rds"))
-            updateCheckboxInput(
-              session, "save",
-              value = global$save)
           }, "Loading data", "Done loading!")
         }
       }
@@ -274,11 +257,11 @@ editServer <- function(id, datafolder) {
     })
     observeEvent(input$confirmDelete, {
       req(input$dir)
-      unlink(file.path(datafolder, input$dir), recursive = TRUE)
+      unlink(file.path(.globals$datafolder, input$dir), recursive = TRUE)
       updateSelectInput(session,
                         "dir",
-                        choices = getDataSets(datafolder),
-                        selected = getDataSets(datafolder)[1])
+                        choices = getDataSets(),
+                        selected = getDataSets()[1])
       removeModal()
     })
     observeEvent(input$doi,{
@@ -294,26 +277,20 @@ editServer <- function(id, datafolder) {
       row  <- input$conf_cell_edit$row
       clmn <- input$conf_cell_edit$col
       global$sc1conf_data[row, clmn] <- input$conf_cell_edit$value
-      saveRDS(global$sc1conf_data,
-              file.path(datafolder, input$dir, "sc1conf.rds"))
+      saveData(global$sc1conf_data, input$dir, "sc1conf")
     })
 
     observeEvent(input$reset, {
       adminProcess({
         global$sc1conf_data <- global$sc1conf_orig
-        saveRDS(global$sc1meta,
-                file.path(datafolder, input$dir, "sc1meta.rds"))
-        saveRDS(global$sc1conf_orig,
-                file.path(datafolder, input$dir, "sc1conf.rds"))
-        saveRDS(global$appconf,
-                file.path(datafolder, input$dir, "appconf.rds"))
-        saveRDS(global$sc1def,
-                file.path(datafolder, input$dir, "sc1def.rds"))
+        saveData(global$sc1meta, input$dir, "sc1meta")
+        saveData(global$sc1conf_orig, input$dir, "sc1conf")
+        saveData(global$appconf, input$dir, "appconf")
+        saveData(global$sc1def, input$dir, "sc1def")
         if(global$locker){
-          writeLines(character(0),
-                     file.path(datafolder, input$dir, "LOCKER"))
+          setLocker(input$dir)
         }else{
-          unlink(file.path(datafolder, input$dir, "LOCKER"))
+          removeLocker(input$dir)
         }
       }, "Starting rollback", "Rollback done!")
     })
@@ -367,15 +344,8 @@ editServer <- function(id, datafolder) {
       meta <- new_meta_conf$meta
       rownames(meta) <- meta$sampleID
       meta$sampleID <- NULL
-      gene <- readRDS(file.path(
-        datafolder, input$dir, "sc1gene.rds"
-      ))
-      expr <- readDataMatrix(
-        file.path(
-          datafolder, input$dir, "sc1gexpr.h5"
-        ),
-        names(gene), rownames(meta)
-      )
+      gene <- readData("sc1gene", input$dir)
+      expr <- readDataMatrix(input$dir, names(gene), rownames(meta))
       return(list(expr=expr, meta=meta, config=new_meta_conf$config))
     }
     toSingleCellExperiment <- function(expr_meta_conf){
@@ -416,39 +386,23 @@ editServer <- function(id, datafolder) {
         selected = cellInfo
       )
     }
-    writeMisc <- function(misc, slot){
-      if(!is.null(misc)){
-        saveRDS(misc,
-                file.path(datafolder, input$dir,
-                          paste0(slot, ".rds")))
-      }
-    }
     observeEvent(input$edit, {
       adminProcess({
         if(!identical(global$sc1conf_data, global$sc1conf_orig)){
           ## update meta if conf changed
           new_meta_conf <- getUpdatedMetaAndConf()
-          saveRDS(new_meta_conf$meta,
-                  file.path(datafolder, input$dir, "sc1meta.rds"))
-          saveRDS(new_meta_conf$config,
-                  file.path(datafolder, input$dir, "sc1conf.rds"))
+          saveData(new_meta_conf$meta, input$dir, "sc1meta")
+          saveData(new_meta_conf$config, input$dir, "sc1conf")
         }
-        sc1conf <- readRDS(file.path(datafolder, input$dir, "sc1conf.rds"))
+        sc1conf <- readData("sc1conf", input$dir)
         sc1conf <- sc1conf[sc1conf$ID %in% input$meta_to_include, ]
-        saveRDS(sc1conf,
-                file.path(datafolder, input$dir, "sc1conf.rds"))
-        updateAppConf(datafolder, input, reactive({global}))
-        updateDef(datafolder, input)
+        saveData(sc1conf, input$dir, "sc1conf")
+        updateAppConf(input, reactive({global}))
+        updateDef(input)
         if(input$locker){
-          writeLines(character(0),
-                     file.path(datafolder, input$dir, "LOCKER"))
+          setLocker(input$dir)
         }else{
-          unlink(file.path(datafolder, input$dir, "LOCKER"))
-        }
-        if(input$save){
-          warning("There is no seurat object available")
-        }else{
-          unlink(file.path(datafolder, input$dir, "seu.rds"))
+          removeLocker(input$dir)
         }
       }, "Starting Update.", "Update done!")
     })
@@ -507,7 +461,7 @@ editServer <- function(id, datafolder) {
                                expr_meta_conf$config)
         message("Assign pseudotime to miscellaneous data")
         ## assign pseudotime to miscellaneous data
-        writeMisc(miscData, "monocle3_pseudotime")
+        writeMisc(miscData, input$dir, "monocle")
       },"Starting Monocle3", "Monocle3 done!")
     })
     observeEvent(input$slingshot, {
@@ -524,7 +478,7 @@ editServer <- function(id, datafolder) {
         lineages <- addSlingshot(dimred, grp_ids)
         message("Assign slingshot to miscellaneous data")
         ## assign slingshot to meta data
-        writeMisc(lineages, "slingshot")
+        writeMisc(lineages, input$dir, "slingshot")
       },"Starting SlingShot","SlingShot done!")
     })
     observeEvent(input$cellchat, {
@@ -547,7 +501,7 @@ editServer <- function(id, datafolder) {
                       grp, input$species)
         })
         ## assign cellchat to miscellaneous data
-        writeMisc(misc_cellchat, "cellchat")
+        writeMisc(misc_cellchat, input$dir, "cellchat")
       }, "Starting CellChat", "CellChat done!")
     })
   })

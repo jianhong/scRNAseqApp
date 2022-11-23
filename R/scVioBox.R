@@ -2,9 +2,9 @@
 #' @importFrom stats rnorm
 #' @importFrom ggplot2 ggplot aes_string geom_violin geom_boxplot geom_jitter xlab
 #' ylab scale_fill_manual theme
-scVioBox <- function(inpConf, inpMeta, inp1, inp1a, inp1b, inp1c, inp2, dataset, inpH5, inpGene,
-                     inptyp, inppts, inpsiz, inpfsz,
-                     datafolder){
+scVioBox <- function(inpConf, inpMeta, inp1, inp1a, inp1b, inp1c,
+                     inp2, dataset, inpGene,
+                     inptyp, inppts, inpsiz, inpfsz){
   # Prepare ggData
   ggData <- inpMeta[, c(inpConf[inpConf$UI == inp1]$ID,
                         inpConf[inpConf$grp == TRUE]$ID),
@@ -17,8 +17,7 @@ scVioBox <- function(inpConf, inpMeta, inp1, inp1a, inp1b, inp1c, inp2, dataset,
       ggData <- ggData[ggData$val>=inp1c[1], , drop=FALSE]
     }
   } else {
-    ggData$val <- read_exprs(file.path(datafolder, dataset, inpH5),
-                             inpGene[inp2], valueOnly=TRUE)
+    ggData$val <- read_exprs(dataset, inpGene[inp2], valueOnly=TRUE)
     if(length(inp1c)){
       ggData <- ggData[ggData$val>=inp1c[1], , drop=FALSE]
     }

@@ -3,11 +3,37 @@
 \name{createDataSet}
 \alias{createDataSet}
 \title{Create a dataset
-Create a dataset from an object}
+Create a dataset from an seurat object}
 \usage{
-createDataSet(datafolder = "data", appconf, seu, config, LOCKER = FALSE, ...)
+createDataSet(
+  datafolder = "data",
+  appconf,
+  seu,
+  config,
+  ident,
+  contrast,
+  LOCKER = FALSE,
+  ...
+)
+}
+\arguments{
+\item{datafolder}{app data folder}
+
+\item{appconf}{a list object represent the information about the dataset}
+
+\item{seu}{an seurat object}
+
+\item{config}{config file for makeShinyApp}
+
+\item{ident}{The default group}
+
+\item{contrast}{The contrast group}
+
+\item{LOCKER}{Set locker if the file is required login}
+
+\item{...}{parameters passed to makeShinyApp}
 }
 \description{
 Create a dataset
-Create a dataset from an object
+Create a dataset from an seurat object
 }

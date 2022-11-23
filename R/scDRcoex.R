@@ -10,9 +10,8 @@ bilinear <- function(x,y,xy,Q11,Q21,Q12,Q22){
 #' @importFrom ggplot2 ggplot aes_string geom_point xlab ylab scale_color_gradientn
 #' guides guide_colorbar coord_fixed
 scDRcoex <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inp2,
-                     inpsub1, inpsub2, dataset, inpH5, inpGene,
-                     inpsiz, inptype, inpcol, inpord, inpfsz, inpasp, inptxt,
-                     datafolder){
+                     inpsub1, inpsub2, dataset, inpGene,
+                     inpsiz, inptype, inpcol, inpord, inpfsz, inpasp, inptxt){
   # Prepare ggData
   ggData <- inpMeta[, c(inpConf[inpConf$UI == inpdrX]$ID,
                         inpConf[inpConf$UI == inpdrY]$ID,
@@ -22,10 +21,8 @@ scDRcoex <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inp2,
   colnames(ggData) <- c("X", "Y", "sub")
   rat <- getRatio(ggData)
 
-  ggData$val1 <- read_exprs(file.path(datafolder, dataset, inpH5),
-                            inpGene[inp1], valueOnly=TRUE)
-  ggData$val2 <- read_exprs(file.path(datafolder, dataset, inpH5),
-                            inpGene[inp2], valueOnly=TRUE)
+  ggData$val1 <- read_exprs(dataset, inpGene[inp1], valueOnly=TRUE)
+  ggData$val2 <- read_exprs(dataset, inpGene[inp2], valueOnly=TRUE)
   ggData[ggData$val1 < 0]$val1 <- 0
   ggData[ggData$val2 < 0]$val2 <- 0
   bgCells <- FALSE

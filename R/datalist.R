@@ -1,24 +1,41 @@
-getDataSets <- function(datafolder="data", appconf=NULL){
-  datasets <- list.dirs(datafolder, full.names = FALSE, recursive = FALSE)
+getDataSets <- function(appconf=NULL){
+  datasets <- list.dirs(.globals$datafolder,
+                        full.names = FALSE,
+                        recursive = FALSE)
+  datasets <- datasets[vapply(datasets,
+                              FUN = checkFiles,
+                              FUN.VALUE = logical(1L))]
   if(!is.null(appconf)){
     names(datasets) <- vapply(appconf, function(.ele) .ele$title,
                               FUN.VALUE = character(1))
   }
   return(datasets)
 }
-getDefaultDataset <- function(defaultDataset="pbmc_small",
-                              datafolder="data"){
-  datasets <- getDataSets(datafolder = datafolder)
+getNamedDataSets <- function(){
+  getDataSets(appconf = getAppConf())
+}
+# check if all the required files are available
+checkFiles <- function(folder){
+  all(c(.globals$filenames$appconf,
+        .globals$filenames$sc1conf,
+        .globals$filenames$sc1def,
+        .globals$filenames$sc1gene,
+        .globals$filenames$sc1gexpr,
+        .globals$filenames$sc1meta) %in%
+        list.files(file.path(.globals$datafolder, folder), full.names = FALSE))
+}
+getDefaultDataset <- function(defaultDataset="pbmc_small"){
+  datasets <- getDataSets()
   if(!defaultDataset %in% datasets){
     defaultDataset <- datasets[1]
   }
   defaultDataset
 }
 
-getAppConf <- function(datafolder="data"){
-  datasets <- getDataSets(datafolder = datafolder)
+getAppConf <- function(){
+  datasets <- getDataSets()
   appconf <- lapply(datasets, function(.ele){
-    readRDS(file.path(datafolder, .ele, "appconf.rds"))
+    readData("appconf", .ele)
   })
   names(appconf) <- datasets
   return(appconf)
@@ -30,9 +47,9 @@ getDataType <- function(appconf){
                        FUN.VALUE = character(1))
 }
 
-updateSymbolDict <- function(datafolder="data"){
-  symbols <- lapply(getDataSets(datafolder = datafolder), function(.ele){
-    names(readRDS(file.path(datafolder, .ele, "sc1gene.rds")))
+updateSymbolDict <- function(){
+  symbols <- lapply(getDataSets(), function(.ele){
+    names(readData("sc1gene", .ele))
   })
   sort(unique(unlist(symbols)))
 }
@@ -57,8 +74,21 @@ get_full_ref_list <- function(appconf, returnLen=FALSE){
     if(!is.null(.ele$bib)){
       bib <- sub("^\\[\\d+\\]\\s+", "", gsub("^\\s+", "", .ele$bib))
       if(bib!="" && !is.na(bib)){
-        if(!is.null(.ele$doi)) bib <- paste(bib, paste0("<a href='https://doi.org/", .ele$doi, "'>", .ele$doi, "</a>"))
-        if(!is.null(.ele$pmid)) bib <- paste(bib, paste0("<a href='https://www.ncbi.nlm.nih.gov/pubmed", .ele$pmid, "'>PMID:", .ele$pmid, "</a>"))
+        if(!is.null(.ele$doi)){
+          bib <- paste(bib,
+                       paste0("<a href='https://doi.org/",
+                              .ele$doi,
+                              "'>",
+                              .ele$doi,
+                              "</a>"))
+        }
+        if(!is.null(.ele$pmid)) {
+          bib <- paste(bib, paste0(
+            "<a href='https://www.ncbi.nlm.nih.gov/pubmed",
+            .ele$pmid, "'>PMID:",
+            .ele$pmid,
+            "</a>"))
+        }
         return(list(TRUE, bib))
       }
     }
@@ -75,17 +105,21 @@ get_full_ref_list <- function(appconf, returnLen=FALSE){
   HTML(ref)
 }
 
-getToken <- function(datafolder="data"){
-  token <- dir(datafolder, "token", recursive = TRUE, full.names = TRUE)
+getToken <- function(){
+  token <- dir(.globals$datafolder,
+               .globals$filenames$token,
+               recursive = TRUE,
+               full.names = TRUE)
   token_n <- lapply(token, readLines)
   token <- rep(basename(dirname(token)), lengths(token_n))
   names(token) <- unlist(token_n)
   token <- as.list(token)
 }
 
-checkLockedDataset <- function(datasetname, datafolder="data",
-                               lockfilename="LOCKER"){
-  file.exists(file.path(datafolder, datasetname, lockfilename))
+checkLocker <- function(datasetname){
+  file.exists(file.path(.globals$datafolder,
+                        datasetname,
+                        .globals$filenames$locker))
 }
 checkToken <- function(tokenList, token, dataset){
   if(token %in% names(tokenList)){
@@ -97,4 +131,10 @@ checkToken <- function(tokenList, token, dataset){
 checkPrivilege <- function(privilege, datasetname){
   if(is.null(privilege)) return(FALSE)
   privilege == "all" || grepl(datasetname, privilege, fixed = TRUE)
+}
+
+checkMisc <- function(slot, folder){
+  file.exists(file.path(.globals$datafolder,
+                        folder,
+                        .globals$filenames[[slot]]))
 }

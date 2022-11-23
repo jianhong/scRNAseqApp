@@ -1,8 +1,7 @@
 #' @importFrom data.table .N
 scDRnum <- function(inpConf, inpMeta, inpCellInfo, inpGeneName,
                     inpsubName, inpsubValue,
-                    dataset, inpH5, inpGene, inpsplt,
-                    datafolder){
+                    dataset, inpGene, inpsplt){
   if(length(inpCellInfo)>1){
     inpCellInfoSubGroup <- inpCellInfo[-1]
     inpCellInfo <- inpCellInfo[1]
@@ -19,8 +18,7 @@ scDRnum <- function(inpConf, inpMeta, inpCellInfo, inpGeneName,
     return(dt)
   }
   colnames(ggData) <- c("group", "sub")
-  ggData$val2 <- read_exprs(file.path(datafolder, dataset, inpH5),
-                            inpGene[inpGeneName], valueOnly=TRUE)
+  ggData$val2 <- read_exprs(dataset, inpGene[inpGeneName], valueOnly=TRUE)
   ggData[ggData$val2 < 0]$val2 <- 0
   if(length(inpsubValue) != 0 & length(inpsubValue) != nlevels(ggData$sub)){
     ggData <- ggData[ggData$sub %in% inpsubValue]

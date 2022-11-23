@@ -1,14 +1,11 @@
 #' @importFrom data.table .N
 scDRcoexNum <- function(inpConf, inpMeta, inp1, inp2,
-                        inpsub1, inpsub2, dataset, inpH5, inpGene,
-                        datafolder){
+                        inpsub1, inpsub2, dataset, inpGene){
   # Prepare ggData
   ggData <- inpMeta[, c(inpConf[inpConf$UI == inpsub1]$ID), with = FALSE]
   colnames(ggData) <- c("sub")
-  ggData$val1 <- read_exprs(file.path(datafolder, dataset, inpH5),
-                           inpGene[inp1], valueOnly=TRUE)
-  ggData$val2 <- read_exprs(file.path(datafolder, dataset, inpH5),
-                           inpGene[inp2], valueOnly=TRUE)
+  ggData$val1 <- read_exprs(dataset, inpGene[inp1], valueOnly=TRUE)
+  ggData$val2 <- read_exprs(dataset, inpGene[inp2], valueOnly=TRUE)
   ggData[ggData$val1 < 0]$val1 <- 0
   ggData[ggData$val2 < 0]$val2 <- 0
   if(length(inpsub2) != 0 & length(inpsub2) != nlevels(ggData$sub)){

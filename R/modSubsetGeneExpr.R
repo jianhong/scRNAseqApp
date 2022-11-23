@@ -108,7 +108,6 @@ subsetGeneExprServer <- function(id, dataSource, optCrt){
         input$CellInfo,
         c(input$GeneExprsub1b,input$GeneExprsub2b),
         dataSource()$dataset,
-        "sc1gexpr.h5",
         dataSource()$sc1gene,
         input$GeneExprsiz,
         input$GeneExprcol1,
@@ -122,8 +121,7 @@ subsetGeneExprServer <- function(id, dataSource, optCrt){
         inpsub3=input$subsetCell,
         inpsub3filter=input$subsetCellVal,
         inpsub4=input$filterCell,
-        inpsub4filter=input$filterCellVal,
-        datafolder=dataSource()$datafolder
+        inpsub4filter=input$filterCellVal
       )
     })
     ## plots
@@ -155,10 +153,8 @@ subsetGeneExprServer <- function(id, dataSource, optCrt){
                           input$subsetCell,
                           input$subsetCellVal,
                           dataSource()$dataset,
-                          "sc1gexpr.h5",
                           dataSource()$sc1gene,
-                          input$GeneExprsplt1,
-                          datafolder=dataSource()$datafolder)
+                          input$GeneExprsplt1)
         datatable(ggData, rownames = FALSE, extensions = "Buttons",
                   options = list(pageLength = -1,
                                  dom = "tB",

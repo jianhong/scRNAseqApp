@@ -1,5 +1,22 @@
 # global variables
 .globals <- new.env(parent = emptyenv())
+# filenames
+.globals$datafolder <- "data"
+.globals$filenames <- list(
+  appconf = "appconf.rds",
+  sc1conf = "sc1conf.rds",
+  sc1def = "sc1def.rds",
+  sc1gene = "sc1gene.rds",
+  sc1gexpr = "sc1gexpr.h5",
+  sc1meta = "sc1meta.rds",
+  token = "token",
+  locker = "LOCKER",
+  cellchat = "cellchat.rds",
+  monocle = "monocle3_pseudotime.rds",
+  slingshot = "slingshot.rds"
+)
+# for home search page, the groupColPattern
+.globals$groupColPattern <- 'group'
 # Colour palette
 .globals$cList <- list(
   "White-Red" =
@@ -31,6 +48,7 @@
 .globals$pList3 <- c("Small"="600px", "Medium"="800px", "Large"="1000px")
 .globals$sList <- c("Small"=18, "Medium"=24, "Large"=30)
 .globals$lList <- c("Small"=5, "Medium"=6, "Large"=7)
+.globals$fList <- c("Small"=.5, "Medium"=1, "Large"=2)
 
 # supported organisms
 .globals$supported_organisms <- c("Bos taurus",

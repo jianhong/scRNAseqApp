@@ -90,7 +90,6 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt){
         input$filterVal,
         input$plottyp,
         dataSource()$dataset,
-        "sc1gexpr.h5",
         dataSource()$sc1gene,
         input$plotscl,
         input$plotrow,
@@ -100,7 +99,6 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt){
         input$plotfsz,
         input$plotall,
         legendTitle=dataSource()$terms['expression'],
-        datafolder=dataSource()$datafolder,
         returnColorRange=TRUE)
       rg <- round(rg, digits = 2)
       updateNumericInput(session, "colorb1", value = rg[2],
@@ -147,7 +145,6 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt){
         input$filterVal,
         input$plottyp,
         dataSource()$dataset,
-        "sc1gexpr.h5",
         dataSource()$sc1gene,
         input$plotscl,
         input$plotrow,
@@ -158,8 +155,7 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt){
         input$plotall,
         colorBreaks=if(input$userbreaks %% 2==0 &&
                        !is.na(colrg()[1])) NA else colrg(),
-        legendTitle=dataSource()$terms['expression'],
-        datafolder=dataSource()$datafolder)
+        legendTitle=dataSource()$terms['expression'])
     })
     updateGeneExprDotPlotUI(postfix=1, id, input, output, session,
                             plot1, .globals$pList3[input$plotpsz],

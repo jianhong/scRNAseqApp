@@ -1,6 +1,6 @@
 #' @importFrom DT DTOutput
 #' @importFrom magrittr %>%
-coExprUI <- function(id){
+coExpr3dUI <- function(id){
   tabPanel(
     value = id,
     htmlOutput(NS(id, 'GeneExpr')),
@@ -24,17 +24,7 @@ coExprUI <- function(id){
       ),
       column(
         9,
-        fluidRow(
-          column(
-            8, style="border-right: 2px solid black",
-            geneExprDotPlotUI(id, 1)
-          ),
-          column(
-            4,geneExprDotPlotUI(id, 2),
-            br(), h4("Cell numbers"),
-            DTOutput(NS(id, "coExpr.dt"))
-          )
-        )
+        fluidRow(column(12, uiOutput(NS0(id, "GeneExpr3Doup.ui", 1))))
       )
     )
   )
@@ -42,11 +32,11 @@ coExprUI <- function(id){
 #' @importFrom DT renderDT
 #' @importFrom magrittr %>%
 #' @importFrom plotly plotlyOutput renderPlotly
-coExprServer <- function(id, dataSource, optCrt){
+coExpr3dServer <- function(id, dataSource, optCrt){
   moduleServer(id, function(input, output, session){
     ## title
     output$GeneExpr <-
-      renderUI({HTML(paste("Gene", dataSource()$terms['coexpression']))})
+      renderUI({HTML(paste("3D Gene", dataSource()$terms['coexpression']))})
     ## subtitle
     output$GeneExprSubTitle <-
       renderUI({
@@ -78,66 +68,30 @@ coExprServer <- function(id, dataSource, optCrt){
                          options = list(maxOptions = 6, create = TRUE,
                                         persist = TRUE, render = I(optCrt)))
     ### plots
-    plot1 <- reactive({
-        scDRcoex(
-          dataSource()$sc1conf,
-          dataSource()$sc1meta,
-          input$GeneExprdrX,
-          input$GeneExprdrY,
-          input$GeneName1,
-          input$GeneName2,
-          input$subsetCell,
-          input$subsetCellVal,
-          dataSource()$dataset,
-          dataSource()$sc1gene,
-          input$GeneExprsiz,
-          "2D",
-          input$CoExprcol1,
-          input$CoExprord1,
-          input$GeneExprfsz,
-          input$GeneExprasp,
-          input$GeneExprtxt)
-    })
-    updateGeneExprDotPlotUI(postfix=1, id, input, output, session,
-                            plot1,
-                            .globals$pList1[input$GeneExprpsz],
-                            dataSource()$dataset,
-                            input$GeneExprdrX,
-                            input$GeneExprdrY,
-                            input$GeneName1,
-                            input$GeneName2)
-
-    plot2 <- reactive({
-      scDRcoexLeg(
-        input$GeneName1,
-        input$GeneName2,
-        input$CoExprcol1,
-        input$GeneExprfsz)
-    })
-    updateGeneExprDotPlotUI(postfix=2, id, input, output, session,
-                            plot2,
-                            300,
-                            dataSource()$dataset,
-                            input$GeneExprdrX,
-                            input$GeneExprdrY,
-                            input$GeneName1,
-                            input$GeneName2)
-
-    output$coExpr.dt <- renderDT({
-      ggData <- scDRcoexNum(
+    plot3d <- reactive({
+      scDRcoex(
         dataSource()$sc1conf,
         dataSource()$sc1meta,
+        input$GeneExprdrX,
+        input$GeneExprdrY,
         input$GeneName1,
         input$GeneName2,
         input$subsetCell,
         input$subsetCellVal,
         dataSource()$dataset,
-        dataSource()$sc1gene)
-      datatable(ggData, rownames = FALSE, extensions = "Buttons",
-                options = list(pageLength = -1,
-                               dom = "tB",
-                               buttons = c("copy", "csv", "excel"))) %>%
-        formatRound(columns = c("percent"), digits = 2)
+        dataSource()$sc1gene,
+        input$GeneExprsiz,
+        "3D",
+        input$CoExprcol1,
+        input$CoExprord1,
+        input$GeneExprfsz,
+        input$GeneExprasp,
+        input$GeneExprtxt)
+    })
+    output$GeneExpr3Doup1 <- renderPlotly({ plot3d() })
+    output$GeneExpr3Doup.ui1 <- renderUI({
+      plotlyOutput(NS0(id, "GeneExpr3Doup", 1),
+                   height = .globals$pList1[input$GeneExprpsz])
     })
   })
 }

@@ -17,6 +17,12 @@ scDRgene <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
   if(inp1[1]==""){
     return(ggplot())
   }
+  if(is.na(inpGene[inp1])){
+    return(ggplot())
+  }
+  if(is.null(inpGene[inp1])){
+    return(ggplot())
+  }
   # Prepare ggData
   ggData <- inpMeta[, c(inpConf[inpConf$UI == inpdrX]$ID,
                         inpConf[inpConf$UI == inpdrY]$ID,

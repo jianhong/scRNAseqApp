@@ -35,14 +35,21 @@ updateSubsetCellUI <-
 
     output$subsetCell.ui <- renderUI({
       if(input$subsetCell!="N/A"){
-        sub <- strsplit(dataSource()$sc1conf[
-          dataSource()$sc1conf$UI == input$subsetCell]$fID,
-          "\\|")[[1]]
-        checkboxGroupInput(NS(id, "subsetCellVal"),
-                           "Select which cells to show",
-                           inline = TRUE,
-                           choices = sub,
-                           selected = sub)
+        x <- dataSource()$sc1conf[
+          dataSource()$sc1conf$UI == input$subsetCell]$fID
+        if(!is.null(x)){
+          sub <- strsplit(dataSource()$sc1conf[
+            dataSource()$sc1conf$UI == input$subsetCell]$fID,
+            "\\|")[[1]]
+          div(
+            style="max-height: 150px; display:flex; flex-direction: column; overflow-y: auto;",
+            checkboxGroupInput(NS(id, "subsetCellVal"),
+                               "Select which cells to show",
+                               inline = TRUE,
+                               choices = sub,
+                               selected = sub)
+          )
+        }
       }
     })
   }
@@ -241,3 +248,51 @@ updateSubsetGeneExprPlot <-
                             input$GeneName,
                             input$CellInfo)
   }
+
+# sub module related
+updateSubModulePlotUI <-
+  function(postfix=1, pid, id, input, output, session, plotX, height, ...){
+    output[[paste0("GeneExproup", postfix)]] <- renderPlot({ plotX() })
+    output[[paste0("GeneExproup.ui", postfix)]] <- renderUI({
+      plotOutput(NS0(NS(pid, id), "GeneExproup", postfix),
+                 height = height)
+    })
+    output[[paste0("GeneExproup.pdf", postfix)]] <-
+      plotsDownloadHandler(
+        "pdf",
+        width=input[[paste0("GeneExproup.w", postfix)]],
+        height=input[[paste0("GeneExproup.h", postfix)]],
+        plotX(),
+        ...)
+    output[[paste0("GeneExproup.png", postfix)]] <-
+      plotsDownloadHandler(
+        "png",
+        width=input[[paste0("GeneExproup.w", postfix)]],
+        height=input[[paste0("GeneExproup.h", postfix)]],
+        plotX(),
+        ...)
+  }
+
+subModuleMenuObservor <- function(id, input, p_session, dataSource,
+                                  observeEvtList){
+  observeEvent(input$close, {
+    updateTextInput(p_session, "removePlotModule", value = id)
+  })
+  observeEvent(input$movedown, {
+    updateTextInput(p_session, "movedownPlotModule", value = id)
+  })
+  observeEvent(input$moveup, {
+    updateTextInput(p_session, "moveupPlotModule", value = id)
+  })
+  observeEvent(input$resize, {
+    updateTextInput(p_session, "resizePlotModule", value = id)
+  })
+  if(is.null(p_session$userData$defaults[[dataSource()$dataset]][[id]]))
+    p_session$userData$defaults[[dataSource()$dataset]][[id]] <- list()
+  lapply(observeEvtList, function(evt){
+    observeEvent(input[[evt]], {
+      p_session$userData$defaults[[dataSource()$dataset]][[id]][[evt]] <-
+        input[[evt]]
+    })
+  })
+}

@@ -70,6 +70,8 @@ scRNAseqApp <- function(datafolder = "data",
         geneExprGeneExprUI("geneExprGeneExpr"),
         ### Tab: Gene coexpression plot
         coExprUI("coExpr"),
+        ### Tab: 3d Gene coexpression plot
+        coExpr3dUI("coExpr3d"),
         ### Tab: subset gene expr
         subsetGeneExprUI("subsetGeneExpr"),
         ### Tab: violinplot / boxplot
@@ -271,6 +273,11 @@ scRNAseqApp <- function(datafolder = "data",
 
       ### Plots for tab co-expression
       coExprServer("coExpr",
+                   reactive({dataSource}),
+                   optCrt)
+
+      ### Plots for tab 3d co-expression
+      coExpr3dServer("coExpr3d",
                    reactive({dataSource}),
                    optCrt)
 

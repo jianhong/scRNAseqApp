@@ -12,6 +12,9 @@ bilinear <- function(x,y,xy,Q11,Q21,Q12,Q22){
 scDRcoex <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inp2,
                      inpsub1, inpsub2, dataset, inpGene,
                      inpsiz, inptype, inpcol, inpord, inpfsz, inpasp, inptxt){
+  if(is.null(inp1) | is.null(inp2) | inp1=="" | inp2==""){
+    return(NULL)
+  }
   # Prepare ggData
   ggData <- inpMeta[, c(inpConf[inpConf$UI == inpdrX]$ID,
                         inpConf[inpConf$UI == inpdrY]$ID,

@@ -30,10 +30,9 @@ subsetPlotsUI <- function(id){
                   choices = c('cell info',
                               'gene expression',
                               'proportion',
-                              'violin plot',
-                              'boxplot',
-                              'bubble plot',
-                              'heatmap'),
+                              'violin/box plot',
+                              'co-expression',
+                              'co-expression 3d'),
                   selected = 'cell info')
       ),
       column(
@@ -49,7 +48,13 @@ subsetPlotsUI <- function(id){
                        icon = icon('plus'),
                        class="align-action-button"),
           div(style='display: none;',
-              textInput(ns("removePlotModule"), '', value='', width=0))
+              textInput(ns("removePlotModule"), '', value='', width=0)),
+          div(style='display: none;',
+              textInput(ns("moveupPlotModule"), '', value='', width=0)),
+          div(style='display: none;',
+              textInput(ns("movedownPlotModule"), '', value='', width=0)),
+          div(style='display: none;',
+              textInput(ns("resizePlotModule"), '', value='', width=0))
         )
       )
     ),
@@ -64,7 +69,7 @@ subsetPlotsServer <- function(id, dataSource, optCrt){
     ## subtitle
     output$PlotsSubTitle <-
       renderUI({
-        h4(paste("Subset gene",
+        h4(paste("Explorer",
                  dataSource()$terms['expression'],
                  "on dimension reduction"))})
     ## input column 1
@@ -80,8 +85,13 @@ subsetPlotsServer <- function(id, dataSource, optCrt){
     globals <- reactiveValues(
       containerIds = c(),
       containerUIs = list(),
-      containerWidth = list()
+      containerWidth = list(),
+      containerServers = list()
     )
+    if(is.null(session$userData$defaults))
+      session$userData$defaults <- list()
+    if(is.null(session$userData$defaults[[dataSource()$dataset]]))
+      session$userData$defaults[[dataSource()$dataset]] <- list()
     uiGrid <- function(ui, width){
         column(width = width, ui)
     }
@@ -118,11 +128,14 @@ subsetPlotsServer <- function(id, dataSource, optCrt){
                     SIMPLIFY = FALSE)
       uis <- lapply(split(uis, getRown(coln)), fluidRow)
       output$subplot <- renderUI(uis)
-      scInfoServer(id, globals$containerIds,
-                   dataSource,
-                   optCrt,
-                   input,
-                   session)
+      lapply(globals$containerIds, function(cid){
+        globals$containerServers[[cid]](
+          id, cid,
+          dataSource,
+          optCrt,
+          input,
+          session)
+      })
     }
     observeEvent(input$newModule, {
       if(length(globals$containerIds)>=8){
@@ -133,7 +146,26 @@ subsetPlotsServer <- function(id, dataSource, optCrt){
         ns0 <- paste0('plot_', length(globals$containerIds)+1)
         globals$containerIds <- c(globals$containerIds, ns0)
         globals$containerWidth[[ns0]] <- isolate(input$moduleWidth)
-        globals$containerUIs[[ns0]] <- scInfoUI(NS(id, ns0))
+        globals$containerUIs[[ns0]] <- switch(
+          input$moduleName,
+          "cell info"=scInfoUI(NS(id, ns0)),
+          'gene expression'=scExprUI(NS(id, ns0)),
+          'proportion'=scPropUI(NS(id, ns0)),
+          'violin/box plot'=scVlnUI(NS(id, ns0)),
+          'co-expression'=scCoexpUI(NS(id, ns0)),
+          'co-expression 3d'=scCoexp3dUI(NS(id, ns0)),
+          scInfoUI(NS(id, ns0))
+        )
+        globals$containerServers[[ns0]] <- switch(
+          input$moduleName,
+          "cell info"=scInfoServer,
+          'gene expression'=scExprServer,
+          'proportion'=scPropServer,
+          'violin/box plot'=scVlnServer,
+          'co-expression'=scCoexpServer,
+          'co-expression 3d'=scCoexp3dServer,
+          scInfoServer
+        )
         updatePlotModules()
       }
     })
@@ -143,6 +175,41 @@ subsetPlotsServer <- function(id, dataSource, optCrt){
           globals$containerIds[globals$containerIds!=input$removePlotModule]
         globals$containerWidth[[input$removePlotModule]] <- NULL
         globals$containerUIs[[input$removePlotModule]] <- NULL
+        updatePlotModules()
+      }
+    })
+    observeEvent(input$movedownPlotModule, {
+      if(input$movedownPlotModule!=""){
+        id <- which(globals$containerIds==input$movedownPlotModule)
+        if(length(id)==1){
+          if(id!=length(globals$containerIds)){
+            tmp <- globals$containerIds[id+1]
+            globals$containerIds[id+1] <- globals$containerIds[id]
+            globals$containerIds[id] <- tmp
+          }
+          updatePlotModules()
+        }
+      }
+    })
+    observeEvent(input$moveupPlotModule, {
+      if(input$moveupPlotModule!=""){
+        id <- which(globals$containerIds==input$moveupPlotModule)
+        if(length(id)==1){
+          if(id!=1){
+            tmp <- globals$containerIds[id-1]
+            globals$containerIds[id-1] <- globals$containerIds[id]
+            globals$containerIds[id] <- tmp
+          }
+          updatePlotModules()
+        }
+      }
+    })
+    observeEvent(input$resizePlotModule, {
+      if(input$resizePlotModule!=""){
+        globals$containerWidth[[input$resizePlotModule]] <- ifelse(
+          globals$containerWidth[[input$resizePlotModule]]=="half",
+          "full", "half"
+        )
         updatePlotModules()
       }
     })

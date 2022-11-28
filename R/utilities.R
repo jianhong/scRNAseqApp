@@ -53,7 +53,7 @@ plotLoader <- function(ui, bufferStr='loading...'){
       class = 'ploader-container',
       div(
         class = 'ploader',
-        id=paste0(id, '-loader'),
+        id=paste0("scRNAseqAppLoader-", id),
         bufferStr
       ),
       ui

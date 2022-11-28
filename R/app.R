@@ -82,6 +82,8 @@ scRNAseqApp <- function(datafolder = "data",
         plotBubbleHeatmapUI("bubbleHeatmap"),
         ### Tab: monocle
         #plotMonocleUI("monocle"),
+        ### Tab: waffle
+        plotWaffleUI("waffle"),
         subsetPlotsUI('explorer'),
         ### Tab: Login form
         #tabLogin(),
@@ -302,6 +304,11 @@ scRNAseqApp <- function(datafolder = "data",
       plotBubbleHeatmapServer("bubbleHeatmap",
                               reactive({dataSource}),
                               optCrt)
+
+      ### Plots for waffle
+      plotWaffleServer("waffle",
+                       reactive({dataSource}),
+                       optCrt)
 
       ### Plots for monocle
       # plotMonocleServer("monocle",

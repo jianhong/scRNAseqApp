@@ -25,14 +25,14 @@ $(document).on('shiny:sessioninitialized', function(){
     if (id === undefined) {
       return;
     }
-    $('#'+id+'-loader').show();
+    $('#scRNAseqAppLoader-'+id).show();
   }
   function hide_loader(event){
     var id = event.target.id;
     if (id === undefined) {
       return;
     }
-    $('#'+id+'-loader').hide();
+    $('#scRNAseqAppLoader-'+id).hide();
   }
   $(document).on('shiny:outputinvalidated', show_loader);
   $(document).on('shiny:bound', show_loader);

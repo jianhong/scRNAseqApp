@@ -3,7 +3,11 @@
 #' @importFrom stats as.formula
 #' @importFrom ggplot2 coord_equal facet_grid unit scale_fill_gradientn
 #' @importFrom grDevices hcl.colors
-scWafflePlot <- function(expr, groupCol='treatment'){
+scWafflePlot <- function(expr, groupCol='treatment',
+                         gradientCol = rev(hcl.colors(20, "RdYlGn"))){
+  if(length(gradientCol)==1){
+    gradientCol <- .globals$cList[[gradientCol]]
+  }
   if(groupCol[1] %in% colnames(expr)){
     if(!all(as.character(expr[[groupCol]]) ==
             as.character(expr$grpBy))){
@@ -42,7 +46,7 @@ scWafflePlot <- function(expr, groupCol='treatment'){
     ) +
     guides(fill = guide_colorbar(barwidth = unit(3, "mm"))) +
     xlab("") + ylab("") +
-    scale_fill_gradientn(colors = rev(hcl.colors(20, "RdYlGn")))
+    scale_fill_gradientn(colors = gradientCol)
   return(p)
 }
 

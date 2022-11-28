@@ -43,10 +43,14 @@ scInfoServer <- function(pid, id, dataSource, optCrt,
         p_input$GeneExprasp,
         p_input$GeneExprtxt,
         input[[paste0("CellInfolab", postfix)]],
-        input[[paste0("CellInfoslingshot", postfix)]],
-        file.path(.globals$datafolder,
-                  dataSource()$dataset,
-                  .globals$filenames[["slingshot"]]))
+        dataset=dataSource()$dataset,
+        geneIdMap=dataSource()$sc1gene,
+        valueFilterKey=p_input$filterCell,
+        valueFilterCutoff=p_input$filterCellVal,
+        inpSlingshot = input[[paste0("CellInfoslingshot", postfix)]],
+        slingshotFilename = file.path(.globals$datafolder,
+                                      dataSource()$dataset,
+                                      .globals$filenames[["slingshot"]]))
     })
     updateSubModulePlotUI(postfix, pid, id, input, output, session,
                           plotX,

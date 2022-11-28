@@ -54,13 +54,15 @@ scCoexpServer <- function(pid, id, dataSource, optCrt,
         p_input$subsetCellVal,
         dataSource()$dataset,
         dataSource()$sc1gene,
-        p_input$GeneExprsiz,
         "2D",
+        p_input$GeneExprsiz,
         input$CoExprcol1,
         input$CoExprord1,
         p_input$GeneExprfsz,
         p_input$GeneExprasp,
-        p_input$GeneExprtxt)
+        p_input$GeneExprtxt,
+        valueFilterKey=p_input$filterCell,
+        valueFilterCutoff=p_input$filterCellVal)
     })
     updateSubModulePlotUI(postfix, pid, id, input, output, session,
                           plot1,

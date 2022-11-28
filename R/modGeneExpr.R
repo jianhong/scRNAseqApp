@@ -51,7 +51,9 @@ scExprServer <- function(pid, id, dataSource, optCrt,
         if(input[[paste0("GeneExprxlimb", postfix)]] %% 2==0) 0 else
           input[[paste0("GeneExprxlim", postfix)]],
         inpColRange=if(input[[paste0("GeneExprrgb", postfix)]] %% 2==0) 0 else
-          input[[paste0("GeneExprrg", postfix)]])
+          input[[paste0("GeneExprrg", postfix)]],
+        valueFilterKey=p_input$filterCell,
+        valueFilterCutoff=p_input$filterCellVal)
     })
     updateSubModulePlotUI(postfix, pid, id, input, output, session,
                           plotX,

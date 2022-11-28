@@ -118,10 +118,10 @@ subsetGeneExprServer <- function(id, dataSource, optCrt){
         input$GeneExprtype1,
         if(input$GeneExprxlimb1 %% 2==0) 0 else input$GeneExprxlim1,
         inpColRange=TRUE,
-        inpsub3=input$subsetCell,
-        inpsub3filter=input$subsetCellVal,
-        inpsub4=input$filterCell,
-        inpsub4filter=input$filterCellVal
+        infoFilterKey=input$subsetCell,
+        infoFilterVal=input$subsetCellVal,
+        valueFilterKey=input$filterCell,
+        valueFilterCutoff=input$filterCellVal
       )
     })
     ## plots

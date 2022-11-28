@@ -54,13 +54,15 @@ scCoexp3dServer <- function(pid, id, dataSource, optCrt,
         p_input$subsetCellVal,
         dataSource()$dataset,
         dataSource()$sc1gene,
-        p_input$GeneExprsiz,
         "3D",
+        p_input$GeneExprsiz,
         input$CoExprcol1,
         input$CoExprord1,
         p_input$GeneExprfsz,
         p_input$GeneExprasp,
-        p_input$GeneExprtxt)
+        p_input$GeneExprtxt,
+        valueFilterKey=p_input$filterCell,
+        valueFilterCutoff=p_input$filterCellVal)
     })
     output$GeneExpr3Doup1 <- renderPlotly({ plot3d() })
     output$GeneExpr3Doup.ui1 <- renderUI({

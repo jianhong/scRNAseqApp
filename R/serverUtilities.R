@@ -135,10 +135,10 @@ updateCellInfoPlot <-
         input$GeneExprasp,
         input$GeneExprtxt,
         input[[paste0("CellInfolab", postfix)]],
-        input[[paste0("CellInfoslingshot", postfix)]],
-        file.path(.globals$datafolder,
-                  dataSource()$dataset,
-                  .globals$filenames[["slingshot"]]))
+        inpSlingshot = input[[paste0("CellInfoslingshot", postfix)]],
+        slingshotFilename = file.path(.globals$datafolder,
+                                      dataSource()$dataset,
+                                      .globals$filenames[["slingshot"]]))
     })
     updateGeneExprDotPlotUI(postfix, id, input, output, session,
                             plotX,
@@ -234,10 +234,10 @@ updateSubsetGeneExprPlot <-
         inpColRange=if(input[[paste0("GeneExprrgb", postfix)]] %% 2==0){
           inpColRange()
         }else{ input[[paste0("GeneExprrg", postfix)]] },
-        inpsub3=input$subsetCell,
-        inpsub3filter=input$subsetCellVal,
-        inpsub4=input$filterCell,
-        inpsub4filter=input$filterCellVal)
+        infoFilterKey=input$subsetCell,
+        infoFilterVal=input$subsetCellVal,
+        valueFilterKey=input$filterCell,
+        valueFilterCutoff=input$filterCellVal)
     })
     updateGeneExprDotPlotUI(postfix, id, input, output, session,
                             plotX,
@@ -296,3 +296,166 @@ subModuleMenuObservor <- function(id, input, p_session, dataSource,
     })
   })
 }
+
+## plots related
+getRatio <- function(ggData){## help function
+  return((max(ggData$X, na.rm = TRUE) - min(ggData$X, na.rm = TRUE)) /
+           (max(ggData$Y, na.rm = TRUE) - min(ggData$Y, na.rm = TRUE)))
+}
+orderGeneExpr <- function(ggData, GeneExprDotOrd, coln){
+  if(GeneExprDotOrd == "Max-1st"){
+    ggData <- ggData[order(ggData[, coln, with=FALSE])]
+  } else if(GeneExprDotOrd == "Min-1st"){
+    ggData <- ggData[order(-ggData[, coln, with=FALSE])]
+  } else if(GeneExprDotOrd == "Random"){
+    ggData <- ggData[sample(nrow(ggData))]
+  }
+  return(ggData)
+}
+subGrp <- function(ggData, ui_key, grpVal, config){
+  if (ui_key != "N/A" && length(grpVal)) {
+    ggData <- ggData[ggData[[config[config$UI == ui_key]$ID]] %in%
+                       grpVal, , drop = FALSE]
+  }
+  return(ggData)
+}
+subsetData <- function(ggData, subKey, subValue){
+  if (length(subValue) != 0 & length(subValue) !=
+      nlevels(ggData[ , subKey, with=FALSE])) {
+    ggData <- ggData[ggData[ , subKey, with=FALSE] %in% subValue]
+  }
+  return(ggData)
+}
+relevelData <- function(ggData, coln){
+  ggLvl <- levels(ggData[[coln]])
+  if(length(ggLvl)){
+    ggLvl <- ggLvl[ggLvl %in% unique(ggData[[coln]])]
+    ggLvl <- sortLevels(ggLvl)
+    ggData[[coln]] <- factor(ggData[[coln]], levels = ggLvl)
+  }
+  return(ggData)
+}
+extractGrpColor <- function(config, ui_key){
+  ggCol <- strsplit(config[config$UI == ui_key]$fCL, "\\|")[[1]]
+  names(ggCol) <- strsplit(config[config$UI == ui_key]$fID, "\\|")[[1]]
+  return(ggCol)
+}
+relevelCol <- function(inpConf, ui_key, ggData, coln){
+  ggCol <- NULL
+  if(!is.na(inpConf[inpConf$UI == ui_key]$fCL)){
+    ggCol <- extractGrpColor(inpConf, ui_key)
+    ggCol <- ggCol[levels(ggData[[coln]])]
+  }
+  return(ggCol)
+}
+fixCoord <- function(ggOut, aspectRatio, ratio){
+  if (aspectRatio == "Square") {
+    ggOut <- ggOut + coord_fixed(ratio = ratio)
+  }else if(aspectRatio == "Fixed"){
+    ggOut <- ggOut + coord_fixed()
+  }
+  return(ggOut)
+}
+labelBackgroundCells <- function(ggOut, ggData, pointSize,
+                                 color="snow2", shape=16){
+  ggOut + geom_point(data = ggData, color = color,
+                     size = pointSize, shape = shape)
+}
+pointPlot <- function(ggOut, pointSize, fontSize,
+                      dimRedX, dimRedY, keepXYlables,
+                      shape=16){
+  ggOut + geom_point(size = pointSize, shape = 16) +
+    xlab(dimRedX) + ylab(dimRedY) +
+    sctheme(base_size = .globals$sList[fontSize],
+            XYval = keepXYlables)
+}
+ggXYplot <- function(ggData){
+  ggplot(ggData, aes_string("X", "Y", color = "val"))
+}
+getTotalNumber <- function(nGrid = 16, nPad = 2){
+  return(nGrid + nPad * 2)
+}
+getCoexpCol <- function(colorPairs, nGrid = 16, nPad = 2){
+  cInp <- strsplit(colorPairs, "; ")[[1]]
+  if(cInp[1] == "Red (Gene1)"){
+    c10 <- c(255,0,0)
+  } else if(cInp[1] == "Orange (Gene1)"){
+    c10 <- c(255,140,0)
+  } else {
+    c10 <- c(0,255,0)
+  }
+  if(cInp[2] == "Green (Gene2)"){
+    c01 <- c(0,255,0)
+  } else {
+    c01 <- c(0,0,255)
+  }
+  c00 <- c(217,217,217)
+  c11 <- c10 + c01
+  nTot <- getTotalNumber(nGrid, nPad)
+  gg <- data.table(v1 = rep(0:nTot,nTot+1),
+                   v2 = sort(rep(0:nTot,nTot+1)))
+  gg$vv1 <- gg$v1 - nPad
+  gg[gg$vv1 < 0]$vv1 <- 0
+  gg[gg$vv1 > nGrid]$vv1 <- nGrid
+  gg$vv2 <- gg$v2 - nPad
+  gg[gg$vv2 < 0]$vv2 <- 0
+  gg[gg$vv2 > nGrid]$vv2 <- nGrid
+  gg$cR <- bilinear(gg$vv1, gg$vv2, nGrid, c00[1], c10[1], c01[1], c11[1])
+  gg$cG <- bilinear(gg$vv1, gg$vv2, nGrid, c00[2], c10[2], c01[2], c11[2])
+  gg$cB <- bilinear(gg$vv1, gg$vv2, nGrid, c00[3], c10[3], c01[3], c11[3])
+  gg$cMix <- rgb(gg$cR, gg$cG, gg$cB, maxColorValue = 255)
+  gg <- gg[, c("v1", "v2", "cMix")]
+  return(gg)
+}
+getCoexpVal <- function(ggData, dataset, geneIdMap, gene1, gene2){
+  ggData$val1 <- read_exprs(dataset, geneIdMap[gene1], valueOnly=TRUE)
+  ggData$val2 <- read_exprs(dataset, geneIdMap[gene2], valueOnly=TRUE)
+  ggData[ggData$val1 < 0]$val1 <- 0
+  ggData[ggData$val2 < 0]$val2 <- 0
+  return(ggData)
+}
+cbindFilterValues <- function(ggData, config, meta, coln, geneIdMap, dataset,
+                              valueFilterKey, valueFilterCutoff){
+  if(!missing(valueFilterKey) && !missing(valueFilterCutoff)){
+    if(valueFilterKey %in% config$UI){
+      ggData <- cbind(ggData,
+                      subValue=meta[, config[config$UI == valueFilterKey]$ID,
+                                    with = FALSE])
+      colnames(ggData)[ncol(ggData)] <- coln
+    }else if(valueFilterKey %in% names(geneIdMap)){
+      subValue <- read_exprs(dataset,
+                             geneIdMap[valueFilterKey],
+                             valueOnly=TRUE)
+      if(any(subValue<0)) subValue[subValue<0] <- 0
+      ggData <- cbind(ggData,
+                      subValue=subValue)
+      colnames(ggData)[ncol(ggData)] <- coln
+    }
+  }
+  return(ggData)
+}
+filterCells <- function(ggData,
+                        subsetCellKey, subsetCellVal,
+                        valueFilterKey, valueFilterCutoff,
+                        infoFilterKey, infoFilterVal){
+  keep <- rep(TRUE, nrow(ggData))
+  if(!missing(subsetCellKey) && !missing(subsetCellVal)){
+    if(length(subsetCellVal) != 0 &&
+       length(subsetCellVal) != nlevels(ggData[[subsetCellKey]])){
+      keep <- ggData[[subsetCellKey]] %in% subsetCellVal
+    }
+  }
+  if(!missing(infoFilterKey) && !missing(infoFilterVal)){
+    if(length(infoFilterVal) !=0 &&
+       length(infoFilterVal) != nlevels(ggData[[infoFilterKey]])){
+      keep <- keep & ggData[[infoFilterKey]] %in% infoFilterVal
+    }
+  }
+  if(!missing(valueFilterKey) && !missing(valueFilterCutoff)){
+    if(length(valueFilterCutoff) !=0){
+      keep <- keep & ggData[[valueFilterKey]] >= valueFilterCutoff[1]
+    }
+  }
+  return(keep)
+}
+

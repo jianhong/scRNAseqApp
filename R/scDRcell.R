@@ -1,59 +1,66 @@
 # Plot cell information on dimred
 #' @noRd
-#' @importFrom ggplot2 ggplot aes_string geom_point xlab ylab scale_color_gradientn
-#' guides guide_colorbar scale_color_manual guide_legend theme element_text
-#' coord_fixed geom_segment
+#' @importFrom ggplot2 ggplot aes_string geom_point xlab ylab
+#' scale_color_gradientn guides guide_colorbar scale_color_manual
+#' guide_legend theme element_text coord_fixed geom_segment
 #' @importFrom ggrepel geom_text_repel
 #' @importFrom stats weighted.mean
 #' @importFrom slingshot SlingshotDataSet slingLineages slingClusterLabels
 #' slingMST slingParams
 #' @importFrom data.table .SD
 #' @importFrom SingleCellExperiment reducedDim
-scDRcell <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
-                     inpsiz, inpcol, inpord, inpfsz, inpasp, inptxt, inplab,
+scDRcell <- function(inpConf, inpMeta,
+                     dimRedX, dimRedY,
+                     inp1, subsetCellKey, subsetCellVal,
+                     pointSize,
+                     gradientCol,
+                     GeneExprDotOrd,
+                     labelsFontsize,
+                     plotAspectRatio,
+                     keepXYlables, inplab,
+                     dataset, geneIdMap,
+                     valueFilterKey, valueFilterCutoff,
                      inpSlingshot, slingshotFilename){
+  subFilterColname <- 'subValue'
+  subGrpColname <- 'sub'
+  valColname <- 'val'
   # Prepare ggData
-  ggData <- inpMeta[, c(inpConf[inpConf$UI == inpdrX]$ID,
-                        inpConf[inpConf$UI == inpdrY]$ID,
+  ggData <- inpMeta[, c(inpConf[inpConf$UI == dimRedX]$ID,
+                        inpConf[inpConf$UI == dimRedY]$ID,
                         inpConf[inpConf$UI == inp1]$ID,
-                        inpConf[inpConf$UI == inpsub1]$ID),
+                        inpConf[inpConf$UI == subsetCellKey]$ID),
                    with = FALSE]
   if(ncol(ggData)!=4) return(ggplot())
-  colnames(ggData) <- c("X", "Y", "val", "sub")
+  colnames(ggData) <- c("X", "Y", valColname, subGrpColname)
+  ggData <- cbindFilterValues(ggData, inpConf, inpMeta, subFilterColname,
+                              geneIdMap, dataset,
+                              valueFilterKey, valueFilterCutoff)
   rat <- getRatio(ggData)
-  bgCells <- FALSE
-  if(length(inpsub2) != 0 & length(inpsub2) != nlevels(ggData$sub)){
-    bgCells <- TRUE
-    ggData2 <- ggData[!ggData$sub %in% inpsub2]
-    ggData <- ggData[ggData$sub %in% inpsub2]
+  keep <- filterCells(ggData,
+                      subGrpColname, subsetCellVal,
+                      subFilterColname, valueFilterCutoff)
+
+  bgCells <- sum(!keep)>0
+
+  if(bgCells){
+    ggData2 <- ggData[!keep]
+    ggData <- ggData[keep]
   }
-  if(inpord == "Max-1st"){
-    ggData <- ggData[order(ggData$val)]
-  } else if(inpord == "Min-1st"){
-    ggData <- ggData[order(-ggData$val)]
-  } else if(inpord == "Random"){
-    ggData <- ggData[sample(nrow(ggData))]
-  }
+
+  ggData <- orderGeneExpr(ggData, GeneExprDotOrd, valColname)
 
   # Do factoring if required
-  if(!is.na(inpConf[inpConf$UI == inp1]$fCL)){
-    ggCol <- strsplit(inpConf[inpConf$UI == inp1]$fCL, "\\|")[[1]]
-    names(ggCol) <- levels(ggData$val)
-    ggLvl <- levels(ggData$val)[levels(ggData$val) %in% unique(ggData$val)]
-    ggData$val <- factor(ggData$val, levels = ggLvl)
-    ggCol <- ggCol[ggLvl]
-  }
+  ggData <- relevelData(ggData, valColname)
+  ggCol <- relevelCol(inpConf, inp1, ggData, valColname)
 
   # Actual ggplot
-  ggOut <- ggplot(ggData, aes_string("X", "Y", color = "val"))
+  ggOut <- ggXYplot(ggData)
   if(bgCells){
-    ggOut <- ggOut +
-      geom_point(data = ggData2, color = "snow2", size = inpsiz, shape = 16)
+    ggOut <- labelBackgroundCells(ggOut, ggData2, pointSize,
+                                  color="snow2", shape=16)
   }
-  ggOut <- ggOut +
-    geom_point(size = inpsiz, shape = 16) +
-    xlab(inpdrX) + ylab(inpdrY) +
-    sctheme(base_size = .globals$sList[inpfsz], XYval = inptxt)
+  ggOut <- pointPlot(ggOut, pointSize, labelsFontsize,
+                     dimRedX, dimRedY, keepXYlables)
   # slingshot
   if(inpSlingshot){
     if(file.exists(slingshotFilename)){
@@ -67,8 +74,8 @@ scDRcell <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
           b <- gsub('[^a-z]', '', tolower(b))
           a %in% b
         }
-        if(checkRedDimName(inpdrX, colnames(X)) &&
-           checkRedDimName(inpdrY, colnames(X))){
+        if(checkRedDimName(dimRedX, colnames(X)) &&
+           checkRedDimName(dimRedY, colnames(X))){
           linInd <- seq_along(slingLineages(x))
           clusterLabels <- slingClusterLabels(x)
           connectivity <- slingMST(x)
@@ -113,7 +120,7 @@ scDRcell <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
                                                  xend="xend", yend="yend"),
                          inherit.aes=FALSE) +
             geom_point(data=pts, aes_string(x="x", y="y", color="color"),
-                       size = inpsiz*3, alpha=.5,
+                       size = pointSize*3, alpha=.5,
                        inherit.aes = FALSE)
         }
       }
@@ -122,35 +129,32 @@ scDRcell <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inpsub1, inpsub2,
   # label
   if(is.na(inpConf[inpConf$UI == inp1]$fCL)){
     ggOut <- ggOut +
-      scale_color_gradientn("", colours = .globals$cList[[inpcol]]) +
+      scale_color_gradientn("", colours = .globals$cList[[gradientCol]]) +
       guides(color = guide_colorbar(barwidth = 15))
   } else {
-    sListX <- min(nchar(paste0(levels(ggData$val), collapse = "")), 200)
+    sListX <- min(nchar(paste0(levels(ggData[[valColname]]),
+                               collapse = "")), 200)
     sListX <- 0.75 * (.globals$sList - (1.5 * floor(sListX/50)))
     ggOut <- ggOut + scale_color_manual("", values = ggCol) +
       guides(color = guide_legend(override.aes = list(size = 5),
                                   nrow = inpConf[inpConf$UI == inp1]$fRow)) +
-      theme(legend.text = element_text(size = sListX[inpfsz]))
+      theme(legend.text = element_text(size = sListX[labelsFontsize]))
     if(inplab){
       ggData3 <- ggData[, list(X = mean(.SD$X),
                                Y = mean(.SD$Y)),
-                        by = "val"]
-      lListX <- min(nchar(paste0(ggData3$val, collapse = "")), 200)
+                        by = valColname]
+      lListX <- min(nchar(paste0(ggData3[[valColname]], collapse = "")), 200)
       lListX <- .globals$lList - (0.25 * floor(lListX/50))
       ggOut <- ggOut +
         geom_text_repel(data = ggData3,
-                        aes_string("X", "Y", label = "val"),
+                        aes_string("X", "Y", label = valColname),
                         color = "grey10",
                         bg.color = "grey95",
                         bg.r = 0.15,
-                        size = lListX[inpfsz],
+                        size = lListX[labelsFontsize],
                         seed = 123)
     }
   }
-  if(inpasp == "Square") {
-    ggOut <- ggOut + coord_fixed(ratio = rat)
-  } else if(inpasp == "Fixed") {
-    ggOut <- ggOut + coord_fixed()
-  }
+  ggOut <- fixCoord(ggOut, plotAspectRatio, rat)
   return(ggOut)
 }

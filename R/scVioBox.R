@@ -2,9 +2,9 @@
 #' @importFrom stats rnorm
 #' @importFrom ggplot2 ggplot aes_string geom_violin geom_boxplot geom_jitter xlab
 #' ylab scale_fill_manual theme
-scVioBox <- function(inpConf, inpMeta, inp1, inp1a, inp1b, inp1c,
+scVioBox <- function(inpConf, inpMeta, inp1, grpKey, grpVal, inp1c,
                      inp2, dataset, inpGene,
-                     inptyp, inppts, inpsiz, inpfsz){
+                     inptyp, inppts, pointSize, labelsFontsize){
   # Prepare ggData
   ggData <- inpMeta[, c(inpConf[inpConf$UI == inp1]$ID,
                         inpConf[inpConf$grp == TRUE]$ID),
@@ -26,18 +26,11 @@ scVioBox <- function(inpConf, inpMeta, inp1, inp1a, inp1b, inp1c,
     ggData$val <- ggData$val + tmpNoise
   }
 
-  if(inp1a!="N/A" && length(inp1b)){
-    ggData <-
-      ggData[ggData[[inpConf[inpConf$UI == inp1a]$ID]] %in% inp1b,
-             , drop=FALSE]
-  }
+  ggData <- subGrp(ggData, grpKey, grpVal, inpConf)
+
   # Do factoring
-  ggCol <- strsplit(inpConf[inpConf$UI == inp1]$fCL, "\\|")[[1]]
-  names(ggCol) <- levels(ggData$X)
-  ggLvl <- levels(ggData$X)[levels(ggData$X) %in% unique(ggData$X)]
-  ggLvl <- sortLevels(ggLvl)
-  ggData$X <- factor(ggData$X, levels = ggLvl)
-  ggCol <- ggCol[ggLvl]
+  ggData <- relevelData(ggData, "X")
+  ggCol <- relevelCol(inpConf, inp1, ggData, "X")
 
   # Actual ggplot
   if(inptyp == "violin"){
@@ -48,10 +41,10 @@ scVioBox <- function(inpConf, inpMeta, inp1, inp1a, inp1b, inp1c,
       geom_boxplot()
   }
   if(inppts){
-    ggOut <- ggOut + geom_jitter(size = inpsiz, shape = 16)
+    ggOut <- ggOut + geom_jitter(size = pointSize, shape = 16)
   }
   ggOut <- ggOut + xlab(inp1) + ylab(inp2) +
-    sctheme(base_size = .globals$sList[inpfsz], Xang = 45, XjusH = 1) +
+    sctheme(base_size = .globals$sList[labelsFontsize], Xang = 45, XjusH = 1) +
     scale_fill_manual("", values = ggCol) +
     theme(legend.position = "none")
   return(ggOut)

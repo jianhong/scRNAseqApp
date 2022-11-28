@@ -96,7 +96,6 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt){
         input$plotcol,
         input$plotcols,
         input$plotflp,
-        input$plotfsz,
         input$plotall,
         legendTitle=dataSource()$terms['expression'],
         returnColorRange=TRUE)
@@ -151,7 +150,6 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt){
         input$plotcol,
         input$plotcols,
         input$plotflp,
-        input$plotfsz,
         input$plotall,
         colorBreaks=if(input$userbreaks %% 2==0 &&
                        !is.na(colrg()[1])) NA else colrg(),

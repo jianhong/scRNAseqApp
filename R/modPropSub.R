@@ -43,7 +43,11 @@ scPropServer <- function(pid, id, dataSource, optCrt,
         input$cellInfoY,
         input$plottyp,
         input$plotflp,
-        p_input$GeneExprfsz)
+        p_input$GeneExprfsz,
+        dataset=dataSource()$dataset,
+        geneIdMap=dataSource()$sc1gene,
+        valueFilterKey=p_input$filterCell,
+        valueFilterCutoff=p_input$filterCellVal)
     })
 
     updateSubModulePlotUI(postfix, pid, id, input, output, session,

@@ -1,23 +1,23 @@
 #' @importFrom data.table .N
-scDRcoexNum <- function(inpConf, inpMeta, inp1, inp2,
-                        inpsub1, inpsub2, dataset, inpGene){
+scDRcoexNum <- function(inpConf, inpMeta, gene1, gene2,
+                        subsetCellKey, subsetCellVal,
+                        dataset, geneIdMap){
   # Prepare ggData
-  ggData <- inpMeta[, c(inpConf[inpConf$UI == inpsub1]$ID), with = FALSE]
+  ggData <- inpMeta[, c(inpConf[inpConf$UI == subsetCellKey]$ID), with = FALSE]
   colnames(ggData) <- c("sub")
-  ggData$val1 <- read_exprs(dataset, inpGene[inp1], valueOnly=TRUE)
-  ggData$val2 <- read_exprs(dataset, inpGene[inp2], valueOnly=TRUE)
-  ggData[ggData$val1 < 0]$val1 <- 0
-  ggData[ggData$val2 < 0]$val2 <- 0
-  if(length(inpsub2) != 0 & length(inpsub2) != nlevels(ggData$sub)){
-    ggData <- ggData[sub %in% inpsub2]
+  ggData <- getCoexpVal(ggData, dataset, geneIdMap, gene1, gene2)
+
+  if(length(subsetCellVal) != 0 & length(subsetCellVal) != nlevels(ggData$sub)){
+    ggData <- ggData[sub %in% subsetCellVal]
   }
 
   # Actual data.table
   ggData$express <- "none"
-  ggData[ggData$val1 > 0]$express <- inp1
-  ggData[ggData$val2 > 0]$express <- inp2
+  ggData[ggData$val1 > 0]$express <- gene1
+  ggData[ggData$val2 > 0]$express <- gene2
   ggData[ggData$val1 > 0 & ggData$val2 > 0]$express <- "both"
-  ggData$express <- factor(ggData$express, levels = unique(c("both", inp1, inp2, "none")))
+  ggData$express <- factor(ggData$express,
+                           levels = unique(c("both", gene1, gene2, "none")))
   ggData <- ggData[, list(nCells = .N), by = "express"]
   ggData$percent <- 100 * ggData$nCells / sum(ggData$nCells)
   ggData <- ggData[order(ggData$express)]

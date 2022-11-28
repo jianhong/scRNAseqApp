@@ -6,16 +6,17 @@
 #' @importFrom grid gpar grid.circle unit.c
 #' @importFrom hdf5r H5File
 #' @importFrom data.table rbindlist dcast.data.table data.table :=
-scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp1c, inpPlt,
+scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, grpKey, grpVal, inpGrp1c, inpPlt,
                        dataset, inpGene, inpScl, inpRow, inpCol,
-                       inpcols, inpflp, inpfsz, inpall = FALSE, save = FALSE,
+                       inpcols, flipXY,
+                       plotAllCells = FALSE, save = FALSE,
                        colorBreaks,
                        legendTitle="expression",
                        returnColorRange=FALSE){
   # Identify genes that are in our dataset
   if(missing(inpGrp1c)) inpGrp1c <- 0
   if(inpPlt == "Bubbleplot"){
-    inpall <- FALSE
+    plotAllCells <- FALSE
   }
   geneList <- scGeneList(inp, inpGene)
   geneList <- geneList[geneList$present == TRUE]
@@ -41,15 +42,13 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp
   }
   h5file$close_all()
 
-  if(inpGrp1a!="N/A" && length(inpGrp1b)){
-    ggData <- ggData[ggData[[inpConf[inpConf$UI == inpGrp1a]$ID]] %in%
-                       inpGrp1b, , drop=FALSE]
-  }
+  ggData <- subGrp(ggData, grpKey, grpVal, inpConf)
+
   # Aggregate
   ggData$val <- expm1(ggData$val)
   ggData$val[is.infinite(ggData$val)] <-
     max(ggData$val[!is.infinite(ggData$val)], na.rm = TRUE)
-  if(!inpall){
+  if(!plotAllCells){
     ggData <- ggData[, list(val = mean(.SD$val[.SD$val>=inpGrp1c]),
                             prop = sum(.SD$val>0) / length(.SD$sampleID)),
                     by = c("geneName", "grpBy")]
@@ -116,7 +115,7 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp
   }
 
   # reshape the data to matrix
-  if(inpall){
+  if(plotAllCells){
     ggData$grpBy <- paste(ggData$grpBy, ggData$sampleID, sep="__")
   }
   reshapeMat <- function(value.var){
@@ -156,9 +155,9 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp
     rect_gp <- gpar(type = "none")
   }
 
-  if(inpflp){
+  if(flipXY){
     ggMat <- t(ggMat)
-    if(inpall){
+    if(plotAllCells){
       group <- ggData$ident[match(rownames(ggMat),
                                   ggData$grpBy)]
       anno <- rowAnnotation(group=group, show_legend = FALSE,
@@ -173,7 +172,7 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp
                          cluster_rows = TRUE,
                          cluster_row_slices = inpCol,
                          cluster_columns = cluster_rows,
-                         show_row_names = !inpall,
+                         show_row_names = !plotAllCells,
                          row_split = group,
                          right_annotation = anno,
                          row_title_side = "right",
@@ -192,13 +191,13 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp
                                 title_position = "lefttop"),
                          cluster_rows = cluster_columns,
                          cluster_columns = cluster_rows,
-                         show_row_names = !inpall,
+                         show_row_names = !plotAllCells,
                          column_names_rot = 45,
                          layer_fun = layer_fun,
                          rect_gp = rect_gp)
     }
   }else{
-    if(inpall){
+    if(plotAllCells){
       group <- ggData$ident[match(colnames(ggMat),
                                   ggData$grpBy)]
       anno <- HeatmapAnnotation(group=group, show_legend = FALSE,
@@ -213,7 +212,7 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp
                          cluster_rows = cluster_rows,
                          cluster_columns = TRUE,
                          cluster_column_slices = inpCol,
-                         show_column_names = !inpall,
+                         show_column_names = !plotAllCells,
                          column_split = group,
                          bottom_annotation = anno,
                          column_title_side = "bottom",
@@ -231,39 +230,12 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, inpGrp1a, inpGrp1b, inpGrp
                                 title_position = "lefttop"),
                          cluster_rows = cluster_rows,
                          cluster_columns = cluster_columns,
-                         show_column_names = !inpall,
+                         show_column_names = !plotAllCells,
                          column_names_rot = 45,
                          layer_fun = layer_fun,
                          rect_gp = rect_gp)
     }
   }
-  # if(inpPlt == "Bubbleplot"){
-  #   leg <- function(x, y, w, h, r){
-  #     grid.circle(x = x, y = y, r = r/2 * min(unit.c(w, h)),
-  #                      gp = gpar(fill = "black", col = NA))
-  #   }
-  #   lgd <- Legend(title = "proportion",
-  #                 title_position = "leftcenter",
-  #                 legend_gp = gpar(fill="black", border=NA),
-  #                 at = c(0.01, .25, .50, .75, 1.00),
-  #                 labels = seq(0, 1, by=.25),
-  #                 background = "white",
-  #                 direction = "horizontal",
-  #                 nrow = 1,
-  #                 graphics = list(
-  #                   function(x, y, w, h) leg(x, y, w, h, .001),
-  #                   function(x, y, w, h) leg(x, y, w, h, .25),
-  #                   function(x, y, w, h) leg(x, y, w, h, .5),
-  #                   function(x, y, w, h) leg(x, y, w, h, .75),
-  #                   function(x, y, w, h) leg(x, y, w, h, 1)
-  #                  )
-  #                 )
-  #   return(draw(ht_list, heatmap_legend_side = "bottom", annotation_legend_side = "bottom",
-  #        annotation_legend_list=list(lgd)))
-  # }
-  #
-  #
-
   return(draw(ht_list,
               heatmap_legend_side = "bottom",
               annotation_legend_side = "bottom"))

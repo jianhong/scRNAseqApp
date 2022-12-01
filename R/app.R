@@ -117,6 +117,7 @@ scRNAseqApp <- function(datafolder = "data",
       dataset=defaultDataset, # currentdataset
       appconf=appconf, # all data configs, used for search
       data_types=data_types, # data type
+      cell=NULL,
       genelist=NULL, # genelist for cellInfoGeneExpr or heatmap plot from query string
       sc1conf=NULL, # config for current sc data
       sc1def=NULL, # def for current sc data
@@ -169,6 +170,12 @@ scRNAseqApp <- function(datafolder = "data",
         dataSource$genelist <- genes
       }else{
         dataSource$genelist <- NULL
+      }
+      if(!is.null(query[['cell']])){
+        cell <- strsplit(query[['cell']], ";")[[1]]
+        dataSource$cell <- cell
+      }else{
+        dataSource$cell <- NULL
       }
       if(!is.null(query[['data']])){
         updateSelectInput(session, "selectedDatasets",

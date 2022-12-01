@@ -53,4 +53,25 @@ heatmapDownloadHandler <- function(device, width, height, plot, ...){
     }
   )
 }
-
+#' @importFrom plotly event_data
+exprDownloadHandler <- function(geneIdMap, dataset, meta){
+  downloadHandler(
+    filename = function(){
+      paste0('exprdata-', dataset, '.csv')
+    },
+    content = function(file){
+      d <- event_data("plotly_click")
+      expr <- NULL
+      if (!is.null(d)){
+        cell <- which(meta$sampleID==d$customdata)
+        if(!is.null(cell)){
+          expr <- read_exprs(h5f=dataset, valueOnly=TRUE, cell=cell)
+          names(expr) <- names(geneIdMap[order(geneIdMap)])
+          expr <- t(t(expr))
+          colnames(expr) <- d$customdata
+        }
+      }
+      write.csv(expr, file)
+    }
+  )
+}

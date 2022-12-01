@@ -11,7 +11,11 @@ scCoexp3dUI <- function(id, postfix=1){
                                      width = "100px")
                          ),
                        menuUI= contextMenuCoExprUI(id),
-                       contentUI= uiOutput(NS0(id, "GeneExpr3Doup.ui", 1)))
+                       contentUI= tagList(
+                         uiOutput(NS0(id, "GeneExpr3Doup.ui", 1)),
+                         downloadButton(NS(id, 'downloadExpr'),
+                                        "Expression for clicked cell"))
+  )
 }
 scCoexp3dServer <- function(pid, id, dataSource, optCrt,
                          p_input, p_session, postfix=1){
@@ -69,5 +73,7 @@ scCoexp3dServer <- function(pid, id, dataSource, optCrt,
       plotlyOutput(NS0(NS(pid, id), "GeneExpr3Doup", 1),
                    height = .globals$pList1[p_input$GeneExprpsz])
     })
+    output$downloadExpr <- exprDownloadHandler(
+      dataSource()$sc1gene, dataSource()$dataset, dataSource()$sc1meta)
   })
 }

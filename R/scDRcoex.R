@@ -34,6 +34,9 @@ scDRcoex <- function(inpConf, inpMeta,
                    with = FALSE]
   if(nrow(ggData)==0) return(NULL)
   colnames(ggData) <- c("X", "Y", subGrpColname)
+  if(plotType=="3D"){
+    ggData$sampleID <- inpMeta$sampleID
+  }
   ggData <- cbindFilterValues(ggData, inpConf, inpMeta, subFilterColname,
                               geneIdMap, dataset,
                               valueFilterKey, valueFilterCutoff)
@@ -74,6 +77,7 @@ scDRcoex <- function(inpConf, inpMeta,
     ggData$norm2 <- round(nTot * ggData$val2 / max(ggData$val2, na.rm = TRUE))
     ggData$Z <- log2(ggData$norm1+1)-log2(ggData$norm2+1)
     return(layout(plot_ly(x=ggData$X, y=ggData$Y, z=ggData$Z,
+                          customdata=ggData$sampleID,
                    type="scatter3d",
                    mode="markers",
                    color=ggData[[subGrpColname]],

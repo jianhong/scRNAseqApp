@@ -24,14 +24,17 @@ coExpr3dUI <- function(id){
       ),
       column(
         9,
-        fluidRow(column(12, uiOutput(NS0(id, "GeneExpr3Doup.ui", 1))))
+        fluidRow(column(12, uiOutput(NS0(id, "GeneExpr3Doup.ui", 1)))),
+        downloadButton(NS(id, 'downloadExpr'),
+                       "Download expression for clicked cell")
       )
     )
   )
 }
+
 #' @importFrom DT renderDT
 #' @importFrom magrittr %>%
-#' @importFrom plotly plotlyOutput renderPlotly
+#' @importFrom plotly plotlyOutput renderPlotly event_data
 coExpr3dServer <- function(id, dataSource, optCrt){
   moduleServer(id, function(input, output, session){
     ## title
@@ -93,6 +96,8 @@ coExpr3dServer <- function(id, dataSource, optCrt){
       plotlyOutput(NS0(id, "GeneExpr3Doup", 1),
                    height = .globals$pList1[input$GeneExprpsz])
     })
+    output$downloadExpr <- exprDownloadHandler(
+      dataSource()$sc1gene, dataSource()$dataset, dataSource()$sc1meta)
   })
 }
 

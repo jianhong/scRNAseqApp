@@ -45,18 +45,24 @@ writeMisc <- function(misc, folder, slot){
 #' @param config configs by loading sc1conf.rds
 #' @param groupName The group name in the metadata colnames
 #' @param valueOnly return the values of first gene
+#' @param cell barcode/sampleID pos retrieved from sc1meta.rds
 #' @return If valueOnly is TRUE, return expression values for first gene.
 #' Otherwise, return a data.table with expressions and group information.
 #' @importFrom hdf5r H5File
 #'
 read_exprs <- function(h5f, genesID, meta,
-                       config, groupName, valueOnly=FALSE){
+                       config, groupName, valueOnly=FALSE,
+                       cell){
   h5file <- H5File$new(file.path(
     .globals$datafolder, h5f, .globals$filenames$sc1gexpr), mode = "r")
   on.exit(h5file$close_all())
   h5data <- h5file[["grp"]][["data"]]
   if(valueOnly){
-    expr <- h5data$read(args = list(genesID[1], quote(expr=)))
+    if(!missing(cell)){
+      expr <- h5data$read(args = list(quote(expr=), cell[1]))
+    }else{
+      expr <- h5data$read(args = list(genesID[1], quote(expr=)))
+    }
     h5file$close_all()
     on.exit()
     return(expr)

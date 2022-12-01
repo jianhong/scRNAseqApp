@@ -13,8 +13,8 @@ loginUI <- function(loginNavbarTitle, defaultDataset){
       # set language ?
       lan = lan
     ),
-    shinymanager:::shinymanager_where("authentication"),
-    shinymanager:::shinymanager_language(lan$get_language())
+    shinymanager_where("authentication"),
+    shinymanager_language(lan$get_language())
   )
 }
 loginServer <- function(input, output, session){
@@ -23,12 +23,13 @@ loginServer <- function(input, output, session){
   )
 }
 
+#' @importFrom utils getFromNamespace
 #' @importFrom shinymanager use_language secure_app fab_button pwd_ui
 secureUI <- function(ui0){
   function(request){
     query <- parseQueryString(request$QUERY_STRING)
     token <- gsub('\"', "", query$token)
-    .tok <- shinymanager:::.tok
+    .tok <- getFromNamespace(".tok", "shinymanager")
     if (.tok$is_valid(token)) {
       enable_admin <- TRUE
       head_auth <- NULL
@@ -39,10 +40,8 @@ secureUI <- function(ui0){
       if(!is.null(language)){
         lan <- use_language(gsub('\"', "", language))
       }
-      shinymanager_where <- shinymanager:::shinymanager_where
-      shinymanager_language <- shinymanager:::shinymanager_language
-
-      is_forced_chg_pwd <- shinymanager:::is_force_chg_pwd(token = token)
+      is_forced_chg_pwd <-
+        getFromNamespace("is_force_chg_pwd", "shinymanager")(token = token)
       if (is_forced_chg_pwd) {
         args <- list()
         args$id <- "password"
@@ -69,10 +68,12 @@ secureUI <- function(ui0){
                              shinymanager_where("admin")),
                    tabPanel(title = tagList(icon("home"), lan$get("Home")),
                             value = "home",
-                            shinymanager:::admin_ui("admin", lan),
+                            getFromNamespace("admin_ui",
+                                             "shinymanager")("admin", lan),
                             shinymanager_language(lan$get_language())),
                    tabPanel(title = lan$get("Logs"),
-                            shinymanager:::logs_ui("logs", lan),
+                            getFromNamespace("logs_ui",
+                                             "shinymanager")("logs", lan),
                             shinymanager_language(lan$get_language())),
                    tabPanel(title = 'UploadData',
                             uploadUI("upload")),
@@ -99,13 +100,14 @@ secureUI <- function(ui0){
                                           label = lan$get("Logout"),
                                           icon = icon("sign-out")))
         }
-        shinymanager:::save_logs(token)
+        getFromNamespace("save_logs", "shinymanager")(token)
         if (is.function(ui0)) {
           ui <- ui0(request)
         }
         tagList(ui, menu, shinymanager_where("application"),
                 shinymanager_language(lan$get_language()),
-                singleton(tags$head(tags$script(src = "shinymanager/timeout.js"))))
+                singleton(tags$head(tags$script(
+                  src = "shinymanager/timeout.js"))))
       }
     } else{
       ui0(request)

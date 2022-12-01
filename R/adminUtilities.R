@@ -146,17 +146,30 @@ filterGrpIDs <- function(grp_ids, meta){
 }
 
 updateAppConf <- function(input, global){
-  appconf <- list(title=input$title,
+  markers <- global()$markers
+  if(is.character(markers)){
+    markers <- markers[!is.na(markers)]
+    markers <- markers[markers!=""]
+    markers <- t(t(markers))
+    rownames(markers) <- markers
+    markers <- list(markers=as.data.frame(markers))
+  }
+  if(input$species2!="" && input$species2!="NA"){
+    species <- input$species2
+  }else{
+    species <- input$species
+  }
+  appconf <- APPconf(title=input$title,
                      id=input$dir,
-                     species=input$species,
+                     species=species,
                      ref=list(
                        bib=input$reference,
                        doi=input$doi,
                        pmid=input$pmid,
                        entry=global()$ref
                      ),
-                     types=input$datatype,
-                     markers = global()$markers,
+                     type=input$datatype,
+                     markers = markers,
                      keywords = input$keywords)
   if(!is.null(input$dir)){
     if(input$dir!=""){

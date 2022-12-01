@@ -40,7 +40,12 @@ updateSubsetCellUI <-
         if(!is.null(x)){
           sub <- strsplit(dataSource()$sc1conf[
             dataSource()$sc1conf$UI == input$subsetCell]$fID,
-            "\\|")[[1]]
+            "\\|")
+          if(length(sub)){
+            sub <- sub[[1]]
+          }else{
+            sub <- NULL
+          }
           div(
             style="max-height: 150px; display:flex; flex-direction: column; overflow-y: auto;",
             checkboxGroupInput(NS(id, "subsetCellVal"),

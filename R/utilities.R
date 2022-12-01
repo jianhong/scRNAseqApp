@@ -72,12 +72,12 @@ g_legend <- function(a.gplot){
 }
 
 # update search results
-updateSearch <- function(key_words, output, symbolDict, id){
+updateSearch <- function(key_words, output, symbolDict, id, auth){
   key_words = gsub("[^a-zA-Z0-9._'\"*-]+", "", key_words)
   if(length(key_words)==1 &&
      nchar(key_words)>1 &&
      isGene(key_words, symbolDict)){## check if it is a gene
-    search_res <- checkGene(key_words, id=id)
+    search_res <- checkGene(key_words, id=id, auth = auth)
     output$search_res <-
       renderUI(search_res$UI)
     for(i in seq_along(search_res$PLOT)){
@@ -87,7 +87,7 @@ updateSearch <- function(key_words, output, symbolDict, id){
     }
   }else{
     res_data <- lapply(getAppConf(), function(.ele){
-      x <- paste(unlist(.ele), collapse = " ")
+      x <- paste(as.character(.ele), collapse = " ")
       m <- vapply(key_words, grepl, logical(1L), x = x, ignore.case=TRUE)
       m <- sum(m)
       return(c(m, .ele$id, .ele$title))
@@ -128,7 +128,7 @@ isGene <- function(symbol, dict, maxEvent=3){
   }
   if(isAsterisk(symbol)){
     symbol <- isAsterisk(symbol, transform = TRUE)
-    maxEvent <- 50
+    maxEvent <- .globals$maxNumGene
   }
   g <- sum(grepl(symbol, dict))
   g > 0 && g < maxEvent
@@ -178,7 +178,7 @@ wafflePlot <- function(expres, id, plotname, numGene,
                        groupCol="treatment"){
   groupValue <- expres[[groupCol]]
   if(all(as.character(groupValue)==
-         as.character(expres$grpBy))){
+         as.character(expres$grpBy), na.rm=TRUE)){
     groupValue <- 1
   }
   list(
@@ -198,53 +198,76 @@ wafflePlot <- function(expres, id, plotname, numGene,
 #' @noRd
 #' @param gene character(1L), gene name
 #' @param datafolder the data folder
+#' @param auth for locked data
 #' @param id namespace
 #' @return Html tags for search results
-checkGene <- function(gene, id){
+checkGene <- function(gene, id, auth){
   appconfs <- getAppConf()
-  exprs <- lapply(appconfs, function(.ele){
-    geneIds <- readData("sc1gene", .ele$id)
-    if(isQuote(gene)){
-      genenames <- geneIds[names(geneIds) %in% removeQuote(gene)]
-    }else{
-      gene <- isAsterisk(gene, transform = TRUE)
-      genenames <- geneIds[grepl(gene, names(geneIds), ignore.case = TRUE)]
-    }
-    if(length(genenames)>0){
-      config <- readData("sc1conf", .ele$id)
-      groupName <- getCelltypeCol(config)
-      ggData <-
-        read_exprs(.ele$id,
-                   genenames,
-                   readData("sc1meta", .ele$id),
-                   config, groupName, valueOnly=FALSE)
-      ggData[ggData$val < 0]$val <- 0
-      #waffle plot
-      plotname = paste0('search-plot', .ele$id)
-      groupCol <-
-        ifelse(!is.null(.ele$groupCol),
-               .ele$groupCol,
-               getCelltypeCol(config,
-                              celltypePattern =
-                                .globals$groupColPattern))
-      wp <- wafflePlot(ggData, id,
-                       plotname,
-                       length(genenames),
-                       groupCol = groupCol)
-      list(
-        UI = tags$li(
-          tags$a(href=paste0('?data=', .ele$id, '&gene=',
-                             paste(names(genenames), collapse=";")),
-                 .ele$title),
-          wp$UI
-        ),
-        PLOT = wp$PLOT,
-        NAME = plotname
-      )
-    }else{
-      NULL
-    }
+  exprs <- NULL
+  tryCatch({
+    exprs <- lapply(appconfs, function(.ele){
+      if(checkLocker(.ele$id)){
+        if(!checkPrivilege(auth$privilege, .ele$id)){
+          return(NULL)
+        }
+      }
+      geneIds <- readData("sc1gene", .ele$id)
+      if(isQuote(gene)){
+        genenames <- geneIds[names(geneIds) %in% removeQuote(gene)]
+      }else{
+        gene <- isAsterisk(gene, transform = TRUE)
+        genenames <- geneIds[grepl(gene, names(geneIds), ignore.case = TRUE)]
+        if(length(genenames)>.globals$limitNumGene){
+          genenames <- geneIds[grepl(paste0("^",gene),
+                                     names(geneIds),
+                                     ignore.case = TRUE)]
+        }
+      }
+      if(length(genenames)>0){
+        genenames <- genenames[seq.int(min(length(genenames),
+                                           .globals$limitNumGene))]
+        config <- readData("sc1conf", .ele$id)
+        groupName <- getCelltypeCol(config)
+        ggData <-
+          read_exprs(.ele$id,
+                     genenames,
+                     readData("sc1meta", .ele$id),
+                     config, groupName, valueOnly=FALSE)
+        ggData[ggData$val < 0]$val <- 0
+        #waffle plot
+        plotname = paste0('search-plot', .ele$id)
+        groupCol <- getCelltypeCol(config,
+                                   celltypePattern =
+                                     .globals$groupColPattern)
+        if(!is.null(.ele$groupCol)){
+          groupCol <- .ele$groupCol
+        }
+        if(is.null(groupCol)){
+          return(NULL)
+        }
+        wp <- wafflePlot(ggData, id,
+                         plotname,
+                         length(genenames),
+                         groupCol = groupCol)
+        list(
+          UI = tags$li(
+            tags$a(href=paste0('?data=', .ele$id, '&gene=',
+                               paste(names(genenames), collapse=";")),
+                   .ele$title),
+            wp$UI
+          ),
+          PLOT = wp$PLOT,
+          NAME = plotname
+        )
+      }else{
+        NULL
+      }
+    })
+  },
+  error = function(e){
+    message(e)
   })
+
   exprs <- exprs[lengths(exprs)>0]
   if(length(exprs)==0){
     return(list(UI=tagList(), PLOT=NULL))

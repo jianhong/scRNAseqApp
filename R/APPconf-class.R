@@ -1,3 +1,5 @@
+setClassUnion("character_OR_NULL", c("character", "NULL"))
+
 #' Class \code{"APPconf"}
 #' @description Ano object of class \code{"APPconf"} represents
 #'  the metadata for a dataset.
@@ -12,7 +14,9 @@
 #' @slot markers character. A vector of characters represents cell marders.
 #' @slot keywords character. A vector of characters represents the keywords of
 #' the study.
+#' @slot groupCol character. The key group column name to separate the cells.
 #' @importFrom methods setClass representation prototype setMethod new `slot<-`
+#' setClassUnion
 #' @export
 #' @examples
 #' appconf <- readRDS(system.file("extdata", "data",
@@ -26,16 +30,18 @@ setClass("APPconf",
            species = "character",
            ref = "list",
            type = "character",
-           markers = "character",
-           keywords = "character"
+           markers = "list",
+           keywords = "character",
+           groupCol = "character_OR_NULL"
          ),
          prototype = prototype(
            title = "scRNAseqApp",
            id = 'sample_data',
            ref = list(),
            type = "scRNAseqApp",
-           markers = "",
-           keywords = ""
+           markers = list(),
+           keywords = "",
+           groupCol = NULL
          ),
          validity = function(object){
            if(length(object@title)!=1){
@@ -53,6 +59,22 @@ setClass("APPconf",
            if(length(object@ref$entry)){
              if(!is(object@ref$entry, "bibentry")){
                return("ref$entry must be an object of bibentry.")
+             }
+           }
+           if(length(object@markers)){
+             out <- lapply(object@markers, function(.ele){
+               if(!is.data.frame(.ele)){
+                 return("markers must be a list of data.frame")
+               }
+               if(length(rownames(.ele))!=nrow(.ele)){
+                 return("markers must be a list of data.frame with rownames
+                        and the rownames show be the marker name")
+               }
+               return(NULL)
+             })
+             out <- out[lengths(out)>0]
+             if(length(out)){
+               return(out)
              }
            }
            return(TRUE)

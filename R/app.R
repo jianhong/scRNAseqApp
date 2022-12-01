@@ -140,8 +140,10 @@ scRNAseqApp <- function(datafolder = "data",
                  ignoreInit = TRUE, {
                    ## update datasets if datasets changed by admin
                    ad <- getNamedDataSets()
-                   if(!all(dataSource$available_datasets %in% ad) ||
-                      !all(ad %in% dataSource$available_datasets)){
+                   if(!all(dataSource$available_datasets %in% ad,
+                           na.rm = TRUE) ||
+                      !all(ad %in% dataSource$available_datasets,
+                           na.rm = TRUE)){
                      dataSource$available_datasets <- ad
                      dataSource$symbolDict <-
                        updateSymbolDict()

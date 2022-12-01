@@ -4,7 +4,7 @@
 .Ruserdata
 **.DS_Store
 *.Rproj
-scRNAseqApp
+scRNAseqAppOldFiles
 tests
 tmp
 # {shinytest2}: Ignore new debug snapshots for `$expect_values()`

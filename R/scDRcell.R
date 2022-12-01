@@ -94,8 +94,8 @@ scDRcell <- function(inpConf, inpMeta,
           lineDf <- data.frame()
           for(i in seq_len(nclus-1)){
             for(j in seq(i+1,nclus)){
-              if(connectivity[i,j]==1 &
-                 all(clusters[c(i,j)] %in% clus2include)){
+              if(connectivity[i,j]==1 &&
+                 all(clusters[c(i,j)] %in% clus2include, na.rm = TRUE)){
                 lineDf <- rbind(lineDf, c(centers[i, 1:2, drop=TRUE],
                                           centers[j, 1:2, drop=TRUE]))
               }

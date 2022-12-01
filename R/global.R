@@ -76,4 +76,6 @@
     expression="accessibility"
   )
 )
-
+# number of gene by search
+.globals$maxNumGene <- 50
+.globals$limitNumGene <- 3

@@ -35,7 +35,9 @@ getDefaultDataset <- function(defaultDataset="pbmc_small"){
 getAppConf <- function(){
   datasets <- getDataSets()
   appconf <- lapply(datasets, function(.ele){
-    readData("appconf", .ele)
+    conf <- readData("appconf", .ele)
+    stopifnot('id is not identical with the folder name'=.ele==conf$id)
+    conf
   })
   names(appconf) <- datasets
   return(appconf)
@@ -43,7 +45,7 @@ getAppConf <- function(){
 
 getDataType <- function(appconf){
   stopifnot(!missing(appconf))
-  data_types <- vapply(appconf, function(.ele) .ele$types,
+  data_types <- vapply(appconf, function(.ele) .ele$type,
                        FUN.VALUE = character(1))
 }
 
@@ -53,6 +55,7 @@ updateSymbolDict <- function(){
   })
   sort(unique(unlist(symbols)))
 }
+
 getRef <- function(dataset, key, appconf){
   stopifnot(!missing(appconf))
   stopifnot(!missing(dataset))

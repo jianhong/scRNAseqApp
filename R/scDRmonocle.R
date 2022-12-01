@@ -1,3 +1,4 @@
+#' @importFrom ggplot2 geom_text
 scDRmonocle <- function(
     data,
     reduction_method = "UMAP",
@@ -25,7 +26,7 @@ scDRmonocle <- function(
     geom_point(color=I("black"), size=1.25*cell_size,
                stroke = I(cell_stroke), na.rm = TRUE,
                alpha = I(alpha)) +
-    geom_point(aes(color = cell_color), size=I(cell_size),
+    geom_point(aes_string(color = "cell_color"), size=I(cell_size),
                stroke = I(cell_stroke), na.rm = TRUE,
                alpha = alpha) +
     guides(color = guide_legend(title = "cluster",

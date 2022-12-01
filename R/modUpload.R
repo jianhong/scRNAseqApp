@@ -36,6 +36,10 @@ uploadUI <- function (id) {
                  choices = .globals$supported_organisms,
                  selected = "Homo sapiens"
                ),
+               textInput(
+                 ns("species2"),
+                 label = "Other species"
+               ),
                selectInput(
                  ns("gexAssay"),
                  label = "Gene expression assay",
@@ -126,7 +130,7 @@ uploadUI <- function (id) {
 
 #' @importFrom tools file_ext
 #' @importFrom SeuratObject Reductions Idents Assays DefaultAssay GetAssayData
-#'  `DefaultAssay<-` VariableFeatures Misc `Misc<-` Embeddings
+#'  `DefaultAssay<-` VariableFeatures Misc `Misc<-` Embeddings `Idents<-`
 #' @importFrom Seurat FindAllMarkers FindVariableFeatures ScaleData
 #'  CellCycleScoring GetAssayData as.SingleCellExperiment
 #' @importFrom ShinyCell makeShinyApp createConfig

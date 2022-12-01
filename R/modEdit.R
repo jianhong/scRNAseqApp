@@ -63,6 +63,10 @@ editUI <- function (id) {
                  choices = .globals$supported_organisms,
                  selected = NULL
                ),
+               textInput(
+                 ns("species2"),
+                 label = "Other species"
+               ),
                checkboxGroupInput(
                  ns("meta_to_include"),
                  label = "Columns to include from the metadata"
@@ -163,7 +167,9 @@ editServer <- function(id) {
                         selected = getDataSets()[1])
     })
     observeEvent(input$multigene, {
-      global$markers <- strsplit(input$multigene, "\\s+|,|;")[[1]]
+      if(!is.list(global$markers)){
+        global$markers <- strsplit(input$multigene, "\\s+|,|;")[[1]]
+      }
     })
     observeEvent(input$dir, {
       if(!is.null(input$dir)){
@@ -222,14 +228,20 @@ editServer <- function(id) {
             updateSelectInput(session, "grp2", choices = grp,
                               selected = global$sc1def$grp2)
             global$appconf <- readData("appconf",input$dir)
+            if(length(global$appconf$markers)){
+              global$markers <- global$appconf$markers
+            }
             updateTextAreaInput(session, "keywords",
                                 value=global$appconf$keywords)
             updateTextInput(session, "title", value=global$appconf$title)
             updateTextInput(session, "dir", value=global$appconf$id)
             updateSelectInput(session, "datatype",
-                              selected = global$appconf$types)
+                              selected = global$appconf$type)
             updateSelectInput(session, "species",
                               selected = global$appconf$species)
+            if(!global$appconf$species %in% .globals$supported_organisms){
+              updateTextInput(session, "species2", value = global$appconf$species)
+            }
             updateTextInput(session, "reference", value=global$appconf$ref$bib)
             updateTextInput(session, "doi", value=global$appconf$ref$doi)
             updateTextInput(session, "pmid", value=global$appconf$ref$pmid)
@@ -314,7 +326,7 @@ editServer <- function(id) {
           return(NULL)
         }
         mapply(o_fID, n_fID, conf_new$ID, FUN=function(.old, .new, .id){
-          if(!all(.old==.new)){
+          if(!all(.old==.new, na.rm = TRUE)){
             for(i in which(.old!=.new)){
               meta[meta[, .id]==.old[i], .id] <- .new[i]## need to check
             }

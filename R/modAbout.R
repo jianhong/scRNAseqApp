@@ -110,7 +110,8 @@ aboutServer <- function(id, dataSource, optCrt){
         updateSearch(key_words,
                      output,
                      dataSource()$symbolDict,
-                     id)
+                     id,
+                     auth = dataSource()$auth)
       }
     })
     output$dataset_counts <- renderText({

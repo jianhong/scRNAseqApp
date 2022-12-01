@@ -10,7 +10,7 @@ scWafflePlot <- function(expr, groupCol='treatment',
   }
   if(groupCol[1] %in% colnames(expr)){
     if(!all(as.character(expr[[groupCol]]) ==
-            as.character(expr$grpBy))){
+            as.character(expr$grpBy), na.rm = TRUE)){
       expr$geneName <- paste(as.character(expr$geneName),
                              as.character(expr[[groupCol]]))
     }

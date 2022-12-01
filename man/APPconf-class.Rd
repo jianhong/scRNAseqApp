@@ -37,6 +37,8 @@ entry. Entry must be an object of \link[utils]{bibentry}}
 
 \item{\code{keywords}}{character. A vector of characters represents the keywords of
 the study.}
+
+\item{\code{groupCol}}{character. The key group column name to separate the cells.}
 }}
 
 \examples{

@@ -5,8 +5,6 @@ scDRwafflePlot <- function(dataset,
                            gene,
                            groupBy,
                            gradientCol){
-  saveRDS(as.list(environment()), "tmp.rds")
-
   if(isQuote(gene)){
     genenames <- geneIdMap[names(geneIdMap) %in%
                            removeQuote(gene)]

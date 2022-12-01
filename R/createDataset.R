@@ -24,6 +24,7 @@ createDataSet <- function(datafolder="data",
   if(length(markers)==0){
     markers <- rownames(seu)[1:2]
   }else{
+    markers <- unique(unlist(lapply(markers, rownames)))
     if(length(markers)==1){
       markers <- c(markers, markers)
     }
@@ -40,7 +41,7 @@ createDataSet <- function(datafolder="data",
   saveAppConf(appconf, pf)
   ## save misc data
   for(slot in names(Misc(seu))){
-    saveMisc(slot)
+    writeMisc(Misc(seu, slot), appconf$id, slot)
   }
   ## "Locker"
   if(LOCKER){
@@ -63,6 +64,11 @@ createMetadata <- function(){
 }
 
 #' load data from cellRanger
+#' @param outsFolder the outs folder of cellRanger
+#' @importFrom Seurat CreateSeuratObject Read10X
+#' @importFrom SeuratObject CreateDimReducObject
+#' @importFrom utils read.csv
+#' @importFrom data.table fread
 createSeuFromCellRanger <- function(outsFolder){
   analysisFolder <- file.path(outsFolder, "analysis")
   matrixFolder <- file.path(outsFolder, "filtered_feature_bc_matrix")
@@ -114,25 +120,58 @@ createSeuFromCellRanger <- function(outsFolder){
   seu
 }
 
-
-cteateSeuFromMatrix <- function(matrix, meta, genes, cluster){
+#' load data from a count matrix
+#' @param matrix count matrix
+#' @param meta cell-level meta data
+#' @param genes character. gene names, will be the rownames of the matrix
+#' @param cluster the cluster coordinates
+#' @param ... The parameter passed to read.delim when read cluster file.
+#' @importFrom data.table fread
+#' @importFrom Seurat CreateSeuratObject
+#' @importFrom SeuratObject CreateDimReducObject
+cteateSeuFromMatrix <- function(matrix, meta, genes,
+                                cluster, ...){
   mat <- fread(matrix)
   meta <- read.delim(meta, header=TRUE)
-  mat <- mat[!duplicated(mat[, 1][[1]]), ]
-  genes = mat[,1][[1]]
-  mat = data.frame(mat[,-1], row.names=genes)
+  if(missing(genes)){
+    mat <- mat[!duplicated(mat[[1]]), ]
+    genes = mat[[1]]
+    mat <- mat[, -1]
+  }
+  stopifnot(length(genes)==nrow(matrix))
+  mat = data.frame(mat, row.names=genes)
   rownames(meta) <- colnames(mat)
-  identical(colnames(mat), make.names(meta[, 1], unique=TRUE))
-  meta <- meta[, -1]
+  if(identical(colnames(mat), make.names(meta[, 1], unique=TRUE))){
+    meta <- meta[, -1]
+  }
+  getCluster <- function(cluster){
+    clusterfile <- read.delim(cluster, ...)
+    stopifnot(identical(colnames(mat), make.names(clusterfile$V1, unique=TRUE)))
+    clusterfile <- clusterfile[, -1]
+    rownames(clusterfile) <- colnames(mat)
+    if(all(grepl("^V", colnames(clusterfile)), na.rm = TRUE)){
+      colnames(clusterfile)[1:2] <- c("tSNE_1", "tSNE_2")
+    }
+    clusterfile
+  }
+  if(is.list(cluster)){
+    stopifnot(length(names(cluster))==length(cluster))
+    clusters <- lapply(cluster, getCluster)
+  }else{
+    clusters <- list('tsne'=getCluster(cluster))
+    names(clusters) <- lapply(clusters, function(.ele) {
+      tolower(gsub("_\\d+$", "", colnames(.ele)[1]))
+      })[[1]]
+  }
+
   # create seu
   seu <- CreateSeuratObject(mat, meta.data = meta)
-  clusterfile <- read.delim(cluster, header=FALSE)
-  identical(colnames(mat), make.names(clusterfile$V1, unique=TRUE))
-  clusterfile <- clusterfile[, -1]
-  rownames(clusterfile) <- colnames(mat)
-  colnames(clusterfile) <- c("tSNE_1", "tSNE_2")
-  clusters <- CreateDimReducObject(embeddings=as.matrix(clusterfile))
-  seu[["tsne"]] <- clusters
+  if(length(clusters)){
+    for(i in seq_along(clusters)){
+      cluster <- CreateDimReducObject(embeddings=as.matrix(clusters[[i]]))
+      seu[[names(clusters)[i]]] <- cluster
+    }
+  }
   seu
 }
 

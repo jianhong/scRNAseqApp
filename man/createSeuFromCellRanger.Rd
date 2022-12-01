@@ -6,6 +6,9 @@
 \usage{
 createSeuFromCellRanger(outsFolder)
 }
+\arguments{
+\item{outsFolder}{the outs folder of cellRanger}
+}
 \description{
 load data from cellRanger
 }

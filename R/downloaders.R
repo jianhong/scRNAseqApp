@@ -75,3 +75,14 @@ exprDownloadHandler <- function(geneIdMap, dataset, meta){
     }
   )
 }
+
+#' @importFrom plotly event_data
+plotly3d_click <- function(session){
+  renderPrint({
+    d <- event_data("plotly_click",
+                    session = session)
+    if (is.null(d)) "Click cell appear here" else {
+      paste("Clicked cell", d$customdata)
+    }
+  })
+}

@@ -60,7 +60,7 @@ scRNAseqApp <- function(datafolder = "data",
                        "jianhong@duke", style='text-align:right;'),
                      class="about-right border-top-info"),
         ### Tab: change dataset
-        aboutUI(req, "about", banner),
+        aboutUI(req, "about", banner, defaultDataset),
         homeUI(), ## fake home
         ### Tab: cellInfo vs geneExpr on dimRed
         cellInfoGeneExprUI("cellInfoGeneExpr"),
@@ -171,7 +171,7 @@ scRNAseqApp <- function(datafolder = "data",
       }else{
         dataSource$genelist <- NULL
       }
-      if(!is.null(query[['cell']])){
+      if(!is.null(query[['cell']])){## not used yet
         cell <- strsplit(query[['cell']], ";")[[1]]
         dataSource$cell <- cell
       }else{

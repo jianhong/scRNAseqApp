@@ -8,7 +8,7 @@ homeUI <- function(){
 
 #' @importFrom bibtex read.bib
 #' @importFrom RefManageR GetBibEntryWithDOI PrintBibliography
-aboutUI <- function(request, id, banner, doc="doc.txt"){
+aboutUI <- function(request, id, banner, defaultDataset, doc="doc.txt"){
   ns <- NS(id)
   # addResourcePath(prefix="pics",
   #                 directoryPath = system.file(
@@ -16,10 +16,10 @@ aboutUI <- function(request, id, banner, doc="doc.txt"){
   tabPanel(title=div(selectInput('selectedDatasets',
                                  label = NULL,
                                  choices = getNamedDataSets(),
-                                 selected = NULL,
+                                 selected = defaultDataset,
                                  width = "90vw")),
            value = 'about',
-           includeHTML(doc),
+           div(id='about-doc', includeHTML(doc)),
            hr(),
            htmlOutput(ns("ref")),
            hr(),

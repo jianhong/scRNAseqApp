@@ -14,7 +14,8 @@ scCoexp3dUI <- function(id, postfix=1){
                        contentUI= tagList(
                          uiOutput(NS0(id, "GeneExpr3Doup.ui", 1)),
                          downloadButton(NS(id, 'downloadExpr'),
-                                        "Expression for clicked cell"))
+                                        "Expression for clicked cell"),
+                         verbatimTextOutput(NS(id, 'clicked')))
   )
 }
 scCoexp3dServer <- function(pid, id, dataSource, optCrt,
@@ -68,12 +69,14 @@ scCoexp3dServer <- function(pid, id, dataSource, optCrt,
         valueFilterKey=p_input$filterCell,
         valueFilterCutoff=p_input$filterCellVal)
     })
+    source <- NS0(NS(pid, id), "GeneExpr3Doup", 1)
     output$GeneExpr3Doup1 <- renderPlotly({ plot3d() })
     output$GeneExpr3Doup.ui1 <- renderUI({
-      plotlyOutput(NS0(NS(pid, id), "GeneExpr3Doup", 1),
+      plotlyOutput(source,
                    height = .globals$pList1[p_input$GeneExprpsz])
     })
     output$downloadExpr <- exprDownloadHandler(
       dataSource()$sc1gene, dataSource()$dataset, dataSource()$sc1meta)
+    output$clicked <- plotly3d_click(session)
   })
 }

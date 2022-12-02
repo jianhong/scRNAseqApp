@@ -26,7 +26,8 @@ coExpr3dUI <- function(id){
         9,
         fluidRow(column(12, uiOutput(NS0(id, "GeneExpr3Doup.ui", 1)))),
         downloadButton(NS(id, 'downloadExpr'),
-                       "Download expression for clicked cell")
+                       "Download expression for clicked cell"),
+        verbatimTextOutput(NS(id, 'clicked'))
       )
     )
   )
@@ -98,6 +99,7 @@ coExpr3dServer <- function(id, dataSource, optCrt){
     })
     output$downloadExpr <- exprDownloadHandler(
       dataSource()$sc1gene, dataSource()$dataset, dataSource()$sc1meta)
+    output$clicked <- plotly3d_click(session)
   })
 }
 

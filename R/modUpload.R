@@ -132,8 +132,7 @@ uploadUI <- function (id) {
 #' @importFrom SeuratObject Reductions Idents Assays DefaultAssay GetAssayData
 #'  `DefaultAssay<-` VariableFeatures Misc `Misc<-` Embeddings `Idents<-`
 #' @importFrom Seurat FindAllMarkers FindVariableFeatures ScaleData
-#'  CellCycleScoring GetAssayData as.SingleCellExperiment
-#' @importFrom ShinyCell makeShinyApp createConfig
+#'  CellCycleScoring as.SingleCellExperiment
 #' @importFrom RefManageR GetBibEntryWithDOI GetPubMedByID
 #' @importFrom utils head
 #' @importFrom methods slot
@@ -257,7 +256,8 @@ uploadServer <- function(id) {
       }, "Uploading data", "Preprocessing Done!")
     })
     observeEvent(input$meta_to_include, {
-      global$config <- createConfig(
+      global$config <-
+        createConfig(
         global$seu,
         meta.to.include = unique(input$meta_to_include)
       )
@@ -296,14 +296,13 @@ uploadServer <- function(id) {
           message("set data config file")
           updateAppConf(input, reactive({global}))
           message("makeShinyApp")
-          makeShinyApp(global$seu,
+          makeShinyFiles(global$seu,
                        scConf = global$config,
-                       gex.assay = input$gexAssay,
-                       gex.slot = input$gexSlot,
-                       shiny.title = input$title,
-                       shiny.dir = file.path(.globals$datafolder, input$dir),
-                       default.gene1 = input$gene1,
-                       default.gene2 = input$gene2,
+                       assayName = input$gexAssay,
+                       gexSlot = input$gexSlot,
+                       appDir = file.path(.globals$datafolder, input$dir),
+                       defaultGene1 = input$gene1,
+                       defaultGene2 = input$gene2,
                        default.multigene = global$markers)
           message("set misc files")
           for(slot in names(Misc(global$seu))){
@@ -313,9 +312,6 @@ uploadServer <- function(id) {
           if(input$locker){
             setLocker(input$dir)
           }
-          message("Clean up unused files")
-          unlink(file.path(.globals$datafolder, input$dir, "ui.R"))
-          unlink(file.path(.globals$datafolder, input$dir, "server.R"))
           message("reset the inputs")
           updateTextInput(session, "dir",
                           value = "")

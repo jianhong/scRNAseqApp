@@ -1,43 +1,140 @@
 #' Create a dataset
-#' Create a dataset from an seurat object
+#' Create a dataset from a Seurat object
 #' @param datafolder app data folder
 #' @param appconf a list object represent the information about the dataset
-#' @param seu an seurat object
-#' @param config config file for makeShinyApp
-#' @param ident The default group
+#' @param seu a Seurat object
+#' @param config config file for makeShinyFiles
 #' @param contrast The contrast group
 #' @param LOCKER Set locker if the file is required login
-#' @param ... parameters passed to makeShinyApp
-#' @importFrom ShinyCell makeShinyApp
-createDataSet <- function(datafolder="data",
-                          appconf,
+#' @param assayName assay in single-cell data object to use for plotting
+#'   gene expression, which must match one of the following:
+#'   \itemize{
+#'     \item{Seurat objects}: "RNA" or "integrated" assay,
+#'       default is "RNA"
+#'   }
+#' @param gexSlot slot in single-cell assay to plot.
+#' Default is to use the "data" slot
+#' @importFrom SeuratObject Reductions Idents Assays DefaultAssay GetAssayData
+#'  `DefaultAssay<-` VariableFeatures Misc `Misc<-` Embeddings `Idents<-`
+#' @importFrom Seurat FindAllMarkers FindVariableFeatures ScaleData
+#' @return The updated Seurat object.
+#' @export
+#' library(Seurat)
+#' appconf <- createAppConfig(
+#'            title="pbmc_small",
+#'            destinationFolder = "pbmc_small",
+#'            species = "Homo sapiens",
+#'            doi="10.1038/nbt.3192",
+#'            datatype = "scRNAseq")
+#' createDataSet(appconf, pbmc_small, datafolder=tempdir())
+createDataSet <- function(appconf,
                           seu,
                           config,
-                          ident,
                           contrast,
+                          assayName,
+                          gexSlot = c("data", "scale.data", "counts"),
                           LOCKER=FALSE,
-                          ...){
-  .globals$datafolder <- datafolder
+                          datafolder="data"){
+  stopifnot(file.exists(datafolder))
+  stopifnot(is(seu, "Seurat"))
+  stopifnot(is(appconf, "APPconf"))
+  gexSlot <- match.arg(gexSlot)
+  if(missing(config)){
+    config <- createConfig(seu)
+  }
   pf <- file.path(datafolder, appconf$id)
-  dir.create(pf)
+  dir.create(pf, recursive = TRUE)
+  cellInfo <- colnames(seu[[]])
+  assays <- Assays(seu)
+  stopifnot("Please input a seurat object with 'SCT' or 'RNA' assay" =
+              any(c("SCT", "RNA") %in% assays))
+  if(!DefaultAssay(seu) %in% c("SCT", "RNA")){
+    DefaultAssay(seu) <- match.arg(assays, choices = c("SCT", "RNA"),
+                                   several.ok = TRUE)[1]
+  }
+  if(missing(assayName)){
+    assayName <- DefaultAssay(seu)
+  }
+  assayName <- assayName[1]
+  stopifnot("The assayName is not in input object" = assayName %in% assays)
+  if(length(GetAssayData(seu, "scale.data"))==0){
+    seu <- FindVariableFeatures(seu,
+                                selection.method = "vst",
+                                nfeatures=1000)
+    seu <- ScaleData(seu)
+  }
+  top10 <- head(VariableFeatures(seu), 10)
+  ## markers
   markers <- appconf$markers
-  if(length(markers)==0){
-    markers <- rownames(seu)[1:2]
+  if(!missing(contrast)){
+    if(contrast[1] %in% cellInfo){
+      appconf$groupCol <- contrast[1]
+    }else{
+      stop("The input contrast is not in seu object")
+    }
   }else{
-    markers <- unique(unlist(lapply(markers, rownames)))
-    if(length(markers)==1){
-      markers <- c(markers, markers)
+    if(!is.null(appconf$groupCol)){
+      if(appconf$groupCol[1] %in% cellInfo){
+        contrast <- appconf$groupCol[1]
+      }else{
+        appconf$groupCol <- appconf$groupCol[-1]
+      }
+    }else{
+      contrast <- NULL
     }
   }
+  if(length(markers)==0){
+    if(!is.null(Misc(seu, "markers"))){
+      ## the markers is available at Misc(seu, "markers") slot
+      markers <- Misc(seu, "markers")
+    }else{
+      if(!is.factor(Idents(seu))){
+        if(!is.null(contrast)){
+          Idents(seu) <- contrast
+        }else{
+          grp <- cellInfo[grepl('cluster|cell(.*)type',
+                                cellInfo,
+                                ignore.case = TRUE)]
+          grp_d <- adist('celltype', grp)
+          Idents(seu) <- grp[which.min(grp_d)][1]
+        }
+      }
+      markers <- FindAllMarkers(seu, only.pos=TRUE,
+                                min.pct=.25, logfc.threshold =.25)
+      if(length(markers)){
+        Misc(seu, "markers") <- markers
+      }
+    }
+    appconf$markers <- markers
+  }
+  if(length(markers)==0){
+    markers <- top10
+  }else{
+    if(is.list(markers)&&!is.data.frame(markers)){
+      markers <- as.data.frame(markers[[1]])
+    }
+    markers <- split(markers, markers$cluster)
+    markers <- lapply(markers, head, n=min(5, ceiling(50/length(markers))))
+    markers <- lapply(markers, function(.ele)(
+      if(!is.null(.ele$gene)){
+        return(.ele$gene)
+      }else{
+        return(rownames(.ele))
+      }
+    ))
+    markers <- unique(unlist(markers))
+  }
   ## make shiny app
-  makeShinyApp(seu,
-               scConf = config,
-               ...,
-               shiny.title = appconf$title,
-               shiny.dir = pf,
-               default.gene1 = markers[1],
-               default.gene2 = markers[2],
-               default.multigene = markers)
+  makeShinyFiles(seu,
+                 scConf = config,
+                 assayName = assayName,
+                 gexSlot = gexSlot,
+                 appDir = pf,
+                 defaultGene1 = markers[1],
+                 defaultGene2 = markers[2],
+                 default.multigene = markers)
+
+  .globals$datafolder <- datafolder
   saveAppConf(appconf, pf)
   ## save misc data
   for(slot in names(Misc(seu))){
@@ -47,20 +144,95 @@ createDataSet <- function(datafolder="data",
   if(LOCKER){
     writeLines("", file.path(pf, "LOCKER"))
   }
-  ## "Clean up unused files"
-  unlink(file.path(pf, "ui.R"))
-  unlink(file.path(pf, "server.R"))
+  return(seu)
 }
 
 
 #' Create a metadata to describe the dataset
-#' 1. must contain condition, cell type, tissue, species information
-#' 2. the conditions must be a keyword in database, used for whole database comparison
-#' 3. cell type must be standard words
-#'
-#'
-createMetadata <- function(){
-
+#' @description The function will return a APPconf object which contain the reference,
+#' keywords for the dataset.
+#' @param title The title of the dataset
+#' @param destinationFolder The destination folder name of the dataset without
+#'  the root folder of the datasets. The data will be saved as
+#'  `appdataFolder/destinationFolder`
+#' @param species The species of the dataset
+#' @param doi,pmid The DOI or PMID of the reference
+#' @param bibentry An object of bibentry
+#' @param datatype character(1). Type of the data, scRNAseq or scATACseq.
+#' @param markers A list of data.frame with gene symbols as rownames or
+#'  a character vector.
+#' @param keywords The keywords for the dataset.
+#' For example the condition, cell type, tissue information
+#' The keywords will be used for whole database search
+#' @return An object of \link{APPconf} object
+#' @importFrom RefManageR GetBibEntryWithDOI GetPubMedByID
+#' @export
+#' @examples
+#' config <- createAppConfig(
+#'            title="pbmc_small",
+#'            destinationFolder = "pbmc_small",
+#'            species = "Homo sapiens",
+#'            doi="10.1038/nbt.3192",
+#'            datatype = "scRNAseq")
+createAppConfig <-
+  function(title, destinationFolder,
+           species, doi, pmid, bibentry,
+           datatype=c("scRNAseq", "scATACseq"),
+           markers, keywords){
+    ## markers is a list of dataframe, rownames is the gene symbols
+    if(!missing(markers)){
+      if(is.character(markers)){
+        markers <- markers[!is.na(markers)]
+        markers <- markers[markers!=""]
+        markers <- t(t(markers))
+        rownames(markers) <- markers
+        markers <- list(markers=as.data.frame(markers))
+      }
+    }else{
+      markers <- list()
+    }
+    stopifnot(is.list(markers))
+    lapply(markers, function(.ele){
+      stopifnot("markers must be a list of data.frame" = is.data.frame(.ele))
+      stopifnot("markers must be a list of data.frame
+                with gene symbols as rownames" =
+                  length(rownames(.ele))==nrow(.ele))
+    })
+    datatype <- match.arg(datatype)
+    stopifnot(is.character(title))
+    stopifnot(is.character(destinationFolder))
+    stopifnot(is.character(species))
+    if(!missing(keywords)){
+      stopifnot(is.character(keywords))
+    } else keywords <- character(0L)
+    if(!missing(doi)){
+      stopifnot(is.character(doi))
+      bibentry <- GetBibEntryWithDOI(doi)
+      if(missing(pmid)) pmid <- idConverter(doi, type="pmid")
+    }
+    if(!missing(pmid)){
+      stopifnot(is.character(pmid))
+      bibentry <- GetPubMedByID(pmid)
+      if(missing(doi)) doi <- idConverter(pmid, type="doi")
+    }
+    bib <- NULL
+    if(!missing(bibentry)){
+      if(is(bibentry, "bibentry")){
+        bib <- format(bibentry, style = 'html')
+      }
+    }
+    return(APPconf(title=title[1],
+                   id=destinationFolder[1],
+                   species=species[1],
+                   ref=list(
+                     bib=bib,
+                     doi=doi,
+                     pmid=pmid,
+                     entry=bibentry
+                   ),
+                   type=datatype,
+                   markers = markers,
+                   keywords = keywords))
 }
 
 #' load data from cellRanger

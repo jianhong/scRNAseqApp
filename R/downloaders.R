@@ -54,6 +54,7 @@ heatmapDownloadHandler <- function(device, width, height, plot, ...){
   )
 }
 #' @importFrom plotly event_data
+#' @importFrom utils write.csv
 exprDownloadHandler <- function(geneIdMap, dataset, meta){
   downloadHandler(
     filename = function(){

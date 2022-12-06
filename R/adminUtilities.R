@@ -74,7 +74,11 @@ redirectOutput <- function(input, output, session, open=TRUE,
   }
 }
 
+#' @noRd
 #' @importFrom xml2 read_xml as_list
+#' @param id id to be convert
+#' @param type target id type
+#' @param url the service url
 idConverter <-
   function(id, type=c("doi", "pmid"),
            url='https://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/'){

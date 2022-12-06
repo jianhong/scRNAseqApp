@@ -1,5 +1,7 @@
 .shiny-output-error-validation {color: red; font-weight: bold;}
 .navbar-default .navbar-nav { font-weight: bold; font-size: 16px; }
+.navbar-nav>li>a {padding: 0.25rem .5rem!important;}
+.navbar-nav>li:first-child>a>div>div.form-group {margin-bottom: 0rem!important;}
 .consoleOutput>pre {max-height: 400px;}
 .align-action-button {margin-top: 31px!important;}
 /*About icon stats*/
@@ -83,4 +85,4 @@ div.about-right>div{font-size:24px!important;magin:10px 0!important;font-weight:
 }
 .submodule-content {padding: 10px;}
 .submodule-contextmenu{position: relative;}
-.submodule-contextmenu > div {width:400px; padding:5px; border: 2px solid #EFEFEF; z-index: 1001; position: absolute;background: rgba(255,255,255,0.8); backdrop-filter:saturate(180%) blur(10px)}
+.submodule-contextmenu > div {width:260px; padding:5px; border: 2px solid #EFEFEF; z-index: 1001; position: absolute; right: 0; background: rgba(255,255,255,0.8); backdrop-filter:saturate(180%) blur(10px)}

@@ -2,18 +2,20 @@
 #' @importFrom ggplot2 ggplot aes_string geom_col ylab coord_flip xlab
 #' scale_fill_manual theme
 #' @importFrom data.table .SD .N
-scProp <- function(inpConf, inpMeta, inp1, grpKey, grpVal, inp2,
+scProp <- function(inpConf, inpMeta,
+                   infoX, infoY,
+                   grpKey, grpVal,
                    inptyp, flipXY, labelsFontsize,
                    dataset, geneIdMap,
                    valueFilterKey, valueFilterCutoff){
   # Prepare ggData
   if(grpKey!="N/A" && length(grpVal)){
-    colN <- c(inpConf[inpConf$UI == inp1]$ID,
-              inpConf[inpConf$UI == inp2]$ID,
+    colN <- c(inpConf[inpConf$UI == infoX]$ID,
+              inpConf[inpConf$UI == infoY]$ID,
               inpConf[inpConf$UI == grpKey]$ID)
   }else{
-    colN <- c(inpConf[inpConf$UI == inp1]$ID,
-              inpConf[inpConf$UI == inp2]$ID)
+    colN <- c(inpConf[inpConf$UI == infoX]$ID,
+              inpConf[inpConf$UI == infoY]$ID)
   }
   ggData <- inpMeta[, colN, with = FALSE]
   ggData <- subGrp(ggData, grpKey, grpVal, inpConf)
@@ -35,7 +37,7 @@ scProp <- function(inpConf, inpMeta, inp1, grpKey, grpVal, inp2,
   # Do factoring
   ggData <- relevelData(ggData, "grp")
   ggData <- relevelData(ggData, "X")
-  ggCol <- relevelCol(inpConf, inp2, ggData, "grp")
+  ggCol <- relevelCol(inpConf, infoY, ggData, "grp")
 
   # Actual ggplot
   if(inptyp == "Proportion"){
@@ -48,7 +50,7 @@ scProp <- function(inpConf, inpMeta, inp1, grpKey, grpVal, inp2,
   if(flipXY){
     ggOut <- ggOut + coord_flip()
   }
-  ggOut <- ggOut + xlab(inp1) +
+  ggOut <- ggOut + xlab(infoX) +
     sctheme(base_size = .globals$sList[labelsFontsize], Xang = 45, XjusH = 1) +
     scale_fill_manual("", values = ggCol) +
     theme(legend.position = "right")

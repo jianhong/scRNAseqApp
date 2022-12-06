@@ -1,8 +1,15 @@
 scPropUI <- function(id, postfix=1){
   subModuleContainerUI(id,
-                       mainSelectUI= selectInput(NS(id, "CellInfoX"),
-                                                 "Cell information:",
-                                                 choices = NULL),
+                       mainSelectUI= tagList(
+                         selectInput(NS(id, "CellInfoX"),
+                                     "X-axis:",
+                                     choices = NULL,
+                                     width = "100px"),
+                         selectInput(NS(id, "CellInfoY"),
+                                     "Y-axis:",
+                                     choices = NULL,
+                                     width = "100px")
+                       ),
                        menuUI= contextMenuPropUI(id),
                        contentUI= geneExprDotPlotUI(id, postfix=postfix))
 }
@@ -12,7 +19,7 @@ scPropServer <- function(pid, id, dataSource, optCrt,
     if(is.null(p_session$userData$defaults[[dataSource()$dataset]][[id]])){
       defaults <- list(
         CellInfoX = dataSource()$sc1def$grp2,
-        cellInfoY = dataSource()$sc1def$grp1
+        CellInfoY = dataSource()$sc1def$grp1
       )
     }else{
       defaults <- p_session$userData$defaults[[dataSource()$dataset]][[id]]
@@ -21,11 +28,11 @@ scPropServer <- function(pid, id, dataSource, optCrt,
     updateSelectInput(session,
                       "CellInfoX",
                       choices = getGroupUI(dataSource),
-                      selected = defaults$cellinfoX)
+                      selected = defaults$CellInfoX)
     updateSelectInput(session,
-                      "cellInfoY",
+                      "CellInfoY",
                       choices = getGroupUI(dataSource),
-                      selected = defaults$cellinfoY)
+                      selected = defaults$CellInfoY)
 
     subModuleMenuObservor(id, input, p_session, dataSource,
                           c("CellInfoX", "CellInfoY",
@@ -38,9 +45,9 @@ scPropServer <- function(pid, id, dataSource, optCrt,
         dataSource()$sc1conf,
         dataSource()$sc1meta,
         input$CellInfoX,
+        input$CellInfoY,
         p_input$subsetCell,
         p_input$subsetCellVal,
-        input$cellInfoY,
         input$plottyp,
         input$plotflp,
         p_input$GeneExprfsz,
@@ -56,6 +63,6 @@ scPropServer <- function(pid, id, dataSource, optCrt,
                           dataSource()$dataset,
                           input$plottyp,
                           input$CellInfoX,
-                          input$cellInfoY)
+                          input$CellInfoY)
   })
 }

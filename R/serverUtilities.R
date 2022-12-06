@@ -17,6 +17,10 @@ getGroupUI <- function(dataSource){
   dataSource()$sc1conf[
     dataSource()$sc1conf$grp == TRUE]$UI
 }
+getNonGroupUI <- function(dataSource){
+  dataSource()$sc1conf[
+    is.na(dataSource()$sc1conf$fID)]$UI
+}
 updateSubsetCellUI <-
   function(id, input, output, session, dataSource, addNA=FALSE){
     choices <- dataSource()$sc1conf[
@@ -63,15 +67,12 @@ updateFilterCellUI <-
     updateSelectizeInput(session,
                          "filterCell",
                          server = TRUE,
-                         choices = c(dataSource()$sc1conf[
-                           is.na(dataSource()$sc1conf$fID)]$UI,
-                           sort(names(dataSource()$sc1gene))),
-                         selected = dataSource()$sc1conf[
-                           is.na(dataSource()$sc1conf$fID)]$UI[1],
+                         choices = c(getNonGroupUI(dataSource),
+                                     sort(names(dataSource()$sc1gene))),
+                         selected = getNonGroupUI(dataSource)[1],
                          options = list(
                            maxOptions =
-                             length(dataSource()$sc1conf[
-                               is.na(dataSource()$sc1conf$fID)]$UI) + 3,
+                             length(getNonGroupUI(dataSource)) + 3,
                            create = TRUE,
                            persist = TRUE,
                            render = I(optCrt)))

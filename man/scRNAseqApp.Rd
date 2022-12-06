@@ -10,6 +10,7 @@ scRNAseqApp(
   windowTitle = "scRNAseq/scATACseq database",
   banner = system.file("assets", "images", "banner.png", package = "scRNAseqApp"),
   maxRequestSize = 1073741824,
+  timeout = 30,
   theme = bs_theme(bootswatch = "lumen"),
   use_bs_themer = FALSE,
   ...
@@ -25,6 +26,9 @@ scRNAseqApp(
 \item{banner}{The banner image.}
 
 \item{maxRequestSize}{Maximal upload file size. Default is 1G.}
+
+\item{timeout}{Timeout session (minutes) before logout if sleeping.
+Default to 30. 0 to disable.}
 
 \item{theme}{A theme.}
 

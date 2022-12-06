@@ -1,8 +1,15 @@
 scVlnUI <- function(id, postfix=1){
   subModuleContainerUI(id,
-                       mainSelectUI= selectInput(NS(id, "CellInfoX"),
-                                                 "Cell information:",
-                                                 choices = NULL),
+                       mainSelectUI= tagList(
+                         selectInput(NS(id, "CellInfoX"),
+                                     "X-axis:",
+                                     choices = NULL,
+                                     width = "100px"),
+                         selectInput(NS(id, "CellInfoY"),
+                                     "Y-axis:",
+                                     choices = NULL,
+                                     width = "100px")
+                       ),
                        menuUI= contextMenuViolinUI(id),
                        contentUI= geneExprDotPlotUI(id, postfix=postfix))
 }
@@ -11,7 +18,8 @@ scVlnServer <- function(pid, id, dataSource, optCrt,
   moduleServer(id, function(input, output, session){
     if(is.null(p_session$userData$defaults[[dataSource()$dataset]][[id]])){
       defaults <- list(
-        CellInfoX = dataSource()$sc1def$grp2
+        CellInfoX = dataSource()$sc1def$grp2,
+        CellInfoY = dataSource()$sc1def$grp1
       )
     }else{
       defaults <- p_session$userData$defaults[[dataSource()$dataset]][[id]]
@@ -21,19 +29,32 @@ scVlnServer <- function(pid, id, dataSource, optCrt,
                       "CellInfoX",
                       choices = getGroupUI(dataSource),
                       selected = defaults$CellInfoX)
-
+    updateSelectizeInput(session,
+                         "CellInfoY",
+                         server = TRUE,
+                         choices = c(getNonGroupUI(dataSource),
+                                     sort(names(dataSource()$sc1gene))),
+                         selected =  defaults$CellInfoY,
+                         options = list(
+                           maxOptions =
+                             length(getNonGroupUI(dataSource)) + 3,
+                           create = TRUE,
+                           persist = TRUE,
+                           render = I(optCrt)))
     subModuleMenuObservor(id, input, p_session, dataSource,
-                          c("CellInfoX", "plottyp", "plotpts"))
+                          c("CellInfoX", "CellInfoY",
+                            "plottyp", "plotpts"))
     ## plot
     plot1 <- reactive({
       scVioBox(
         dataSource()$sc1conf,
         dataSource()$sc1meta,
         input$CellInfoX,
+        input$CellInfoY,
         p_input$subsetCell,
         p_input$subsetCellVal,
-        p_input$filterCellVal,
         p_input$filterCell,
+        p_input$filterCellVal,
         dataSource()$dataset,
         dataSource()$sc1gene,
         input$plottyp,

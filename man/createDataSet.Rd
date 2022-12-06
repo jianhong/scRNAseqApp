@@ -3,37 +3,46 @@
 \name{createDataSet}
 \alias{createDataSet}
 \title{Create a dataset
-Create a dataset from an seurat object}
+Create a dataset from a Seurat object}
 \usage{
 createDataSet(
-  datafolder = "data",
   appconf,
   seu,
   config,
-  ident,
   contrast,
+  assayName,
+  gexSlot = c("data", "scale.data", "counts"),
   LOCKER = FALSE,
-  ...
+  datafolder = "data"
 )
 }
 \arguments{
-\item{datafolder}{app data folder}
-
 \item{appconf}{a list object represent the information about the dataset}
 
-\item{seu}{an seurat object}
+\item{seu}{a Seurat object}
 
-\item{config}{config file for makeShinyApp}
-
-\item{ident}{The default group}
+\item{config}{config file for makeShinyFiles}
 
 \item{contrast}{The contrast group}
 
+\item{assayName}{assay in single-cell data object to use for plotting
+gene expression, which must match one of the following:
+\itemize{
+\item{Seurat objects}: "RNA" or "integrated" assay,
+default is "RNA"
+}}
+
+\item{gexSlot}{slot in single-cell assay to plot.
+Default is to use the "data" slot}
+
 \item{LOCKER}{Set locker if the file is required login}
 
-\item{...}{parameters passed to makeShinyApp}
+\item{datafolder}{app data folder}
+}
+\value{
+The updated Seurat object.
 }
 \description{
 Create a dataset
-Create a dataset from an seurat object
+Create a dataset from a Seurat object
 }

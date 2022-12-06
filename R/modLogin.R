@@ -25,7 +25,7 @@ loginServer <- function(input, output, session){
 
 #' @importFrom utils getFromNamespace
 #' @importFrom shinymanager use_language secure_app fab_button pwd_ui
-secureUI <- function(ui0){
+secureUI <- function(ui0, timeout=30){
   function(request){
     query <- parseQueryString(request$QUERY_STRING)
     token <- gsub('\"', "", query$token)
@@ -52,6 +52,7 @@ secureUI <- function(ui0){
                             shinymanager_language(lan$get_language()))
         return(pwd_ui)
       }
+      .tok$set_timeout(timeout)
       if (isTRUE(enable_admin) && .tok$is_admin(token) &
           identical(admin, "true") & !is.null(.tok$get_sqlite_path())) {
         navbarPage(title = "Admin",

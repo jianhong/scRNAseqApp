@@ -1,7 +1,7 @@
 scInfoUI <- function(id, postfix=1){
   subModuleContainerUI(id,
                        mainSelectUI= selectInput(NS0(id, "CellInfo", postfix),
-                                                 "Cell information:",
+                                                 "Cell info:",
                                                  choices = NULL),
                        menuUI= contextMenuCellInfoUI(id, postfix),
                        contentUI= geneExprDotPlotUI(id, postfix))

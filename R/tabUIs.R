@@ -417,9 +417,6 @@ contextMenuPropUI <- function(id){
       class="submodule-contextmenu",
       conditionalPanel(
         condition = paste0("input.Proptog", " % 2 == 1"), ns=NS(id),
-        selectInput(NS(id, "cellInfoY"),
-                    "Group / colour by:",
-                    choices = NULL),
         radioButtons(NS(id, "plottyp"),
                      "Plot value:",
                      choices = c("Proportion", "CellNumbers"),

@@ -65,9 +65,9 @@ plotProportionServer <- function(id, dataSource, optCrt){
         dataSource()$sc1conf,
         dataSource()$sc1meta,
         input$CellInfoX,
+        input$cellInfoY,
         input$subsetCell,
         input$subsetCellVal,
-        input$cellInfoY,
         input$plottyp,
         input$plotflp,
         input$plotfsz)

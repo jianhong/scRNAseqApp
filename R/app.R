@@ -5,6 +5,8 @@
 #' @param windowTitle The title that should be displayed by the browser window.
 #' @param banner The banner image.
 #' @param maxRequestSize Maximal upload file size. Default is 1G.
+#' @param timeout Timeout session (minutes) before logout if sleeping.
+#'  Default to 30. 0 to disable.
 #' @param theme A theme.
 #' @param use_bs_themer logical(1). Used to determine the theme.
 #' @param ... parameters can be passed to shinyApp except ui and server.
@@ -30,6 +32,7 @@ scRNAseqApp <- function(datafolder = "data",
                         banner = system.file('assets', 'images', 'banner.png',
                                              package='scRNAseqApp'),
                         maxRequestSize=1073741824,
+                        timeout = 30,
                         theme = bs_theme(bootswatch = 'lumen'),
                         use_bs_themer = FALSE,
                         ...){
@@ -91,7 +94,7 @@ scRNAseqApp <- function(datafolder = "data",
       ))
   }
   ## security_login
-  ui <- secureUI(ui0)
+  ui <- secureUI(ui0, timeout)
 
   ### Start server code
   server <- function(input, output, session) {

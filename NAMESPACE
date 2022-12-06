@@ -2,6 +2,7 @@
 
 export(APPconf)
 export(createAppConfig)
+export(createDataSet)
 export(scInit)
 export(scRNAseqApp)
 exportClasses(APPconf)

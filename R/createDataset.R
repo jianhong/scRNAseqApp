@@ -19,6 +19,7 @@
 #' @importFrom Seurat FindAllMarkers FindVariableFeatures ScaleData
 #' @return The updated Seurat object.
 #' @export
+#' @examples
 #' library(Seurat)
 #' appconf <- createAppConfig(
 #'            title="pbmc_small",

@@ -208,12 +208,12 @@ createAppConfig <-
     } else keywords <- character(0L)
     if(!missing(doi)){
       stopifnot(is.character(doi))
-      bibentry <- GetBibEntryWithDOI(doi)
+      suppressMessages(bibentry <- GetBibEntryWithDOI(doi))
       if(missing(pmid)) pmid <- idConverter(doi, type="pmid")
     }
     if(!missing(pmid)){
       stopifnot(is.character(pmid))
-      bibentry <- GetPubMedByID(pmid)
+      suppressMessages(bibentry <- GetPubMedByID(pmid))
       if(missing(doi)) doi <- idConverter(pmid, type="doi")
     }
     bib <- NULL

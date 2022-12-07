@@ -55,13 +55,16 @@ heatmapDownloadHandler <- function(device, width, height, plot, ...){
 }
 #' @importFrom plotly event_data
 #' @importFrom utils write.csv
+click_event_data <- function(...){
+  event_data(event = "plotly_click", ...)
+}
 exprDownloadHandler <- function(geneIdMap, dataset, meta){
   downloadHandler(
     filename = function(){
       paste0('exprdata-', dataset, '.csv')
     },
     content = function(file){
-      d <- event_data("plotly_click")
+      d <- click_event_data()
       expr <- NULL
       if (!is.null(d)){
         cell <- which(meta$sampleID==d$customdata)
@@ -80,8 +83,7 @@ exprDownloadHandler <- function(geneIdMap, dataset, meta){
 #' @importFrom plotly event_data
 plotly3d_click <- function(session){
   renderPrint({
-    d <- event_data("plotly_click",
-                    session = session)
+    d <- click_event_data(session = session)
     if (is.null(d)) "Click cell appear here" else {
       paste("Clicked cell", d$customdata)
     }

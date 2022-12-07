@@ -44,7 +44,9 @@ adminProcess <- function(expr, startMsg, endMsg){
   )
   get("progress", envir = .globals)$close()
   on.exit()
-  adminMsg(endMsg, "message")
+  if(!missing(endMsg)){
+    adminMsg(endMsg, "message")
+  }
 }
 
 askNamespace <- function(...){
@@ -116,7 +118,7 @@ updateRefById <- function(id, element, FUN, input, output, session){
     if(input[[element]]!=""){
       tryCatch(
         {
-          bibentry <- FUN(input[[element]])
+          suppressMessages(bibentry <- FUN(input[[element]]))
           if(is(bibentry, "bibentry")){
             updateTextAreaInput(session,
                                 id,

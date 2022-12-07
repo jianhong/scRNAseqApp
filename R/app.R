@@ -38,6 +38,7 @@ scRNAseqApp <- function(datafolder = "data",
                         ...){
   stopifnot(is(theme, "bs_theme"))
   .globals$datafolder <- datafolder
+  stopifnot(file.exists(datafolder))
   ## load banner
   banner <- base64_uri(banner)
   ## load default parameters
@@ -65,29 +66,38 @@ scRNAseqApp <- function(datafolder = "data",
         ### Tab: change dataset
         aboutUI(req, "about", banner, defaultDataset),
         homeUI(), ## fake home
-        ### Tab: cellInfo vs geneExpr on dimRed
-        cellInfoGeneExprUI("cellInfoGeneExpr"),
-        ### Tab: cellInfo vs cellInfo on dimRed
-        cellInfoCellInfoUI("cellInfoCellInfo"),
-        ### Tab: geneExpr vs geneExpr on dimRed
-        geneExprGeneExprUI("geneExprGeneExpr"),
-        ### Tab: Gene coexpression plot
-        coExprUI("coExpr"),
-        ### Tab: 3d Gene coexpression plot
-        coExpr3dUI("coExpr3d"),
-        ### Tab: subset gene expr
-        subsetGeneExprUI("subsetGeneExpr"),
-        ### Tab: violinplot / boxplot
-        plotVioBoxUI("vioBoxPlot"),
-        ### Tab: Proportion plot
-        plotProportionUI("proportion"),
-        ### Tab: Multiple gene expr
-        plotBubbleHeatmapUI("bubbleHeatmap"),
-        ### Tab: monocle
-        #plotMonocleUI("monocle"),
-        ### Tab: waffle
-        plotWaffleUI("waffle"),
-        subsetPlotsUI('explorer'),
+        navbarMenu(
+          "CellInfo/GeneExpr",
+          ### Tab: cellInfo vs geneExpr on dimRed
+          cellInfoGeneExprUI("cellInfoGeneExpr"),
+          ### Tab: cellInfo vs cellInfo on dimRed
+          cellInfoCellInfoUI("cellInfoCellInfo"),
+          ### Tab: subset gene expr
+          subsetGeneExprUI("subsetGeneExpr")
+        ),
+        navbarMenu(
+          "Co-expression",
+          ### Tab: geneExpr vs geneExpr on dimRed
+          geneExprGeneExprUI("geneExprGeneExpr"),
+          ### Tab: Gene coexpression plot
+          coExprUI("coExpr"),
+          ### Tab: 3d Gene coexpression plot
+          coExpr3dUI("coExpr3d")
+        ),
+        navbarMenu(
+          "Stats",
+          ### Tab: violinplot / boxplot
+          plotVioBoxUI("vioBoxPlot"),
+          ### Tab: Proportion plot
+          plotProportionUI("proportion"),
+          ### Tab: Multiple gene expr
+          plotBubbleHeatmapUI("bubbleHeatmap"),
+          ### Tab: monocle
+          #plotMonocleUI("monocle"),
+          ### Tab: waffle
+          plotWaffleUI("waffle")
+        ),
+        subsetPlotsUI('Explorer'),
         ### Tab: Login form
         #tabLogin(),
         loginUI(loginNavbarTitle, defaultDataset)

@@ -1,5 +1,6 @@
 # global variables
 .globals <- new.env(parent = emptyenv())
+.globals$theme <- bs_theme(bootswatch = 'lumen')
 # filenames
 .globals$datafolder <- "data"
 .globals$filenames <- list(
@@ -15,6 +16,7 @@
   monocle = "monocle3_pseudotime.rds",
   slingshot = "slingshot.rds"
 )
+.globals$counterFilename <- "www/counter.tsv"
 # for home search page, the groupColPattern
 .globals$groupColPattern <- 'group'
 # Colour palette
@@ -41,7 +43,10 @@
     c('#440154FF','#472D7BFF','#3B528BFF','#2C728EFF','#21908CFF',
       '#27AD81FF','#5DC863FF','#AADC32FF','#FDE725FF'))
 
-
+.globals$coExpColor <- c("Red (Gene1); Blue (Gene2)",
+                         "Orange (Gene1); Blue (Gene2)",
+                         "Red (Gene1); Green (Gene2)",
+                         "Green (Gene1); Blue (Gene2)")
 # Panel sizes
 .globals$pList1 <- c("Small"="400px", "Medium"="600px", "Large"="800px")
 .globals$pList2 <- c("Small"="500px", "Medium"="700px", "Large"="900px")

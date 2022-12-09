@@ -6,8 +6,11 @@ getDataSets <- function(appconf=NULL){
                               FUN = checkFiles,
                               FUN.VALUE = logical(1L))]
   if(!is.null(appconf)){
-    names(datasets) <- vapply(appconf, function(.ele) .ele$title,
+    n <- vapply(appconf, function(.ele) .ele$title,
                               FUN.VALUE = character(1))
+    if(length(n)==length(datasets)){
+      names(datasets) <- n
+    }
   }
   return(datasets)
 }

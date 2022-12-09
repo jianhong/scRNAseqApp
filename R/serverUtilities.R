@@ -390,11 +390,16 @@ getCoexpCol <- function(colorPairs, nGrid = 16, nPad = 2){
   } else {
     c10 <- c(0,255,0)
   }
-  if(cInp[2] == "Green (Gene2)"){
-    c01 <- c(0,255,0)
-  } else {
+  if(length(cInp)>1){
+    if(cInp[2] == "Green (Gene2)"){
+      c01 <- c(0,255,0)
+    } else {
+      c01 <- c(0,0,255)
+    }
+  }else{
     c01 <- c(0,0,255)
   }
+
   c00 <- c(217,217,217)
   c11 <- c10 + c01
   nTot <- getTotalNumber(nGrid, nPad)

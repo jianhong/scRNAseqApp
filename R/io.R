@@ -8,14 +8,14 @@ loadData <- function(dataSource){
   return(dataSource)
 }
 
-saveAppConf <- function(appconf, folder){
-  pf <- file.path(.globals$datafolder, folder)
+saveAppConf <- function(appconf){
+  pf <- file.path(.globals$datafolder, appconf$id)
   if(!file.exists(pf)) dir.create(pf, recursive = TRUE, showWarnings = FALSE)
   for(i in c("markers", "keywords")){
     appconf[[i]] <- appconf[[i]][!is.na(appconf[[i]])]
     appconf[[i]] <- appconf[[i]][appconf[[i]]!=""]
   }
-  saveData(appconf, folder, "appconf")
+  saveData(appconf, appconf$id, "appconf")
 }
 
 saveData <- function(data, folder, prefix){

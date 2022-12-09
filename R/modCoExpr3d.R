@@ -20,7 +20,7 @@ coExpr3dUI <- function(id){
         htmlOutput(NS0(id, "subPlotTitle", 1)),
         geneExprUI(id, 1),
         geneExprUI(id, 2),
-        geneCoExprPlotControlUI(id, 1)
+        geneCoExprPlotControlUI(id, 1, plotly = TRUE)
       ),
       column(
         9,

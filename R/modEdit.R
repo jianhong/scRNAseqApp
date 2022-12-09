@@ -295,8 +295,11 @@ editServer <- function(id) {
     observeEvent(input$reset, {
       adminProcess({
         global$sc1conf_data <- global$sc1conf_orig
+        conf_orig <- global$sc1conf_orig
+        conf_orig$fID <- formatfID_CL(conf_orig$fID, rev = TRUE)
+        conf_orig$fCL <- formatfID_CL(conf_orig$fCL, rev = TRUE)
         saveData(global$sc1meta, input$dir, "sc1meta")
-        saveData(global$sc1conf_orig, input$dir, "sc1conf")
+        saveData(conf_orig, input$dir, "sc1conf")
         saveData(global$appconf, input$dir, "appconf")
         saveData(global$sc1def, input$dir, "sc1def")
         if(global$locker){

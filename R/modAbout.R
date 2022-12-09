@@ -74,6 +74,7 @@ aboutServer <- function(id, dataSource, optCrt){
     bibentry <- getRef(dataSource()$dataset,
                        "entry",
                        getAppConf())
+    global <- reactiveValues(search_results=list(), evt=list())
     if(is(bibentry, "bibentry")){
       output$ref <- renderUI(tagList(
         if(!is.null(bibentry$abstract)){
@@ -108,17 +109,20 @@ aboutServer <- function(id, dataSource, optCrt){
         output$search_res <- renderUI(tags$div('searching...'))
         key_words <- strsplit(input$search, '\\s+')[[1]]
         updateSearch(key_words,
-                     output,
                      dataSource()$symbolDict,
-                     id,
-                     auth = dataSource()$auth)
+                     auth = dataSource()$auth,
+                     global = reactive({global}),
+                     id = id,
+                     input = input,
+                     output = output,
+                     session = session)
       }
     })
     output$dataset_counts <- renderText({
       length(getDataSets())
     })
     output$visitor_count <- renderText({
-      counter <- read.delim("www/counter.tsv", header = TRUE)
+      counter <- read.delim(.globals$counterFilename, header = TRUE)
       length(unique(counter$ip))
     })
     output$reference_count <- renderText({

@@ -30,6 +30,7 @@ Imports:
     grid,
     hdf5r,
     htmltools,
+    jsonlite,
     magrittr,
     methods,
     plotly,

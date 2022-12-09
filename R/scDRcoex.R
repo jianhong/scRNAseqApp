@@ -80,8 +80,10 @@ scDRcoex <- function(inpConf, inpMeta,
                           customdata=ggData$sampleID,
                    type="scatter3d",
                    mode="markers",
-                   color=ggData[[subGrpColname]],
-                   colors=ggCol,
+                   color=if(GeneExprDotCol=="Default"){ggData[[subGrpColname]]
+                     } else{ ggData$Z },
+                   colors=if(GeneExprDotCol=="Default") ggCol else
+                     .globals$cList[[GeneExprDotCol]],
                    text = paste0(gene1, ": ", ggData$val1, "\n",
                                  gene2, ": ", ggData$val2),
                    size = 1),

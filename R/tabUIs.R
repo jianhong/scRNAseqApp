@@ -100,17 +100,18 @@ cellInfoPlotControlUI <- function(id, postfix=1,
     )
   )
 }
-geneCoExprPlotControlUI <- function(id, postfix=1){
+geneCoExprPlotControlUI <- function(id, postfix=1, plotly=FALSE){
+  choices <- .globals$coExpColor
+  if(plotly){
+    choices <- c("Default", names(.globals$cList))
+  }
   tagList(
     actionButton(NS0(id, "CoExprtog", postfix), "Toggle plot controls"),
     conditionalPanel(
       condition = paste0("input.CoExprtog", postfix, " % 2 == 1"), ns=NS(id),
       radioButtons(NS0(id, "CoExprcol", postfix), "Colour:",
-                   choices = c("Red (Gene1); Blue (Gene2)",
-                               "Orange (Gene1); Blue (Gene2)",
-                               "Red (Gene1); Green (Gene2)",
-                               "Green (Gene1); Blue (Gene2)"),
-                   selected = "Red (Gene1); Blue (Gene2)"),
+                   choices = choices,
+                   selected = choices[1]),
       radioButtons(NS0(id, "CoExprord", postfix), "Plot order:",
                    choices = c("Max-1st", "Min-1st", "Original", "Random"),
                    selected = "Max-1st", inline = TRUE)
@@ -386,7 +387,12 @@ contextMenuGeneExprUI <- function(id, postfix=1,
   )
 }
 contextMenuCoExprUI <- function(id, postfix=1,
-                                colorNames=names(.globals$cList)){
+                                colorNames=names(.globals$cList),
+                                plotly = FALSE){
+  choices <- .globals$coExpColor
+  if(plotly){
+    choices <- c("Default", names(.globals$cList))
+  }
   tagList(
     actionButton(NS0(id, "CoExprtog", postfix), "",
                  icon = icon("bars"),
@@ -396,11 +402,8 @@ contextMenuCoExprUI <- function(id, postfix=1,
       conditionalPanel(
         condition = paste0("input.CoExprtog", postfix, " % 2 == 1"), ns=NS(id),
         radioButtons(NS0(id, "CoExprcol", postfix), "Colour:",
-                     choices = c("Red (Gene1); Blue (Gene2)",
-                                 "Orange (Gene1); Blue (Gene2)",
-                                 "Red (Gene1); Green (Gene2)",
-                                 "Green (Gene1); Blue (Gene2)"),
-                     selected = "Red (Gene1); Blue (Gene2)"),
+                     choices = choices,
+                     selected = choices[1]),
         radioButtons(NS0(id, "CoExprord", postfix), "Plot order:",
                      choices = c("Max-1st", "Min-1st", "Original", "Random"),
                      selected = "Max-1st", inline = TRUE)

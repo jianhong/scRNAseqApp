@@ -36,7 +36,6 @@ secureUI <- function(ui0, timeout=30){
       fab_position <- "bottom-right"
       admin <- query$admin
       language <- query$language
-      theme <- "shinymanager/css/readable.min.css"
       if(!is.null(language)){
         lan <- use_language(gsub('\"', "", language))
       }
@@ -46,7 +45,7 @@ secureUI <- function(ui0, timeout=30){
         args <- list()
         args$id <- "password"
         args$lan <- lan
-        pwd_ui <- fluidPage(theme = theme, tags$head(head_auth),
+        pwd_ui <- fluidPage(theme = .globals$theme, tags$head(head_auth),
                             do.call(pwd_ui, args),
                             shinymanager_where("password"),
                             shinymanager_language(lan$get_language()))
@@ -55,46 +54,53 @@ secureUI <- function(ui0, timeout=30){
       .tok$set_timeout(timeout)
       if (isTRUE(enable_admin) && .tok$is_admin(token) &
           identical(admin, "true") & !is.null(.tok$get_sqlite_path())) {
-        navbarPage(title = "Admin",
-                   theme = theme,
-                   header =
-                     tagList(tags$style(".navbar-header {margin-left: 16.66% !important;}"),
-                             fab_button(position = fab_position,
-                                        actionButton(inputId = ".shinymanager_logout",
-                                                     label = lan$get("Logout"),
-                                                     icon = icon("sign-out")),
-                                        actionButton(inputId = ".shinymanager_app",
-                                                     label = lan$get("Go to application"),
-                                                     icon = icon("share"))),
-                             shinymanager_where("admin")),
-                   tabPanel(title = tagList(icon("home"), lan$get("Home")),
-                            value = "home",
-                            getFromNamespace("admin_ui",
-                                             "shinymanager")("admin", lan),
-                            shinymanager_language(lan$get_language())),
-                   tabPanel(title = lan$get("Logs"),
-                            getFromNamespace("logs_ui",
-                                             "shinymanager")("logs", lan),
-                            shinymanager_language(lan$get_language())),
-                   tabPanel(title = 'UploadData',
-                            uploadUI("upload")),
-                   tabPanel(title = 'EditData',
-                            editUI("editdata")))
+        navbarPage(
+          title = "Admin",
+          theme = theme,
+          header =
+            tagList(
+              tags$style(".navbar-header {margin-left: 16.66% !important;}"),
+              fab_button(position = fab_position,
+                         actionButton(inputId = ".shinymanager_logout",
+                                      label = lan$get("Logout"),
+                                      icon = icon("sign-out")),
+                         actionButton(inputId = ".shinymanager_app",
+                                      label = lan$get("Go to application"),
+                                      icon = icon("share"))),
+                    shinymanager_where("admin")),
+          tabPanel(title = tagList(icon("home"), lan$get("Home")),
+                   value = "home",
+                   getFromNamespace("admin_ui",
+                                    "shinymanager")("admin", lan),
+                   shinymanager_language(lan$get_language())),
+          tabPanel(title = lan$get("Logs"),
+                   getFromNamespace("logs_ui",
+                                    "shinymanager")("logs", lan),
+                   shinymanager_language(lan$get_language())),
+          tabPanel(title = 'SiteInfo',
+                   webstatsUI('webstats')),
+          tabPanel(title = 'UploadData',
+                   uploadUI("upload")),
+          tabPanel(title = 'EditData',
+                   editUI("editdata")))
       } else {
         if (isTRUE(enable_admin) && .tok$is_admin(token) &&
             !is.null(.tok$get_sqlite_path())) {
-          menu <- fab_button(position = fab_position,
-                             actionButton(inputId = ".shinymanager_logout",
-                                          label = lan$get("Logout"), icon = icon("sign-out")),
-                             actionButton(inputId = ".shinymanager_admin",
-                                          label = lan$get("Administrator mode"),
-                                          icon = icon("cogs")))
+          menu <-
+            fab_button(position = fab_position,
+                       actionButton(inputId = ".shinymanager_logout",
+                                    label = lan$get("Logout"),
+                                    icon = icon("sign-out")),
+                       actionButton(inputId = ".shinymanager_admin",
+                                    label = lan$get("Administrator mode"),
+                                    icon = icon("cogs")))
         }
         else {
           if (isTRUE(enable_admin) && .tok$is_admin(token) &&
               is.null(.tok$get_sqlite_path())) {
-            warning("Admin mode is only available when using a SQLite database!",
-                    call. = FALSE)
+            warning(
+              "Admin mode is only available when using a SQLite database!",
+              call. = FALSE)
           }
           menu <- fab_button(position = fab_position,
                              actionButton(inputId = ".shinymanager_logout",

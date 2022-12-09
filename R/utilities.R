@@ -72,12 +72,17 @@ g_legend <- function(a.gplot){
 }
 
 # update search results
-updateSearch <- function(key_words, output, symbolDict, id, auth){
+updateSearch <- function(key_words, symbolDict,
+                         auth, global, page=1,
+                         id, input, output, session){
   key_words = gsub("[^a-zA-Z0-9._'\"*-]+", "", key_words)
   if(length(key_words)==1 &&
      nchar(key_words)>1 &&
-     isGene(key_words, symbolDict)){## check if it is a gene
-    search_res <- checkGene(key_words, id=id, auth = auth)
+     isGene(key_words, symbolDict, maxEvent = .globals$maxNumGene)){## check if it is a gene
+    search_res <- checkGene(key_words, symbolDict=symbolDict,
+                            auth = auth,
+                            global = global, page=page,
+                            id=id, input=input, output=output, session=session)
     output$search_res <-
       renderUI(search_res$UI)
     for(i in seq_along(search_res$PLOT)){
@@ -201,11 +206,14 @@ wafflePlot <- function(expres, id, plotname, numGene,
 #' @param auth for locked data
 #' @param id namespace
 #' @return Html tags for search results
-checkGene <- function(gene, id, auth){
-  appconfs <- getAppConf()
+checkGene <- function(gene, symbolDict,
+                      auth, global, page=1,
+                      id, input, output, session){
   exprs <- NULL
-  tryCatch({
-    exprs <- lapply(appconfs, function(.ele){
+  limit <- 5 # return 5 record
+  getGeneNamesByKeyword <- function(){
+    appconfs <- getAppConf()
+    gn <- lapply(appconfs, function(.ele){
       if(checkLocker(.ele$id)){
         if(!checkPrivilege(auth$privilege, .ele$id)){
           return(NULL)
@@ -215,59 +223,82 @@ checkGene <- function(gene, id, auth){
       if(isQuote(gene)){
         genenames <- geneIds[names(geneIds) %in% removeQuote(gene)]
       }else{
-        gene <- isAsterisk(gene, transform = TRUE)
-        genenames <- geneIds[grepl(gene, names(geneIds), ignore.case = TRUE)]
-        if(length(genenames)>.globals$limitNumGene){
-          genenames <- geneIds[grepl(paste0("^",gene),
-                                     names(geneIds),
-                                     ignore.case = TRUE)]
+        if(isAsterisk(gene)){
+          gene <- isAsterisk(gene, transform = TRUE)
+          genenames <- geneIds[grepl(gene, names(geneIds), ignore.case = TRUE)]
+          if(length(genenames)>.globals$limitNumGene){
+            genenames <- geneIds[grepl(paste0("^",gene),
+                                       names(geneIds),
+                                       ignore.case = TRUE)]
+          }
+        }else{
+          genenames <- geneIds[tolower(names(geneIds)) %in% tolower(gene)]
         }
       }
-      if(length(genenames)>0){
-        genenames <- genenames[seq.int(min(length(genenames),
-                                           .globals$limitNumGene))]
-        config <- readData("sc1conf", .ele$id)
+      return(genenames)
+    })
+    keep <- lengths(gn)>0
+    return(list(appconfs=appconfs[keep], genenames=gn[keep]))
+  }
+  tryCatch({
+    global <- global()
+    if(is.null(global$search_results[[gene]])){
+      gn <- getGeneNamesByKeyword()
+      global$search_results[[gene]] <-
+        list(genenames= gn$genenames,
+             appconfs = gn$appconfs,
+             page=1,
+             total=ceiling(length(gn$genenames)/limit))
+    }
+    global$search_results[[gene]]$page <- page
+    from <- limit*(page-1)+1
+    to <- min(from+limit-1, length(global$search_results[[gene]]$genenames))
+    if(to>=from){
+      genenames <- global$search_results[[gene]]$genenames[from:to]
+      appconfs <- global$search_results[[gene]]$appconfs[from:to]
+
+      exprs <- mapply(function(.appconfs, .genenames){
+        .genenames <- .genenames[seq.int(min(length(.genenames),
+                                             .globals$limitNumGene))]
+        config <- readData("sc1conf", .appconfs$id)
         groupName <- getCelltypeCol(config)
         ggData <-
-          read_exprs(.ele$id,
-                     genenames,
-                     readData("sc1meta", .ele$id),
+          read_exprs(.appconfs$id,
+                     .genenames,
+                     readData("sc1meta", .appconfs$id),
                      config, groupName, valueOnly=FALSE)
         ggData[ggData$val < 0]$val <- 0
         #waffle plot
-        plotname = paste0('search-plot', .ele$id)
+        plotname = paste0('search-plot', .appconfs$id)
         groupCol <- getCelltypeCol(config,
                                    celltypePattern =
                                      .globals$groupColPattern)
-        if(!is.null(.ele$groupCol)){
-          groupCol <- .ele$groupCol
+        if(!is.null(.appconfs$groupCol)){
+          groupCol <- .appconfs$groupCol
         }
         if(is.null(groupCol)){
           return(NULL)
         }
         wp <- wafflePlot(ggData, id,
                          plotname,
-                         length(genenames),
+                         length(.genenames),
                          groupCol = groupCol)
         list(
           UI = tags$li(
-            tags$a(href=paste0('?data=', .ele$id, '&gene=',
-                               paste(names(genenames), collapse=";")),
-                   .ele$title),
+            tags$a(href=paste0('?data=', .appconfs$id, '&gene=',
+                               paste(names(.genenames), collapse=";")),
+                   .appconfs$title),
             wp$UI
           ),
           PLOT = wp$PLOT,
           NAME = plotname
         )
-      }else{
-        NULL
-      }
-    })
+      }, appconfs, genenames, SIMPLIFY = FALSE)
+    }
   },
   error = function(e){
     message(e)
   })
-
   exprs <- exprs[lengths(exprs)>0]
   if(length(exprs)==0){
     return(list(UI=tagList(), PLOT=NULL))
@@ -279,9 +310,47 @@ checkGene <- function(gene, id, auth){
     exprs <- lapply(exprs, function(.ele){
       .ele$UI
     })
+    if(length(global$evt))
+      lapply(global$evt, function(.ele){
+        if(!is.null(.ele)){
+          .ele$destroy()
+        }
+      })
+    if(!is.null(global$search_results[[gene]])){
+      if(global$search_results[[gene]]$total>1){
+        lapply(seq.int(global$search_results[[gene]]$total),
+               function(.id){
+                 if(.id!=global$search_results[[gene]]$page){
+                   global$evt[[local({.id})]] <-
+                     observeEvent(input[[paste0("page", .id)]],{
+                       updateSearch(gene,
+                                    symbolDict,
+                                    auth,
+                                    reactive({global}),
+                                    page = local({.id}),
+                                    id, input, output, session)
+                     }, ignoreInit = TRUE, once = TRUE)
+                 }
+               })
+      }
+    }
     return(
       list(
-        UI=tags$ul(exprs),
+        UI=tagList(
+          ##pagination
+          div(style="padding-left:2rem;",
+          if(global$search_results[[gene]]$total>1){
+            lapply(seq.int(global$search_results[[gene]]$total), function(.id){
+              if(.id!=global$search_results[[gene]]$page){
+                tags$span(actionLink(NS(id, paste0("page", .id)),
+                                    paste("page", .id),
+                                    `data-value`=.id))
+              }else{
+                tags$em(paste("page", .id))
+              }
+            })
+          }),
+          tags$ul(exprs)),
         PLOT=plots
         )
       )
@@ -290,7 +359,7 @@ checkGene <- function(gene, id, auth){
 
 # vistor plots
 updateVisitor <- function(input, output, session){
-  conterFilename <- "www/counter.tsv"
+  conterFilename <- .globals$counterFilename
   ## update visitor stats
   update_visitor <- function(){
     req(input$remote_addr)

@@ -10,7 +10,7 @@ scCoexp3dUI <- function(id, postfix=1){
                                      choices = NULL,
                                      width = "100px")
                          ),
-                       menuUI= contextMenuCoExprUI(id),
+                       menuUI= contextMenuCoExprUI(id, plotly=TRUE),
                        contentUI= tagList(
                          uiOutput(NS0(id, "GeneExpr3Doup.ui", 1)),
                          downloadButton(NS(id, 'downloadExpr'),

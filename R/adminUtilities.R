@@ -179,7 +179,7 @@ updateAppConf <- function(input, global){
                      keywords = input$keywords)
   if(!is.null(input$dir)){
     if(input$dir!=""){
-      saveAppConf(appconf, input$dir)
+      saveAppConf(appconf)
     }
   }
 }

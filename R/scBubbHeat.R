@@ -1,12 +1,13 @@
 # Plot gene expression bubbleplot / heatmap
 #' @importFrom stats as.dendrogram dist hclust quantile as.formula
 #' @importFrom ComplexHeatmap merge_dendrogram Heatmap draw rowAnnotation
-#' HeatmapAnnotation
+#' HeatmapAnnotation Legend
 #' @importFrom circlize colorRamp2
 #' @importFrom grid gpar grid.circle unit.c
 #' @importFrom hdf5r H5File
 #' @importFrom data.table rbindlist dcast.data.table data.table :=
-scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, grpKey, grpVal, inpGrp1c, inpPlt,
+scBubbHeat <- function(inpConf, inpMeta, inp,
+                       inpGrp, grpKey, grpVal, inpGrp1c, inpPlt,
                        dataset, inpGene, inpScl, inpRow, inpCol,
                        inpcols, flipXY,
                        plotAllCells = FALSE, save = FALSE,
@@ -154,7 +155,7 @@ scBubbHeat <- function(inpConf, inpMeta, inp, inpGrp, grpKey, grpVal, inpGrp1c, 
     }
     rect_gp <- gpar(type = "none")
   }
-
+  saveRDS(as.list(environment()), "tmp.rds")
   if(flipXY){
     ggMat <- t(ggMat)
     if(plotAllCells){

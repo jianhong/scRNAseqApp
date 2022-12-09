@@ -136,7 +136,7 @@ createDataSet <- function(appconf,
                  default.multigene = markers)
 
   .globals$datafolder <- datafolder
-  saveAppConf(appconf, pf)
+  saveAppConf(appconf)
   ## save misc data
   for(slot in names(Misc(seu))){
     writeMisc(Misc(seu, slot), appconf$id, slot)

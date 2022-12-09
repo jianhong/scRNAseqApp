@@ -37,6 +37,7 @@ scRNAseqApp <- function(datafolder = "data",
                         use_bs_themer = FALSE,
                         ...){
   stopifnot(is(theme, "bs_theme"))
+  .globals$theme <- theme
   .globals$datafolder <- datafolder
   stopifnot(file.exists(datafolder))
   ## load banner
@@ -52,7 +53,7 @@ scRNAseqApp <- function(datafolder = "data",
   ui0 <- function(req){
     fluidPage(
       ### theme
-      theme = theme,
+      theme = .globals$theme,
       navbarPage(
         title = NULL,
         windowTitle = windowTitle,
@@ -97,7 +98,7 @@ scRNAseqApp <- function(datafolder = "data",
           ### Tab: waffle
           plotWaffleUI("waffle")
         ),
-        subsetPlotsUI('Explorer'),
+        subsetPlotsUI('explorer'),
         ### Tab: Login form
         #tabLogin(),
         loginUI(loginNavbarTitle, defaultDataset)
@@ -112,7 +113,7 @@ scRNAseqApp <- function(datafolder = "data",
     session$sendCustomMessage("load_key", "defaultDataset")
     ## set theme
     if(is.null(getShinyOption("bootstrapTheme"))){
-      shinyOptions("bootstrapTheme"=theme)
+      shinyOptions("bootstrapTheme"=.globals$theme)
     }
     if(use_bs_themer && is(getShinyOption("bootstrapTheme"), "bs_theme")){
       bs_themer()
@@ -126,8 +127,8 @@ scRNAseqApp <- function(datafolder = "data",
     return('<div class=\"create\"><strong>' + '</strong></div>');
     } }"
     dataSource <- reactiveValues(
-      available_datasets=datasets, # all available datasets, need to change to interval values
-      dataset=defaultDataset, # currentdataset
+      available_datasets=datasets, # all available datasets
+      dataset=defaultDataset, # current dataset
       appconf=appconf, # all data configs, used for search
       data_types=data_types, # data type
       cell=NULL,
@@ -136,6 +137,7 @@ scRNAseqApp <- function(datafolder = "data",
       sc1def=NULL, # def for current sc data
       sc1gene=NULL, # gene for current sc data
       sc1meta=NULL, # meta for current sc data
+      search_results=NULL, #search_cache
       Logged=FALSE, # user logged
       terms=.globals$terms[["scRNAseq"]], # tab UI for scRNAseq/scATACseq
       symbolDict=NULL, # gene symbol dictionary
@@ -169,9 +171,15 @@ scRNAseqApp <- function(datafolder = "data",
                  })
     ## login
     dataSource$auth <- loginServer(input, output, session)
-    ## manager
-    uploadServer("upload")
-    editServer("editdata")
+    observe({
+      if(!is.null(isolate(dataSource$auth$admin))){
+        if(isolate(dataSource$auth$admin)){
+          webstatsServer("webstats", session)
+          uploadServer("upload")
+          editServer("editdata")
+        }
+      }
+    })
     ## update visitor stats
     updateVisitor(input, output, session)
     ## parse query strings, and lood old session

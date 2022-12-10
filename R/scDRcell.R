@@ -20,7 +20,8 @@ scDRcell <- function(inpConf, inpMeta,
                      keepXYlables, inplab,
                      dataset, geneIdMap,
                      valueFilterKey, valueFilterCutoff,
-                     inpSlingshot, slingshotFilename){
+                     inpSlingshot, slingshotFilename,
+                     ...){
   subFilterColname <- 'subValue'
   subGrpColname <- 'sub'
   valColname <- 'val'

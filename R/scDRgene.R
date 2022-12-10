@@ -14,7 +14,8 @@ scDRgene <- function(inpConf, inpMeta,
                      plotAspectRatio, keepXYlables,
                      inpPlt="Dotplot", inpXlim, inpColRange=0,
                      infoFilterKey, infoFilterVal,
-                     valueFilterKey, valueFilterCutoff){
+                     valueFilterKey, valueFilterCutoff,
+                     ...){
   if(gene1[1]==""){
     return(ggplot())
   }

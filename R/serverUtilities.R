@@ -257,26 +257,35 @@ updateSubsetGeneExprPlot <-
 
 # sub module related
 updateSubModulePlotUI <-
-  function(postfix=1, pid, id, input, output, session, plotX, height, ...){
-    output[[paste0("GeneExproup", postfix)]] <- renderPlot({ plotX() })
-    output[[paste0("GeneExproup.ui", postfix)]] <- renderUI({
-      plotOutput(NS0(NS(pid, id), "GeneExproup", postfix),
-                 height = height)
-    })
-    output[[paste0("GeneExproup.pdf", postfix)]] <-
-      plotsDownloadHandler(
-        "pdf",
-        width=input[[paste0("GeneExproup.w", postfix)]],
-        height=input[[paste0("GeneExproup.h", postfix)]],
-        plotX(),
-        ...)
-    output[[paste0("GeneExproup.png", postfix)]] <-
-      plotsDownloadHandler(
-        "png",
-        width=input[[paste0("GeneExproup.w", postfix)]],
-        height=input[[paste0("GeneExproup.h", postfix)]],
-        plotX(),
-        ...)
+  function(postfix=1, pid, id, input, output, session,
+           interactive, plotX, height, ...){
+    if(isTRUE(interactive)){
+      output[[paste0("GeneExproup", postfix)]] <- renderPlotly({ plotX() })
+      output[[paste0("GeneExproup.ui", postfix)]] <- renderUI({
+        plotlyOutput(NS0(NS(pid, id), "GeneExproup", postfix),
+                     height = height)
+      })
+    }else{
+      output[[paste0("GeneExproup", postfix)]] <- renderPlot({ plotX() })
+      output[[paste0("GeneExproup.ui", postfix)]] <- renderUI({
+        plotOutput(NS0(NS(pid, id), "GeneExproup", postfix),
+                   height = height)
+      })
+      output[[paste0("GeneExproup.pdf", postfix)]] <-
+        plotsDownloadHandler(
+          "pdf",
+          width=input[[paste0("GeneExproup.w", postfix)]],
+          height=input[[paste0("GeneExproup.h", postfix)]],
+          plotX(),
+          ...)
+      output[[paste0("GeneExproup.png", postfix)]] <-
+        plotsDownloadHandler(
+          "png",
+          width=input[[paste0("GeneExproup.w", postfix)]],
+          height=input[[paste0("GeneExproup.h", postfix)]],
+          plotX(),
+          ...)
+    }
   }
 
 subModuleMenuObservor <- function(id, input, p_session, dataSource,
@@ -293,6 +302,10 @@ subModuleMenuObservor <- function(id, input, p_session, dataSource,
   observeEvent(input$resize, {
     updateTextInput(p_session, "resizePlotModule", value = id)
   })
+  observeEvent(input$interactive1, {
+    updateCheckboxInput(p_session, "chg2DPlotModule",
+                        value = input$interactive1)
+  }, ignoreInit = TRUE)
   if(is.null(p_session$userData$defaults[[dataSource()$dataset]][[id]]))
     p_session$userData$defaults[[dataSource()$dataset]][[id]] <- list()
   lapply(observeEvtList, function(evt){

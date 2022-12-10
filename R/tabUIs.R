@@ -334,7 +334,9 @@ contextMenuCellInfoUI <- function(id, postfix=1,
         checkboxInput(NS0(id, "CellInfolab", postfix),
                       "Show cell info labels", value = TRUE),
         checkboxInput(NS0(id, "CellInfoslingshot", postfix),
-                      "Show lineages", value = TRUE)
+                      "Show lineages", value = TRUE),
+        checkboxInput(NS0(id, "interactive", postfix),
+                      label = "plot by plotly (BETA)")
       )
     )
   )
@@ -362,6 +364,8 @@ contextMenuGeneExprUI <- function(id, postfix=1,
                        choices = c("Max-1st", "Min-1st",
                                    "Original", "Random"),
                        selected = "Max-1st", inline = TRUE),
+          checkboxInput(NS0(id, "interactive", postfix),
+                        label = "plot by plotly (BETA)"),
           actionButton(NS0(id, "GeneExprrgb", postfix),
                        "Manually set max color value",
                        inline = TRUE),
@@ -406,7 +410,9 @@ contextMenuCoExprUI <- function(id, postfix=1,
                      selected = choices[1]),
         radioButtons(NS0(id, "CoExprord", postfix), "Plot order:",
                      choices = c("Max-1st", "Min-1st", "Original", "Random"),
-                     selected = "Max-1st", inline = TRUE)
+                     selected = "Max-1st", inline = TRUE),
+        checkboxInput(NS0(id, "interactive", postfix),
+                      label = "plot by plotly (BETA)")
       )
     )
   )

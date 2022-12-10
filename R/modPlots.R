@@ -36,16 +36,19 @@ subsetPlotsUI <- function(id){
                   selected = 'cell info')
       ),
       column(
-        4,
+        2,
       selectInput(ns('moduleWidth'), "Module width",
                   choices = c('half', 'full'),
                   selected = 'half')
       ),
       column(
-        4,
+        6,
         div(
           actionButton(ns("newModule"), "New Module",
                        icon = icon('plus'),
+                       class="align-action-button"),
+          actionButton(ns("destroyModule"), "Remove All",
+                       icon = icon('minus'),
                        class="align-action-button"),
           div(style='display: none;',
               textInput(ns("removePlotModule"), '', value='', width=0)),
@@ -54,7 +57,9 @@ subsetPlotsUI <- function(id){
           div(style='display: none;',
               textInput(ns("movedownPlotModule"), '', value='', width=0)),
           div(style='display: none;',
-              textInput(ns("resizePlotModule"), '', value='', width=0))
+              textInput(ns("resizePlotModule"), '', value='', width=0)),
+          div(style='display: none;',
+              checkboxInput(ns("chg2DPlotModule"), '', value=FALSE, width=0))
         )
       )
     ),
@@ -86,7 +91,8 @@ subsetPlotsServer <- function(id, dataSource, optCrt){
       containerIds = c(),
       containerUIs = list(),
       containerWidth = list(),
-      containerServers = list()
+      containerServers = list(),
+      Idpointer = 0
     )
     if(is.null(session$userData$defaults))
       session$userData$defaults <- list()
@@ -143,7 +149,8 @@ subsetPlotsServer <- function(id, dataSource, optCrt){
                          closeButton = TRUE,
                          type = "warning")
       }else{
-        ns0 <- paste0('plot_', length(globals$containerIds)+1)
+        globals$Idpointer <- globals$Idpointer + 1
+        ns0 <- paste0('plot_', globals$Idpointer)
         globals$containerIds <- c(globals$containerIds, ns0)
         globals$containerWidth[[ns0]] <- isolate(input$moduleWidth)
         globals$containerUIs[[ns0]] <- switch(
@@ -169,11 +176,25 @@ subsetPlotsServer <- function(id, dataSource, optCrt){
         updatePlotModules()
       }
     })
+    observeEvent(input$destroyModule, {
+      lapply(globals$containerUIs, function(ui){
+        removeUI(ui, immediate = TRUE, session = session)
+      })
+      globals$containerIds <- c()
+      globals$containerUIs <- list()
+      globals$containerWidth <- list()
+      globals$containerServers <- list()
+      globals$Idpointer <- 0
+      updatePlotModules()
+    })
     observeEvent(input$removePlotModule, {
       if(input$removePlotModule!=""){
         globals$containerIds <-
           globals$containerIds[globals$containerIds!=input$removePlotModule]
         globals$containerWidth[[input$removePlotModule]] <- NULL
+        removeUI(globals$containerUIs[[input$removePlotModule]],
+                 immediate = TRUE,
+                 session = session)
         globals$containerUIs[[input$removePlotModule]] <- NULL
         updatePlotModules()
       }
@@ -211,6 +232,12 @@ subsetPlotsServer <- function(id, dataSource, optCrt){
           "full", "half"
         )
         updatePlotModules()
+      }
+    })
+    observeEvent(input$chg2DPlotModule, {
+      if(input$chg2DPlotModule){
+        updatePlotModules()
+        updateCheckboxInput(session, "chg2DPlotModule", value = FALSE)
       }
     })
   })

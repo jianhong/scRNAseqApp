@@ -17,7 +17,7 @@ scInfoServer <- function(pid, id, dataSource, optCrt,
     }else{
       defaults <- p_session$userData$defaults[[dataSource()$dataset]][[id]]
     }
-    updateSelectInput(session, cellInfoLabel, "Cell information:",
+    updateSelectInput(session, cellInfoLabel, "Cell info:",
                       choices = dataSource()$sc1conf$UI,
                       selected = defaults[[cellInfoLabel]])
     subModuleMenuObservor(id, input, p_session, dataSource,
@@ -25,7 +25,8 @@ scInfoServer <- function(pid, id, dataSource, optCrt,
                             paste0("CellInfocol", postfix),
                             paste0("CellInfoord", postfix),
                             paste0("CellInfolab", postfix),
-                            paste0("CellInfoslingshot", postfix)))
+                            paste0("CellInfoslingshot", postfix),
+                            paste0("interactive", postfix)))
     ## plot
     plotX <- reactive({
       scDRcell(
@@ -50,9 +51,11 @@ scInfoServer <- function(pid, id, dataSource, optCrt,
         inpSlingshot = input[[paste0("CellInfoslingshot", postfix)]],
         slingshotFilename = file.path(.globals$datafolder,
                                       dataSource()$dataset,
-                                      .globals$filenames[["slingshot"]]))
+                                      .globals$filenames[["slingshot"]]),
+        interactive=input[[paste0('interactive', postfix)]])
     })
     updateSubModulePlotUI(postfix, pid, id, input, output, session,
+                          input[[paste0('interactive', postfix)]],
                           plotX,
                           .globals$pList1[p_input$GeneExprpsz],
                           dataSource()$dataset,

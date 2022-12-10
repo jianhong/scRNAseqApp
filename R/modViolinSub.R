@@ -63,6 +63,7 @@ scVlnServer <- function(pid, id, dataSource, optCrt,
         p_input$GeneExprfsz)
     })
     updateSubModulePlotUI(postfix, pid, id, input, output, session,
+                          FALSE,
                           plot1,
                           .globals$pList1[p_input$GeneExprpsz],
                           dataSource()$dataset,

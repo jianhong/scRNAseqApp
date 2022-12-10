@@ -5,11 +5,13 @@
 #' @importFrom circlize colorRamp2
 #' @importFrom grid gpar grid.circle unit.c
 #' @importFrom hdf5r H5File
-#' @importFrom data.table rbindlist dcast.data.table data.table :=
+#' @importFrom data.table rbindlist dcast.data.table data.table := uniqueN
+#' @importFrom ggdendro dendro_data
+#' @importFrom gridExtra arrangeGrob grid.arrange
 scBubbHeat <- function(inpConf, inpMeta, inp,
                        inpGrp, grpKey, grpVal, inpGrp1c, inpPlt,
                        dataset, inpGene, inpScl, inpRow, inpCol,
-                       inpcols, flipXY,
+                       inpcols, inpfsz, flipXY,
                        plotAllCells = FALSE, save = FALSE,
                        colorBreaks,
                        legendTitle="expression",
@@ -90,6 +92,7 @@ scBubbHeat <- function(inpConf, inpMeta, inp,
     colRange1 <- colRange1[c(-3)]
     return(colRange1)
   }
+
   if(!is.na(colorBreaks[1])){
     if(colorBreaks[1]<colRange[1]) colorBreaks[1] <- colRange[1]
     if(colorBreaks[2]>colRange[2]) colorBreaks[2] <- colRange[2]
@@ -114,7 +117,6 @@ scBubbHeat <- function(inpConf, inpMeta, inp,
         colors = .globals$cList[[inpcols]])
     }
   }
-
   # reshape the data to matrix
   if(plotAllCells){
     ggData$grpBy <- paste(ggData$grpBy, ggData$sampleID, sep="__")
@@ -142,25 +144,101 @@ scBubbHeat <- function(inpConf, inpMeta, inp,
     cluster_columns <- as.dendrogram(hclust(dist(t(ggMat))))
   }
 
+  if(inpPlt == "Bubbleplot"){## giveup complexHeatmap becase the size if not fixed
+    axis_fontsize <-
+      round(min(c(500/nrow(geneList), 12), na.rm=TRUE), digits = 1)
+    bulb_pointsize <- min(c(round(400/nrow(geneList)), 8), na.rm=TRUE)
+    if(inpRow){
+      hcRow <- dendro_data(cluster_rows)
+      ggRow <- ggplot() + coord_flip() +
+        geom_segment(data = hcRow$segments,
+                     aes(x=hcRow$segments$x,
+                         y=hcRow$segments$y,
+                         xend=hcRow$segments$xend,
+                         yend=hcRow$segments$yend)) +
+        scale_y_continuous(breaks = rep(0, uniqueN(ggData$grpBy)),
+                           labels = unique(ggData$grpBy), expand = c(0, 0)) +
+        scale_x_continuous(breaks = seq_along(hcRow$labels$label),
+                           labels = hcRow$labels$label, expand = c(0, 0.5)) +
+        sctheme(base_size = .globals$sList[inpfsz]) +
+        theme(axis.title = element_blank(), axis.line = element_blank(),
+              axis.ticks = element_blank(), axis.text.y = element_blank(),
+              axis.text.x = element_text(color="white", angle = 45, hjust = 1))
+      ggData$geneName <- factor(ggData$geneName, levels = hcRow$labels$label)
+    } else {
+      ggData$geneName <- factor(ggData$geneName, levels = rev(geneList$gene))
+    }
+    if(inpCol){
+      hcCol = dendro_data(cluster_columns)
+      ggCol = ggplot() +
+        geom_segment(data = hcCol$segments,
+                     aes(x=hcCol$segments$x,
+                         y=hcCol$segments$y,
+                         xend=hcCol$segments$xend,
+                         yend=hcCol$segments$yend)) +
+        scale_x_continuous(breaks = seq_along(hcCol$labels$label),
+                           labels = hcCol$labels$label, expand = c(0.05, 0)) +
+        scale_y_continuous(breaks = rep(0, uniqueN(ggData$geneName)),
+                           labels = unique(ggData$geneName), expand=c(0,0)) +
+        sctheme(base_size = axis_fontsize, Xang = 45, XjusH = 1) +
+        theme(axis.title = element_blank(), axis.line = element_blank(),
+              axis.ticks = element_blank(), axis.text.x = element_blank(),
+              axis.text.y = element_text(color = "white"))
+      ggData$grpBy = factor(ggData$grpBy, levels = hcCol$labels$label)
+    }else{
+      ggData$grpBy <-
+        factor(as.character(ggData$grpBy),
+               levels=sortLevels(sort(as.character(unique(ggData$grpBy)))))
+    }
+    ggOut <- ggplot(ggData, aes(ggData$grpBy, ggData$geneName,
+                               color = ggData$val, size = ggData$prop)) +
+      geom_point() +
+      sctheme(base_size = .globals$sList[inpfsz], Xang = 45, XjusH = 1) +
+      scale_x_discrete(expand = c(0.05, 0)) +
+      scale_y_discrete(expand = c(0, 0.5)) +
+      scale_size_continuous("proportion", range = c(0, bulb_pointsize),
+                            limits = c(0, 1),
+                            breaks = c(0.00,0.25,0.50,0.75,1.00)) +
+      scale_color_gradientn(legendTitle, limits = colRange,
+                            colours = .globals$cList[[inpcols]]) +
+      guides(color = guide_colorbar(barwidth = 15)) +
+      theme(axis.title = element_blank(),
+            axis.text.y=element_text(size=axis_fontsize),
+            legend.box = "vertical")
+    ggLeg <- g_legend(ggOut)
+    ggOut <- ggOut + theme(legend.position = "none")
+    if(flipXY){
+      ggOut <- ggOut + coord_flip()
+      ggOut <-
+        grid.arrange(ggOut, ggLeg, heights = c(7,2),
+                     layout_matrix = rbind(c(1),c(2)))
+    }else{
+      FUN <- if(save) arrangeGrob else grid.arrange
+      if(inpRow & inpCol){
+        ggOut <- FUN(ggOut, ggLeg, ggCol, ggRow, widths = c(7,1),
+                     heights = c(1,7,2),
+                     layout_matrix = rbind(c(3,NA),c(1,4),c(2,NA)))
+      } else if(inpRow){
+        ggOut <- FUN(ggOut, ggLeg, ggRow, widths = c(7,1), heights = c(7,2),
+                     layout_matrix = rbind(c(1,3),c(2,NA)))
+      } else if(inpCol){
+        ggOut <- FUN(ggOut, ggLeg, ggCol, heights = c(1,7,2),
+                     layout_matrix = rbind(c(3),c(1),c(2)))
+      } else {
+        ggOut <- FUN(ggOut, ggLeg, heights = c(7,2),
+                     layout_matrix = rbind(c(1),c(2)))
+      }
+    }
+    return(ggOut)
+  }
+
   layer_fun <- NULL
   rect_gp <- gpar(col = NA)
-  if(inpPlt == "Bubbleplot"){
-    ggProp <- reshapeMat(value.var = "prop")
-    layer_fun <- function(j, i, x, y, width, height, fill) {
-      r <- min(unit.c(width, height), na.rm = TRUE)
-      idx <- i+(j-1)*ncol(ggProp)
-      g_prop <- as.vector(ggProp)[idx]
-      grid.circle(x = x, y = y, r = abs(g_prop)/2 * r,
-                  gp = gpar(fill = fill, col = NA))
-    }
-    rect_gp <- gpar(type = "none")
-  }
-  saveRDS(as.list(environment()), "tmp.rds")
   if(flipXY){
     ggMat <- t(ggMat)
     if(plotAllCells){
-      group <- ggData$ident[match(rownames(ggMat),
-                                  ggData$grpBy)]
+      group <- ggData[[inpGrp]][
+        match(rownames(ggMat), ggData$grpBy)]
       anno <- rowAnnotation(group=group, show_legend = FALSE,
                                 show_annotation_name = FALSE)
       ht_list <- Heatmap(ggMat,
@@ -199,8 +277,8 @@ scBubbHeat <- function(inpConf, inpMeta, inp,
     }
   }else{
     if(plotAllCells){
-      group <- ggData$ident[match(colnames(ggMat),
-                                  ggData$grpBy)]
+      group <- ggData[[inpGrp]][
+        match(colnames(ggMat), ggData$grpBy)]
       anno <- HeatmapAnnotation(group=group, show_legend = FALSE,
                                 show_annotation_name = FALSE)
       ht_list <- Heatmap(ggMat,

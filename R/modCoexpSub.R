@@ -40,7 +40,8 @@ scCoexpServer <- function(pid, id, dataSource, optCrt,
 
     subModuleMenuObservor(id, input, p_session, dataSource,
                           c("GeneName1", "GeneName2",
-                            "CoExprcol1", "CoExprord1"))
+                            "CoExprcol1", "CoExprord1",
+                            paste0("interactive", postfix)))
     ## plot
     plot1 <- reactive({
       scDRcoex(
@@ -65,6 +66,7 @@ scCoexpServer <- function(pid, id, dataSource, optCrt,
         valueFilterCutoff=p_input$filterCellVal)
     })
     updateSubModulePlotUI(postfix, pid, id, input, output, session,
+                          input[[paste0('interactive', postfix)]],
                           plot1,
                           .globals$pList1[p_input$GeneExprpsz],
                           dataSource()$dataset,

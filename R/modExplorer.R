@@ -25,21 +25,27 @@ subsetPlotsUI <- function(id){
     ),
     fluidRow(
       column(
-        4,
-      selectInput(ns('moduleName'), "Module type",
-                  choices = c('cell info',
-                              'gene expression',
-                              'proportion',
-                              'violin/box plot',
-                              'co-expression',
-                              'co-expression 3d'),
-                  selected = 'cell info')
+        2,
+        selectInput(ns('moduleName'), "Module type",
+                    choices = c('cell info',
+                                'gene expression',
+                                'proportion',
+                                'violin/box plot',
+                                'co-expression',
+                                'co-expression 3d'),
+                    selected = 'cell info')
       ),
       column(
         2,
-      selectInput(ns('moduleWidth'), "Module width",
-                  choices = c('half', 'full'),
-                  selected = 'half')
+        selectInput(ns('moduleWidth'), "Module width",
+                    choices = c('half', 'full'),
+                    selected = 'half')
+      ),
+      column(
+        2,
+        selectInput(ns('interactive'), label = "Interactive",
+                    choices = c('No', 'Yes'),
+                    selected = 'No')
       ),
       column(
         6,
@@ -57,9 +63,7 @@ subsetPlotsUI <- function(id){
           div(style='display: none;',
               textInput(ns("movedownPlotModule"), '', value='', width=0)),
           div(style='display: none;',
-              textInput(ns("resizePlotModule"), '', value='', width=0)),
-          div(style='display: none;',
-              checkboxInput(ns("chg2DPlotModule"), '', value=FALSE, width=0))
+              textInput(ns("resizePlotModule"), '', value='', width=0))
         )
       )
     ),
@@ -89,6 +93,7 @@ subsetPlotsServer <- function(id, dataSource, optCrt){
     ## plot region
     globals <- reactiveValues(
       containerIds = c(),
+      containerInteractive = list(),
       containerUIs = list(),
       containerWidth = list(),
       containerServers = list(),
@@ -140,7 +145,8 @@ subsetPlotsServer <- function(id, dataSource, optCrt){
           dataSource,
           optCrt,
           input,
-          session)
+          session,
+          globals$containerInteractive[[cid]])
       })
     }
     observeEvent(input$newModule, {
@@ -152,6 +158,7 @@ subsetPlotsServer <- function(id, dataSource, optCrt){
         globals$Idpointer <- globals$Idpointer + 1
         ns0 <- paste0('plot_', globals$Idpointer)
         globals$containerIds <- c(globals$containerIds, ns0)
+        globals$containerInteractive[[ns0]] <- isolate(input$interactive=='Yes')
         globals$containerWidth[[ns0]] <- isolate(input$moduleWidth)
         globals$containerUIs[[ns0]] <- switch(
           input$moduleName,
@@ -181,20 +188,18 @@ subsetPlotsServer <- function(id, dataSource, optCrt){
         removeUI(ui, immediate = TRUE, session = session)
       })
       globals$containerIds <- c()
+      globals$containerInteractive <- list()
       globals$containerUIs <- list()
       globals$containerWidth <- list()
       globals$containerServers <- list()
-      globals$Idpointer <- 0
       updatePlotModules()
     })
     observeEvent(input$removePlotModule, {
       if(input$removePlotModule!=""){
         globals$containerIds <-
           globals$containerIds[globals$containerIds!=input$removePlotModule]
+        globals$containerInteractive[[input$removePlotModule]] <- NULL
         globals$containerWidth[[input$removePlotModule]] <- NULL
-        removeUI(globals$containerUIs[[input$removePlotModule]],
-                 immediate = TRUE,
-                 session = session)
         globals$containerUIs[[input$removePlotModule]] <- NULL
         updatePlotModules()
       }
@@ -232,12 +237,6 @@ subsetPlotsServer <- function(id, dataSource, optCrt){
           "full", "half"
         )
         updatePlotModules()
-      }
-    })
-    observeEvent(input$chg2DPlotModule, {
-      if(input$chg2DPlotModule){
-        updatePlotModules()
-        updateCheckboxInput(session, "chg2DPlotModule", value = FALSE)
       }
     })
   })

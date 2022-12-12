@@ -14,7 +14,8 @@ scVlnUI <- function(id, postfix=1){
                        contentUI= geneExprDotPlotUI(id, postfix=postfix))
 }
 scVlnServer <- function(pid, id, dataSource, optCrt,
-                         p_input, p_session, postfix=1){
+                         p_input, p_session, interactive,
+                        postfix=1){
   moduleServer(id, function(input, output, session){
     if(is.null(p_session$userData$defaults[[dataSource()$dataset]][[id]])){
       defaults <- list(
@@ -63,7 +64,7 @@ scVlnServer <- function(pid, id, dataSource, optCrt,
         p_input$GeneExprfsz)
     })
     updateSubModulePlotUI(postfix, pid, id, input, output, session,
-                          FALSE,
+                          interactive,
                           plot1,
                           .globals$pList1[p_input$GeneExprpsz],
                           dataSource()$dataset,

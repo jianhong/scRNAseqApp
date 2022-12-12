@@ -6,7 +6,8 @@ scExprUI <- function(id, postfix=1){
                        contentUI= geneExprDotPlotUI(id, postfix))
 }
 scExprServer <- function(pid, id, dataSource, optCrt,
-                         p_input, p_session, postfix=1){
+                         p_input, p_session, interactive,
+                         postfix=1){
   moduleServer(id, function(input, output, session){
     ## title
     GeneNameLabel <- paste0('GeneName', postfix)
@@ -28,8 +29,7 @@ scExprServer <- function(pid, id, dataSource, optCrt,
                             paste0("GeneExprord", postfix),
                             paste0("GeneExprtype", postfix),
                             paste0("GeneExprxlim", postfix),
-                            paste0("GeneExprrg", postfix),
-                            paste0("interactive", postfix)))
+                            paste0("GeneExprrg", postfix)))
     ### plots
     plotX <- reactive({
       scDRgene(
@@ -54,11 +54,10 @@ scExprServer <- function(pid, id, dataSource, optCrt,
         inpColRange=if(input[[paste0("GeneExprrgb", postfix)]] %% 2==0) 0 else
           input[[paste0("GeneExprrg", postfix)]],
         valueFilterKey=p_input$filterCell,
-        valueFilterCutoff=p_input$filterCellVal,
-        interactive = input[[paste0('interactive', postfix)]])
+        valueFilterCutoff=p_input$filterCellVal)
     })
     updateSubModulePlotUI(postfix, pid, id, input, output, session,
-                          input[[paste0('interactive', postfix)]],
+                          interactive,
                           plotX,
                           .globals$pList1[p_input$GeneExprpsz],
                           dataSource()$dataset,

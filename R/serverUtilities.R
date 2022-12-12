@@ -302,10 +302,6 @@ subModuleMenuObservor <- function(id, input, p_session, dataSource,
   observeEvent(input$resize, {
     updateTextInput(p_session, "resizePlotModule", value = id)
   })
-  observeEvent(input$interactive1, {
-    updateCheckboxInput(p_session, "chg2DPlotModule",
-                        value = input$interactive1)
-  }, ignoreInit = TRUE)
   if(is.null(p_session$userData$defaults[[dataSource()$dataset]][[id]]))
     p_session$userData$defaults[[dataSource()$dataset]][[id]] <- list()
   lapply(observeEvtList, function(evt){

@@ -14,7 +14,8 @@ scCoexpUI <- function(id, postfix=1){
                        contentUI= geneExprDotPlotUI(id, postfix=postfix))
 }
 scCoexpServer <- function(pid, id, dataSource, optCrt,
-                         p_input, p_session, postfix=1){
+                         p_input, p_session, interactive,
+                         postfix=1){
   moduleServer(id, function(input, output, session){
     if(is.null(p_session$userData$defaults[[dataSource()$dataset]][[id]])){
       defaults <- list(
@@ -40,8 +41,7 @@ scCoexpServer <- function(pid, id, dataSource, optCrt,
 
     subModuleMenuObservor(id, input, p_session, dataSource,
                           c("GeneName1", "GeneName2",
-                            "CoExprcol1", "CoExprord1",
-                            paste0("interactive", postfix)))
+                            "CoExprcol1", "CoExprord1"))
     ## plot
     plot1 <- reactive({
       scDRcoex(
@@ -66,7 +66,7 @@ scCoexpServer <- function(pid, id, dataSource, optCrt,
         valueFilterCutoff=p_input$filterCellVal)
     })
     updateSubModulePlotUI(postfix, pid, id, input, output, session,
-                          input[[paste0('interactive', postfix)]],
+                          interactive,
                           plot1,
                           .globals$pList1[p_input$GeneExprpsz],
                           dataSource()$dataset,

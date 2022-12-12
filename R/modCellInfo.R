@@ -7,7 +7,8 @@ scInfoUI <- function(id, postfix=1){
                        contentUI= geneExprDotPlotUI(id, postfix))
 }
 scInfoServer <- function(pid, id, dataSource, optCrt,
-                         p_input, p_session, postfix=1){
+                         p_input, p_session, interactive,
+                         postfix=1){
   moduleServer(id, function(input, output, session){
     ## title
     cellInfoLabel <- paste0('CellInfo', postfix)
@@ -25,8 +26,7 @@ scInfoServer <- function(pid, id, dataSource, optCrt,
                             paste0("CellInfocol", postfix),
                             paste0("CellInfoord", postfix),
                             paste0("CellInfolab", postfix),
-                            paste0("CellInfoslingshot", postfix),
-                            paste0("interactive", postfix)))
+                            paste0("CellInfoslingshot", postfix)))
     ## plot
     plotX <- reactive({
       scDRcell(
@@ -52,10 +52,10 @@ scInfoServer <- function(pid, id, dataSource, optCrt,
         slingshotFilename = file.path(.globals$datafolder,
                                       dataSource()$dataset,
                                       .globals$filenames[["slingshot"]]),
-        interactive=input[[paste0('interactive', postfix)]])
+        interactive=interactive)
     })
     updateSubModulePlotUI(postfix, pid, id, input, output, session,
-                          input[[paste0('interactive', postfix)]],
+                          interactive,
                           plotX,
                           .globals$pList1[p_input$GeneExprpsz],
                           dataSource()$dataset,

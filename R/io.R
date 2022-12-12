@@ -61,7 +61,11 @@ read_exprs <- function(h5f, genesID, meta,
     if(!missing(cell)){
       expr <- h5data$read(args = list(quote(expr=), cell[1]))
     }else{
-      expr <- h5data$read(args = list(genesID[1], quote(expr=)))
+      if(!is.na(genesID)){
+        expr <- h5data$read(args = list(genesID[1], quote(expr=)))
+      }else{
+        expr <- 0
+      }
     }
     h5file$close_all()
     on.exit()

@@ -107,9 +107,9 @@ aboutServer <- function(id, dataSource, optCrt){
     observeEvent(input$search, {
       if(input$search != '' && input$search != "Type key words here"){
         output$search_res <- renderUI(tags$div('searching...'))
-        key_words <- strsplit(input$search, '\\s+')[[1]]
-        updateSearch(key_words,
+        updateSearch(input$search,
                      dataSource()$symbolDict,
+                     dataSource()$gn2sym,
                      auth = dataSource()$auth,
                      global = reactive({global}),
                      id = id,

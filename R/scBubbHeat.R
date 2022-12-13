@@ -8,6 +8,7 @@
 #' @importFrom data.table rbindlist dcast.data.table data.table := uniqueN
 #' @importFrom ggdendro dendro_data
 #' @importFrom gridExtra arrangeGrob grid.arrange
+#' @importFrom ggplot2 scale_x_discrete scale_size_continuous
 scBubbHeat <- function(inpConf, inpMeta, inp,
                        inpGrp, grpKey, grpVal, inpGrp1c, inpPlt,
                        dataset, inpGene, inpScl, inpRow, inpCol,

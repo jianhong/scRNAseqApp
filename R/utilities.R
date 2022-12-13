@@ -72,14 +72,13 @@ g_legend <- function(a.gplot){
 }
 
 # update search results
-updateSearch <- function(key_words, symbolDict,
+updateSearch <- function(key_words, symbolDict, gn2sym,
                          auth, global, page=1,
                          id, input, output, session){
-  key_words = gsub("[^a-zA-Z0-9._'\"*-]+", "", key_words)
-  if(length(key_words)==1 &&
-     nchar(key_words)>1 &&
-     isGene(key_words, symbolDict, maxEvent = .globals$maxNumGene)){## check if it is a gene
+  if(isGene(key_words, symbolDict, maxEvent = .globals$maxNumGene) ||
+     mappingToSymbols(key_words, gn2sym)){## check if it is a gene
     search_res <- checkGene(key_words, symbolDict=symbolDict,
+                            gn2sym = gn2sym,
                             auth = auth,
                             global = global, page=page,
                             id=id, input=input, output=output, session=session)
@@ -91,6 +90,8 @@ updateSearch <- function(key_words, symbolDict,
       })
     }
   }else{
+    key_words <- strsplit(key_words, "\\s+")[[1]]
+    key_words <- gsub("[^a-zA-Z0-9._'\"*-]+", "", key_words)
     res_data <- lapply(getAppConf(), function(.ele){
       x <- paste(as.character(.ele), collapse = " ")
       m <- vapply(key_words, grepl, logical(1L), x = x, ignore.case=TRUE)
@@ -122,11 +123,37 @@ updateSearch <- function(key_words, symbolDict,
   }
 }
 
+#' convert search keys to gene symbols
+#' @noRd
+#' @param x the key words to be converted
+#' @param db the gene name to gene symbol map
+#' @param transform convert the x to gene symbol
+mappingToSymbols <- function(x, db, transform=FALSE){
+  # quote all gene symbols
+  # convert names in database to gene symbols
+  stopifnot(is.list(db))
+  if(!transform){
+    return(tolower(x) %in% c(names(db$unique), names(db$multiple)))
+  }else{
+    if(mappingToSymbols(x, db)){
+      x <- tolower(x)
+      if(x %in% names(db$unique)){
+        return(paste0('"', db$unique[[x]], '"'))
+      }else{
+        return(db$multiple[[x]])
+      }
+    }else{
+      return(x)
+    }
+  }
+}
+
 #' check if a symbol is a gene
 #' @noRd
 #' @param symbol the character to be checked
 #' @param dict the gene symbol dictionary available in the data folder
 isGene <- function(symbol, dict, maxEvent=3){
+  symbol <- strsplit(symbol, "\\s+")[[1]][1]
   if(isQuote(symbol)){
     symbol <- removeQuote(symbol)
     return(symbol %in% dict)
@@ -135,7 +162,7 @@ isGene <- function(symbol, dict, maxEvent=3){
     symbol <- isAsterisk(symbol, transform = TRUE)
     maxEvent <- .globals$maxNumGene
   }
-  g <- sum(grepl(symbol, dict))
+  g <- sum(grepl(symbol, dict, ignore.case = TRUE))
   g > 0 && g < maxEvent
 }
 #' check if a symbol is quoted
@@ -152,6 +179,7 @@ removeQuote <- function(symbol){
 #' @param symbol the character to be checked
 #' @param transform change the '*' to '.*'
 isAsterisk <- function(symbol, transform=FALSE){
+  symbol <- symbol[1]
   isT <- grepl("*", symbol, fixed = TRUE)
   if(transform){
     if(isT){
@@ -206,11 +234,12 @@ wafflePlot <- function(expres, id, plotname, numGene,
 #' @param auth for locked data
 #' @param id namespace
 #' @return Html tags for search results
-checkGene <- function(gene, symbolDict,
+checkGene <- function(gene, symbolDict, gn2sym,
                       auth, global, page=1,
                       id, input, output, session){
   exprs <- NULL
   limit <- 5 # return 5 record
+  gene <- mappingToSymbols(gene, gn2sym, transform = TRUE)
   getGeneNamesByKeyword <- function(){
     appconfs <- getAppConf()
     gn <- lapply(appconfs, function(.ele){
@@ -221,7 +250,7 @@ checkGene <- function(gene, symbolDict,
       }
       geneIds <- readData("sc1gene", .ele$id)
       if(isQuote(gene)){
-        genenames <- geneIds[names(geneIds) %in% removeQuote(gene)]
+        genenames <- geneIds[tolower(names(geneIds)) %in% tolower(removeQuote(gene))]
       }else{
         if(isAsterisk(gene)){
           gene <- isAsterisk(gene, transform = TRUE)

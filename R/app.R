@@ -126,6 +126,8 @@ scRNAseqApp <- function(datafolder = "data",
     optCrt="{ option_create: function(data,escape) {
     return('<div class=\"create\"><strong>' + '</strong></div>');
     } }"
+    gn2sym <- readRDS(system.file('extdata', 'gn2sym.rds',
+                                  package = 'scRNAseqApp'))
     dataSource <- reactiveValues(
       available_datasets=datasets, # all available datasets
       dataset=defaultDataset, # current dataset
@@ -141,6 +143,7 @@ scRNAseqApp <- function(datafolder = "data",
       Logged=FALSE, # user logged
       terms=.globals$terms[["scRNAseq"]], # tab UI for scRNAseq/scATACseq
       symbolDict=NULL, # gene symbol dictionary
+      gn2sym=gn2sym, # gene name to gene symbol dictionary
       auth=NULL, # authority
       Username="", # username
       Password="", # passward

@@ -93,7 +93,7 @@ scDRcoex <- function(inpConf, inpMeta,
                          zaxis = list(title = paste0('Log2 Fold Change (',
                                                      gene1, '/', gene2, ')')))))
   }
-  ggOut <- ggplot(ggData, aes_string("X", "Y"))
+  ggOut <- ggplot(ggData, aes(x=ggData$X, y=ggData$Y))
   if(bgCells){
     ggOut <- labelBackgroundCells(ggOut, ggData2, pointSize,
                                   color="snow2", shape=16)

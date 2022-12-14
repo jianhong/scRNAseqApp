@@ -83,7 +83,9 @@ scRNAseqApp <- function(datafolder = "data",
           ### Tab: Gene coexpression plot
           coExprUI("coExpr"),
           ### Tab: 3d Gene coexpression plot
-          coExpr3dUI("coExpr3d")
+          coExpr3dUI("coExpr3d"),
+          ### Tab: sunburst plot
+          plotPieDimUI('sunburst')
         ),
         navbarMenu(
           "Stats",
@@ -315,6 +317,11 @@ scRNAseqApp <- function(datafolder = "data",
       coExpr3dServer("coExpr3d",
                    reactive({dataSource}),
                    optCrt)
+
+      ### Plots for tab PieDim
+      plotPieDimServer('sunburst',
+                       reactive({dataSource}),
+                       optCrt)
 
       ### Plots for tab subset
       subsetGeneExprServer("subsetGeneExpr",

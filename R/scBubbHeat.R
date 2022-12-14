@@ -24,8 +24,11 @@ scBubbHeat <- function(inpConf, inpMeta, inp,
   }
   geneList <- scGeneList(inp, inpGene)
   geneList <- geneList[geneList$present == TRUE]
-  shiny::validate(need(nrow(geneList) <= 500, "More than 500 genes to plot! Please reduce the gene list!"))
-  shiny::validate(need(nrow(geneList) > 1, "Please input at least 2 genes to plot!"))
+  shiny::validate(
+    need(nrow(geneList) <= 500,
+         "More than 500 genes to plot! Please reduce the gene list!"))
+  shiny::validate(
+    need(nrow(geneList) > 1, "Please input at least 2 genes to plot!"))
   #axis_fontsize <- round(min(c(500/nrow(geneList), 12), na.rm=TRUE), digits = 1)
   #bulb_pointsize <- min(c(round(400/nrow(geneList)), 8), na.rm=TRUE)
 

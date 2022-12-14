@@ -5,7 +5,7 @@ tabsubTitleUI <- function(id, title, description){
     br(),br()
   )
 }
-graphicsControlUI <- function(id){
+graphicsControlUI <- function(id, GeneExpraspSelect="Square"){
   tagList(
     actionButton(NS(id, "graphicTog"),
                  "Toggle graphics controls"),
@@ -29,7 +29,7 @@ graphicsControlUI <- function(id){
       column(
         6, radioButtons(NS(id, "GeneExprasp"), "Aspect ratio:",
                         choices = c("Square", "Fixed", "Free"),
-                        selected = "Square", inline = TRUE),
+                        selected = GeneExpraspSelect, inline = TRUE),
         checkboxInput(NS(id, "GeneExprtxt"), "Show axis text", value = FALSE)
       )
     )

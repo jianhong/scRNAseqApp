@@ -3,16 +3,19 @@
 #' @importFrom data.table rbindlist
 #' @importFrom scales rescale
 #' @importFrom ggforce geom_arc_bar geom_circle geom_mark_hull
+#' @importFrom ggplot2 geom_rect
 scPieDim <- function(inpConf, inpMeta,
                      dataset, geneIdMap,
                      dimRedX, dimRedY,
                      genelist,
                      subsetCellKey, subsetCellVal,
                      valueFilterKey, valueFilterCutoff,
+                     CoExpred,
                      pointSize,
                      lableCircle,
                      plotCellBg,
                      markGrp,
+                     alpha,
                      plotType,
                      labelsFontsize,
                      plotAspectRatio,
@@ -45,6 +48,7 @@ scPieDim <- function(inpConf, inpMeta,
   expr <- do.call(cbind, expr)
   expr[expr<0] <- 0
   expr_keep <- rowSums(expr)>0
+  if(CoExpred) expr_keep <- expr_keep & rowSums(expr>0)==ncol(expr)
   keep <- filterCells(ggData,
                       subGrpColname, subsetCellVal,
                       subFilterColname, valueFilterCutoff)
@@ -57,15 +61,15 @@ scPieDim <- function(inpConf, inpMeta,
   ggData_ <- ggData[keep & expr_keep]
   expr <- expr[keep & expr_keep, , drop=FALSE]
   ggData <- ggData[keep]
-  size <- diff(range(ggData_$X))/ 60 * pointSize
-  expr <- rescale(expr, to=c(size/4, size))
+  size <- diff(range(ggData$X))/ 60 * pointSize
+  expr <- apply(expr, 2, rescale, to=c(size/4, size))
   expr <- as.list(as.data.frame(expr))
   expr <- mapply(function(d, n){
     cbind(ggData_, geneName=n, "val"=d)
   }, expr, names(expr), SIMPLIFY = FALSE)
   expr <- rbindlist(expr)
 
-  expr$X0 <- expr$X + (as.numeric(factor(as.character(expr$geneName)))-.5)*size
+  expr$X0 <- expr$X + (as.numeric(factor(as.character(expr$geneName)))-1)*size/2
   ggOut <- ggplot(data=expr, aes(x0=expr$X, y0=expr$Y))
   if(markGrp){
     ggOut <- ggOut +
@@ -77,28 +81,33 @@ scPieDim <- function(inpConf, inpMeta,
   if(plotCellBg){
     ggOut <- ggOut +
     geom_point(data=ggData, aes(x=ggData$X, y=ggData$Y),
-               color='gray', shape=16, inherit.aes = FALSE)
+               color='snow2', shape=16, inherit.aes = FALSE)
   }
   ggOut <- ggOut +
     switch(plotType,
            sunburst =
-             geom_arc_bar(aes(amount=1, r0=0, r=expr$val, fill=expr$geneName),
-                          stat = 'pie', color=NA),
+             geom_arc_bar(aes(amount=1, r0=0,
+                              r=expr$val, fill=expr$geneName),
+                          stat = 'pie', color=NA,
+                          alpha=alpha),
            pie =
              geom_arc_bar(aes(amount=expr$val, r0=0,
                               r=size, fill=expr$geneName),
-                          stat = 'pie', color=NA),
+                          stat = 'pie', color=NA,
+                          alpha=alpha),
            donut =
              geom_arc_bar(aes(amount=expr$val, r0=size/2,
                               r=size, fill=expr$geneName),
-                          stat = 'pie', color=NA),
+                          stat = 'pie', color=NA,
+                          alpha=alpha),
            bar =
-             geom_segment(aes(x=expr$X0, y=expr$Y,
-                              xend=expr$X0, yend=expr$Y+expr$val,
-                              color=expr$geneName),
+             geom_rect(aes(xmin=expr$X0-.02*size, ymin=expr$Y,
+                           xmax=expr$X0+.46*size, ymax=expr$Y+expr$val,
+                           fill=expr$geneName),
                           position = "identity",
-                          linewidth=size)) +
-    guides(fill = guide_legend(title = 'genename'))
+                          alpha=alpha, color=NA)) +
+    guides(fill = guide_legend(title = 'genename'),
+           alpha = "none")
 
   if(lableCircle){
     if(plotType != "bar"){
@@ -107,8 +116,8 @@ scPieDim <- function(inpConf, inpMeta,
         guides(color = guide_legend(title = subsetCellKey))
     }else{
       ggOut <- ggOut +
-        geom_rect(aes(xmin=expr$X - .05*size, ymin=expr$Y-.05,
-                      xmax=expr$X + (nrow(geneList)+.05)*size,
+        geom_rect(aes(xmin=expr$X - .025*size, ymin=expr$Y-.05,
+                      xmax=expr$X + (nrow(geneList)+.05)*size/2,
                       ymax=expr$Y + size * 1.05,
                       color=expr$sub),
                   fill=NA, linewidth=.5) +

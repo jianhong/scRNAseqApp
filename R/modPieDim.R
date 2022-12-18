@@ -6,6 +6,7 @@ plotPieDimUI <- function(id){
     "In this tab, users can visualise the gene expression patterns of ",
     "multiple genes grouped by categorical cell information",
     "(e.g. library / cluster).",
+    "The expression of each gene will be re-scaled to 0-1.",
     "It will only plot top 5000 events.",
     br(),
     fluidRow(
@@ -30,6 +31,8 @@ plotPieDimUI <- function(id){
                               content = c("Input genes to plot",
                                           "- Maximum 10 genes (due to ploting space limitations)",
                                           "- Genes should be separated by comma, semicolon or newline")),
+        checkboxInput(NS(id, "CoExpred"),
+                      "Co-expressed (all>=1)", value = TRUE),
         tagList(
           actionButton(NS(id, "CoExprtog"), "Toggle plot controls"),
           conditionalPanel(
@@ -42,7 +45,10 @@ plotPieDimUI <- function(id){
                           value = FALSE),
             radioButtons(NS(id, "CoExprType"), "Plot type",
                          choices = c("sunburst", "pie", 'donut', "bar"),
-                         selected = "sunburst")
+                         selected = "sunburst"),
+            sliderInput(NS(id, "CoExprAlpha"), "Transparency",
+                        min = 0, max = 1, step = 0.01,
+                        value = .8)
           )
         )
       ),
@@ -71,7 +77,8 @@ plotPieDimServer <- function(id, dataSource, optCrt){
       }
     }
     updateTextAreaInput(session, "genelist",
-                        value = paste0(head(genelist, n=4),
+                        value = paste0(genelist[
+                          seq.int(min(4, length(genelist)))],
                                        collapse = ", "))
     ### plots
     plot1 <- reactive({
@@ -87,10 +94,12 @@ plotPieDimServer <- function(id, dataSource, optCrt){
         input$subsetCellVal,
         valueFilterKey=input$filterCell,
         valueFilterCutoff=input$filterCellVal,
+        input$CoExpred,
         input$GeneExprsiz,
         input$CoExprCircle,
         input$CoExprBg,
         input$CoExprMarkGrp,
+        input$CoExprAlpha,
         input$CoExprType,
         input$GeneExprfsz,
         input$GeneExprasp,

@@ -25,7 +25,7 @@ editUI <- function (id) {
       ),
       fluidRow(
         column(width = 6,
-               textInput(ns("title"),
+               textAreaInput(ns("title"),
                          label = "Title for the data"),
                checkboxInput(ns("locker"),
                              label = "Require privilege for the data",
@@ -233,7 +233,7 @@ editServer <- function(id) {
             }
             updateTextAreaInput(session, "keywords",
                                 value=global$appconf$keywords)
-            updateTextInput(session, "title", value=global$appconf$title)
+            updateTextAreaInput(session, "title", value=global$appconf$title)
             updateTextInput(session, "dir", value=global$appconf$id)
             updateSelectInput(session, "datatype",
                               selected = global$appconf$type)

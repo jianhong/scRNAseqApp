@@ -353,11 +353,15 @@ checkGene <- function(gene, symbolDict, gn2sym,
                    global$evt[[local({.id})]] <-
                      observeEvent(input[[paste0("page", .id)]],{
                        updateSearch(gene,
-                                    symbolDict,
-                                    auth,
-                                    reactive({global}),
+                                    symbolDict=symbolDict,
+                                    gn2sym=gn2sym,
+                                    auth=auth,
+                                    global=reactive({global}),
                                     page = local({.id}),
-                                    id, input, output, session)
+                                    id=id,
+                                    input=input,
+                                    output=output,
+                                    session=session)
                      }, ignoreInit = TRUE, once = TRUE)
                  }
                })

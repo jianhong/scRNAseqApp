@@ -15,7 +15,8 @@ getDataSets <- function(appconf=NULL){
   return(datasets)
 }
 getNamedDataSets <- function(){
-  getDataSets(appconf = getAppConf())
+  nds <- getDataSets(appconf = getAppConf())
+  nds[order(names(nds))]
 }
 # check if all the required files are available
 checkFiles <- function(folder){

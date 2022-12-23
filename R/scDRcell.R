@@ -97,13 +97,13 @@ scDRcell <- function(inpConf, inpMeta,
             for(j in seq(i+1,nclus)){
               if(connectivity[i,j]==1 &&
                  all(clusters[c(i,j)] %in% clus2include, na.rm = TRUE)){
-                lineDf <- rbind(lineDf, c(centers[i, 1:2, drop=TRUE],
-                                          centers[j, 1:2, drop=TRUE]))
+                lineDf <- rbind(lineDf, c(centers[i, c(1,2), drop=TRUE],
+                                          centers[j, c(1,2), drop=TRUE]))
               }
             }
           }
           colnames(lineDf) <- c("x", "y", "xend", "yend")
-          pts <- centers[clusters %in% clus2include, 1:2]
+          pts <- centers[clusters %in% clus2include, c(1,2)]
           colnames(pts) <- c("x", "y")
           pts <- cbind(as.data.frame(pts), color='black')
           if(any(linC$start.given)){

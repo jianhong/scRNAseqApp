@@ -47,12 +47,11 @@ makeShinyFiles <- function(
   gex.matdim = dim(gexAsy)
   gex.rownm = rownames(gexAsy)
   gex.colnm = colnames(gexAsy)
-  # defGenes = obj@assays[[assayName[1]]]@var.features[1:10]
-  defGenes = VariableFeatures(obj)[1:10]
+  defGenes = VariableFeatures(obj)[seq.int(10)]
   if(is.na(defGenes[1])){
-    warning(paste0("Variable genes for seurat object not found! Have you ",
-                   "ran `FindVariableFeatures` or `SCTransform`?"))
-    defGenes = gex.rownm[1:10]
+    warning("Variable genes for seurat object not found! Have you ",
+            "ran `FindVariableFeatures` or `SCTransform`?")
+    defGenes = gex.rownm[seq.int(10)]
   }
   sc1meta = data.table(sampleID = rownames(obj[[]]), obj[[]])
 
@@ -82,8 +81,8 @@ makeShinyFiles <- function(
   if(all(default.multigene %in% geneMap)){
     default.multigene = default.multigene
   } else {
-    warning(paste0("default.multigene doesn't exist in gene expression, ",
-                   "using defaults..."))
+    warning("default.multigene doesn't exist in gene expression, ",
+            "using defaults...")
     default.multigene = defGenes
   }
 
@@ -101,7 +100,7 @@ makeShinyFiles <- function(
   # Extract dimred and append to both XXXmeta.rds and XXXconf.rds...
   for(iDR in Reductions(obj)){
     drMat <- Embeddings(obj[[iDR]])
-    if(ncol(drMat) > 5){drMat <- drMat[, 1:5]}  # Take first 5 components only
+    if(ncol(drMat) > 5){drMat <- drMat[, seq.int(5)]}  # Take first 5 components only
     drMat <- drMat[sc1meta$sampleID, ]          # Ensure ordering
     drMat <- as.data.table(drMat)
     sc1meta <- cbind(sc1meta, drMat)
@@ -128,7 +127,7 @@ makeShinyFiles <- function(
   while(chk > (gex.matdim[1]-8)){
     chk <- floor(chk / 2)     # Account for cases where nGene < chunkSize
   }
-  for(i in 1:floor((gex.matdim[1]-8)/chk)){
+  for(i in seq.int(floor((gex.matdim[1]-8)/chk))){
     sc1gexpr.grp.data[((i-1)*chk+1):(i*chk), ] <- as.matrix(
       gexAsy[((i-1)*chk+1):(i*chk),])
   }
@@ -168,14 +167,14 @@ makeShinyFiles <- function(
                    ignore.case=TRUE)) >= 2){
       default.dimred <- sc1conf[sc1conf$dimred == TRUE]$UI[
         grep(guess, sc1conf[sc1conf$dimred == TRUE]$UI,
-             ignore.case = TRUE)[1:2]]
+             ignore.case = TRUE)[c(1, 2)]]
     } else {
       nDR <- length(sc1conf[sc1conf$dimred == TRUE]$UI)
       default.dimred <- sc1conf[sc1conf$dimred == TRUE]$UI[(nDR-1):nDR]
     }
     if(warn){
-      warning(paste0("default.dimred not found, switching to ",
-                     default.dimred[1], " and ", default.dimred[1]))
+      warning("default.dimred not found, switching to ",
+              default.dimred[1], " and ", default.dimred[1])
     } # Warn if user-supplied default.dimred is not found
   }
   # Note that we stored the display name here

@@ -23,7 +23,7 @@ createConfig <- function(obj, meta.to.include = NA, legendCols = 4,
                          maxLevels = 50){
   # Extract corresponding metadata
   drExist = TRUE
-  if(class(obj)[1] == "Seurat"){
+  if(inherits(obj, "Seurat")){
     # Seurat Object
     objMeta <- obj[[]]
     if(length(Reductions(obj)) == 0){drExist <- FALSE}
@@ -31,8 +31,8 @@ createConfig <- function(obj, meta.to.include = NA, legendCols = 4,
     stop("Only Seurat object is accepted!")
   }
   if(!drExist){
-    stop(paste0("Can not detect any dimension reduction data \n",
-                "       e.g. umap / tsne. Has any analysis been performed?"))
+    stop("Can not detect any dimension reduction data \n",
+         "       e.g. umap / tsne. Has any analysis been performed?")
   }
 
   # Checks and get list of metadata to include
@@ -82,7 +82,7 @@ createConfig <- function(obj, meta.to.include = NA, legendCols = 4,
 
   # STOP if there is no single multi-level covariate
   if(nrow(scConf[scConf$grp == TRUE]) == 0){
-    stop(paste0("Can not detect any multi-group cell metadata."))
+    stop("Can not detect any multi-group cell metadata.")
   }
 
   return(scConf)

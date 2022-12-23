@@ -99,7 +99,6 @@ scDRgene <- function(inpConf, inpMeta,
     }
     ggOut <- fixCoord(ggOut, plotAspectRatio, rat)
   }else{## ridgePlot
-    #print(inpXlim)
     ggData[[subGrpColname]] <-
       factor(ggData[[subGrpColname]],
              levels=rev(sortLevels(

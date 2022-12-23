@@ -66,7 +66,8 @@ plotLoader <- function(ui, bufferStr='loading...'){
 #' @importFrom ggplot2 ggplot_gtable ggplot_build
 g_legend <- function(a.gplot){
   tmp <- ggplot_gtable(ggplot_build(a.gplot))
-  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  leg <- which(vapply(tmp$grobs,
+                      function(x) x$name, character(1L)) == "guide-box")
   legend <- tmp$grobs[[leg]]
   legend
 }

@@ -1,21 +1,24 @@
 Package: scRNAseqApp
 Title: A single-cell RNAseq Shiny app-package
-Version: 0.99.0
+Version: 0.99.1
 Authors@R:
     c(person(given = "Jianhong",
              family = "Ou",
              role = c("aut", "cre"),
-             email = "jianhong.ou@duke.edu"))
+             email = "jianhong.ou@duke.edu",
+             comment=c(ORCID="0000-0002-8652-2488")))
 Description: scRNAseqApp is a Shiny app package that allows users to visualize
     single cell data interactively. It was modified from ShinyCell and repackaged
-    to a tool to show multiple data.
+    to a tool to show multiple data. It can visulize the data with multiple
+    information side by side.
 License: GPL-3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.2
 VignetteBuilder: knitr
+biocViews: Visualization, SingleCell
 Depends:
-    R (>= 4.0.0)
+    R (>= 4.2.0)
 Imports:
     bibtex,
     bslib,
@@ -52,7 +55,8 @@ Imports:
     stats,
     tools,
     xfun,
-    xml2
+    xml2,
+    utils
 Suggests: rmarkdown, knitr, testthat, BiocStyle
 Enhances:
     CellChat,

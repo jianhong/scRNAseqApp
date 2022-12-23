@@ -1,44 +1,57 @@
 # Plot proportion plot
-scProp <- function(inpConf, inpMeta, inp1, inp1a, inp1b, inp2,
-                   inptyp, inpflp, inpfsz){
+#' @importFrom ggplot2 ggplot aes_string geom_col ylab coord_flip xlab
+#' scale_fill_manual theme
+#' @importFrom data.table .SD .N
+scProp <- function(inpConf, inpMeta,
+                   infoX, infoY,
+                   grpKey, grpVal,
+                   inptyp, flipXY, labelsFontsize,
+                   dataset, geneIdMap,
+                   valueFilterKey, valueFilterCutoff){
   # Prepare ggData
-  if(inp1a!="N/A" && length(inp1b)){
-    colN <- c(inpConf[UI == inp1]$ID, inpConf[UI == inp2]$ID, inpConf[UI == inp1a]$ID)
+  if(grpKey!="N/A" && length(grpVal)){
+    colN <- c(inpConf[inpConf$UI == infoX]$ID,
+              inpConf[inpConf$UI == infoY]$ID,
+              inpConf[inpConf$UI == grpKey]$ID)
   }else{
-    colN <- c(inpConf[UI == inp1]$ID, inpConf[UI == inp2]$ID)
+    colN <- c(inpConf[inpConf$UI == infoX]$ID,
+              inpConf[inpConf$UI == infoY]$ID)
   }
-  ggData = inpMeta[, colN, with = FALSE]
-  if(inp1a!="N/A" && length(inp1b)){
-    ggData <- ggData[ggData[[inpConf[UI == inp1a]$ID]] %in% inp1b, c(1, 2), drop=FALSE]
-  }
-  colnames(ggData) = c("X", "grp")
-  ggData = ggData[, .(nCells = .N), by = c("X", "grp")]
-  ggData = ggData[, {tot = sum(nCells)
-  .SD[,.(pctCells = 100 * sum(nCells) / tot,
-         nCells = nCells), by = "grp"]}, by = "X"]
+  ggData <- inpMeta[, colN, with = FALSE]
+  ggData <- subGrp(ggData, grpKey, grpVal, inpConf)
+  subFilterColname <- 'subValue'
+  ggData <- cbindFilterValues(ggData, inpConf, inpMeta, subFilterColname,
+                              geneIdMap, dataset,
+                              valueFilterKey, valueFilterCutoff)
+  keep <- filterCells(ggData,
+                      valueFilterKey=subFilterColname,
+                      valueFilterCutoff=valueFilterCutoff)
+
+  ggData <- ggData[keep, c(1, 2), drop=FALSE]
+  colnames(ggData) <- c("X", "grp")
+  ggData <- ggData[, list(nCells = .N), by = c("X", "grp")]
+  ggData <- ggData[, {tot = sum(.SD$nCells)
+  .SD[,list(pctCells = 100 * sum(.SD$nCells) / tot,
+         nCells = .SD$nCells), by = "grp"]}, by = "X"]
 
   # Do factoring
-  ggCol = strsplit(inpConf[UI == inp2]$fCL, "\\|")[[1]]
-  names(ggCol) = levels(ggData$grp)
-  ggLvl = levels(ggData$grp)[levels(ggData$grp) %in% unique(ggData$grp)]
-  ggLvl = sortLevels(ggLvl)
-  ggData$grp = factor(ggData$grp, levels = ggLvl)
-  ggCol = ggCol[ggLvl]
-  ggData$X <- factor(ggData$X, levels=sortLevels(as.character(unique(ggData$X))))
+  ggData <- relevelData(ggData, "grp")
+  ggData <- relevelData(ggData, "X")
+  ggCol <- relevelCol(inpConf, infoY, ggData, "grp")
 
   # Actual ggplot
   if(inptyp == "Proportion"){
-    ggOut = ggplot(ggData, aes(X, pctCells, fill = grp)) +
+    ggOut <- ggplot(ggData, aes_string("X", "pctCells", fill = "grp")) +
       geom_col() + ylab("Cell Proportion (%)")
   } else {
-    ggOut = ggplot(ggData, aes(X, nCells, fill = grp)) +
+    ggOut <- ggplot(ggData, aes_string("X", "nCells", fill = "grp")) +
       geom_col() + ylab("Number of Cells")
   }
-  if(inpflp){
-    ggOut = ggOut + coord_flip()
+  if(flipXY){
+    ggOut <- ggOut + coord_flip()
   }
-  ggOut = ggOut + xlab(inp1) +
-    sctheme(base_size = sList[inpfsz], Xang = 45, XjusH = 1) +
+  ggOut <- ggOut + xlab(infoX) +
+    sctheme(base_size = .globals$sList[labelsFontsize], Xang = 45, XjusH = 1) +
     scale_fill_manual("", values = ggCol) +
     theme(legend.position = "right")
   return(ggOut)

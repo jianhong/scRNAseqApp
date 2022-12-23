@@ -1,5 +1,6 @@
 plotProportionUI <- function(id){
   tabPanel(
+    value=id,
     HTML("Proportion plot"),
     h4("Proportion / cell numbers across different cell information"),
     "In this tab, users can visualise the composition of single cells based on one discrete ",
@@ -39,37 +40,23 @@ plotProportionUI <- function(id){
     )
   )
 }
-plotProportionServer <- function(id, dataSource, optCrt, currentdataset){
+#' @importFrom DT datatable
+plotProportionServer <- function(id, dataSource, optCrt){
   moduleServer(id, function(input, output, session){
     ## input column
     updateSelectInput(session,
                       "CellInfoX",
                       "Cell information (X-axis):",
-                      choices = dataSource()$sc1conf[grp == TRUE]$UI,
+                      choices = getGroupUI(dataSource),
                       selected = dataSource()$sc1def$grp2)
-    updateSelectInput(session,
-                      "subsetCell",
-                      "Cell information to subset by:",
-                      choices = c("N/A", dataSource()$sc1conf[grp == TRUE]$UI),
-                      selected = "N/A")
+
+    updateSubsetCellUI(id, input, output, session, dataSource, addNA=TRUE)
+
     updateSelectInput(session,
                       "cellInfoY",
                       "Cell information to group / colour by:",
-                      choices = dataSource()$sc1conf[grp == TRUE]$UI,
+                      choices = getGroupUI(dataSource),
                       selected = dataSource()$sc1def$grp1)
-    ## update the ui
-    output$subsetCell.ui <- renderUI({
-      if(input$subsetCell!="N/A"){
-        sub = strsplit(dataSource()$sc1conf[UI == input$subsetCell]$fID, "\\|")[[1]]
-        checkboxGroupInput(NS(id, "subsetCellVal"),
-                              "Select which cells to show",
-                           inline = TRUE,
-                           choices = sub,
-                           selected = sub)
-      }else{
-        sub = NULL
-      }
-    })
 
     ## plot region
     ### plots
@@ -78,38 +65,20 @@ plotProportionServer <- function(id, dataSource, optCrt, currentdataset){
         dataSource()$sc1conf,
         dataSource()$sc1meta,
         input$CellInfoX,
+        input$cellInfoY,
         input$subsetCell,
         input$subsetCellVal,
-        input$cellInfoY,
         input$plottyp,
         input$plotflp,
         input$plotfsz)
     })
-    output$GeneExproup1 <- renderPlot({ plot1() })
-    output$GeneExproup.ui1 <- renderUI({
-      plotOutput(NS0(id, "GeneExproup", 1),
-                 height = pList2[input$plotpsz])
-    })
-    output$GeneExproup.pdf1 <-
-      plotsDownloadHandler(
-        "pdf",
-        width=input$GeneExproup.w1,
-        height=input$GeneExproup.h1,
-        plot1(),
-        currentdataset,
-        input$plottyp,
-        input$CellInfoX,
-        input$cellInfoY)
-    output$GeneExproup.png1 <-
-      plotsDownloadHandler(
-        "png",
-        width=input$GeneExproup.w1,
-        height=input$GeneExproup.h1,
-        plot1(),
-        currentdataset,
-        input$plottyp,
-        input$CellInfoX,
-        input$cellInfoY)
+    updateGeneExprDotPlotUI(postfix=1, id, input, output, session,
+                            plot1, .globals$pList2[input$plotpsz],
+                            dataSource()$dataset,
+                            input$plottyp,
+                            input$CellInfoX,
+                            input$cellInfoY)
+
     output$proportion.dt <- renderDataTable({
       datatable(plot1()$data,
                 rownames = FALSE,

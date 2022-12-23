@@ -5,7 +5,7 @@ tabsubTitleUI <- function(id, title, description){
     br(),br()
   )
 }
-graphicsControlUI <- function(id){
+graphicsControlUI <- function(id, GeneExpraspSelect="Square"){
   tagList(
     actionButton(NS(id, "graphicTog"),
                  "Toggle graphics controls"),
@@ -29,7 +29,7 @@ graphicsControlUI <- function(id){
       column(
         6, radioButtons(NS(id, "GeneExprasp"), "Aspect ratio:",
                         choices = c("Square", "Fixed", "Free"),
-                        selected = "Square", inline = TRUE),
+                        selected = GeneExpraspSelect, inline = TRUE),
         checkboxInput(NS(id, "GeneExprtxt"), "Show axis text", value = FALSE)
       )
     )
@@ -38,7 +38,8 @@ graphicsControlUI <- function(id){
 NS0 <- function(namespace, id, postfix){
   NS(namespace, id=paste0(id, postfix))
 }
-geneExprPlotControlUI <- function(id, postfix=1){
+geneExprPlotControlUI <- function(id, postfix=1,
+                                  colorNames=names(.globals$cList)){
   tagList(
     actionButton(NS0(id, "GeneExprtog", postfix), "Toggle plot controls"),
     conditionalPanel(
@@ -50,9 +51,8 @@ geneExprPlotControlUI <- function(id, postfix=1){
         condition = paste0("input.GeneExprtype", postfix, " == 'Dotplot'"),
         ns=NS(id),
         radioButtons(NS0(id, "GeneExprcol", postfix), "Colour:",
-                     choices = c("White-Red", "Blue-Yellow-Red",
-                                 "Yellow-Green-Purple"),
-                     selected = "White-Red"),
+                     choices = colorNames,
+                     selected = colorNames[1]),
         radioButtons(NS0(id, "GeneExprord", postfix), "Plot order:",
                      choices = c("Max-1st", "Min-1st",
                                  "Original", "Random"),
@@ -80,42 +80,46 @@ geneExprPlotControlUI <- function(id, postfix=1){
     )
   )
 }
-cellInfoPlotControlUI <- function(id, postfix=1){
+cellInfoPlotControlUI <- function(id, postfix=1,
+                                  colorNames=names(.globals$cList)){
   tagList(
     actionButton(NS0(id, "CellInfotog", postfix), "Toggle plot controls"),
     conditionalPanel(
       condition = paste0("input.CellInfotog", postfix, " % 2 == 1"), ns=NS(id),
       radioButtons(NS0(id, "CellInfocol", postfix), "Colour (Continuous data):",
-                   choices = c("White-Red", "Blue-Yellow-Red",
-                               "Yellow-Green-Purple"),
-                   selected = "White-Red"),
+                   choices = colorNames,
+                   selected = colorNames[1]),
       radioButtons(NS0(id, "CellInfoord", postfix), "Plot order:",
                    choices = c("Max-1st", "Min-1st",
                                "Original", "Random"),
                    selected = "Original", inline = TRUE),
       checkboxInput(NS0(id, "CellInfolab", postfix),
-                    "Show cell info labels", value = TRUE)
+                    "Show cell info labels", value = TRUE),
+      checkboxInput(NS0(id, "CellInfoslingshot", postfix),
+                    "Show lineages", value = TRUE)
     )
   )
 }
-geneCoExprPlotControlUI <- function(id, postfix=1){
+geneCoExprPlotControlUI <- function(id, postfix=1, plotly=FALSE){
+  choices <- .globals$coExpColor
+  if(plotly){
+    choices <- c("Default", names(.globals$cList))
+  }
   tagList(
     actionButton(NS0(id, "CoExprtog", postfix), "Toggle plot controls"),
     conditionalPanel(
       condition = paste0("input.CoExprtog", postfix, " % 2 == 1"), ns=NS(id),
       radioButtons(NS0(id, "CoExprcol", postfix), "Colour:",
-                   choices = c("Red (Gene1); Blue (Gene2)",
-                               "Orange (Gene1); Blue (Gene2)",
-                               "Red (Gene1); Green (Gene2)",
-                               "Green (Gene1); Blue (Gene2)"),
-                   selected = "Red (Gene1); Blue (Gene2)"),
+                   choices = choices,
+                   selected = choices[1]),
       radioButtons(NS0(id, "CoExprord", postfix), "Plot order:",
                    choices = c("Max-1st", "Min-1st", "Original", "Random"),
                    selected = "Max-1st", inline = TRUE)
     )
   )
 }
-boxPlotControlUI <- function(id, withPoints=TRUE, withColor=FALSE){
+boxPlotControlUI <- function(id, withPoints=TRUE, withColor=FALSE,
+                             colorNames=names(.globals$cList)){
   tagList(
     actionButton(NS(id, "plottog"), "Toggle graphics controls"),
     conditionalPanel(
@@ -129,9 +133,8 @@ boxPlotControlUI <- function(id, withPoints=TRUE, withColor=FALSE){
       },
       if(withColor){
         radioButtons(NS(id, "plotcols"), "Colour scheme:",
-                     choices = c("White-Red", "Blue-Yellow-Red",
-                                 "Yellow-Green-Purple"),
-                     selected = "Blue-Yellow-Red")
+                     choices = colorNames,
+                     selected = colorNames[2])
       }else{
         span()
       },
@@ -158,6 +161,7 @@ dimensionReductionUI <- function(id){
     )
   )
 }
+#' @importFrom magrittr %>%
 subsetCellByInfoUI <- function(id, mini=FALSE){
   if(mini){
     tagList(
@@ -182,6 +186,7 @@ subsetCellByInfoUI <- function(id, mini=FALSE){
     )
   }
 }
+#' @importFrom magrittr %>%
 subsetCellByFilterUI <- function(id,
                                  label="Cell Info/Gene name to subset:",
                                  title=NULL,
@@ -197,20 +202,21 @@ subsetCellByFilterUI <- function(id,
 geneExprDotPlotUI <- function(id, postfix=1){
   tagList(
     fluidRow(column(12, uiOutput(NS0(id, "GeneExproup.ui", postfix)))),
-    downloadButton(NS0(id, "GeneExproup.pdf", postfix), "Download PDF"),
-    downloadButton(NS0(id, "GeneExproup.png", postfix), "Download PNG"),
-    br(),
+    span("Download PDF/PNG "),
     div(style="display:inline-block",
         numericInput(NS0(id, "GeneExproup.h", postfix),
-                     "PDF / PNG height:", width = "138px",
+                     "height:", width = "50px",
                      min = 4, max = 20, value = 6, step = 0.5)),
     div(style="display:inline-block",
         numericInput(NS0(id, "GeneExproup.w", postfix),
-                     "PDF / PNG width:", width = "138px",
-                     min = 4, max = 20, value = 8, step = 0.5))
+                     "width:", width = "50px",
+                     min = 4, max = 20, value = 8, step = 0.5)),
+    downloadButton(NS0(id, "GeneExproup.pdf", postfix), "PDF"),
+    downloadButton(NS0(id, "GeneExproup.png", postfix), "PNG")
   )
 }
 
+#' @importFrom magrittr %>%
 cellInfoUI <- function(id, postfix=1){
   tagList(
     selectInput(NS0(id, "CellInfo", postfix), "Cell information:",
@@ -218,6 +224,7 @@ cellInfoUI <- function(id, postfix=1){
       helper1(cat="cellInfo")
   )
 }
+#' @importFrom DT DTOutput
 cellInfoTblUI <- function(id, postfix=1){
   tagList(
     actionButton(NS0(id, "CellInfoTableTog", postfix),
@@ -235,6 +242,7 @@ cellInfoTblUI <- function(id, postfix=1){
   )
 }
 
+#' @importFrom magrittr %>%
 geneExprUI <- function(id, postfix=1){
   tagList(
     selectInput(NS0(id, "GeneName", postfix),
@@ -243,6 +251,7 @@ geneExprUI <- function(id, postfix=1){
   )
 }
 
+#' @importFrom magrittr %>%
 xaxisCellInfoUI <- function(id){
   tagList(
     selectInput(NS(id, "CellInfoX"), "Cell information (X-axis):",
@@ -251,6 +260,7 @@ xaxisCellInfoUI <- function(id){
   )
 }
 
+#' @importFrom magrittr %>%
 yaxisCellInfoUI <- function(id){
   tagList(
     selectInput(NS(id, "CellInfoY"), "Cell Info / Gene name (Y-axis):",
@@ -258,4 +268,182 @@ yaxisCellInfoUI <- function(id){
       helper1(cat="cellInfoY")
   )
 }
+# subMOduleUIs
+subModuleContainerUI <-
+  function(id, mainSelectUI, menuUI, contentUI){
+    tagList(
+      div(
+        class="submodule-container",
+        div(
+          class="submodule-row",
+          div(
+            class="submodule-column submodule-left",
+            actionButton(NS(id, 'close'), label = '',
+                         icon = icon('close'),
+                         class = "submodule-dot-btn submodule-icon",
+                         style = "background: #ED594A;"),
+            actionButton(NS(id, 'movedown'), label = '',
+                         icon = icon('angle-down'),
+                         class = "submodule-dot-btn submodule-icon",
+                         style = "background: #FDD800;"),
+            actionButton(NS(id, 'moveup'), label = '',
+                         icon = icon('angle-up'),
+                         class = "submodule-dot-btn submodule-icon",
+                         style = "background: #006EF4;"),
+            actionButton(NS(id, 'resize'), label = '',
+                         icon = icon('arrows-left-right'),
+                         class = "submodule-dot-btn submodule-icon",
+                         style = "background: #5AC05A;")
+          ),
+          div(
+            class="submodule-column submodule-middle",
+            mainSelectUI
+          ),
+          div(
+            class="submodule-column submodule-right",
+            menuUI
+          )
+        ),
+        div(
+          class="submodule-content",
+          div(
+            contentUI
+          )
+        )
+      )
+    )
+  }
 
+contextMenuCellInfoUI <- function(id, postfix=1,
+                          colorNames=names(.globals$cList)){
+  tagList(
+    actionButton(NS0(id, "CellInfotog", postfix), "",
+                 icon = icon("bars"),
+                 class = "submodule-icon"),
+    div(
+      class="submodule-contextmenu",
+      conditionalPanel(
+        condition = paste0("input.CellInfotog", postfix, " % 2 == 1"), ns=NS(id),
+        radioButtons(NS0(id, "CellInfocol", postfix), "Colour (Continuous data):",
+                     choices = colorNames,
+                     selected = colorNames[1]),
+        radioButtons(NS0(id, "CellInfoord", postfix), "Plot order:",
+                     choices = c("Max-1st", "Min-1st",
+                                 "Original", "Random"),
+                     selected = "Original", inline = TRUE),
+        checkboxInput(NS0(id, "CellInfolab", postfix),
+                      "Show cell info labels", value = TRUE),
+        checkboxInput(NS0(id, "CellInfoslingshot", postfix),
+                      "Show lineages", value = TRUE)
+      )
+    )
+  )
+}
+contextMenuGeneExprUI <- function(id, postfix=1,
+                                  colorNames=names(.globals$cList)){
+  tagList(
+    actionButton(NS0(id, "GeneExprtog", postfix), "",
+                 icon = icon("bars"),
+                 class = "submodule-icon"),
+    div(
+      class="submodule-contextmenu",
+      conditionalPanel(
+        condition = paste0("input.GeneExprtog", postfix, " % 2 == 1"), ns=NS(id),
+        radioButtons(NS0(id, "GeneExprtype", postfix), "Plot type",
+                     choices = c("Dotplot", "Ridgeplot"),
+                     selected = "Dotplot"),
+        conditionalPanel(
+          condition = paste0("input.GeneExprtype", postfix, " == 'Dotplot'"),
+          ns=NS(id),
+          radioButtons(NS0(id, "GeneExprcol", postfix), "Colour:",
+                       choices = colorNames,
+                       selected = colorNames[1]),
+          radioButtons(NS0(id, "GeneExprord", postfix), "Plot order:",
+                       choices = c("Max-1st", "Min-1st",
+                                   "Original", "Random"),
+                       selected = "Max-1st", inline = TRUE),
+          actionButton(NS0(id, "GeneExprrgb", postfix),
+                       "Manually set max color value",
+                       inline = TRUE),
+          conditionalPanel(
+            condition = paste0("input.GeneExprrgb", postfix, " % 2 ==1"), ns=NS(id),
+            numericInput(NS0(id, "GeneExprrg", postfix), "Max value:",
+                         value = 100))
+        ),
+        conditionalPanel(
+          condition = paste0("input.GeneExprtype", postfix, " == 'Ridgeplot'"),
+          ns=NS(id),
+          actionButton(NS0(id, "GeneExprxlimb", postfix),
+                       "Manually set x axis", inline = TRUE),
+          conditionalPanel(
+            condition = paste0("input.GeneExprxlimb", postfix, " % 2 ==1"),
+            ns=NS(id),
+            sliderInput(NS0(id, "GeneExprxlim", postfix), "Xlim range:",
+                        min = -10, max = 100, value = c(-1.5, 10),
+                        step = 0.1))
+        )
+      )
+    )
+  )
+}
+contextMenuCoExprUI <- function(id, postfix=1,
+                                colorNames=names(.globals$cList),
+                                plotly = FALSE){
+  choices <- .globals$coExpColor
+  if(plotly){
+    choices <- c("Default", names(.globals$cList))
+  }
+  tagList(
+    actionButton(NS0(id, "CoExprtog", postfix), "",
+                 icon = icon("bars"),
+                 class = "submodule-icon"),
+    div(
+      class="submodule-contextmenu",
+      conditionalPanel(
+        condition = paste0("input.CoExprtog", postfix, " % 2 == 1"), ns=NS(id),
+        radioButtons(NS0(id, "CoExprcol", postfix), "Colour:",
+                     choices = choices,
+                     selected = choices[1]),
+        radioButtons(NS0(id, "CoExprord", postfix), "Plot order:",
+                     choices = c("Max-1st", "Min-1st", "Original", "Random"),
+                     selected = "Max-1st", inline = TRUE)
+      )
+    )
+  )
+}
+contextMenuPropUI <- function(id){
+  tagList(
+    actionButton(NS(id, "Proptog"), "",
+                 icon = icon("bars"),
+                 class = "submodule-icon"),
+    div(
+      class="submodule-contextmenu",
+      conditionalPanel(
+        condition = paste0("input.Proptog", " % 2 == 1"), ns=NS(id),
+        radioButtons(NS(id, "plottyp"),
+                     "Plot value:",
+                     choices = c("Proportion", "CellNumbers"),
+                     selected = "Proportion", inline = TRUE),
+        checkboxInput(NS(id, "plotflp"),
+                      "Flip X/Y", value = FALSE)
+      )
+    )
+  )
+}
+contextMenuViolinUI <- function(id){
+  tagList(
+    actionButton(NS(id, "Propviolin"), "",
+                 icon = icon("bars"),
+                 class = "submodule-icon"),
+    div(
+      class="submodule-contextmenu",
+      conditionalPanel(
+        condition = paste0("input.Propviolin", " % 2 == 1"), ns=NS(id),
+        radioButtons(NS(id, "plottyp"), "Plot type:",
+                     choices = c("violin", "boxplot"),
+                     selected = "violin", inline = TRUE),
+        checkboxInput(NS(id, "plotpts"), "Show data points", value = FALSE)
+      )
+    )
+  )
+}

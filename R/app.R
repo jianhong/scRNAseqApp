@@ -1,304 +1,366 @@
-## BiocManager::install(c("shinyhelper", "DT", "ggplot2", "ggrepel", "Matrix",
-##                        "hdf5r", "ggdendro", "gridExtra", "ggridges"))
+#' scRNAseqApp main function
+#' @description create a scRNAseqApp once the initialization is done.
+#' @param datafolder the folder where saved the dataset for the app
+#' @param defaultDataset default dataset for the app.
+#' @param windowTitle The title that should be displayed by the browser window.
+#' @param banner The banner image.
+#' @param maxRequestSize Maximal upload file size. Default is 1G.
+#' @param timeout Timeout session (minutes) before logout if sleeping.
+#'  Default to 30. 0 to disable.
+#' @param theme A theme.
+#' @param use_bs_themer logical(1). Used to determine the theme.
+#' @param ... parameters can be passed to shinyApp except ui and server.
 #' @import shiny
-#' @import shinyhelper
-#' @import data.table
-#' @import Matrix
-#' @import DT
-#' @import magrittr
-#' @import ggplot2
-#' @import ggrepel
-#' @import hdf5r
-#' @import ggdendro
-#' @import gridExtra
-#' @import ggridges
-# library(shiny)
-# library(shinyhelper)
-# library(data.table)
-# library(Matrix)
-# library(DT)
-# library(magrittr)
-# library(ggplot2)
-# library(ggrepel)
-# library(hdf5r)
-# library(ggdendro)
-# library(gridExtra)
-# library(ggridges)
+#' @importFrom utils packageVersion read.delim
+#' @importFrom xfun base64_uri
+#' @importFrom shinyhelper observe_helpers
+#' @importFrom ggplot2 ggplot aes geom_bar theme_minimal xlab ylab
+#' @importFrom bslib bs_theme bs_themer
+#' @export
+#' @return An object that represents the app.
+#' @examples
+#' if(interactive()){
+#'   app_path=tempdir()
+#'   scInit(app_path=app_path)
+#'   setwd(app_path)
+#'   scRNAseqApp()
+#' }
 
-if(names(dev.cur())!= "null device") dev.off()
-pdf(NULL)
+scRNAseqApp <- function(datafolder = "data",
+                        defaultDataset = "pbmc_small",
+                        windowTitle = "scRNAseq/scATACseq database",
+                        banner = system.file('assets', 'images', 'banner.png',
+                                             package='scRNAseqApp'),
+                        maxRequestSize=1073741824,
+                        timeout = 30,
+                        theme = bs_theme(bootswatch = 'lumen'),
+                        use_bs_themer = FALSE,
+                        ...){
+  stopifnot(is(theme, "bs_theme"))
+  .globals$theme <- theme
+  .globals$datafolder <- datafolder
+  stopifnot(file.exists(datafolder))
+  ## load banner
+  banner <- base64_uri(banner)
+  ## load default parameters
+  loginNavbarTitle <- "Switch User"
+  datasets <- getDataSets()
+  defaultDataset <- getDefaultDataset(defaultDataset=defaultDataset)
+  appconf <- getAppConf()
+  datasets <- getDataSets(appconf = appconf)
+  data_types <- getDataType(appconf = appconf)
 
-#' @include lang.R
-#' @include userdata.R
-#' @include datalist.R
-
-#library(sysfonts)
-#font_paths(file.path(getwd(), "inst/extdata/fonts"))
-#font_add(family = "Arial", regular = "Arial.ttf")
-#library(showtext)
-#showtext.auto()
-
-#' @include define.R
-#' @include g_legend.R
-#' @include sctheme.R
-#' @include sortLevels.R
-#' @include loadData.R
-
-### Common plotting functions
-# source("R/scDRcell.R")
-# source("R/scDRnum.R")
-# source("R/scDRgene.R")
-# source("R/scDRcoex.R")
-# source("R/scDRcoexLeg.R")
-# source("R/scDRcoexNum.R")
-# source("R/scVioBox.R")
-# source("R/scProp.R")
-# source("R/scGeneList.R")
-# source("R/scBubbHeat.R")
-
-### load modules
-## source("R/tab.R")
-# source("R/tabUIs.R")
-# source("R/helpers.R")
-# source("R/downloaders.R")
-## source("R/modules.R")
-
-scRNAseqApp <- function(...){
-  ui <- function(req){
+  ui0 <- function(req){
     fluidPage(
-      ### HTML formatting of error messages
-      tags$head(tags$style(HTML(".shiny-output-error-validation {color: red; font-weight: bold;}")),
-                tags$style(HTML(".rightAlign{float:right;}")),
-                tags$script(src = "login.js"),
-                list(tags$style(HTML(".navbar-default .navbar-nav { font-weight: bold; font-size: 16px; }")))
-      ),
-
-      ### Page title
-      titlePanel(htmlOutput("dataTitle"), windowTitle = "scRNAseq regeneration database"),
+      ### theme
+      theme = .globals$theme,
       navbarPage(
-        NULL,
+        title = NULL,
+        windowTitle = windowTitle,
         id = "topnav",
-        footer = div(p(em("scRNAseq/scATACseq Database (Version:", VERSION, ")"),
+        footer = div(p(em(windowTitle, " (Version:",
+                          as.character(packageVersion("scRNAseqApp")), ")"),
                        HTML("&copy;"), "2020 -",
                        format(Sys.Date(), "%Y"),
-                       "jianhong@duke"), class="rightAlign"),
-        ### Tab: cellInfo vs geneExpr on dimRed
-        cellInfoGeneExprUI("cellInfoGeneExpr"),
-        ### Tab: cellInfo vs cellInfo on dimRed
-        cellInfoCellInfoUI("cellInfoCellInfo"),
-        ### Tab: geneExpr vs geneExpr on dimRed
-        geneExprGeneExprUI("geneExprGeneExpr"),
-        ### Tab: Gene coexpression plot
-        coExprUI("coExpr"),
-        ### Tab: subset gene expr
-        subsetGeneExprUI("subsetGeneExpr"),
-        ### Tab: violinplot / boxplot
-        plotVioBoxUI("vioBoxPlot"),
-        ### Tab: Proportion plot
-        plotProportionUI("proportion"),
-        ### Tab: Multiple gene expr
-        plotBubbleHeatmapUI("bubbleHeatmap"),
+                       "jianhong@duke", style='text-align:right;'),
+                     class="about-right border-top-info"),
         ### Tab: change dataset
-        tabChangeDataset(req),
+        aboutUI(req, "about", banner, defaultDataset),
+        homeUI(), ## fake home
+        navbarMenu(
+          "CellInfo/GeneExpr",
+          ### Tab: cellInfo vs geneExpr on dimRed
+          cellInfoGeneExprUI("cellInfoGeneExpr"),
+          ### Tab: cellInfo vs cellInfo on dimRed
+          cellInfoCellInfoUI("cellInfoCellInfo"),
+          ### Tab: subset gene expr
+          subsetGeneExprUI("subsetGeneExpr")
+        ),
+        navbarMenu(
+          "Co-expression",
+          ### Tab: geneExpr vs geneExpr on dimRed
+          geneExprGeneExprUI("geneExprGeneExpr"),
+          ### Tab: Gene coexpression plot
+          coExprUI("coExpr"),
+          ### Tab: 3d Gene coexpression plot
+          coExpr3dUI("coExpr3d"),
+          ### Tab: sunburst plot
+          plotPieDimUI('sunburst')
+        ),
+        navbarMenu(
+          "Stats",
+          ### Tab: violinplot / boxplot
+          plotVioBoxUI("vioBoxPlot"),
+          ### Tab: Proportion plot
+          plotProportionUI("proportion"),
+          ### Tab: Multiple gene expr
+          plotBubbleHeatmapUI("bubbleHeatmap"),
+          ### Tab: monocle
+          #plotMonocleUI("monocle"),
+          ### Tab: waffle
+          plotWaffleUI("waffle")
+        ),
+        subsetPlotsUI('explorer'),
         ### Tab: Login form
-        tabLogin(),
-        br(),br(),br(),br(),br()
+        #tabLogin(),
+        loginUI(loginNavbarTitle, defaultDataset)
       ))
   }
+  ## security_login
+  ui <- secureUI(ui0, timeout)
 
   ### Start server code
   server <- function(input, output, session) {
+    ## load local storage
+    session$sendCustomMessage("load_key", "defaultDataset")
+    ## set theme
+    if(is.null(getShinyOption("bootstrapTheme"))){
+      shinyOptions("bootstrapTheme"=.globals$theme)
+    }
+    if(use_bs_themer && is(getShinyOption("bootstrapTheme"), "bs_theme")){
+      bs_themer()
+    }
+
+    ### resize the max upload file size for admin
+    options(shiny.maxRequestSize=maxRequestSize) # 1G
     ### For all tags and Server-side selectize
     observe_helpers()
-    optCrt="{ option_create: function(data,escape) {return('<div class=\"create\"><strong>' + '</strong></div>');} }"
-    dataSource <- reactiveValues(dataset=defaultDataset,
-                                 sc1conf=NULL,
-                                 sc1def=NULL,
-                                 sc1gene=NULL,
-                                 sc1meta=NULL,
-                                 Logged=FALSE,
-                                 terms=terms[["scRNAseq"]],
-                                 Username="",
-                                 Password="",
-                                 token="")
+    optCrt="{ option_create: function(data,escape) {
+    return('<div class=\"create\"><strong>' + '</strong></div>');
+    } }"
+    gn2sym <- readRDS(system.file('extdata', 'gn2sym.rds',
+                                  package = 'scRNAseqApp'))
+    dataSource <- reactiveValues(
+      available_datasets=datasets, # all available datasets
+      dataset=defaultDataset, # current dataset
+      appconf=appconf, # all data configs, used for search
+      data_types=data_types, # data type
+      cell=NULL,
+      genelist=NULL, # genelist for cellInfoGeneExpr or heatmap plot from query string
+      sc1conf=NULL, # config for current sc data
+      sc1def=NULL, # def for current sc data
+      sc1gene=NULL, # gene for current sc data
+      sc1meta=NULL, # meta for current sc data
+      search_results=NULL, #search_cache
+      Logged=FALSE, # user logged
+      terms=.globals$terms[["scRNAseq"]], # tab UI for scRNAseq/scATACseq
+      symbolDict=NULL, # gene symbol dictionary
+      gn2sym=gn2sym, # gene name to gene symbol dictionary
+      auth=NULL, # authority
+      Username="", # username
+      Password="", # passward
+      token="") # toekn
+
+    ### check available data
+    checkAvailableDatasets <- reactivePoll(
+      1000, session,
+      checkFunc = getNamedDataSets,
+      valueFunc = getNamedDataSets)
+    observeEvent(checkAvailableDatasets(),
+                 ignoreNULL = TRUE,
+                 ignoreInit = TRUE, {
+                   ## update datasets if datasets changed by admin
+                   ad <- getNamedDataSets()
+                   if(!all(dataSource$available_datasets %in% ad,
+                           na.rm = TRUE) ||
+                      !all(ad %in% dataSource$available_datasets,
+                           na.rm = TRUE)){
+                     dataSource$available_datasets <- ad
+                     dataSource$symbolDict <-
+                       updateSymbolDict()
+                     updateSelectInput(
+                       session, "selectedDatasets",
+                       choices = ad,
+                       selected = input$selectedDatasets)
+                   }
+                 })
     ## login
-    observeEvent(input$Login, {
-      dataSource$Username <- isolate(input$userName)
-      dataSource$Password <- isolate(input$passwd)
-      if(!checkLockedDataset(dataSource$dataset)){
-        output$loginmsg <- renderText("No need to login yet.")
-        updateTabsetPanel(session, "topnav", selected = "ChangeDataset")
-      }
-      if (checkUserNameAndPassword(dataSource$Username,
-                                   dataSource$Password,
-                                   dataSource$dataset) ||
-          checkToken(token, dataSource$token, dataSource$dataset)) {
-        dataSource$Logged <- TRUE
-        output$loginmsg <- renderText("Logged!")
-        updateTabsetPanel(session, "topnav", selected = "ChangeDataset")
-      }else{
-        dataSource$Logged <- FALSE
-        dataSource$Username <- ""
-        dataSource$Password <- ""
-        dataSource$token <- ""
-        output$loginmsg <- renderText("Wrong Username, Password or Dataset!")
-      }
-    })
-    ## parse query strings
+    dataSource$auth <- loginServer(input, output, session)
     observe({
-      query <- parseQueryString(session$clientData$url_search)
-      if(!is.null(query[['data']])){
-        updateSelectInput(session, "availableDatasets", selected=query[['data']])
-      }
-      if(!is.null(query[['token']])){
-        if(query[["token"]] %in% names(token)){
-          dataSource$token <- query[["token"]]
-          if(dataSource$token %in% names(token)){
-            updateSelectInput(session,
-                              "availableDatasets",
-                              selected=token[[query[['token']]]])
-          }
-        }
-      }
-    })
-    ## change dataset
-    observeEvent(input$availableDatasets,{
-      dataSource$dataset <- input$availableDatasets
-      if(checkLockedDataset(dataSource$dataset)){
-        if(dataSource$Username!="" && dataSource$Password!=""){
-          if(checkUserNameAndPassword(dataSource$Username, dataSource$Password, dataSource$dataset)){
-            dataSource$Logged <- TRUE
-            output$loginmsg <- renderText("Logged!")
-          }else{
-            updateTabsetPanel(session, "topnav", selected = "Login")
-          }
-        }else{
-          if(dataSource$token!=""){
-            if(checkToken(token, dataSource$token, dataSource$dataset)){
-              dataSource$Logged <- TRUE
-              output$loginmsg <- renderText("Logged!")
-            }
-          }else{
-            updateTabsetPanel(session, "topnav", selected = "Login")
-          }
-        }
-      }
-      refreshData(input, output, session)
-    })
-    observeEvent(input$search, {
-      if(input$search != '' && input$search != "search key words in data name"){
-        key_words = strsplit(input$search, '\\s+')[[1]]
-        key_words = gsub("[^a-zA-Z0-9._-]+", "", key_words)
-        key_words <- paste(key_words, collapse='|')
-        res_data <- lapply(appconf, function(.ele){
-          if(grepl(key_words, paste(.ele$title, .ele$id, do.call(paste, .ele$ref)),
-                   ignore.case = TRUE)){
-            return(c(.ele$id, .ele$title))
-          }else{
-            return(NULL)
-          }
-        })
-        ## update search_res
-        res_data <- res_data[lengths(res_data)>0]
-        if(!is.null(res_data)){
-          output$search_res <- renderUI(HTML(
-            paste("<ul>",
-                  vapply(res_data, function(.ele){
-                    return(paste0("<li><a href='?data=", .ele[1], "'>", .ele[2], "</a>"))
-                  }, character(1L)),
-                  "</ul>")
-          ))
+      if(!is.null(isolate(dataSource$auth$admin))){
+        if(isolate(dataSource$auth$admin)){
+          webstatsServer("webstats", session)
+          uploadServer("upload")
+          editServer("editdata")
         }
       }
     })
     ## update visitor stats
-    update_visitor <- function(){
-      req(input$remote_addr)
-      counter <- read.delim("www/counter.tsv", header = TRUE)
-      ips <- counter$ip
-      counter <- as.Date(counter$date)
-      visitors <- paste(format(counter, "%d/%m/%y %H"), ips)
-      current <- Sys.time()
-      ip <- isolate(input$remote_addr)
-      agent <- isolate(input$remote_agent)
-      if(!paste(format(current, "%d/%m/%y %H"), ip) %in% visitors){
-        write(paste(as.character(current), ip, agent, sep="\t"),
-              "www/counter.tsv", append = TRUE)
+    updateVisitor(input, output, session)
+    ## parse query strings, and lood old session
+    observe({
+      query <- parseQueryString(session$clientData$url_search)
+      query_has_results <- FALSE
+      if(!is.null(query[['gene']])){
+        genes <- strsplit(query[['gene']], ";")[[1]]
+        dataSource$genelist <- genes
+      }else{
+        dataSource$genelist <- NULL
       }
-    }
-    observeEvent(input$remote_addr, update_visitor())
-    output$total_visitor <- renderPlot({
-      counter <- read.delim("www/counter.tsv", header = TRUE)
-      counter <- as.Date(counter$date)
-      counter <- counter[as.numeric(difftime(as.Date(Sys.time()), counter, units = 'days'))<730]
-      counter <- table(format(counter, "%y-%m"))
-      counter <- as.data.frame(counter)
-      ggplot(counter, aes(x=Var1, y=Freq)) +
-        geom_bar(stat = "identity", fill="darkorchid4") +
-        theme_minimal() + xlab("") + ylab("visitor counts") +
-        theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+      if(!is.null(query[['cell']])){## not used yet
+        cell <- strsplit(query[['cell']], ";")[[1]]
+        dataSource$cell <- cell
+      }else{
+        dataSource$cell <- NULL
+      }
+      if(!is.null(query[['data']])){
+        updateSelectInput(session, "selectedDatasets",
+                          selected=query[['data']])
+        session$userData[["defaultdata_init"]] <- TRUE
+        query_has_results <- TRUE
+      }else{
+        if(!is.null(query[['token']])){
+          token <- getToken()
+          if(query[["token"]] %in% names(token)){
+            dataSource$token <- query[["token"]]
+            if(dataSource$token %in% names(token)){
+              updateSelectInput(session,
+                                "selectedDatasets",
+                                selected=token[[query[['token']]]])
+              session$userData[["defaultdata_init"]] <- TRUE
+              query_has_results <- TRUE
+            }
+          }
+        }
+      }
+
+      if(!use_bs_themer & !query_has_results){ ## not work when load themer
+        observeEvent(input$default_defaultDataset, {
+          if (isTRUE(isolate(session$userData[["defaultdata_init"]]))) {
+            return()
+          } else {
+            session$userData[["defaultdata_init"]] <- TRUE
+            dd <- isolate(input$default_defaultDataset)
+            if(!is.null(dd)){
+              if(dd %in% getDataSets() &&
+                 dd!=defaultDataset){
+                updateSelectInput(session, 'selectedDatasets', selected = dd)
+              }
+            }
+          }
+        })
+      }
+    })
+    ## update gene symbol list
+    dataSource$symbolDict <- updateSymbolDict()
+    ## change dataset
+    observeEvent(input$selectedDatasets,{
+      if(input$selectedDatasets %in% getDataSets()){
+        dataSource$dataset <- input$selectedDatasets
+        if(checkLocker(dataSource$dataset)){
+          dataSource$Logged <- FALSE
+          if(dataSource$token!=""){
+            if(checkToken(token, dataSource$token, dataSource$dataset)){
+              dataSource$Logged <- TRUE
+            }
+          }else{
+            if(!is.null(dataSource$auth)){
+              if(checkPrivilege(dataSource$auth$privilege, dataSource$dataset)){
+                dataSource$Logged <- TRUE
+              }
+            }
+          }
+          if(!dataSource$Logged){
+            updateTabsetPanel(session, "topnav", selected = loginNavbarTitle)
+          }
+        }
+        refreshData(input, output, session)
+        if(length(dataSource$genelist)==1){
+          updateTabsetPanel(session, 'topnav', selected ="cellInfoGeneExpr")
+        }else{
+          if(length(dataSource$genelist)>1){
+            updateTabsetPanel(session, 'topnav', selected ="bubbleHeatmap")
+          }
+        }
+      }else{
+        updateSelectInput(session, "selectedDatasets",
+                          choices = getDataSets(),
+                          selected = getDataSets()[1])
+      }
+      session$sendCustomMessage("save_key",
+                                paste("defaultDataset",
+                                      isolate(input$selectedDatasets),
+                                      sep = "|"))
     })
     ## refresh data when change dataset
     refreshData <- function(input, output, session){
-      hasRef <- !is.na(getRef(dataSource$dataset, "title"))
       if(dataSource$dataset %in% names(data_types)){
-        dataSource$terms <- terms[[data_types[[dataSource$dataset]]]]
+        dataSource$terms <- .globals$terms[[data_types[[dataSource$dataset]]]]
       }
-      dataSource <- loadData(dataSource, datafolder)
-      output$dataTitle <- renderUI({HTML(names(datasets)[datasets==input$availableDatasets])})
-      output$ref_author <- renderText(ifelse(hasRef, getRef(dataSource$dataset, "authors"), ""))
-      output$ref_title <- renderText(ifelse(hasRef, getRef(dataSource$dataset, "title"), ""))
-      output$ref_journal <- renderText(ifelse(hasRef, getRef(dataSource$dataset, "journals"), ""))
-      output$ref_year <- renderText(ifelse(hasRef, getRef(dataSource$dataset, "years"), ""))
-      output$ref_pmid <- renderUI({
-        if(hasRef){
-          a(getRef(dataSource$dataset, "pmids"),
-            href = paste0("https://www.ncbi.nlm.nih.gov/pubmed/",
-                          getRef(dataSource$dataset, "pmids")))
-        }else{
-          br()
-        }
+      dataSource <- loadData(dataSource)
+      output$dataTitle <- renderUI({
+        HTML(names(datasets)[datasets==input$selectedDatasets])
       })
 
+      aboutServer("about", reactive({dataSource}), optCrt)
       ### Plots for tab cell info vs gene expression
-      cellInfoGeneExprServer("cellInfoGeneExpr", reactive({dataSource}),
-                             optCrt, input$availableDatasets)
+      cellInfoGeneExprServer("cellInfoGeneExpr",
+                             reactive({dataSource}),
+                             optCrt)
 
       ### Plots for tab cell info vs cell info
-      cellInfoCellInfoServer("cellInfoCellInfo", reactive({dataSource}),
-                             optCrt, input$availableDatasets)
+      cellInfoCellInfoServer("cellInfoCellInfo",
+                             reactive({dataSource}),
+                             optCrt)
 
       ### Plots for tab gene expression vs gene expression
-      geneExprGeneExprServer("geneExprGeneExpr", reactive({dataSource}),
-                             optCrt, input$availableDatasets)
+      geneExprGeneExprServer("geneExprGeneExpr",
+                             reactive({dataSource}),
+                             optCrt)
 
       ### Plots for tab co-expression
-      coExprServer("coExpr", reactive({dataSource}),
-                   optCrt, input$availableDatasets)
+      coExprServer("coExpr",
+                   reactive({dataSource}),
+                   optCrt)
+
+      ### Plots for tab 3d co-expression
+      coExpr3dServer("coExpr3d",
+                   reactive({dataSource}),
+                   optCrt)
+
+      ### Plots for tab PieDim
+      plotPieDimServer('sunburst',
+                       reactive({dataSource}),
+                       optCrt)
 
       ### Plots for tab subset
-      subsetGeneExprServer("subsetGeneExpr", reactive({dataSource}),
-                           optCrt, input$availableDatasets)
+      subsetGeneExprServer("subsetGeneExpr",
+                           reactive({dataSource}),
+                           optCrt)
 
       ### Plots for tab violion
-      plotVioBoxServer("vioBoxPlot", reactive({dataSource}),
-                       optCrt, input$availableDatasets, datafolder)
+      plotVioBoxServer("vioBoxPlot",
+                       reactive({dataSource}),
+                       optCrt)
 
 
       ### Plots for tab proportion
-      plotProportionServer("proportion", reactive({dataSource}),
-                           optCrt, input$availableDatasets)
+      plotProportionServer("proportion",
+                           reactive({dataSource}),
+                           optCrt)
 
 
       ### Plots for tab bubble heatmap
-      plotBubbleHeatmapServer("bubbleHeatmap", reactive({dataSource}),
-                              optCrt, input$availableDatasets)
+      plotBubbleHeatmapServer("bubbleHeatmap",
+                              reactive({dataSource}),
+                              optCrt)
+
+      ### Plots for waffle
+      plotWaffleServer("waffle",
+                       reactive({dataSource}),
+                       optCrt)
+
+      ### Plots for monocle
+      # plotMonocleServer("monocle",
+      #                  reactive({dataSource}),
+      #                  optCrt)
+      subsetPlotsServer('explorer',
+                        reactive({dataSource}),
+                        optCrt)
     }
+
   }
 
   shinyApp(ui=ui, server = server, ...)
 }
-
-
-
 

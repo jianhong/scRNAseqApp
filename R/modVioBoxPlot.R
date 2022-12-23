@@ -1,5 +1,6 @@
 plotVioBoxUI <- function(id){
   tabPanel(
+    value=id,
     HTML("Violinplot / Boxplot"),
     h4("Cell information / gene expression violin plot / box plot"),
     "In this tab, users can visualise the gene expression or continuous cell information ",
@@ -27,61 +28,17 @@ plotVioBoxUI <- function(id){
     )
   )
 }
-plotVioBoxServer <- function(id, dataSource, optCrt, currentdataset, datafolder){
+plotVioBoxServer <- function(id, dataSource, optCrt){
   moduleServer(id, function(input, output, session){
     ## input column
     updateSelectInput(session,
                       "CellInfoX",
                       "Cell information (X-axis):",
-                      choices = dataSource()$sc1conf[grp == TRUE]$UI,
+                      choices = getGroupUI(dataSource),
                       selected = dataSource()$sc1def$grp1)
-    updateSelectInput(session,
-                      "subsetCell",
-                      "Cell information to subset by:",
-                      choices = c("N/A", dataSource()$sc1conf[grp == TRUE]$UI),
-                      selected = "N/A")
-    updateSelectizeInput(session,
-                         "filterCell",
-                         server = TRUE,
-                         choices = c(dataSource()$sc1conf[is.na(fID)]$UI,
-                                     sort(names(dataSource()$sc1gene))),
-                         selected = dataSource()$sc1conf[is.na(fID)]$UI[1],
-                         options = list(
-                           maxOptions = length(dataSource()$sc1conf[is.na(fID)]$UI) + 3,
-                           create = TRUE, persist = TRUE, render = I(optCrt)))
 
-
-    ## update the ui
-    output$subsetCell.ui <- renderUI({
-      if(input$subsetCell!="N/A"){
-        sub = strsplit(dataSource()$sc1conf[UI == input$subsetCell]$fID, "\\|")[[1]]
-        checkboxGroupInput(NS(id, "subsetCellVal"),
-                              "Select which cells to show",
-                           inline = TRUE,
-                           choices = sub,
-                           selected = sub)
-      }else{
-        sub = NULL
-      }
-    })
-    output$filterCell.ui <- renderUI({
-      if(!input$filterCell %in% dataSource()$sc1conf$UI){
-        h5file <- H5File$new(file.path(datafolder, dataSource()$dataset, "sc1gexpr.h5"), mode = "r")
-        h5data <- h5file[["grp"]][["data"]]
-        val = h5data$read(args = list(dataSource()$sc1gene[input$filterCell], quote(expr=)))
-        val <- max(val, na.rm = TRUE)
-        h5file$close_all()
-      }else{
-        val = dataSource()$sc1meta[[dataSource()$sc1conf[UI == input$filterCell]$ID]]
-        val <- max(val, na.rm = TRUE)
-      }
-      if(val<=1) maxv <- round(val, digits = 3)
-      if(val>1 && val<=10) maxv <- round(val, digits = 1)
-      if(val>10) maxv <- round(val, digits = 0)
-      sliderInput(NS(id, "filterCellVal"),
-                  "Filter the cells by value",
-                  min = 0, max = maxv, value = 0)
-    })
+    updateSubsetCellUI(id, input, output, session, dataSource, addNA=TRUE)
+    updateFilterCellUI(id, optCrt, input, output, session, dataSource)
 
     ## plot region
     ### plots
@@ -90,43 +47,25 @@ plotVioBoxServer <- function(id, dataSource, optCrt, currentdataset, datafolder)
         dataSource()$sc1conf,
         dataSource()$sc1meta,
         input$CellInfoX,
+        input$filterCell,
         input$subsetCell,
         input$subsetCellVal,
-        input$filterCellVal,
         input$filterCell,
+        input$filterCellVal,
         dataSource()$dataset,
-        "sc1gexpr.h5",
         dataSource()$sc1gene,
         input$plottyp,
         input$plotpts,
         input$plotsiz,
         input$plotfsz)
     })
-    output$GeneExproup1 <- renderPlot({ plot1() })
-    output$GeneExproup.ui1 <- renderUI({
-      plotOutput(NS0(id, "GeneExproup", 1),
-                 height = pList2[input$plotpsz])
-    })
-    output$GeneExproup.pdf1 <-
-      plotsDownloadHandler(
-        "pdf",
-        width=input$GeneExproup.w1,
-        height=input$GeneExproup.h1,
-        plot1(),
-        currentdataset,
-        input$plottyp,
-        input$CellInfoX,
-        input$filterCell)
-    output$GeneExproup.png1 <-
-      plotsDownloadHandler(
-        "png",
-        width=input$GeneExproup.w1,
-        height=input$GeneExproup.h1,
-        plot1(),
-        currentdataset,
-        input$plottyp,
-        input$CellInfoX,
-        input$filterCell)
+    updateGeneExprDotPlotUI(postfix=1, id, input, output, session,
+                            plot1, .globals$pList2[input$plotpsz],
+                            dataSource()$dataset,
+                            input$plottyp,
+                            input$CellInfoX,
+                            input$filterCell)
+
   })
 }
 

@@ -1,0 +1,88 @@
+.shiny-output-error-validation {color: red; font-weight: bold;}
+.navbar-default .navbar-nav { font-weight: bold; font-size: 16px; }
+.navbar-nav>li>a {padding: 0.25rem .5rem!important;}
+.navbar-nav>li:first-child>a>div>div.form-group {margin-bottom: 0rem!important;}
+.consoleOutput>pre {max-height: 400px;}
+.align-action-button {margin-top: 31px!important;}
+/*About icon stats*/
+.about-container:after,.about-container:before,.about-clear:after,.about-clear:before{content:"";display:table;clear:both}
+.about-margin-bottom{margin-bottom:16px!important}
+.about-margin-right{margin-right:27px!important}
+.about-left-border{float:left;padding-right:16px!important}
+.about-padding-16{padding-top:16px!important;padding-bottom:16px!important}
+.about-container{padding:0.01em 16px}
+.about-left{float:left!important}
+.about-right{float:right!important}
+.about-large-icon{font-size:24px!important}
+.about-bar{z-index:-1}
+.about-top{z-index:1000!important}
+div.about-right>div{font-size:24px!important;magin:10px 0!important;font-weight:400;font-family:"Raleway", sans-serif;display:block;}
+.about-image{max-width:100%;height:auto}
+.about-glass{background: rgba(255,255,255,0.8); backdrop-filter:saturate(180%) blur(10px)}
+.about-display-container{position:relative}
+.about-ul{list-style-type:none;padding:0;margin:0}.about-ul li{padding:8px 16px;border-bottom:1px solid #ddd}.about-ul li:last-child{border-bottom:none}
+.border-left-primary{border-left:.25rem solid #4e73df!important}
+.border-bottom-primary{border-bottom:.25rem solid #4e73df!important}
+.border-left-secondary{border-left:.25rem solid #858796!important}
+.border-bottom-secondary{border-bottom:.25rem solid #858796!important}
+.border-left-success{border-left:.25rem solid #1cc88a!important}
+.border-bottom-success{border-bottom:.25rem solid #1cc88a!important}
+.border-left-info{border-left:.25rem solid #36b9cc!important}
+.border-bottom-info{border-bottom:.25rem solid #36b9cc!important}
+.border-left-warning{border-left:.25rem solid #f6c23e!important}
+.border-bottom-warning{border-bottom:.25rem solid #f6c23e!important}
+.border-left-danger{border-left:.25rem solid #e74a3b!important}
+.border-bottom-danger{border-bottom:.25rem solid #e74a3b!important}
+.border-left-light{border-left:.25rem solid #f8f9fc!important}
+.border-bottom-light{border-bottom:.25rem solid #f8f9fc!important}
+.border-left-dark{border-left:.25rem solid #5a5c69!important}
+.border-bottom-dark{border-bottom:.25rem solid #5a5c69!important}
+.text-gray-300 {color: #dddfeb!important;}
+.border-top-info{border-top:.25rem solid #36b9cc!important}
+.about-black{color:#fff!important;background-color:#000!important}
+.about-white{color:#000!important;background-color:#fff!important}
+.about-red{color:#fff!important;background-color:#f44336!important}
+.about-orange{color:#000!important;background-color:#ff9800!important}
+.about-teal{color:#fff!important;background-color:#009688!important}
+.about-blue{color:#fff!important;background-color:#2196F3!important}
+.about-container-black-border{border:1px solid #000}
+.about-primary{color:#4e73df!important}
+.about-secondary{color:#858796!important}
+.about-success{color:#1cc88a!important}
+.about-info{color:#36b9cc!important}
+.about-warning{color:#f6c23e!important}
+.about-danger{color:#e74a3b!important}
+.about-light{color:#f8f9fc!important}
+.about-dark{color:#5a5c69!important}
+/*submodule*/
+.submodule-container {border: 3px solid #f1f1f1!important;border-top-left-radius: 4px; border-top-right-radius: 4px;}
+.submodule-row {padding: 10px 10px 0px 10px;background: #f1f1f1;border-top-left-radius: 4px;border-top-right-radius: 4px; display: flex;}
+.submodule-column {float: left;}
+.submodule-left {width: 18%;}
+.submodule-right {width: 7%;}
+.submodule-middle {width: 75%;}
+.submodule-middle label{ display: table-cell; vertical-align: top; margin-bottom: 0px;}
+.submodule-middle .form-group { display: table-row;}
+.submodule-middle .form-group > div {min-width: 200px;}
+.submodule-middle .selectize-input { padding: 0px; min-height:.75em;}
+.submodule-middle .selectize-input > div { padding: 0px 5px;}
+.submodule-middle .selectize-dropdown { margin: 0px;}
+.submodule-row:after {content: "";display: table;clear: both;}
+.submodule-icon{
+  background-color:transparent;
+  border:0px solid transparent!important;
+  padding: 0px!important;
+  text-align: center!important;
+  text-decoration: none!important;
+  display: inline-block!important;
+}
+.submodule-dot-btn{
+  border-radius: 50%!important;
+  width: 12px!important;
+  height: 12px!important;
+  font-size: 8px!important;
+  opacity:0.8!important;
+}
+.submodule-content {padding: 10px;}
+.submodule-contextmenu{position: relative;}
+.submodule-contextmenu > div {width:260px; padding:5px; border: 2px solid #EFEFEF; z-index: 1001; position: absolute; right: 0; background: rgba(255,255,255,0.8); backdrop-filter:saturate(180%) blur(10px)}

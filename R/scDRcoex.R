@@ -1,88 +1,110 @@
 # Plot gene coexpression on dimred
 bilinear <- function(x,y,xy,Q11,Q21,Q12,Q22){
-  oup = (xy-x)*(xy-y)*Q11 + x*(xy-y)*Q21 + (xy-x)*y*Q12 + x*y*Q22
-  oup = oup / (xy*xy)
+  oup <- (xy-x)*(xy-y)*Q11 + x*(xy-y)*Q21 + (xy-x)*y*Q12 + x*y*Q22
+  oup <- oup / (xy*xy)
   return(oup)
 }
-scDRcoex <- function(inpConf, inpMeta, inpdrX, inpdrY, inp1, inp2,
-                     inpsub1, inpsub2, dataset, inpH5, inpGene,
-                     inpsiz, inpcol, inpord, inpfsz, inpasp, inptxt){
-  # Prepare ggData
-  ggData = inpMeta[, c(inpConf[UI == inpdrX]$ID, inpConf[UI == inpdrY]$ID,
-                       inpConf[UI == inpsub1]$ID),
-                   with = FALSE]
-  colnames(ggData) = c("X", "Y", "sub")
-  rat = (max(ggData$X, na.rm = TRUE) - min(ggData$X, na.rm = TRUE)) /
-    (max(ggData$Y, na.rm=TRUE) - min(ggData$Y, na.rm = TRUE))
-
-  h5file <- H5File$new(file.path(datafolder, dataset, inpH5), mode = "r")
-  h5data <- h5file[["grp"]][["data"]]
-  ggData$val1 = h5data$read(args = list(inpGene[inp1], quote(expr=)))
-  ggData[val1 < 0]$val1 = 0
-  ggData$val2 = h5data$read(args = list(inpGene[inp2], quote(expr=)))
-  ggData[val2 < 0]$val2 = 0
-  h5file$close_all()
-  bgCells = FALSE
-  if(length(inpsub2) != 0 & length(inpsub2) != nlevels(ggData$sub)){
-    bgCells = TRUE
-    ggData2 = ggData[!sub %in% inpsub2]
-    ggData = ggData[sub %in% inpsub2]
+#' @importFrom grDevices rgb
+#' @importFrom data.table data.table
+#' @importFrom plotly plot_ly layout
+#' @importFrom ggplot2 ggplot aes_string geom_point xlab ylab scale_color_gradientn
+#' guides guide_colorbar coord_fixed
+scDRcoex <- function(inpConf, inpMeta,
+                     dimRedX, dimRedY,
+                     gene1, gene2,
+                     subsetCellKey, subsetCellVal,
+                     dataset, geneIdMap,
+                     plotType,
+                     pointSize,
+                     GeneExprDotCol,
+                     GeneExprDotOrd,
+                     labelsFontsize,
+                     plotAspectRatio,
+                     keepXYlables,
+                     valueFilterKey, valueFilterCutoff){
+  if(is.null(gene1) || is.null(gene2) || gene1=="" || gene2==""){
+    return(NULL)
   }
+  subFilterColname <- 'subValue'
+  subGrpColname <- 'sub'
+  # Prepare ggData
+  ggData <- inpMeta[, c(inpConf[inpConf$UI == dimRedX]$ID,
+                        inpConf[inpConf$UI == dimRedY]$ID,
+                        inpConf[inpConf$UI == subsetCellKey]$ID),
+                   with = FALSE]
+  if(nrow(ggData)==0) return(NULL)
+  colnames(ggData) <- c("X", "Y", subGrpColname)
+  if(plotType=="3D"){
+    ggData$sampleID <- inpMeta$sampleID
+  }
+  ggData <- cbindFilterValues(ggData, inpConf, inpMeta, subFilterColname,
+                              geneIdMap, dataset,
+                              valueFilterKey, valueFilterCutoff)
+  rat <- getRatio(ggData)
+
+  ggData <- getCoexpVal(ggData, dataset, geneIdMap, gene1, gene2)
+  keep <- filterCells(ggData,
+                      subGrpColname, subsetCellVal,
+                      subFilterColname, valueFilterCutoff)
+
+  bgCells <- sum(!keep)>0
+  if(bgCells){
+    ggData2 <- ggData[!keep]
+    ggData <- ggData[keep]
+  }
+  ## color for group
+  # Do factoring if required
+  ggData <- relevelData(ggData, subGrpColname)
+  ggCol <- relevelCol(inpConf, subsetCellKey, ggData, subGrpColname)
 
   # Generate coex color palette
-  cInp = strsplit(inpcol, "; ")[[1]]
-  if(cInp[1] == "Red (Gene1)"){
-    c10 = c(255,0,0)
-  } else if(cInp[1] == "Orange (Gene1)"){
-    c10 = c(255,140,0)
-  } else {
-    c10 = c(0,255,0)
-  }
-  if(cInp[2] == "Green (Gene2)"){
-    c01 = c(0,255,0)
-  } else {
-    c01 = c(0,0,255)
-  }
-  c00 = c(217,217,217) ; c11 = c10 + c01
-  nGrid = 16; nPad = 2; nTot = nGrid + nPad * 2
-  gg = data.table(v1 = rep(0:nTot,nTot+1), v2 = sort(rep(0:nTot,nTot+1)))
-  gg$vv1 = gg$v1 - nPad ; gg[vv1 < 0]$vv1 = 0; gg[vv1 > nGrid]$vv1 = nGrid
-  gg$vv2 = gg$v2 - nPad ; gg[vv2 < 0]$vv2 = 0; gg[vv2 > nGrid]$vv2 = nGrid
-  gg$cR = bilinear(gg$vv1, gg$vv2, nGrid, c00[1], c10[1], c01[1], c11[1])
-  gg$cG = bilinear(gg$vv1, gg$vv2, nGrid, c00[2], c10[2], c01[2], c11[2])
-  gg$cB = bilinear(gg$vv1, gg$vv2, nGrid, c00[3], c10[3], c01[3], c11[3])
-  gg$cMix = rgb(gg$cR, gg$cG, gg$cB, maxColorValue = 255)
-  gg = gg[, c("v1", "v2", "cMix")]
+  cInp <- strsplit(GeneExprDotCol, "; ")[[1]]
+
+  nTot <- getTotalNumber(nGrid = 16, nPad = 2)
+  gg <- getCoexpCol(GeneExprDotCol, nGrid = 16, nPad = 2)
 
   # Map colours
-  ggData$v1 = round(nTot * ggData$val1 / max(ggData$val1))
-  ggData$v2 = round(nTot * ggData$val2 / max(ggData$val2))
-  ggData$v0 = ggData$v1 + ggData$v2
-  ggData = gg[ggData, on = c("v1", "v2")]
-  if(inpord == "Max-1st"){
-    ggData = ggData[order(v0)]
-  } else if(inpord == "Min-1st"){
-    ggData = ggData[order(-v0)]
-  } else if(inpord == "Random"){
-    ggData = ggData[sample(nrow(ggData))]
-  }
+  ggData$v1 <- round(nTot * ggData$val1 / max(ggData$val1, na.rm = TRUE))
+  ggData$v2 <- round(nTot * ggData$val2 / max(ggData$val2, na.rm = TRUE))
+  ggData$v0 <- ggData$v1 + ggData$v2
+  ggData <- gg[ggData, on = c("v1", "v2")]
+  ggData <- orderGeneExpr(ggData, GeneExprDotOrd, 'v0')
 
   # Actual ggplot
-  ggOut = ggplot(ggData, aes(X, Y))
+  if(plotType=="3D"){
+    nTot <- max(c(ggData$val1, ggData$val2), na.rm = TRUE)
+    ggData$norm1 <- round(nTot * ggData$val1 / max(ggData$val1, na.rm = TRUE))
+    ggData$norm2 <- round(nTot * ggData$val2 / max(ggData$val2, na.rm = TRUE))
+    ggData$Z <- log2(ggData$norm1+1)-log2(ggData$norm2+1)
+    return(layout(plot_ly(x=ggData$X, y=ggData$Y, z=ggData$Z,
+                          customdata=ggData$sampleID,
+                   type="scatter3d",
+                   mode="markers",
+                   color=if(GeneExprDotCol=="Default"){ggData[[subGrpColname]]
+                     } else{ ggData$Z },
+                   colors=if(GeneExprDotCol=="Default") ggCol else
+                     .globals$cList[[GeneExprDotCol]],
+                   text = paste0(gene1, ": ", ggData$val1, "\n",
+                                 gene2, ": ", ggData$val2),
+                   size = 1),
+                  scene =
+                    list(xaxis = list(title = dimRedX),
+                         yaxis = list(title = dimRedY),
+                         zaxis = list(title = paste0('Log2 Fold Change (',
+                                                     gene1, '/', gene2, ')')))))
+  }
+  ggOut <- ggplot(ggData, aes(x=ggData$X, y=ggData$Y))
   if(bgCells){
-    ggOut = ggOut +
-      geom_point(data = ggData2, color = "snow2", size = inpsiz, shape = 16)
+    ggOut <- labelBackgroundCells(ggOut, ggData2, pointSize,
+                                  color="snow2", shape=16)
   }
-  ggOut = ggOut +
-    geom_point(size = inpsiz, shape = 16, color = ggData$cMix) +
-    xlab(inpdrX) + ylab(inpdrY) +
-    sctheme(base_size = sList[inpfsz], XYval = inptxt) +
-    scale_color_gradientn(inp1, colours = cList[[1]]) +
+  ggOut <- ggOut +
+    geom_point(size = pointSize, shape = 16, color = ggData$cMix) +
+    xlab(dimRedX) + ylab(dimRedY) +
+    sctheme(base_size = .globals$sList[labelsFontsize], XYval = keepXYlables) +
+    scale_color_gradientn(gene1, colours = .globals$cList[[1]]) +
     guides(color = guide_colorbar(barwidth = 15))
-  if(inpasp == "Square") {
-    ggOut = ggOut + coord_fixed(ratio = rat)
-  } else if(inpasp == "Fixed") {
-    ggOut = ggOut + coord_fixed()
-  }
+
+  ggOut <- fixCoord(ggOut, plotAspectRatio, rat)
   return(ggOut)
 }

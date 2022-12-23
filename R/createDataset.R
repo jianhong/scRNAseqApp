@@ -304,6 +304,9 @@ createSeuFromCellRanger <- function(outsFolder){
 #' @importFrom SeuratObject CreateDimReducObject
 cteateSeuFromMatrix <- function(matrix, meta, genes,
                                 cluster, ...){
+  if(missing(matrix) | missing(meta) ){
+    stop('matrix and meta is requred.')
+  }
   mat <- fread(matrix)
   meta <- read.delim(meta, header=TRUE)
   if(missing(genes)){

@@ -71,15 +71,19 @@ getRef <- function(dataset, key, appconf){
   }
 }
 
+trimBib <- function(bib){
+  return(sub("^(<.*?>)\\[\\d+\\]", "\\1", gsub("^\\s+", "", bib)))
+}
 get_full_ref_list <- function(appconf, returnLen=FALSE){
   ref <- lapply(appconf, function(.ele){
     .ele <- .ele$ref
     if(!is.null(.ele$entry)){
       bib <- format(.ele$entry, style="html")
+      bib <- trimBib(bib)
       return(list(TRUE, bib))
     }
     if(!is.null(.ele$bib)){
-      bib <- sub("^\\[\\d+\\]\\s+", "", gsub("^\\s+", "", .ele$bib))
+      bib <- trimBib(.ele$bib)
       if(bib!="" && !is.na(bib)){
         if(!is.null(.ele$doi)){
           bib <- paste(bib,

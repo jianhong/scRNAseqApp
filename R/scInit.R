@@ -28,7 +28,7 @@ scInit <- function(app_path=getwd(),
   for(f in c("www", "doc.txt", "data")){
     to = ifelse(f=="data", datafolder, f)
     file.copy(system.file("extdata", f, package = "scRNAseqApp"),
-              to=file.path(app_path, to), recursive=TRUE,
+              to=app_path, recursive=f!="doc.txt",
               overwrite = overwrite)
   }
   # define credentials

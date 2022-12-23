@@ -29,7 +29,7 @@ single-cell level. The development of scRNA-seq shed light to address the
 knowledge gap about the cell types, cell interactions, and key genes involved
 in biological process and their dynamics.
 
-To increase the reusability and reproducibility of scientific findings,
+To increase the re-usability and reproducibility of scientific findings,
 more and more publishers require raw data and detailed descriptions of how the
 data were analyzed. However, difficulties arise due to the highly concise
 descriptions of analysis and the differences of the computing environments.
@@ -116,7 +116,7 @@ The basic information of the tools are list in the following table
 
 # Motivation
 
-Based on _ShinyCell_, The _scRNAseqApp_ package is developed with multiple
+Based on [_ShinyCell_](https://github.com/SGDDNB/ShinyCell), The _scRNAseqApp_ package is developed with multiple
 highly interactive visualizations of how cells and subsets of cells cluster
 behavior.
 The end users can discover the expression of genes in multiple interactive
@@ -147,7 +147,7 @@ trajectory analysis or cell communication analysis.
 
 ```{r, eval=FALSE}
 library(BiocManager)
-BiocManager::install("jianhong/scRNAseqApp@dev")
+BiocManager::install("scRNAseqApp")
 ```
 
 ## Load library

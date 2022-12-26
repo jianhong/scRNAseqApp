@@ -32,7 +32,7 @@ plotPieDimUI <- function(id){
                                           "- Maximum 10 genes (due to ploting space limitations)",
                                           "- Genes should be separated by comma, semicolon or newline")),
         checkboxInput(NS(id, "CoExpred"),
-                      "Co-expressed (all>=1)", value = TRUE),
+                      "Co-expressed (all>0)", value = TRUE),
         tagList(
           actionButton(NS(id, "CoExprtog"), "Toggle plot controls"),
           conditionalPanel(

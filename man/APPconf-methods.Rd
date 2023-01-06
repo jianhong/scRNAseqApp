@@ -61,6 +61,9 @@
 
 \item{recursive, use.names}{function used by \link[base:unlist]{unlist}}
 }
+\value{
+A named character vector.
+}
 \description{
 The assessment and replacement methods for \link{APPconf-class}
 }

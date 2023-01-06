@@ -242,6 +242,7 @@ createAppConfig <-
 #' @importFrom SeuratObject CreateDimReducObject
 #' @importFrom utils read.csv
 #' @importFrom data.table fread
+#' @return An SeuratObject
 createSeuFromCellRanger <- function(outsFolder){
   analysisFolder <- file.path(outsFolder, "analysis")
   matrixFolder <- file.path(outsFolder, "filtered_feature_bc_matrix")
@@ -302,6 +303,7 @@ createSeuFromCellRanger <- function(outsFolder){
 #' @importFrom data.table fread
 #' @importFrom Seurat CreateSeuratObject
 #' @importFrom SeuratObject CreateDimReducObject
+#' @return An SeuratObject
 cteateSeuFromMatrix <- function(matrix, meta, genes,
                                 cluster, ...){
   if(missing(matrix) | missing(meta) ){
@@ -311,11 +313,11 @@ cteateSeuFromMatrix <- function(matrix, meta, genes,
   meta <- read.delim(meta, header=TRUE)
   if(missing(genes)){
     mat <- mat[!duplicated(mat[[1]]), ]
-    genes = mat[[1]]
+    genes <- mat[[1]]
     mat <- mat[, -1]
   }
   stopifnot(length(genes)==nrow(matrix))
-  mat = data.frame(mat, row.names=genes)
+  mat <- data.frame(mat, row.names=genes)
   rownames(meta) <- colnames(mat)
   if(identical(colnames(mat), make.names(meta[, 1], unique=TRUE))){
     meta <- meta[, -1]
@@ -326,7 +328,7 @@ cteateSeuFromMatrix <- function(matrix, meta, genes,
     clusterfile <- clusterfile[, -1]
     rownames(clusterfile) <- colnames(mat)
     if(all(grepl("^V", colnames(clusterfile)), na.rm = TRUE)){
-      colnames(clusterfile)[1:2] <- c("tSNE_1", "tSNE_2")
+      colnames(clusterfile)[c(1,2)] <- c("tSNE_1", "tSNE_2")
     }
     clusterfile
   }
@@ -426,14 +428,14 @@ addMonocle <- function(cds, reduction_method, meta, config){
     list(
       # full data
       meta_data = p$data[, !colnames(p$data) %in% config$ID,
-                         drop=FALSE]
-      ,#trajectory graph segment is layer 3
-      segments_layer_data = p$layers[[3]]$data
-      ,# principal_points is layer 4
-      principal_points_data = p$layer[[4]]$data
-      ,# leaves_lable is layer 6
-      mst_leaf_nodes = p$layers[[6]]$data
-      ,# root lable is layer 8
+                         drop=FALSE],
+      #trajectory graph segment is layer 3
+      segments_layer_data = p$layers[[3]]$data,
+      # principal_points is layer 4
+      principal_points_data = p$layer[[4]]$data,
+      # leaves_lable is layer 6
+      mst_leaf_nodes = p$layers[[6]]$data,
+      # root lable is layer 8
       mst_root_nodes = p$layers[[8]]$data
     )
   }
@@ -492,21 +494,3 @@ addTricycle <- function(exp, gname.type, species, meta){
   return(list(tricyclePosition=tricyclePosition,
               CCStage=CCStage))
 }
-#' co-expression data by fcoex
-#' pseudotime analysis
-#' assign cell type
-#' assign cell cycle
-#' trajectories
-#' cell communications
-#'
-#'
-#' How to summarize the data?
-#' radc.rush.edu
-#' ROSMAP
-#' compare the expression for each cell type, tissue, species for two condiction,
-#' injured vs uninjured
-#' GO enrichment analysis
-#'
-#' integrated by corralm for one species
-#'
-#' treatment must be celltype, and contrasts must be injured vs uninjured

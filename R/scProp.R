@@ -30,9 +30,12 @@ scProp <- function(inpConf, inpMeta,
   ggData <- ggData[keep, c(1, 2), drop=FALSE]
   colnames(ggData) <- c("X", "grp")
   ggData <- ggData[, list(nCells = .N), by = c("X", "grp")]
-  ggData <- ggData[, {tot = sum(.SD$nCells)
-  .SD[,list(pctCells = 100 * sum(.SD$nCells) / tot,
-         nCells = .SD$nCells), by = "grp"]}, by = "X"]
+  ggData <- ggData[, {
+    tot <- sum(.SD$nCells)
+    .SD[,list(pctCells = 100 * sum(.SD$nCells) / tot,
+              nCells = .SD$nCells), by = "grp"]
+    },
+    by = "X"]
 
   # Do factoring
   ggData <- relevelData(ggData, "grp")

@@ -82,7 +82,7 @@ updateFilterCellUI <-
                           dataSource()$sc1gene[input$filterCell],
                           valueOnly=TRUE)
       }else{
-        val = dataSource()$sc1meta[[
+        val <- dataSource()$sc1meta[[
           dataSource()$sc1conf[
             dataSource()$sc1conf$UI == input$filterCell]$ID]]
       }

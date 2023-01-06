@@ -1,6 +1,6 @@
 Package: scRNAseqApp
 Title: A single-cell RNAseq Shiny app-package
-Version: 0.99.1
+Version: 0.99.2
 Authors@R:
     c(person(given = "Jianhong",
              family = "Ou",
@@ -14,9 +14,9 @@ Description: scRNAseqApp is a Shiny app package that allows users to visualize
 License: GPL-3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.2
+RoxygenNote: 7.2.3
 VignetteBuilder: knitr
-biocViews: Visualization, SingleCell
+biocViews: Visualization, SingleCell, RNASeq
 Depends:
     R (>= 4.2.0)
 Imports:

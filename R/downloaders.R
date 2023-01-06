@@ -48,7 +48,7 @@ heatmapDownloadHandler <- function(device, width, height, plot, ...){
           height = height,
           width = width)
       }
-      print(plot)
+      print(plot) ## this line will get note: avoid 'print'
       dev.off()
     }
   )

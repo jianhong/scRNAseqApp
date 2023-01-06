@@ -125,7 +125,7 @@ scRNAseqApp <- function(datafolder = "data",
     options(shiny.maxRequestSize=maxRequestSize) # 1G
     ### For all tags and Server-side selectize
     observe_helpers()
-    optCrt="{ option_create: function(data,escape) {
+    optCrt <- "{ option_create: function(data,escape) {
     return('<div class=\"create\"><strong>' + '</strong></div>');
     } }"
     gn2sym <- readRDS(system.file('extdata', 'gn2sym.rds',

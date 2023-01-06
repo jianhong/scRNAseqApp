@@ -17,6 +17,9 @@ cteateSeuFromMatrix(matrix, meta, genes, cluster, ...)
 
 \item{...}{The parameter passed to read.delim when read cluster file.}
 }
+\value{
+An SeuratObject
+}
 \description{
 load data from a count matrix
 }

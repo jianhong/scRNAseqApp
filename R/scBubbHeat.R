@@ -137,7 +137,7 @@ scBubbHeat <- function(inpConf, inpMeta, inp,
     rownames(ggMatrix) <- tmp
     return(ggMatrix)
   }
-  ggMat =reshapeMat(value.var = "val")
+  ggMat <- reshapeMat(value.var = "val")
 
   cluster_rows <- inpRow
   if(inpRow){
@@ -173,8 +173,8 @@ scBubbHeat <- function(inpConf, inpMeta, inp,
       ggData$geneName <- factor(ggData$geneName, levels = rev(geneList$gene))
     }
     if(inpCol){
-      hcCol = dendro_data(cluster_columns)
-      ggCol = ggplot() +
+      hcCol <- dendro_data(cluster_columns)
+      ggCol <- ggplot() +
         geom_segment(data = hcCol$segments,
                      aes(x=hcCol$segments$x,
                          y=hcCol$segments$y,
@@ -188,7 +188,7 @@ scBubbHeat <- function(inpConf, inpMeta, inp,
         theme(axis.title = element_blank(), axis.line = element_blank(),
               axis.ticks = element_blank(), axis.text.x = element_blank(),
               axis.text.y = element_text(color = "white"))
-      ggData$grpBy = factor(ggData$grpBy, levels = hcCol$labels$label)
+      ggData$grpBy <- factor(ggData$grpBy, levels = hcCol$labels$label)
     }else{
       ggData$grpBy <-
         factor(as.character(ggData$grpBy),

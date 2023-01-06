@@ -22,7 +22,7 @@
 createConfig <- function(obj, meta.to.include = NA, legendCols = 4,
                          maxLevels = 50){
   # Extract corresponding metadata
-  drExist = TRUE
+  drExist <- TRUE
   if(inherits(obj, "Seurat")){
     # Seurat Object
     objMeta <- obj[[]]

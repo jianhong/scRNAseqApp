@@ -9,6 +9,9 @@ createSeuFromCellRanger(outsFolder)
 \arguments{
 \item{outsFolder}{the outs folder of cellRanger}
 }
+\value{
+An SeuratObject
+}
 \description{
 load data from cellRanger
 }

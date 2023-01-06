@@ -44,56 +44,58 @@ makeShinyFiles <- function(
   }
   gexSlot <- match.arg(gexSlot)
   gexAsy <- GetAssayData(obj, assay=assayName, slot=gexSlot)
-  gex.matdim = dim(gexAsy)
-  gex.rownm = rownames(gexAsy)
-  gex.colnm = colnames(gexAsy)
-  defGenes = VariableFeatures(obj)[seq.int(10)]
+  gex.matdim <- dim(gexAsy)
+  gex.rownm <- rownames(gexAsy)
+  gex.colnm <- colnames(gexAsy)
+  defGenes <- VariableFeatures(obj)[seq.int(10)]
   if(is.na(defGenes[1])){
     warning("Variable genes for seurat object not found! Have you ",
             "ran `FindVariableFeatures` or `SCTransform`?")
-    defGenes = gex.rownm[seq.int(10)]
+    defGenes <- gex.rownm[seq.int(10)]
   }
-  sc1meta = data.table(sampleID = rownames(obj[[]]), obj[[]])
+  sc1meta <- data.table(sampleID = rownames(obj[[]]), obj[[]])
 
-  geneMap = gex.rownm
-  names(geneMap) = gex.rownm    # Basically no mapping
+  geneMap <- gex.rownm
+  names(geneMap) <- gex.rownm    # Basically no mapping
 
-  defGenes = geneMap[defGenes]
+  defGenes <- geneMap[defGenes]
 
   # Check defaultGene1 / defaultGene2 / default.multigene
-  defaultGene1 = defaultGene1[1]
-  defaultGene2 = defaultGene2[1]
-  if(is.na(defaultGene1)){defaultGene1 = defGenes[1]}
-  if(is.na(defaultGene2)){defaultGene2 = defGenes[2]}
-  if(is.na(default.multigene[1])){default.multigene = defGenes}
+  defaultGene1 <- defaultGene1[1]
+  defaultGene2 <- defaultGene2[1]
+  if(is.na(defaultGene1)){defaultGene1 <- defGenes[1]}
+  if(is.na(defaultGene2)){defaultGene2 <- defGenes[2]}
+  if(is.na(default.multigene[1])){default.multigene <- defGenes}
   if(defaultGene1 %in% geneMap){
-    defaultGene1 = defaultGene1
+    defaultGene1 <- defaultGene1
   } else {
     warning("defaultGene1 doesn't exist in gene expression, using defaults...")
-    defaultGene1 = defGenes[1]
+    defaultGene1 <- defGenes[1]
   }
   if(defaultGene2 %in% geneMap){
-    defaultGene2 = defaultGene2
+    defaultGene2 <- defaultGene2
   } else {
     warning("defaultGene2 doesn't exist in gene expression, using defaults...")
-    defaultGene2 = defGenes[2]
+    defaultGene2 <- defGenes[2]
   }
   if(all(default.multigene %in% geneMap)){
-    default.multigene = default.multigene
+    default.multigene <- default.multigene
   } else {
     warning("default.multigene doesn't exist in gene expression, ",
             "using defaults...")
-    default.multigene = defGenes
+    default.multigene <- defGenes
   }
 
   # save data
   sc1conf <- scConf
-  sc1conf$dimred = FALSE
-  sc1meta = sc1meta[, c("sampleID", as.character(sc1conf$ID)), with = FALSE]
+  sc1conf$dimred <- FALSE
+  sc1meta <- sc1meta[, c("sampleID", as.character(sc1conf$ID)), with = FALSE]
   # Factor metadata again
   for(i in as.character(sc1conf[!is.na(sc1conf$fID)]$ID)){
     sc1meta[[i]] <- factor(sc1meta[[i]],
-                           levels = strsplit(sc1conf[sc1conf$ID == i]$fID, "\\|")[[1]])
+                           levels =
+                             strsplit(sc1conf[sc1conf$ID == i]$fID,
+                                      "\\|")[[1]])
     levels(sc1meta[[i]]) <- strsplit(sc1conf[sc1conf$ID == i]$fUI, "\\|")[[1]]
     sc1conf[sc1conf$ID == i]$fID <- sc1conf[sc1conf$ID == i]$fUI
   }

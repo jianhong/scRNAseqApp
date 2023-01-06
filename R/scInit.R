@@ -6,6 +6,7 @@
 #' @param password character(1), the password for administrator
 #' @param datafolder the folder where saved the dataset for the app
 #' @param overwrite logical(1), overwrite the `app_path` if there is a project.
+#' @return no returns. This function will copy files to `app_path`
 #' @export
 #' @importFrom shinymanager create_db
 #' @importFrom scrypt hashPassword
@@ -26,7 +27,7 @@ scInit <- function(app_path=getwd(),
   }
   message("Now copy files")
   for(f in c("www", "doc.txt", "data")){
-    to = ifelse(f=="data", datafolder, f)
+    to <- ifelse(f=="data", datafolder, f)
     file.copy(system.file("extdata", f, package = "scRNAseqApp"),
               to=app_path, recursive=f!="doc.txt",
               overwrite = overwrite)

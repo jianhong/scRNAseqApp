@@ -23,6 +23,9 @@ scInit(
 
 \item{overwrite}{logical(1), overwrite the \code{app_path} if there is a project.}
 }
+\value{
+no returns. This function will copy files to \code{app_path}
+}
 \description{
 To run scRNAseqApp, you need to first create a directory
 which contains the required files.

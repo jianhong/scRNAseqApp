@@ -133,6 +133,7 @@ setMethod("lapply", "APPconf",
 #' @rdname APPconf-methods
 #' @export
 #' @param recursive,use.names function used by \link[base:unlist]{unlist}
+#' @return A named character vector.
 #' @examples
 #' unlist(appconf)
 setMethod("unlist", "APPconf",

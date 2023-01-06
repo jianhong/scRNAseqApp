@@ -12,7 +12,7 @@ scVioBox <- function(inpConf, inpMeta,
   ggData <- inpMeta[, c(inpConf[inpConf$UI == infoX]$ID,
                         inpConf[inpConf$grp == TRUE]$ID),
                    with = FALSE]
-  colnames(ggData)[1] = c("X")
+  colnames(ggData)[1] <- c("X")
   # Load in either cell meta or gene expr
   if(infoY %in% inpConf$UI){
     ggData$val <- inpMeta[[inpConf[inpConf$UI == infoY]$ID]]

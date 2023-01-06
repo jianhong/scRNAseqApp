@@ -123,18 +123,18 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt){
 
     ## update the ui
     output$oupTxt <- renderUI({
-      geneList = scGeneList(input$genelist, dataSource()$sc1gene)
+      geneList <- scGeneList(input$genelist, dataSource()$sc1gene)
       if(nrow(geneList) > 50){
         HTML("More than 50 input genes! Please reduce the gene list!")
       } else {
-        oup = paste0(nrow(geneList[geneList$present == TRUE]),
-                     " genes OK and will be plotted")
+        oup <- paste0(nrow(geneList[geneList$present == TRUE]),
+                      " genes OK and will be plotted")
         if(nrow(geneList[geneList$present == FALSE]) > 0){
-          oup = paste0(oup, "<br/>",
-                       nrow(geneList[geneList$present == FALSE]),
-                       " genes not found (",
-                       paste0(geneList[geneList$present == FALSE]$gene,
-                              collapse = ", "), ")")
+          oup <- paste0(oup, "<br/>",
+                        nrow(geneList[geneList$present == FALSE]),
+                        " genes not found (",
+                        paste0(geneList[geneList$present == FALSE]$gene,
+                               collapse = ", "), ")")
         }
         HTML(oup)
       }

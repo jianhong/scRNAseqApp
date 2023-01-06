@@ -299,7 +299,7 @@ checkGene <- function(gene, symbolDict, gn2sym,
                      config, groupName, valueOnly=FALSE)
         ggData[ggData$val < 0]$val <- 0
         #waffle plot
-        plotname = paste0('search-plot', .appconfs$id)
+        plotname <- paste0('search-plot', .appconfs$id)
         groupCol <- getCelltypeCol(config,
                                    celltypePattern =
                                      .globals$groupColPattern)

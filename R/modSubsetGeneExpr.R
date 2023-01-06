@@ -126,7 +126,7 @@ subsetGeneExprServer <- function(id, dataSource, optCrt){
     })
     ## plots
     getSubGroupName <- function(dataSource, input){
-      sub = strsplit(dataSource()$sc1conf[
+      sub <- strsplit(dataSource()$sc1conf[
         dataSource()$sc1conf$UI == input$CellInfo]$fID,
         "\\|")
       if(length(sub)){

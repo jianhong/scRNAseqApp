@@ -45,10 +45,10 @@ heatmapDownloadHandler <- function(device, width, height, plot, ...){
       }else{
         get(device)(
           file,
-          height = height,
-          width = width)
+          height = height*100,
+          width = width*100)
       }
-      print(plot) ## this line will get note: avoid 'print'
+      draw(plot) ## for complexheatmap
       dev.off()
     }
   )

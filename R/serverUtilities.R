@@ -97,21 +97,22 @@ updateFilterCellUI <-
   }
 
 updateGeneExprDotPlotUI <-
-  function(postfix=1, id, input, output, session, plotX, height, ...){
+  function(postfix=1, id, input, output, session, plotX, height, ...,
+           handlerFUN=plotsDownloadHandler){
     output[[paste0("GeneExproup", postfix)]] <- renderPlot({ plotX() })
     output[[paste0("GeneExproup.ui", postfix)]] <- renderUI({
       plotOutput(NS0(id, "GeneExproup", postfix),
                  height = height)
     })
     output[[paste0("GeneExproup.pdf", postfix)]] <-
-      plotsDownloadHandler(
+      handlerFUN(
         "pdf",
         width=input[[paste0("GeneExproup.w", postfix)]],
         height=input[[paste0("GeneExproup.h", postfix)]],
         plotX(),
         ...)
     output[[paste0("GeneExproup.png", postfix)]] <-
-      plotsDownloadHandler(
+      handlerFUN(
         "png",
         width=input[[paste0("GeneExproup.w", postfix)]],
         height=input[[paste0("GeneExproup.h", postfix)]],

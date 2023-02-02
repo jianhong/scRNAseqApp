@@ -165,11 +165,16 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt){
                        !is.na(colrg()[1])) NA else colrg(),
         legendTitle=dataSource()$terms['expression'])
     })
+    observeEvent(input$plottyp, 
     updateGeneExprDotPlotUI(postfix=1, id, input, output, session,
                             plot1, .globals$pList3[input$plotpsz],
                             dataSource()$dataset,
                             input$plottyp,
-                            input$CellInfoX)
+                            input$CellInfoX,
+                            handlerFUN=if(input$plottyp=="Bubbleplot"){
+                              plotsDownloadHandler
+                            } else heatmapDownloadHandler)
+    )
   })
 }
 

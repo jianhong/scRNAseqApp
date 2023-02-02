@@ -82,47 +82,49 @@ scDRcell <- function(inpConf, inpMeta,
           connectivity <- slingMST(x)
           clusters <- rownames(connectivity)
           nclus <- nrow(connectivity)
-          centers <- t(vapply(clusters,function(clID){
-            w <- clusterLabels[,clID]
-            return(apply(X, 2, weighted.mean, w = w))
-          }, rep(0,ncol(X))))
-          rownames(centers) <- clusters
-          X <- X[rowSums(clusterLabels) > 0, , drop = FALSE]
-          clusterLabels <- clusterLabels[rowSums(clusterLabels) > 0, ,
-                                         drop = FALSE]
-          linC <- slingParams(x)
-          clus2include <- unique(unlist(slingLineages(x)[linInd]))
-          lineDf <- data.frame()
-          for(i in seq_len(nclus-1)){
-            for(j in seq(i+1,nclus)){
-              if(connectivity[i,j]==1 &&
-                 all(clusters[c(i,j)] %in% clus2include, na.rm = TRUE)){
-                lineDf <- rbind(lineDf, c(centers[i, c(1,2), drop=TRUE],
-                                          centers[j, c(1,2), drop=TRUE]))
+          if(nclus>1){
+            centers <- t(vapply(clusters,function(clID){
+              w <- clusterLabels[,clID]
+              return(apply(X, 2, weighted.mean, w = w))
+            }, rep(0,ncol(X))))
+            rownames(centers) <- clusters
+            X <- X[rowSums(clusterLabels) > 0, , drop = FALSE]
+            clusterLabels <- clusterLabels[rowSums(clusterLabels) > 0, ,
+                                           drop = FALSE]
+            linC <- slingParams(x)
+            clus2include <- unique(unlist(slingLineages(x)[linInd]))
+            lineDf <- data.frame()
+            for(i in seq_len(nclus-1)){
+              for(j in seq(i+1,nclus)){
+                if(connectivity[i,j]==1 &&
+                   all(clusters[c(i,j)] %in% clus2include, na.rm = TRUE)){
+                  lineDf <- rbind(lineDf, c(centers[i, c(1,2), drop=TRUE],
+                                            centers[j, c(1,2), drop=TRUE]))
+                }
               }
             }
-          }
-          colnames(lineDf) <- c("x", "y", "xend", "yend")
-          pts <- centers[clusters %in% clus2include, c(1,2)]
-          colnames(pts) <- c("x", "y")
-          pts <- cbind(as.data.frame(pts), color='black')
-          if(any(linC$start.given)){
-            if(length(linC$start.clus[linC$start.given])>0){
-              pts[linC$start.clus[linC$start.given], "color"] <- "green3"
+            colnames(lineDf) <- c("x", "y", "xend", "yend")
+            pts <- centers[clusters %in% clus2include, c(1,2)]
+            colnames(pts) <- c("x", "y")
+            pts <- cbind(as.data.frame(pts), color='black')
+            if(any(linC$start.given)){
+              if(length(linC$start.clus[linC$start.given])>0){
+                pts[linC$start.clus[linC$start.given], "color"] <- "green3"
+              }
             }
-          }
-          if(any(linC$end.given)){
-            if(length(linC$end.clus[linC$end.given])>0){
-              pts[linC$end.clus[linC$end.given], "color"] <- "red2"
+            if(any(linC$end.given)){
+              if(length(linC$end.clus[linC$end.given])>0){
+                pts[linC$end.clus[linC$end.given], "color"] <- "red2"
+              }
             }
+            ggOut <- ggOut +
+              geom_segment(data=lineDf, aes_string(x="x", y="y",
+                                                   xend="xend", yend="yend"),
+                           inherit.aes=FALSE) +
+              geom_point(data=pts, aes_string(x="x", y="y", color="color"),
+                         size = pointSize*3, alpha=.5,
+                         inherit.aes = FALSE)
           }
-          ggOut <- ggOut +
-            geom_segment(data=lineDf, aes_string(x="x", y="y",
-                                                 xend="xend", yend="yend"),
-                         inherit.aes=FALSE) +
-            geom_point(data=pts, aes_string(x="x", y="y", color="color"),
-                       size = pointSize*3, alpha=.5,
-                       inherit.aes = FALSE)
         }
       }
     }

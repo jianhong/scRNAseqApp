@@ -134,16 +134,7 @@ Here is an example using _scRNAseqApp_ with a subset of scRNA-seq data.
 First, install _scRNAseqApp_ and other packages required to run 
 the examples.
 Please note that the example dataset used here is from a small subset of
-PBMC[@satija2015spatial]. 
-To run an analysis with a dataset from a different species or different assembly, 
-please install the corresponding Bsgenome and "TxDb".
-For example, to analyze mouse data aligned to "mm10", 
-please install "BSgenome.Mmusculus.UCSC.mm10", 
-and "TxDb.Mmusculus.UCSC.mm10.knownGene". 
-You can also generate a TxDb object by 
-functions `makeTxDbFromGFF` from a local "gff" file,
-or `makeTxDbFromUCSC`, `makeTxDbFromBiomart`, and `makeTxDbFromEnsembl`, 
-from online resources in the _GenomicFeatures_ package.
+PBMC[@satija2015spatial].
 Additional package are also required for enhancement functions such 
 trajectory analysis or cell communication analysis.
 
@@ -168,6 +159,41 @@ scInit(app_path=".")
 ```{r}
 scRNAseqApp()
 ```
+
+# Create a new data
+
+There are two ways to create a new data.
+
+- from the administrator mode
+- use R session
+
+## by administrator
+
+Log in to admin by `Switch User` tab and click `administrator button` in the 
+right-bottom corner of screen. Click `UploadData` and upload a Seurat object.
+
+## via R session
+
+There are two steps to create a new data via R session. First, create the config
+file with description of the data and second create the data from a Seurat object.
+
+```{r, eval=FALSE}
+library(Seurat)
+appconf <- createAppConfig(
+            title="pbmc_small_test",
+            destinationFolder = "pbmc_small_test",
+            species = "Homo sapiens",
+            doi="10.1038/nbt.3192",
+            datatype = "scRNAseq")
+createDataSet(appconf, pbmc_small, datafolder="data")
+```
+
+# Distribute to a shiny server
+
+There are two steps to distribute to a shiny server. First, install the package
+in the server as root user. Second, in a R session run `scInit()` after load 
+the `scRNAseqApp` library. If you initialed the app offline, copy the app folder
+to the shiny server.
 
 # SessionInfo
 

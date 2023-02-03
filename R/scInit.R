@@ -45,5 +45,9 @@ scInit <- function(app_path=getwd(),
     credentials_data = credentials,
     sqlite_path = file.path(app_path, "database.sqlite")
   )
+  # Write the app.R
+  writeLines(c("library(scRNAseqApp)",
+               paste0("scRNAseqApp('", datafolder, "')")),
+             file.path(app_path, "app.R"))
   return(invisible())
 }

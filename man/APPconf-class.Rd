@@ -28,21 +28,23 @@ the metadata for a dataset.
 
 \item{\code{species}}{character(1). species}
 
-\item{\code{ref}}{Reference information in a list with element bib, doi, pmid and
-entry. Entry must be an object of \link[utils]{bibentry}}
+\item{\code{ref}}{Reference information in a list with element bib, doi, pmid
+and entry. Entry must be an object of \link[utils]{bibentry}}
 
 \item{\code{type}}{character(1). Type of the data, scRNAseq or scATACseq.}
 
-\item{\code{markers}}{character. A vector of characters represents cell marders.}
+\item{\code{markers}}{character. A vector of characters represents cell
+marders.}
 
-\item{\code{keywords}}{character. A vector of characters represents the keywords of
-the study.}
+\item{\code{keywords}}{character. A vector of characters represents the
+keywords of the study.}
 
-\item{\code{groupCol}}{character. The key group column name to separate the cells.}
+\item{\code{groupCol}}{character. The key group column name to separate
+the cells.}
 }}
 
 \examples{
 appconf <- readRDS(system.file("extdata", "data",
- "pbmc_small", "appconf.rds", package="scRNAseqApp"))
+    "pbmc_small", "appconf.rds", package="scRNAseqApp"))
 appconf
 }

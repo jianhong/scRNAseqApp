@@ -69,7 +69,7 @@ The assessment and replacement methods for \link{APPconf-class}
 }
 \examples{
 appconf <- readRDS(system.file("extdata", "data",
- "pbmc_small", "appconf.rds", package="scRNAseqApp"))
+    "pbmc_small", "appconf.rds", package="scRNAseqApp"))
 appconf
 appconf$title
 appconf[["title"]]

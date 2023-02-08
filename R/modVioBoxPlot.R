@@ -1,71 +1,94 @@
-plotVioBoxUI <- function(id){
-  tabPanel(
-    value=id,
-    HTML("Violinplot / Boxplot"),
-    h4("Cell information / gene expression violin plot / box plot"),
-    "In this tab, users can visualise the gene expression or continuous cell information ",
-    "(e.g. Number of UMIs / module score) across groups of cells (e.g. libary / clusters).",
-    br(),br(),
-    fluidRow(
-      column(
-        3, style="border-right: 2px solid black",
-        xaxisCellInfoUI(id),
-        subsetCellByInfoUI(id, mini=TRUE),
-        subsetCellByFilterUI(id, label = "Cell Info / Gene name (Y-axis):",
-                             title = "Cell Info / Gene to plot",
-                             content = c("Select cell info / gene to plot on Y-axis",
-                                         "- Can be continuous cell information (e.g. nUMIs / scores)",
-                                         "- Can also be gene expression")),
-        radioButtons(NS(id, "plottyp"), "Plot type:",
-                     choices = c("violin", "boxplot"),
-                     selected = "violin", inline = TRUE),
-        checkboxInput(NS(id, "plotpts"), "Show data points", value = FALSE),
-        boxPlotControlUI(id)
-      ),
-      column(
-        9, geneExprDotPlotUI(id)
-      )
+plotVioBoxUI <- function(id) {
+    tabPanel(
+        value = id,
+        HTML("Violinplot / Boxplot"),
+        h4("Cell information / gene expression violin plot / box plot"),
+        "In this tab, users can visualise the gene expression ",
+        "or continuous cell information ",
+        "(e.g. Number of UMIs / module score) across groups of cells ",
+        "(e.g. libary / clusters).",
+        br(),
+        br(),
+        fluidRow(
+            column(
+                3,
+                style = "border-right: 2px solid black",
+                xaxisCellInfoUI(id),
+                subsetCellByInfoUI(id, mini = TRUE),
+                subsetCellByFilterUI(
+                    id,
+                    label = "Cell Info / Gene name (Y-axis):",
+                    title = "Cell Info / Gene to plot",
+                    content = c(
+                        "Select cell info / gene to plot on Y-axis",
+                        "- Can be continuous cell information ",
+                        "(e.g. nUMIs / scores)",
+                        "- Can also be gene expression"
+                    )
+                ),
+                radioButtons(
+                    NS(id, "plottyp"),
+                    "Plot type:",
+                    choices = c("violin", "boxplot"),
+                    selected = "violin",
+                    inline = TRUE
+                ),
+                checkboxInput(
+                    NS(id, "plotpts"), "Show data points",
+                    value = FALSE),
+                boxPlotControlUI(id)
+            ),
+            column(9, geneExprDotPlotUI(id))
+        )
     )
-  )
 }
-plotVioBoxServer <- function(id, dataSource, optCrt){
-  moduleServer(id, function(input, output, session){
-    ## input column
-    updateSelectInput(session,
-                      "CellInfoX",
-                      "Cell information (X-axis):",
-                      choices = getGroupUI(dataSource),
-                      selected = dataSource()$sc1def$grp1)
-
-    updateSubsetCellUI(id, input, output, session, dataSource, addNA=TRUE)
-    updateFilterCellUI(id, optCrt, input, output, session, dataSource)
-
-    ## plot region
-    ### plots
-    plot1 <- reactive({
-      scVioBox(
-        dataSource()$sc1conf,
-        dataSource()$sc1meta,
-        input$CellInfoX,
-        input$filterCell,
-        input$subsetCell,
-        input$subsetCellVal,
-        input$filterCell,
-        input$filterCellVal,
-        dataSource()$dataset,
-        dataSource()$sc1gene,
-        input$plottyp,
-        input$plotpts,
-        input$plotsiz,
-        input$plotfsz)
+plotVioBoxServer <- function(id, dataSource, optCrt) {
+    moduleServer(id, function(input, output, session) {
+        ## input column
+        updateSelectInput(
+            session,
+            "CellInfoX",
+            "Cell information (X-axis):",
+            choices = getGroupUI(dataSource),
+            selected = dataSource()$sc1def$grp1
+        )
+        
+        updateSubsetCellUI(id, input, output, session, dataSource, addNA = TRUE)
+        updateFilterCellUI(id, optCrt, input, output, session, dataSource)
+        
+        ## plot region
+        ### plots
+        plot1 <- reactive({
+            scVioBox(
+                dataSource()$sc1conf,
+                dataSource()$sc1meta,
+                input$CellInfoX,
+                input$filterCell,
+                input$subsetCell,
+                input$subsetCellVal,
+                input$filterCell,
+                input$filterCellVal,
+                dataSource()$dataset,
+                dataSource()$sc1gene,
+                input$plottyp,
+                input$plotpts,
+                input$plotsiz,
+                input$plotfsz
+            )
+        })
+        updateGeneExprDotPlotUI(
+            postfix = 1,
+            id,
+            input,
+            output,
+            session,
+            plot1,
+            .globals$pList2[input$plotpsz],
+            dataSource()$dataset,
+            input$plottyp,
+            input$CellInfoX,
+            input$filterCell
+        )
+        
     })
-    updateGeneExprDotPlotUI(postfix=1, id, input, output, session,
-                            plot1, .globals$pList2[input$plotpsz],
-                            dataSource()$dataset,
-                            input$plottyp,
-                            input$CellInfoX,
-                            input$filterCell)
-
-  })
 }
-

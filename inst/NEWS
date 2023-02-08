@@ -1,3 +1,16 @@
+CHANGES IN VERSION 0.99.5
+-------------------------
+
+    o Update R version dependency from 4.2.0 to 4.3.0
+    o remove 'CellChat', 'monocle3' and 'SeuratWrappers'.
+    o re-organize the files in extdata to script and add documentation.
+    o remove the `eval=FALSE` in vignettes and add `publish_folder` to scripts.
+    o change the parameter of `cat` to `category` for `helper1` function.
+    o remove `suppressWarnings/Messages`.
+    o re-format the code style to fit 80 line width and 4 spaces for line
+    indents.
+    o add function to save ATAC peaks.
+
 CHANGES IN VERSION 0.99.4
 -------------------------
 

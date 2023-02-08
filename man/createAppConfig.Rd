@@ -5,15 +5,15 @@
 \title{Create a metadata to describe the dataset}
 \usage{
 createAppConfig(
-  title,
-  destinationFolder,
-  species,
-  doi,
-  pmid,
-  bibentry,
-  datatype = c("scRNAseq", "scATACseq"),
-  markers,
-  keywords
+    title,
+    destinationFolder,
+    species,
+    doi,
+    pmid,
+    bibentry,
+    datatype = c("scRNAseq", "scATACseq", "scMultiome"),
+    markers,
+    keywords
 )
 }
 \arguments{
@@ -29,7 +29,8 @@ the root folder of the datasets. The data will be saved as
 
 \item{bibentry}{An object of bibentry}
 
-\item{datatype}{character(1). Type of the data, scRNAseq or scATACseq.}
+\item{datatype}{character(1). Type of the data, scRNAseq, scATACseq or
+scMultiome.}
 
 \item{markers}{A list of data.frame with gene symbols as rownames or
 a character vector.}
@@ -42,14 +43,14 @@ The keywords will be used for whole database search}
 An object of \link{APPconf} object
 }
 \description{
-The function will return a APPconf object which contain the reference,
-keywords for the dataset.
+The function will return a APPconf object which contain
+the reference, keywords for the dataset.
 }
 \examples{
 config <- createAppConfig(
-           title="pbmc_small",
-           destinationFolder = "pbmc_small",
-           species = "Homo sapiens",
-           doi="10.1038/nbt.3192",
-           datatype = "scRNAseq")
+    title="pbmc_small",
+    destinationFolder = "pbmc_small",
+    species = "Homo sapiens",
+    doi="10.1038/nbt.3192",
+    datatype = "scRNAseq")
 }

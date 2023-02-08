@@ -5,15 +5,16 @@
 \title{scRNAseqApp main function}
 \usage{
 scRNAseqApp(
-  datafolder = "data",
-  defaultDataset = "pbmc_small",
-  windowTitle = "scRNAseq/scATACseq database",
-  banner = system.file("assets", "images", "banner.png", package = "scRNAseqApp"),
-  maxRequestSize = 1073741824,
-  timeout = 30,
-  theme = bs_theme(bootswatch = "lumen"),
-  use_bs_themer = FALSE,
-  ...
+    datafolder = "data",
+    defaultDataset = "pbmc_small",
+    windowTitle = "scRNAseq/scATACseq database",
+    banner =
+        system.file("assets", "img", "banner.png", package = "scRNAseqApp"),
+    maxRequestSize = 1073741824,
+    timeout = 30,
+    theme = bs_theme(bootswatch = "lumen"),
+    use_bs_themer = FALSE,
+    ...
 )
 }
 \arguments{
@@ -44,9 +45,9 @@ create a scRNAseqApp once the initialization is done.
 }
 \examples{
 if(interactive()){
-  app_path=tempdir()
-  scInit(app_path=app_path)
-  setwd(app_path)
-  scRNAseqApp()
+    app_path=tempdir()
+    scInit(app_path=app_path)
+    setwd(app_path)
+    scRNAseqApp()
 }
 }

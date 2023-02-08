@@ -1,4 +1,5 @@
 library(biomaRt)
+library(Seurat)
 orgs <- c("Bos taurus",
           "Caenorhabditis elegans",
           "Drosophila melanogaster",

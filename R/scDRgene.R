@@ -3,118 +3,167 @@
 #' guide_colorbar scale_color_gradientn coord_fixed scale_y_discrete
 #' scale_x_continuous xlim
 #' @importFrom ggridges geom_density_ridges theme_ridges
-scDRgene <- function(inpConf, inpMeta,
-                     dimRedX, dimRedY,
-                     gene1,
-                     subsetCellKey, subsetCellVal,
-                     dataset, geneIdMap,
-                     pointSize, gradientCol,
-                     GeneExprDotOrd,
-                     labelsFontsize,
-                     plotAspectRatio, keepXYlables,
-                     inpPlt="Dotplot", inpXlim, inpColRange=0,
-                     infoFilterKey, infoFilterVal,
-                     valueFilterKey, valueFilterCutoff,
-                     ...){
-  if(gene1[1]==""){
-    return(ggplot())
-  }
-  if(is.na(geneIdMap[gene1])){
-    return(ggplot())
-  }
-  if(is.null(geneIdMap[gene1])){
-    return(ggplot())
-  }
-  # Prepare ggData
-  subInfoColname <- 'subInfo'
-  subFilterColname <- 'subValue'
-  subGrpColname <- 'sub'
-  exprColname <- 'val'
-  ggData <- inpMeta[, c(inpConf[inpConf$UI == dimRedX]$ID,
-                        inpConf[inpConf$UI == dimRedY]$ID,
-                        inpConf[inpConf$UI == subsetCellKey]$ID),
-                    with = FALSE]
-  if(ncol(ggData)!=3) return(ggplot())
-  colnames(ggData) <- c("X", "Y", subGrpColname)
-  if(!missing(infoFilterKey) && !missing(infoFilterVal)){
-    ggData <- cbind(ggData,
-                    subInfo=inpMeta[, inpConf[inpConf$UI == infoFilterKey]$ID,
-                                    with = FALSE])
-    colnames(ggData)[ncol(ggData)] <- subInfoColname
-  }
-  ggData <- cbindFilterValues(ggData, inpConf, inpMeta, subFilterColname,
-                              geneIdMap, dataset,
-                              valueFilterKey, valueFilterCutoff)
-  rat <- getRatio(ggData)
-
-  ggData[[exprColname]] <- read_exprs(dataset,
-                                      geneIdMap[gene1],
-                                      valueOnly=TRUE)
-  if(any(ggData[[exprColname]] < 0)){
-    ggData[ggData[[exprColname]] < 0][[exprColname]] <- 0
-  }
-
-  keep <- filterCells(ggData,
-                      subGrpColname, subsetCellVal,
-                      subFilterColname, valueFilterCutoff,
-                      subInfoColname, infoFilterVal)
-
-  bgCells <- sum(!keep)>0
-
-  if(bgCells){
-    ggData2 <- ggData[!keep]
-    ggData <- ggData[keep]
-  }
-  ggData <- orderGeneExpr(ggData, GeneExprDotOrd, exprColname)
-  if(is.logical(inpColRange[1])){
-    return(range(ggData[[exprColname]]))
-  }
-  # Actual ggplot
-  if(inpPlt == "Dotplot"){
-    if(length(inpColRange)==1){
-      inpColRange <- c(min(0, min(inpColRange, na.rm = TRUE),
-                           na.rm = TRUE),
-                       inpColRange)
+scDRgene <- function(
+        inpConf,
+        inpMeta,
+        dimRedX,
+        dimRedY,
+        gene1,
+        subsetCellKey,
+        subsetCellVal,
+        dataset,
+        geneIdMap,
+        pointSize,
+        gradientCol,
+        GeneExprDotOrd,
+        labelsFontsize,
+        plotAspectRatio,
+        keepXYlables,
+        inpPlt = "Dotplot",
+        inpXlim,
+        inpColRange = 0,
+        infoFilterKey,
+        infoFilterVal,
+        valueFilterKey,
+        valueFilterCutoff,
+        ...) {
+    if (gene1[1] == "") {
+        return(ggplot())
     }
-    if(inpColRange[2]>0){
-      ggData[ggData[[exprColname]]>inpColRange[2], exprColname] <- inpColRange[2]
+    if (is.na(geneIdMap[gene1])) {
+        return(ggplot())
     }
-    ggOut <- ggXYplot(ggData)
-    if(bgCells){
-      ggOut <- labelBackgroundCells(ggOut, ggData2, pointSize,
-                                    color="snow2", shape=16)
+    if (is.null(geneIdMap[gene1])) {
+        return(ggplot())
     }
-    ggOut <- pointPlot(ggOut, pointSize, labelsFontsize,
-                       dimRedX, dimRedY, keepXYlables) +
-      guides(color = guide_colorbar(barwidth = 15))
-    if(inpColRange[2]>0){
-      ggOut <- ggOut +
-        scale_color_gradientn(gene1,
-                              colours = .globals$cList[[gradientCol]],
-                              limits=inpColRange)
-    }else{
-      ggOut <- ggOut +
-        scale_color_gradientn(gene1,
-                              colours = .globals$cList[[gradientCol]])
+    # Prepare ggData
+    subInfoColname <- 'subInfo'
+    subFilterColname <- 'subValue'
+    subGrpColname <- 'sub'
+    exprColname <- 'val'
+    ggData <- inpMeta[, c(
+        inpConf[inpConf$UI == dimRedX]$ID,
+        inpConf[inpConf$UI == dimRedY]$ID,
+        inpConf[inpConf$UI == subsetCellKey]$ID),
+        with = FALSE]
+    if (ncol(ggData) != 3)
+        return(ggplot())
+    colnames(ggData) <- c("X", "Y", subGrpColname)
+    if (!missing(infoFilterKey) && !missing(infoFilterVal)) {
+        ggData <- cbind(
+            ggData,
+            subInfo =
+                inpMeta[, inpConf[
+                    inpConf$UI == infoFilterKey]$ID, with = FALSE])
+        colnames(ggData)[ncol(ggData)] <- subInfoColname
     }
-    ggOut <- fixCoord(ggOut, plotAspectRatio, rat)
-  }else{## ridgePlot
-    ggData[[subGrpColname]] <-
-      factor(ggData[[subGrpColname]],
-             levels=rev(sortLevels(
-               as.character(unique(ggData[[subGrpColname]])))))
-    ggOut <- ggplot(ggData, aes_string(x = exprColname, y = subGrpColname,
-                                       fill = subGrpColname)) +
-      geom_density_ridges(scale = 4, show.legend = FALSE) +
-      theme_ridges() +
-      scale_y_discrete(expand = c(0.01, 0)) +
-      scale_x_continuous(expand = c(0, 0)) +
-      ylab("Subsets") +
-      xlab("Expression Level")
-    if(length(inpXlim)==2){
-      ggOut <- ggOut + xlim(inpXlim)
+    ggData <-
+        cbindFilterValues(
+            ggData,
+            inpConf,
+            inpMeta,
+            subFilterColname,
+            geneIdMap,
+            dataset,
+            valueFilterKey,
+            valueFilterCutoff
+        )
+    rat <- getRatio(ggData)
+    
+    ggData[[exprColname]] <- read_exprs(
+        dataset,
+        geneIdMap[gene1],
+        valueOnly = TRUE)
+    if (any(ggData[[exprColname]] < 0)) {
+        ggData[ggData[[exprColname]] < 0][[exprColname]] <- 0
     }
-  }
-
-  return(ggOut)
+    
+    keep <- filterCells(
+        ggData,
+        subGrpColname,
+        subsetCellVal,
+        subFilterColname,
+        valueFilterCutoff,
+        subInfoColname,
+        infoFilterVal
+    )
+    
+    bgCells <- sum(!keep) > 0
+    
+    if (bgCells) {
+        ggData2 <- ggData[!keep]
+        ggData <- ggData[keep]
+    }
+    ggData <- orderGeneExpr(ggData, GeneExprDotOrd, exprColname)
+    if (is.logical(inpColRange[1])) {
+        return(range(ggData[[exprColname]]))
+    }
+    # Actual ggplot
+    if (inpPlt == "Dotplot") {
+        if (length(inpColRange) == 1) {
+            inpColRange <- c(min(
+                0, min(inpColRange, na.rm = TRUE),
+                na.rm = TRUE),
+                inpColRange)
+        }
+        if (inpColRange[2] > 0) {
+            ggData[ggData[[exprColname]] > inpColRange[2], exprColname] <-
+                inpColRange[2]
+        }
+        ggOut <- ggXYplot(ggData)
+        if (bgCells) {
+            ggOut <- labelBackgroundCells(
+                ggOut,
+                ggData2,
+                pointSize,
+                color = "snow2",
+                shape = 16)
+        }
+        ggOut <- pointPlot(
+            ggOut,
+            pointSize,
+            labelsFontsize,
+            dimRedX,
+            dimRedY,
+            keepXYlables) +
+            guides(color = guide_colorbar(barwidth = 15))
+        if (inpColRange[2] > 0) {
+            ggOut <- ggOut +
+                scale_color_gradientn(
+                    gene1,
+                    colours = .globals$cList[[gradientCol]],
+                    limits = inpColRange)
+        } else{
+            ggOut <- ggOut +
+                scale_color_gradientn(
+                    gene1,
+                    colours = .globals$cList[[gradientCol]])
+        }
+        ggOut <- fixCoord(ggOut, plotAspectRatio, rat)
+    } else{
+        ## ridgePlot
+        ggData[[subGrpColname]] <- factor(
+            ggData[[subGrpColname]],
+            levels = rev(sortLevels(as.character(
+                unique(ggData[[subGrpColname]])
+            ))))
+        ggOut <- ggplot(
+            ggData,
+            aes_string(
+                x = exprColname,
+                y = subGrpColname,
+                fill = subGrpColname
+            )) +
+            geom_density_ridges(scale = 4, show.legend = FALSE) +
+            theme_ridges() +
+            scale_y_discrete(expand = c(0.01, 0)) +
+            scale_x_continuous(expand = c(0, 0)) +
+            ylab("Subsets") +
+            xlab("Expression Level")
+        if (length(inpXlim) == 2) {
+            ggOut <- ggOut + xlim(inpXlim)
+        }
+    }
+    
+    return(ggOut)
 }

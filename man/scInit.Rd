@@ -5,11 +5,14 @@
 \title{Create a scRNAseqApp project}
 \usage{
 scInit(
-  app_path = getwd(),
-  root = "admin",
-  password = "scRNAseqApp",
-  datafolder = "data",
-  overwrite = FALSE
+    app_path = getwd(),
+    root = "admin",
+    password = "scRNAseqApp",
+    datafolder = "data",
+    overwrite = FALSE,
+    app_title = "scRNAseq Database",
+    app_description =
+        "This database is a collection of\\n        single cell RNA-seq data."
 )
 }
 \arguments{
@@ -21,7 +24,11 @@ scInit(
 
 \item{datafolder}{the folder where saved the dataset for the app}
 
-\item{overwrite}{logical(1), overwrite the \code{app_path} if there is a project.}
+\item{overwrite}{logical(1), overwrite the \code{app_path} if there is
+a project.}
+
+\item{app_title, app_description}{character(1). The title and
+description of the home page.}
 }
 \value{
 no returns. This function will copy files to \code{app_path}
@@ -32,6 +39,6 @@ which contains the required files.
 }
 \examples{
 if(interactive()){
-  scInit()
+    scInit()
 }
 }

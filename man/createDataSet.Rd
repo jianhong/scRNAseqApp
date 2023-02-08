@@ -3,17 +3,21 @@
 \name{createDataSet}
 \alias{createDataSet}
 \title{Create a dataset
-Create a dataset from a Seurat object}
+Create a dataset from a Seurat object. The function will try to find
+the markers in the Misc data named as 'markers'.
+The misc data should be output of function \code{FindAllMarkers}.}
 \usage{
 createDataSet(
-  appconf,
-  seu,
-  config,
-  contrast,
-  assayName,
-  gexSlot = c("data", "scale.data", "counts"),
-  LOCKER = FALSE,
-  datafolder = "data"
+    appconf,
+    seu,
+    config,
+    contrast,
+    assayName,
+    gexSlot = c("data", "scale.data", "counts"),
+    atacAssayName,
+    atacSlot = c("data", "scale.data", "counts"),
+    LOCKER = FALSE,
+    datafolder = "data"
 )
 }
 \arguments{
@@ -35,6 +39,12 @@ default is "RNA"
 \item{gexSlot}{slot in single-cell assay to plot.
 Default is to use the "data" slot}
 
+\item{atacAssayName}{assay in single-cell data object to use for plotting
+open chromatin.}
+
+\item{atacSlot}{slot in single-cell atac assay to plot.
+Default is to use the "data" slot}
+
 \item{LOCKER}{Set locker if the file is required login}
 
 \item{datafolder}{app data folder}
@@ -44,15 +54,17 @@ The updated Seurat object.
 }
 \description{
 Create a dataset
-Create a dataset from a Seurat object
+Create a dataset from a Seurat object. The function will try to find
+the markers in the Misc data named as 'markers'.
+The misc data should be output of function \code{FindAllMarkers}.
 }
 \examples{
 library(Seurat)
 appconf <- createAppConfig(
-           title="pbmc_small",
-           destinationFolder = "pbmc_small",
-           species = "Homo sapiens",
-           doi="10.1038/nbt.3192",
-           datatype = "scRNAseq")
+    title="pbmc_small",
+    destinationFolder = "pbmc_small",
+    species = "Homo sapiens",
+    doi="10.1038/nbt.3192",
+    datatype = "scRNAseq")
 createDataSet(appconf, pbmc_small, datafolder=tempdir())
 }

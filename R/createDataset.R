@@ -124,7 +124,7 @@ createDataSet <- function(
                 Misc(seu, "markers") <- markers
             }
         }
-        appconf$markers <- markers
+        appconf$markers <- split(markers, markers$cluster)
     }
     if (length(markers) == 0) {
         markers <- top10
@@ -253,11 +253,19 @@ createAppConfig <-
             if (missing(doi))
                 doi <- idConverter(pmid, type = "doi")
         }
+        if(missing(doi)){
+            doi = ""
+        }
+        if(missing(pmid)){
+            pmid = ""
+        }
         bib <- NULL
         if (!missing(bibentry)) {
             if (is(bibentry, "bibentry")) {
                 bib <- format(bibentry, style = 'html')
             }
+        }else{
+            bibentry <- NULL
         }
         return(
             APPconf(

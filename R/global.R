@@ -14,6 +14,7 @@
     sc1peak = 'sc1peak.rds',
     sc1link = 'sc1link.rds',
     sc1anno = 'sc1anno.rds',
+    bwspath = 'bws',
     token = "token",
     locker = "LOCKER",
     cellchat = "cellchat.rds",
@@ -162,6 +163,11 @@
         GeneExpr = "GeneAccs",
         coexpression = "co-accessibility",
         expression = "accessibility"
+    ),
+    scMultiome = c(
+        GeneExpr = "GeneExpr",
+        coexpression = "coexpression",
+        expression = "expression"
     )
 )
 # number of gene by search

@@ -33,8 +33,8 @@ and entry. Entry must be an object of \link[utils]{bibentry}}
 
 \item{\code{type}}{character(1). Type of the data, scRNAseq or scATACseq.}
 
-\item{\code{markers}}{character. A vector of characters represents cell
-marders.}
+\item{\code{markers}}{list. A list of data.frame represents cell
+markers.}
 
 \item{\code{keywords}}{character. A vector of characters represents the
 keywords of the study.}

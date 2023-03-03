@@ -1,6 +1,6 @@
 Package: scRNAseqApp
 Title: A single-cell RNAseq Shiny app-package
-Version: 0.99.5
+Version: 0.99.6
 Authors@R:
     c(person(given = "Jianhong",
              family = "Ou",
@@ -26,6 +26,8 @@ Imports:
     ComplexHeatmap,
     data.table,
     DT,
+    GenomicRanges,
+    GenomeInfoDb,
     ggdendro,
     ggforce,
     ggplot2,
@@ -42,6 +44,8 @@ Imports:
     plotly,
     RColorBrewer,
     RefManageR,
+    Rsamtools,
+    rtracklayer,
     S4Vectors,
     scales,
     scrypt,

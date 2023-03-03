@@ -11,8 +11,8 @@ setClassUnion("character_OR_NULL", c("character", "NULL"))
 #' @slot ref Reference information in a list with element bib, doi, pmid
 #' and entry. Entry must be an object of \link[utils]{bibentry}
 #' @slot type character(1). Type of the data, scRNAseq or scATACseq.
-#' @slot markers character. A vector of characters represents cell
-#'  marders.
+#' @slot markers list. A list of data.frame represents cell
+#'  markers.
 #' @slot keywords character. A vector of characters represents the
 #'  keywords of the study.
 #' @slot groupCol character. The key group column name to separate

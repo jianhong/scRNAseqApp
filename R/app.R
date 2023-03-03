@@ -87,7 +87,9 @@ scRNAseqApp <- function(
                     ### Tab: cellInfo vs cellInfo on dimRed
                     cellInfoCellInfoUI("cellInfoCellInfo"),
                     ### Tab: subset gene expr
-                    subsetGeneExprUI("subsetGeneExpr")
+                    subsetGeneExprUI("subsetGeneExpr"),
+                    ### Tab: ATAC vs Gene expr
+                    geneAccGeneExprUI("ATACvsExpr")
                 ),
                 navbarMenu(
                     "Co-expression",
@@ -384,6 +386,14 @@ scRNAseqApp <- function(
             ### Plots for tab gene expression vs gene expression
             geneExprGeneExprServer(
                 "geneExprGeneExpr",
+                reactive({
+                    dataSource
+                }),
+                optCrt)
+            
+            ### ATAC vs Expr
+            geneAccGeneExprServer(
+                "ATACvsExpr",
                 reactive({
                     dataSource
                 }),

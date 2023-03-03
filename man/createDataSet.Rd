@@ -8,16 +8,16 @@ the markers in the Misc data named as 'markers'.
 The misc data should be output of function \code{FindAllMarkers}.}
 \usage{
 createDataSet(
-    appconf,
-    seu,
-    config,
-    contrast,
-    assayName,
-    gexSlot = c("data", "scale.data", "counts"),
-    atacAssayName,
-    atacSlot = c("data", "scale.data", "counts"),
-    LOCKER = FALSE,
-    datafolder = "data"
+  appconf,
+  seu,
+  config,
+  contrast,
+  assayName,
+  gexSlot = c("data", "scale.data", "counts"),
+  atacAssayName,
+  atacSlot = c("data", "scale.data", "counts"),
+  LOCKER = FALSE,
+  datafolder = "data"
 )
 }
 \arguments{

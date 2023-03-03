@@ -5,14 +5,14 @@
 \title{Create a scRNAseqApp project}
 \usage{
 scInit(
-    app_path = getwd(),
-    root = "admin",
-    password = "scRNAseqApp",
-    datafolder = "data",
-    overwrite = FALSE,
-    app_title = "scRNAseq Database",
-    app_description =
-        "This database is a collection of\\n        single cell RNA-seq data."
+  app_path = getwd(),
+  root = "admin",
+  password = "scRNAseqApp",
+  datafolder = "data",
+  overwrite = FALSE,
+  app_title = "scRNAseq Database",
+  app_description =
+    "This database is a collection of\\n        single cell RNA-seq data."
 )
 }
 \arguments{

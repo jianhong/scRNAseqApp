@@ -103,7 +103,7 @@ read_exprs <- function(
 
 #' read ATAC counts in peaks
 #' The data was write as
-#' /grp/cell-name/matrix
+#' /cell/cell-name/matrix
 #' matrix is sparse matrix, the first column is the index number start from 1
 #' of the peak; the second column is the count number.
 #' @noRd
@@ -111,20 +111,22 @@ read_exprs <- function(
 writeATACdata <- function(acAsy, appDir){
     filename <- file.path(appDir, .globals$filenames$sc1atac)
     sc1atac <- H5File$new(filename, mode = "w")
-    sc1atac.grp <- sc1atac$create_group("grp")
+    sc1atac.cell <- sc1atac$create_group("cell")
     lapply(colnames(acAsy), function(j){## time consuming
         x <- acAsy[, j]
         i <- which(x!=0)
         N <- length(i)
         if(N>0){
             x <- matrix(c(i, x[i]), nrow = N)
-            sc1atac.grp.data <- sc1atac.grp$create_dataset(
+            type <- if(all(x==round(x)))  h5types$H5T_NATIVE_INT else
+                h5types$H5T_NATIVE_DOUBLE
+            sc1atac.cell.data <- sc1atac.cell$create_dataset(
                 j,
-                dtype = h5types$H5T_NATIVE_INT,
+                dtype = type,
                 space = H5S$new("simple", dims = dim(x), maxdims = dim(x)),
                 dim = dim(x)
             )
-            sc1atac.grp.data[, ] <- x 
+            sc1atac.cell.data[, ] <- x 
         }
     })
     sc1atac$close_all()
@@ -141,8 +143,8 @@ readATACdata <- function(h5f, cell){
             .globals$filenames$sc1atac),
         mode = "r")
     on.exit(h5file$close_all())
-    if(cell %in% names(h5file[["grp"]])){
-        h5data <- h5file[["grp"]][[cell]]
+    if(cell %in% names(h5file[["cell"]])){
+        h5data <- h5file[["cell"]][[cell]]
         cnts <- h5data$read()
     }else{
         cnts <- matrix(nrow = 0, ncol=2)
@@ -151,3 +153,26 @@ readATACdata <- function(h5f, cell){
     on.exit()
     cnts
 }
+#'
+readATACdataByCoor <- function(h5f, cells, coord){
+    stopifnot(is.character(cells))
+    stopifnot(is.list(coord))
+    stopifnot(all(c("seqnames", "start", "end") %in% names(coord)))
+    peaks <- readData("sc1peak", h5f)
+    sel <- which(peaks$seqnames %in% coord$seqnames &
+                     peaks$start <= coord$end &
+                     peaks$end >= coord$start)
+    if(length(sel)==0){
+        return(data.frame())
+    }
+    cnts <- lapply(cells, function(cell){
+        cnts <- readATACdata(h5f, cell)
+        cnts <- cnts[match(sel, cnts[, 1]), 2, drop=TRUE]
+    })
+    cnts <- do.call(cbind, cnts)
+    colnames(cnts) <- cells
+    cnts[is.na(cnts)] <- 0
+    cnts <- as.data.frame(cnts)
+    cnts <- cbind(peaks[sel, , drop=FALSE], cnts)
+}
+

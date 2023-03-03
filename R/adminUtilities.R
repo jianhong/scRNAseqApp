@@ -191,6 +191,14 @@ updateAppConf <- function(input, global) {
         rownames(markers) <- markers
         markers <- list(markers = as.data.frame(markers))
     }
+    if(is.list(markers) && !is.data.frame(markers)){
+        if(!all(vapply(markers, is.data.frame, logical(1L)))){
+            markers <- as.data.frame(markers)
+        }
+    }
+    if(is.data.frame(markers)){
+        markers <- list(markers)
+    }
     if (input$species2 != "" && input$species2 != "NA") {
         species <- input$species2
     } else{

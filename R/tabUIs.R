@@ -44,6 +44,22 @@ graphicsControlUI <- function(id, GeneExpraspSelect="Square"){
 NS0 <- function(namespace, id, postfix){
     NS(namespace, id=paste0(id, postfix))
 }
+geneAccPlotControlUI <- function(
+        id, postfix=1,
+        colorNames=names(.globals$cList)){
+    tagList(
+        actionButton(
+            NS0(id, "GeneExprtog", postfix), "Toggle plot controls"),
+        conditionalPanel(
+            condition = paste0("input.GeneExprtog", postfix, " % 2 == 1"),
+            ns=NS(id),
+            radioButtons(
+                NS0(id, "GeneExprcol", postfix), "Colour:",
+                choices = colorNames,
+                selected = colorNames[1])
+        )
+    )
+}
 geneExprPlotControlUI <- function(
         id, postfix=1,
         colorNames=names(.globals$cList)){
@@ -298,6 +314,14 @@ geneExprUI <- function(id, postfix=1){
             NS0(id, "GeneName", postfix),
             "Gene name:", choices=NULL) %>%
             helper1(category="geneName")
+    )
+}
+
+geneAccUI <- function(id, postfix=1){
+    tagList(
+        textInput(
+            NS0(id, "coord", postfix),
+            "Coordinates:", value=NULL)
     )
 }
 

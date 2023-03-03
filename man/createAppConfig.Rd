@@ -5,15 +5,15 @@
 \title{Create a metadata to describe the dataset}
 \usage{
 createAppConfig(
-    title,
-    destinationFolder,
-    species,
-    doi,
-    pmid,
-    bibentry,
-    datatype = c("scRNAseq", "scATACseq", "scMultiome"),
-    markers,
-    keywords
+  title,
+  destinationFolder,
+  species,
+  doi,
+  pmid,
+  bibentry,
+  datatype = c("scRNAseq", "scATACseq", "scMultiome"),
+  markers,
+  keywords
 )
 }
 \arguments{

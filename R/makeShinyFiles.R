@@ -30,6 +30,11 @@
 #' @importFrom SeuratObject GetAssayData VariableFeatures Embeddings Reductions
 #' @importFrom data.table data.table as.data.table
 #' @importFrom hdf5r H5File h5types H5S
+#' @importFrom Rsamtools TabixFile seqnamesTabix scanTabix
+#' @importFrom GenomeInfoDb keepSeqlevels seqinfo seqnames
+#' @importFrom GenomicRanges GRanges width
+#' @importFrom rtracklayer export
+#' @importFrom utils read.table
 makeShinyFiles <- function(
         obj,
         scConf,
@@ -274,6 +279,8 @@ makeShinyFiles <- function(
     ### save ATAC objects
     if (!missing(atacAssayName)) {
         if (atacAssayName %in% Assays(obj)) {
+            rm(gexAsy)
+            DefaultAssay(obj) <- atacAssayName
             ## links, the links between peaks and gene symbol,
             ## used to create the matrix table
             links <- GetAssayData(obj, slot = "links")
@@ -281,6 +288,110 @@ makeShinyFiles <- function(
             annotations <- GetAssayData(obj, slot = "annotation")
             if (length(links) < 1 || length(annotations) < 1) {
                 stop("scATAC data are not available.")
+            }
+            ## get fragments for each cell and group
+            fragments <- GetAssayData(obj, slot = "fragments")
+            regions <- seqinfo(annotations)
+            tryCatch({
+                regions <- as(regions, "GRanges")
+            }, error=function(.e){
+                warning("Cannot get genomic informations")
+            })
+            grp <- sc1conf[sc1conf$grp, ]$ID
+            if(is(regions, "GRanges")){
+                message("The following steps will cost memories.")
+                res <- list()
+                for(k in seq_along(fragments)){
+                    fragment.path <- fragments[[k]]@path
+                    if(file.exists(fragment.path)){
+                        tabix.file <- TabixFile(fragment.path)
+                        open(con = tabix.file)
+                        on.exit(close(tabix.file))
+                        seqnames.in.both <- intersect(
+                            x = seqnames(x = regions),
+                            y = seqnamesTabix(file = tabix.file))
+                        region <- keepSeqlevels(
+                            x = regions,
+                            value = seqnames.in.both,
+                            pruning.mode = "coarse")
+                        coverage <- lapply(seq_along(region), function(i){
+                            reads <- scanTabix(
+                                file = tabix.file,
+                                param = regions[i])
+                            reads <- read.table(text = reads[[1]])
+                            colnames(reads) <- 
+                                c("seqnames", "start", "end", "name", "score")
+                            reads <- GRanges(reads)
+                            reads.grp <- lapply(grp, function(.grp){
+                                lapply(split(
+                                    reads,
+                                    sc1meta[[.grp]][
+                                        match(reads$name, sc1meta$sampleID)]),
+                                    function(.e){
+                                        coverage(.e, weight = .e$score)
+                                    })
+                            })
+                            rm(reads)
+                            names(reads.grp) <- grp
+                            reads.grp
+                        })
+                        names(coverage) <- as.character(seqnames(region))
+                        ## coverage is 3 level list,
+                        ## level 1, chromosome
+                        ## level 2, group
+                        ## level 3, factors in group
+                        if(length(coverage)){
+                            res[[k]] <- list()
+                            for(i in names(coverage[[1]])){
+                                res[[k]][[i]] <- list()
+                                for(j in names(coverage[[1]][[1]])){
+                                    res[[k]][[i]][[j]] <-
+                                        Reduce(c, lapply(coverage,
+                                                         function(.cvg){
+                                            .cvg[[i]][[j]]
+                                        }))
+                                }
+                            }
+                        }
+                        
+                        close(tabix.file)
+                        on.exit()
+                    }
+                }
+                if(length(res)>0){
+                    if(length(res)>1){
+                        for(i in seq_along(res)[-1]){
+                            res[[1]] <- lapply(res[[1]], function(.grp){
+                                lapply(res[[1]][[.grp]], function(.fac){
+                                    res[[1]][[.grp]][[.fac]] +
+                                        res[[i]][[.grp]][[.fac]]
+                                })
+                            })
+                        }
+                    }
+                    res <- lapply(res[[1]], function(.grp) {
+                        lapply(.grp, function(.fac){
+                            .fac <- GRanges(.fac)
+                            .fac <- .fac[.fac$score!=0]
+                            ## normalize by FPKM
+                            .s <- .fac$score * width(.fac)/1e3
+                            .fac$score <- 1e6*.fac$score/sum(.s)
+                            .fac
+                        })
+                    })
+                    mapply(res, names(res), FUN=function(.grp, .grpname){
+                        mapply(.grp, names(.grp), FUN=function(.fac, .facname){
+                            pf <- file.path(
+                                appDir, .globals$filenames$bwspath, .grpname)
+                            dir.create(pf,
+                                recursive = TRUE, showWarnings=FALSE)
+                            export(.fac, file.path(
+                                pf,
+                                paste0(.facname, ".bigwig")),
+                                format = "BigWig")
+                        })
+                    })
+                }
             }
             # asy used to create coverage files,
             # Note this is different from fragment signals

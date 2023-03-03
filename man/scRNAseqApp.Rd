@@ -5,16 +5,15 @@
 \title{scRNAseqApp main function}
 \usage{
 scRNAseqApp(
-    datafolder = "data",
-    defaultDataset = "pbmc_small",
-    windowTitle = "scRNAseq/scATACseq database",
-    banner =
-        system.file("assets", "img", "banner.png", package = "scRNAseqApp"),
-    maxRequestSize = 1073741824,
-    timeout = 30,
-    theme = bs_theme(bootswatch = "lumen"),
-    use_bs_themer = FALSE,
-    ...
+  datafolder = "data",
+  defaultDataset = "pbmc_small",
+  windowTitle = "scRNAseq/scATACseq database",
+  banner = system.file("assets", "img", "banner.png", package = "scRNAseqApp"),
+  maxRequestSize = 1073741824,
+  timeout = 30,
+  theme = bs_theme(bootswatch = "lumen"),
+  use_bs_themer = FALSE,
+  ...
 )
 }
 \arguments{

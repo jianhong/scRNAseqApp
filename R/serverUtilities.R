@@ -228,6 +228,81 @@ updateCellInfoPlot <-
         )
     }
 
+#' @importFrom GenomicRanges strand start end `strand<-` `start<-` `end<-`
+getCoordByGeneSymbol <- function(symbol, genes, links){
+    genes0 <- genes[genes$gene_name %in% symbol | genes$gene_id %in% symbol]
+    if(length(genes0)<1) return(NULL)
+    strand(genes0) <- "*"
+    coor <- range(genes0)[1]
+    genes0 <- c(start(genes0), end(genes0))
+    links0 <- links[links$gene %in% symbol]
+    if(length(links)>0){
+        peaks0 <- do.call(rbind, strsplit(links0$peak, "-"))
+        peaks0 <- as.numeric(peaks0[, c(2, 3)])
+    }else{
+        peaks0 <- NULL
+    }
+    g0 <- range(c(genes0, peaks0))
+    start(coor) <- g0[1] - 500
+    end(coor) <- g0[2] + 500
+    coor
+}
+
+updateGeneAccPlot <-
+    function(
+        postfix = 1,
+        genePostfix = 2,
+        optCrt,
+        id,
+        input,
+        output,
+        session,
+        dataSource){
+        GeneNameLabel <- paste0('GeneName', genePostfix)
+        coordLabel <- paste0('coord', postfix)
+        genes <- readData("sc1anno", dataSource()$dataset)
+        links <- readData("sc1link", dataSource()$dataset)
+        observeEvent(input[[GeneNameLabel]], {
+            coor <- getCoordByGeneSymbol(input[[GeneNameLabel]], genes, links)
+            updateTextInput(
+                session,
+                coordLabel,
+                value = as(coor, "character"))
+        })
+        
+        plotX <- reactive({
+            scDRatac(
+                dataSource()$sc1conf,
+                dataSource()$sc1meta,
+                input$GeneExprdrX,
+                input$GeneExprdrY,
+                input[[GeneNameLabel]],
+                input[[coordLabel]],
+                input$subsetCell,
+                input$subsetCellVal,
+                dataSource()$dataset,
+                dataSource()$sc1gene,
+                input$GeneExprsiz,
+                input[[paste0("GeneExprcol", postfix)]],
+                input$GeneExprfsz,
+                input$GeneExprasp,
+                input$GeneExprtxt)
+        })
+        updateGeneExprDotPlotUI(
+            postfix,
+            id,
+            input,
+            output,
+            session,
+            plotX,
+            .globals$pList1[input$GeneExprpsz],
+            dataSource()$dataset,
+            input$GeneExprdrX,
+            input$GeneExprdrY,
+            input[[GeneNameLabel]]
+        )
+    }
+        
 updateGeneExprPlot <-
     function(
         postfix = 1,

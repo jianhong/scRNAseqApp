@@ -49,7 +49,7 @@ editUI <- function (id) {
                 selectInput(
                     ns("datatype"),
                     label = "Data type",
-                    choices = c("scRNAseq", "scATACseq"),
+                    choices = c("scRNAseq", "scATACseq", "scMultiome"),
                     selected = "scRNAseq"
                 ),
                 selectInput(

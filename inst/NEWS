@@ -1,4 +1,4 @@
-CHANGES IN VERSION 0.99.7
+CHANGES IN VERSION 0.99.8
 -------------------------
 
     o add app_path to app to fix the issue of missing files.

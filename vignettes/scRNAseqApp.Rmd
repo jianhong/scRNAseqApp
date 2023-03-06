@@ -5,13 +5,14 @@ bibliography: bibliography.bib
 csl: nature.csl
 vignette: >
   %\VignetteIndexEntry{scRNAseqApp Vignette}
-  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
 output:
   BiocStyle::html_document:
     toc: true
     toc_float: true
     toc_depth: 4
+runtime: shiny
 ---
 
 ```{r, echo=FALSE, results="hide", warning=FALSE, message=FALSE}
@@ -316,8 +317,7 @@ scInit(app_path=publish_folder)
 
 ## Start shiny app
 ```{r}
-setwd(publish_folder)
-scRNAseqApp()
+scRNAseqApp(app_path = publish_folder)
 ```
 
 # Create a new data
@@ -340,14 +340,16 @@ second create the data from a Seurat object.
 
 ```{r}
 library(Seurat)
-setwd(publish_folder)
 appconf <- createAppConfig(
             title="pbmc_small_test",
             destinationFolder = "pbmc_small_test",
             species = "Homo sapiens",
             doi="10.1038/nbt.3192",
             datatype = "scRNAseq")
-createDataSet(appconf, pbmc_small, datafolder="data")
+createDataSet(
+    appconf,
+    pbmc_small,
+    datafolder=file.path(publish_folder, "data"))
 dir(file.path(publish_folder, 'data'))
 ```
 

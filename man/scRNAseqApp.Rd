@@ -5,6 +5,7 @@
 \title{scRNAseqApp main function}
 \usage{
 scRNAseqApp(
+  app_path = getwd(),
   datafolder = "data",
   defaultDataset = "pbmc_small",
   windowTitle = "scRNAseq/scATACseq database",
@@ -17,6 +18,8 @@ scRNAseqApp(
 )
 }
 \arguments{
+\item{app_path}{path, a directory where do you want to create the app}
+
 \item{datafolder}{the folder where saved the dataset for the app}
 
 \item{defaultDataset}{default dataset for the app.}

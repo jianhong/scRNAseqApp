@@ -1,5 +1,6 @@
 #' scRNAseqApp main function
 #' @description create a scRNAseqApp once the initialization is done.
+#' @param app_path path, a directory where do you want to create the app
 #' @param datafolder the folder where saved the dataset for the app
 #' @param defaultDataset default dataset for the app.
 #' @param windowTitle The title that should be displayed by the browser window.
@@ -12,7 +13,7 @@
 #' @param ... parameters can be passed to shinyApp except ui and server.
 #' @import shiny
 #' @importFrom utils packageVersion read.delim
-#' @importFrom xfun base64_uri
+#' @importFrom xfun base64_uri is_abs_path
 #' @importFrom shinyhelper observe_helpers
 #' @importFrom ggplot2 ggplot aes geom_bar theme_minimal xlab ylab
 #' @importFrom bslib bs_theme bs_themer
@@ -27,6 +28,7 @@
 #' }
 
 scRNAseqApp <- function(
+        app_path = getwd(),
         datafolder = "data",
         defaultDataset = "pbmc_small",
         windowTitle = "scRNAseq/scATACseq database",
@@ -40,8 +42,15 @@ scRNAseqApp <- function(
         ...) {
     stopifnot(is(theme, "bs_theme"))
     .globals$theme <- theme
-    .globals$datafolder <- datafolder
-    stopifnot(file.exists(datafolder))
+    .globals$app_path <- app_path
+    .globals$counterFilename <- file.path(
+        app_path, .globals$counterFilename)
+    if(!is_abs_path(datafolder)){
+        .globals$datafolder <- file.path(app_path, datafolder)
+    }else{
+        .globals$datafolder <- datafolder
+    }
+    stopifnot(file.exists(.globals$datafolder))
     ## load banner
     banner <- base64_uri(banner)
     ## load default parameters
@@ -77,7 +86,12 @@ scRNAseqApp <- function(
                     class = "about-right border-top-info"
                 ),
                 ### Tab: change dataset
-                aboutUI(req, "about", banner, defaultDataset),
+                aboutUI(
+                    req,
+                    "about",
+                    banner,
+                    defaultDataset,
+                    doc = file.path(.globals$app_path, "doc.txt")),
                 homeUI(),
                 ## fake home
                 navbarMenu(

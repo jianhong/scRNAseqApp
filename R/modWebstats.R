@@ -7,7 +7,8 @@ webstatsUI <- function (id) {
         textAreaInput(
             ns('description'),
             label = 'Homepage description',
-            value = paste(readLines("doc.txt"), collapse = "\n")
+            value = paste(readLines(file.path(
+                .globals$app_path, "doc.txt")), collapse = "\n")
         ),
         actionButton(ns('update'), "update web description"),
         fluidRow(column(width = 3, DTOutput(ns(
@@ -28,11 +29,13 @@ webstatsServer <- function(id) {
     moduleServer(id, function(input, output, session) {
         ## web description
         observeEvent(input$update, {
-            writeLines(input$description, "doc.txt")
+            writeLines(
+                input$description,
+                file.path(.globals$app_path, "doc.txt"))
         })
         
         ## stats
-        cache <- "www/cache.rds"
+        cache <- file.path(.globals$app_path, "www/cache.rds")
         
         freegeoip <- function(ip) {
             if (file.exists(cache)) {

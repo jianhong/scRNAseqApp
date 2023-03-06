@@ -183,7 +183,9 @@ aboutServer <- function(id, dataSource, optCrt) {
             length(getDataSets())
         })
         output$visitor_count <- renderText({
-            counter <- read.delim(.globals$counterFilename, header = TRUE)
+            counter <- read.delim(
+                .globals$counterFilename,
+                header = TRUE)
             length(unique(counter$ip))
         })
         output$reference_count <- renderText({

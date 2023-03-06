@@ -2,6 +2,7 @@
 .globals <- new.env(parent = emptyenv())
 .globals$theme <- bs_theme(bootswatch = 'lumen')
 # filenames
+.globals$app_path <- "."
 .globals$datafolder <- "data"
 .globals$filenames <- list(
     appconf = "appconf.rds",

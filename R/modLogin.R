@@ -19,7 +19,8 @@ loginUI <- function(loginNavbarTitle, defaultDataset) {
 }
 loginServer <- function(input, output, session) {
     auth <-
-        secure_server(check_credentials = check_credentials("database.sqlite"))
+        secure_server(check_credentials = check_credentials(
+            file.path(.globals$app_path, "database.sqlite")))
 }
 
 #' @importFrom utils getFromNamespace

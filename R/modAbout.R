@@ -10,9 +10,9 @@ homeUI <- function() {
 aboutUI <-
     function(request, id, banner, defaultDataset, doc = "doc.txt") {
         ns <- NS(id)
-        # addResourcePath(prefix="pics",
-        #                 directoryPath = system.file(
-        #                   "assets", "images", package="scRNAseqApp"))
+        query <- parseQueryString(request[["QUERY_STRING"]])
+        defaultDataset <- 
+            parseQuery(query, defaultDataset)[1]
         tabPanel(
             title = div(
                 selectInput(

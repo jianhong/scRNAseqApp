@@ -242,7 +242,7 @@ scRNAseqApp <- function(
         })
         ## update visitor stats
         updateVisitor(input, output, session)
-        ## parse query strings, and lood old session
+        ## parse query strings, and load old session
         observe({
             query <- parseQueryString(session$clientData$url_search)
             query_has_results <- FALSE
@@ -259,27 +259,15 @@ scRNAseqApp <- function(
             } else{
                 dataSource$cell <- NULL
             }
-            if (!is.null(query[['data']])) {
-                updateSelectInput(
-                    session, "selectedDatasets",
-                    selected = query[['data']])
+            p_query <- parseQuery(query, defaultDataset)
+            if(p_query['from']=='data'){
                 session$userData[["defaultdata_init"]] <- TRUE
                 query_has_results <- TRUE
-            } else{
-                if (!is.null(query[['token']])) {
-                    token <- getToken()
-                    if (query[["token"]] %in% names(token)) {
-                        dataSource$token <- query[["token"]]
-                        if (dataSource$token %in% names(token)) {
-                            updateSelectInput(
-                                session,
-                                "selectedDatasets",
-                                selected = 
-                                    token[[query[['token']]]])
-                            session$userData[["defaultdata_init"]] <- TRUE
-                            query_has_results <- TRUE
-                        }
-                    }
+            }else{
+                if(p_query['from']=='token'){
+                    dataSource$token <- query[["token"]]
+                    session$userData[["defaultdata_init"]] <- TRUE
+                    query_has_results <- TRUE
                 }
             }
             
@@ -296,6 +284,10 @@ scRNAseqApp <- function(
                         if (!is.null(dd)) {
                             if (dd %in% getDataSets() &&
                                 dd != defaultDataset) {
+                                showNotification(
+                                    "Resuming your last session!",
+                                    duration = 3,
+                                    type = "message")
                                 updateSelectInput(
                                     session,
                                     'selectedDatasets',
@@ -310,7 +302,8 @@ scRNAseqApp <- function(
         dataSource$symbolDict <- updateSymbolDict()
         ## change dataset
         observeEvent(input$selectedDatasets, {
-            if (input$selectedDatasets %in% getDataSets()) {
+            if (input$selectedDatasets %in% getDataSets() &&
+                dataSource$dataset != input$selectedDatasets) {
                 dataSource$dataset <- input$selectedDatasets
                 if (checkLocker(dataSource$dataset)) {
                     dataSource$Logged <- FALSE

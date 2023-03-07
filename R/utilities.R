@@ -8,6 +8,24 @@ visitorDependencies <- function(){
         stylesheet = c("css/style.css")
     )
 }
+# parse querystring
+parseQuery <- function(query, defaultDataset){
+    stopifnot(is.list(query))
+    from <- 'default'
+    if (!is.null(query[['data']])) {
+        defaultDataset <- query[['data']]
+        from <- 'data'
+    } else{
+        if (!is.null(query[['token']])) {
+            token <- getToken()
+            if (query[["token"]] %in% names(token)) {
+                defaultDataset <- token[[query[['token']]]]
+                from <- 'token'
+            }
+        }
+    }
+    return(c(defaultDataset=defaultDataset, from=from))
+}
 # summary box for home page
 summaryBox <- function(
         title, value,

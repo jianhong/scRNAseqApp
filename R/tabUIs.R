@@ -225,6 +225,11 @@ subsetCellByInfoUI <- function(id, mini=FALSE){
                 "Cell information to subset:",
                 choices = NULL) %>%
                 helper1(category="subsetCellInfo"),
+            actionButton(
+                NS(id, 'subsetCell.uncheck'),
+                label=textOutput(
+                    NS(id, 'subsetCell.uncheckLab'),
+                    inline = TRUE)),
             uiOutput(NS(id, "subsetCell.ui"))
         )
     }else{
@@ -238,6 +243,11 @@ subsetCellByInfoUI <- function(id, mini=FALSE){
                     "Cell information to subset:",
                     choices = NULL) %>%
                     helper1(category="subsetCellInfo"),
+                actionButton(
+                    NS(id, 'subsetCell.uncheck'),
+                    label=textOutput(
+                        NS(id, 'subsetCell.uncheckLab'),
+                        inline = TRUE)),
                 uiOutput(NS(id, "subsetCell.ui"))
             )
         )

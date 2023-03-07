@@ -78,11 +78,39 @@ updateSubsetCellUI <-
                             inline = TRUE,
                             choices = sub,
                             selected = sub
+                        ),
+                        div(
+                            style = "visibility:hidden;",
+                            textInput(
+                                NS(id, "subsetCellValChoices"),
+                                label = NULL,
+                                value = paste(sub, collapse = "|")
+                            )
                         )
                     )
                 }
             }
         })
+        
+        output$subsetCell.uncheckLab <- renderPrint(cat('Uncheck All'))
+        observeEvent(input$subsetCell.uncheck, {
+            sub <- strsplit(input$subsetCellValChoices, "\\|")[[1]]
+            if(length(input$subsetCellVal)>0){
+                selected <- NULL
+                uncheckLab <- 'Check All'
+            }else{
+                selected <- sub
+                uncheckLab <- 'Uncheck All'
+            }
+            output$subsetCell.uncheckLab <- renderPrint(cat(uncheckLab))
+            updateCheckboxGroupInput(
+                session = session,
+                inputId = 'subsetCellVal',
+                inline = TRUE,
+                choices = sub,
+                selected = selected
+            )
+        }) 
     }
 updateFilterCellUI <-
     function(

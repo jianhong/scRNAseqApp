@@ -204,7 +204,9 @@ scRNAseqApp <- function(
         checkAvailableDatasets <- reactivePoll(
             1000,session,
             checkFunc = getNamedDataSets,
-            valueFunc = getNamedDataSets)
+            valueFunc = function(){
+                return(isolate(dataSource$available_datasets))
+            })
         observeEvent(
             checkAvailableDatasets(),
             ignoreNULL = TRUE,
@@ -224,7 +226,7 @@ scRNAseqApp <- function(
                     updateSelectInput(
                         session,
                         "selectedDatasets",
-                        choices = ad,
+                        choices = dataSource$available_datasets,
                         selected = input$selectedDatasets
                     )
                 }
@@ -291,6 +293,7 @@ scRNAseqApp <- function(
                                 updateSelectInput(
                                     session,
                                     'selectedDatasets',
+                                    choices = dataSource$available_datasets,
                                     selected = dd)
                             }
                         }
@@ -302,8 +305,8 @@ scRNAseqApp <- function(
         dataSource$symbolDict <- updateSymbolDict()
         ## change dataset
         observeEvent(input$selectedDatasets, {
-            if (input$selectedDatasets %in% getDataSets() &&
-                dataSource$dataset != input$selectedDatasets) {
+            availabledb <- getDataSets()
+            if (input$selectedDatasets %in% availabledb) {
                 dataSource$dataset <- input$selectedDatasets
                 if (checkLocker(dataSource$dataset)) {
                     dataSource$Logged <- FALSE
@@ -345,11 +348,12 @@ scRNAseqApp <- function(
                     }
                 }
             } else{
+                ##data was deleted
                 updateSelectInput(
                     session,
                     "selectedDatasets",
-                    choices = getDataSets(),
-                    selected = getDataSets()[1]
+                    choices = getNamedDataSets(),
+                    selected = availabledb[1]
                 )
             }
             session$sendCustomMessage(

@@ -18,7 +18,7 @@ RoxygenNote: 7.2.3
 VignetteBuilder: knitr
 biocViews: Visualization, SingleCell, RNASeq
 Depends:
-    R
+    R (>= 4.3.0)
 Imports:
     bibtex,
     bslib,

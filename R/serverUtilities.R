@@ -651,7 +651,8 @@ pointPlot <- function(
                 XYval = keepXYlables)
 }
 ggXYplot <- function(ggData) {
-    ggplot(ggData, aes_string("X", "Y", color = "val"))
+    ggplot(ggData, aes(
+        .data[["X"]], .data[["Y"]], color = .data[["val"]]))
 }
 getTotalNumber <- function(nGrid = 16, nPad = 2) {
     return(nGrid + nPad * 2)

@@ -1,15 +1,15 @@
 #' waffle plot for single cell expressions
 #' @noRd
 #' @importFrom stats as.formula
-#' @importFrom ggplot2 coord_equal facet_grid unit scale_fill_gradientn
+#' @importFrom ggplot2 coord_equal facet_grid unit scale_fill_gradientn .data
 #' @importFrom grDevices hcl.colors
 #' @param expr expression table
-#' @param groupCol The column name to for `facet_grid`
+#' @param groupCol The column name for `facet_grid`
 #' @param gradientCol Color sets
 #' @param xyMaxRatio The ratio of x,y. The parameter is used to avoid long plots
 scWafflePlot <- function(
         expr,
-        groupCol = 'treatment',
+        groupCol = 'splitBy',
         gradientCol = rev(hcl.colors(20, "RdYlGn")),
         xyMaxRatio = 5) {
     if (length(gradientCol) == 1) {
@@ -24,9 +24,9 @@ scWafflePlot <- function(
                 as.character(expr[[groupCol]]))
         }
     }
-    data <- expr[order(
-        expr$geneName, expr$grpBy, -1 * expr$val),
-        c("geneName", "grpBy", "val"), with = FALSE]
+    
+    data <- expr[, c("geneName", "grpBy", "val"), with = FALSE]
+    data <- data[order(expr$geneName, expr$grpBy, -1 * expr$val),]
     data <- data[!is.na(data$val),]
     groupMax <- data[, {
         list(N = max(.SD[, list(N = .N), by = 'grpBy']$N))
@@ -63,7 +63,8 @@ scWafflePlot <- function(
         }
     }
     
-    p <- ggplot(ggData, aes_string("x", "y", fill = "exprs")) +
+    p <- ggplot(ggData, aes(
+        .data[["x"]], .data[["y"]], fill = .data[["exprs"]])) +
         geom_tile(color = 'white') + coord_equal() +
         facet_grid(as.formula("geneName ~ grpBy")) +
         theme_minimal() +
@@ -84,7 +85,12 @@ scDRwafflePlot <- function(
         inpMeta,
         gene,
         groupBy,
-        gradientCol) {
+        splitBy,
+        gradientCol,
+        grpKey,
+        grpVal,
+        filterKey,
+        filterVal) {
     if (isQuote(gene)) {
         genenames <- geneIdMap[
             names(geneIdMap) %in% removeQuote(gene)]
@@ -107,6 +113,9 @@ scDRwafflePlot <- function(
                 celltypePattern =
                     .globals$groupColPattern)
         }
+        if (missing(splitBy)) {
+            splitBy <- NA
+        }
         ggData <-
             read_exprs(
                 dataset,
@@ -114,9 +123,27 @@ scDRwafflePlot <- function(
                 inpMeta,
                 inpConf,
                 groupBy,
+                splitBy,
                 valueOnly = FALSE)
         ggData[ggData$val < 0]$val <- 0
-        return(scWafflePlot(ggData, groupBy, gradientCol))
+        # filter the cell
+        if (filterKey %in% inpConf$UI) {
+            ggData$filter <- inpMeta[[inpConf[inpConf$UI == filterKey]$ID]]
+            if (length(filterVal)) {
+                ggData <- ggData[ggData$filter >= filterVal[1], , drop = FALSE]
+            }
+        } else {
+            ggData$filter <-
+                read_exprs(dataset, geneIdMap[filterKey], valueOnly = TRUE)
+            if (length(filterVal)) {
+                ggData <- ggData[ggData$filter >= filterVal[1], , drop = FALSE]
+            }
+        }
+        
+        ggData <- subGrp(ggData, grpKey, grpVal, inpConf)
+        ggData$filter <- NULL
+        return(scWafflePlot(
+            ggData, 'splitBy', gradientCol))
     } else{
         return(ggplot())
     }

@@ -1,5 +1,5 @@
 # Plot ATAC track on dimred
-#' @importFrom ggplot2 ggplot aes_string geom_line xlab ylab guides
+#' @importFrom ggplot2 ggplot aes .data geom_line xlab ylab guides
 #' scale_x_continuous xlim vars
 #' @importFrom ggridges geom_ridgeline theme_ridges
 #' @importFrom rtracklayer import
@@ -87,10 +87,10 @@ scDRatac <- function(
         ))))
     ggOut <- ggplot(
         ggData,
-        aes_string(
-            x = "x",
-            y = "y",
-            fill = "group"
+        aes(
+            x = .data[["x"]],
+            y = .data[["y"]],
+            fill = .data[["group"]]
         )) +
         geom_line() +
         scale_x_continuous(expand = c(0, 0)) +

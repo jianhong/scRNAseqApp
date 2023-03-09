@@ -1,5 +1,5 @@
 # Plot gene expression on dimred
-#' @importFrom ggplot2 ggplot aes_string geom_point xlab ylab guides
+#' @importFrom ggplot2 ggplot aes .data geom_point xlab ylab guides
 #' guide_colorbar scale_color_gradientn coord_fixed scale_y_discrete
 #' scale_x_continuous xlim
 #' @importFrom ggridges geom_density_ridges theme_ridges
@@ -149,10 +149,10 @@ scDRgene <- function(
             ))))
         ggOut <- ggplot(
             ggData,
-            aes_string(
-                x = exprColname,
-                y = subGrpColname,
-                fill = subGrpColname
+            aes(
+                x = .data[[exprColname]],
+                y = .data[[subGrpColname]],
+                fill = .data[[subGrpColname]]
             )) +
             geom_density_ridges(scale = 4, show.legend = FALSE) +
             theme_ridges() +

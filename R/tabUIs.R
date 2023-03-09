@@ -167,6 +167,7 @@ geneCoExprPlotControlUI <- function(id, postfix=1, plotly=FALSE){
 }
 boxPlotControlUI <- function(
         id, withPoints=TRUE, withColor=FALSE,
+        withFontSize=TRUE,
         colorNames=names(.globals$cList)){
     tagList(
         actionButton(
@@ -193,10 +194,15 @@ boxPlotControlUI <- function(
                 NS(id, "plotpsz"), "Plot size:",
                 choices = c("Small", "Medium", "Large"),
                 selected = "Medium", inline = TRUE),
-            radioButtons(
-                NS(id, "plotfsz"), "Font size:",
-                choices = c("Small", "Medium", "Large"),
-                selected = "Medium", inline = TRUE))
+            if(withFontSize){
+                radioButtons(
+                    NS(id, "plotfsz"), "Font size:",
+                    choices = c("Small", "Medium", "Large"),
+                    selected = "Medium", inline = TRUE)
+            }else{
+                span()
+            }
+            )
     )
 }
 dimensionReductionUI <- function(id){

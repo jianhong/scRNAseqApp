@@ -22,7 +22,8 @@ scDRmonocle <- function(
     leaf_df <- data$mst_leaf_nodes
     root_df <- data$mst_root_nodes
     ggOut <-
-        ggplot(data = data_df, aes_string(x = "data_dim_1", y = "data_dim_2")) +
+        ggplot(data = data_df, aes(
+            x = .data[["data_dim_1"]], y = .data[["data_dim_2"]])) +
         geom_point(
             color = I("black"),
             size = 1.25 * cell_size,
@@ -31,7 +32,7 @@ scDRmonocle <- function(
             alpha = I(alpha)
         ) +
         geom_point(
-            aes_string(color = "cell_color"),
+            aes(color = .data[["cell_color"]]),
             size = I(cell_size),
             stroke = I(cell_stroke),
             na.rm = TRUE,
@@ -43,11 +44,11 @@ scDRmonocle <- function(
     if (show_trajectory_graph) {
         ggOut <- ggOut +
             geom_segment(
-                aes_string(
-                    x = "source_prin_graph_dim_1",
-                    y = "source_prin_graph_dim_2",
-                    xend = "target_prin_graph_dim_1",
-                    yend = "target_prin_graph_dim_2"
+                aes(
+                    x = .data[["source_prin_graph_dim_1"]],
+                    y = .data[["source_prin_graph_dim_2"]],
+                    xend = .data[["target_prin_graph_dim_1"]],
+                    yend = .data[["target_prin_graph_dim_2"]]
                 ),
                 size = trajectory_graph_segment_size,
                 color = I(trajectory_graph_color),
@@ -59,7 +60,9 @@ scDRmonocle <- function(
     if (label_principal_points) {
         ggOut <- ggOut +
             geom_point(
-                aes_string(x = "prin_graph_dim_1", y = "prin_graph_dim_2"),
+                aes(
+                    x = .data[["prin_graph_dim_1"]],
+                    y = .data[["prin_graph_dim_2"]]),
                 shape = 21,
                 stroke = I(trajectory_graph_segment_size),
                 color = "white",
@@ -72,7 +75,9 @@ scDRmonocle <- function(
     if (label_leaves) {
         ggOut <- ggOut +
             geom_point(
-                aes_string(x = "prin_graph_dim_1", y = "prin_graph_dim_2"),
+                aes(
+                    x = .data[["prin_graph_dim_1"]],
+                    y = .data[["prin_graph_dim_2"]]),
                 shape = 21,
                 stroke = I(trajectory_graph_segment_size),
                 color = "black",
@@ -82,10 +87,10 @@ scDRmonocle <- function(
                 leaf_df
             ) +
             geom_text(
-                aes_string(
-                    x = "prin_graph_dim_1",
-                    y = "prin_graph_dim_2",
-                    label = "leaf_idx"
+                aes(
+                    x = .data[["prin_graph_dim_1"]],
+                    y = .data[["prin_graph_dim_2"]],
+                    label = .data[["leaf_idx"]]
                 ),
                 size = I(graph_label_size),
                 color = "black",
@@ -97,7 +102,9 @@ scDRmonocle <- function(
     if (label_roots) {
         ggOut <- ggOut +
             geom_point(
-                aes_string(x = "prin_graph_dim_1", y = "prin_graph_dim_2"),
+                aes(
+                    x = .data[["prin_graph_dim_1"]],
+                    y = .data[["prin_graph_dim_2"]]),
                 shape = 21,
                 stroke = I(trajectory_graph_segment_size),
                 color = "black",
@@ -107,10 +114,10 @@ scDRmonocle <- function(
                 root_df
             ) +
             geom_text(
-                aes_string(
-                    x = "prin_graph_dim_1",
-                    y = "prin_graph_dim_2",
-                    label = "root_idx"
+                aes(
+                    x = .data[["prin_graph_dim_1"]],
+                    y = .data[["prin_graph_dim_2"]],
+                    label = .data[["root_idx"]]
                 ),
                 size = I(graph_label_size),
                 color = "black",

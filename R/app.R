@@ -312,7 +312,7 @@ scRNAseqApp <- function(
                     dataSource$Logged <- FALSE
                     if (dataSource$token != "") {
                         if (checkToken(
-                            token,
+                            getToken(),
                             dataSource$token,
                             dataSource$dataset)) {
                             dataSource$Logged <- TRUE

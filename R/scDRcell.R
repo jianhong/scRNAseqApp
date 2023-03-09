@@ -1,6 +1,6 @@
 # Plot cell information on dimred
 #' @noRd
-#' @importFrom ggplot2 ggplot aes_string geom_point xlab ylab
+#' @importFrom ggplot2 ggplot aes .data geom_point xlab ylab
 #' scale_color_gradientn guides guide_colorbar scale_color_manual
 #' guide_legend theme element_text coord_fixed geom_segment
 #' @importFrom ggrepel geom_text_repel
@@ -163,20 +163,20 @@ scDRcell <- function(
                         ggOut <- ggOut +
                             geom_segment(
                                 data = lineDf,
-                                aes_string(
-                                    x = "x",
-                                    y = "y",
-                                    xend = "xend",
-                                    yend = "yend"
+                                aes(
+                                    x = .data[["x"]],
+                                    y = .data[["y"]],
+                                    xend = .data[["xend"]],
+                                    yend = .data[["yend"]]
                                 ),
                                 inherit.aes = FALSE
                             ) +
                             geom_point(
                                 data = pts,
-                                aes_string(
-                                    x = "x",
-                                    y = "y",
-                                    color = "color"
+                                aes(
+                                    x = .data[["x"]],
+                                    y = .data[["y"]],
+                                    color = .data[["color"]]
                                 ),
                                 size = pointSize * 3,
                                 alpha = .5,
@@ -214,7 +214,9 @@ scDRcell <- function(
             ggOut <- ggOut +
                 geom_text_repel(
                     data = ggData3,
-                    aes_string("X", "Y", label = valColname),
+                    aes(
+                        .data[["X"]], .data[["Y"]],
+                        label = .data[[valColname]]),
                     color = "grey10",
                     bg.color = "grey95",
                     bg.r = 0.15,

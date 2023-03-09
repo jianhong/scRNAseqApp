@@ -330,16 +330,6 @@ checkGene <- function(
                     length(.genenames),
                     .globals$limitNumGene))]
                 config <- readData("sc1conf", .appconfs$id)
-                groupName <- getCelltypeCol(config)
-                ggData <-
-                    read_exprs(
-                        .appconfs$id,
-                        .genenames,
-                        readData("sc1meta", .appconfs$id),
-                        config, groupName, valueOnly=FALSE)
-                ggData[ggData$val < 0]$val <- 0
-                #waffle plot
-                plotname <- paste0('search-plot', .appconfs$id)
                 groupCol <- getCelltypeCol(
                     config,
                     celltypePattern =
@@ -350,6 +340,15 @@ checkGene <- function(
                 if(is.null(groupCol)){
                     return(NULL)
                 }
+                ggData <-
+                    read_exprs(
+                        .appconfs$id,
+                        .genenames,
+                        readData("sc1meta", .appconfs$id),
+                        config, groupCol, valueOnly=FALSE)
+                ggData[ggData$val < 0]$val <- 0
+                #waffle plot
+                plotname <- paste0('search-plot', .appconfs$id)
                 wp <- wafflePlot(
                     ggData, id,
                     plotname,
@@ -468,7 +467,7 @@ updateVisitor <- function(input, output, session){
             units = 'days'))<730]
         counter <- table(format(counter, "%y-%m"))
         counter <- as.data.frame(counter)
-        ggplot(counter, aes_string(x="Var1", y="Freq")) +
+        ggplot(counter, aes(x=.data[["Var1"]], y=.data[["Freq"]])) +
             geom_bar(stat = "identity", fill="darkorchid4") +
             theme_minimal() + xlab("") + ylab("visitor counts") +
             theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))

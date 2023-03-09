@@ -24,7 +24,22 @@ plotWaffleUI <- function(id) {
                     value = NULL
                 ),
                 xaxisCellInfoUI(id),
-                boxPlotControlUI(id, withPoints = FALSE, withColor = TRUE)
+                yaxisCellInfoUI(id),
+                subsetCellByInfoUI(id, mini = TRUE),
+                subsetCellByFilterUI(
+                    id,
+                    label = "Cell Info / Gene name (Y-axis):",
+                    title = "Cell Info / Gene to plot",
+                    content = c(
+                        "Select cell info / gene to plot on Y-axis",
+                        "- Can be continuous cell information ",
+                        "(e.g. nUMIs / scores)",
+                        "- Can also be gene expression"
+                    )
+                ),
+                boxPlotControlUI(
+                    id, withPoints = FALSE, withColor = TRUE,
+                    withFontSize = FALSE)
             ),
             column(9, geneExprDotPlotUI(id))
         )
@@ -51,6 +66,15 @@ plotWaffleServer <- function(id, dataSource, optCrt, postfix = 1) {
             choices = getGroupUI(dataSource),
             selected = dataSource()$sc1def$grp1
         )
+        updateSelectInput(
+            session,
+            "CellInfoY",
+            "Split by:",
+            choices = getGroupUI(dataSource),
+            selected = dataSource()$sc1def$grp2
+        )
+        updateSubsetCellUI(id, input, output, session, dataSource, addNA = TRUE)
+        updateFilterCellUI(id, optCrt, input, output, session, dataSource)
         ### plots
         plotX <- reactive({
             scDRwafflePlot(
@@ -60,7 +84,12 @@ plotWaffleServer <- function(id, dataSource, optCrt, postfix = 1) {
                 dataSource()$sc1meta,
                 input$genelist,
                 input$CellInfoX,
-                input$plotcols
+                input$CellInfoY,
+                input$plotcols,
+                input$subsetCell,
+                input$subsetCellVal,
+                input$filterCell,
+                input$filterCellVal
             )
         })
         updateGeneExprDotPlotUI(

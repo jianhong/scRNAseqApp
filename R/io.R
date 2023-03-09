@@ -60,6 +60,7 @@ read_exprs <- function(
         meta,
         config,
         groupName,
+        splitName,
         valueOnly = FALSE,
         cell) {
     h5file <- H5File$new(
@@ -91,6 +92,13 @@ read_exprs <- function(
                     with = FALSE]
         if (!missing(groupName)) {
             tmp$grpBy <- meta[[config[config$UI == groupName]$ID]]
+        }
+        if (!missing(splitName)) {
+            if(!is.na(splitName)) {
+                if(splitName %in% config$UI){
+                    tmp$splitBy <- meta[[config[config$UI == splitName]$ID]]
+                }
+            }
         }
         tmp$geneName <- names(genesID)[idx]
         tmp$val <- h5data$read(args = list(genesID[idx], quote(expr = )))

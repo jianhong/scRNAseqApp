@@ -1,5 +1,5 @@
 # Plot proportion plot
-#' @importFrom ggplot2 ggplot aes_string geom_col ylab coord_flip xlab
+#' @importFrom ggplot2 ggplot aes .data geom_col ylab coord_flip xlab
 #' scale_fill_manual theme
 #' @importFrom data.table .SD .N
 scProp <- function(
@@ -64,10 +64,12 @@ scProp <- function(
     
     # Actual ggplot
     if (inptyp == "Proportion") {
-        ggOut <- ggplot(ggData, aes_string("X", "pctCells", fill = "grp")) +
+        ggOut <- ggplot(ggData, aes(
+            .data[["X"]], .data[["pctCells"]], fill = .data[["grp"]])) +
             geom_col() + ylab("Cell Proportion (%)")
     } else {
-        ggOut <- ggplot(ggData, aes_string("X", "nCells", fill = "grp")) +
+        ggOut <- ggplot(ggData, aes(
+            .data[["X"]], .data[["nCells"]], fill = .data[["grp"]])) +
             geom_col() + ylab("Number of Cells")
     }
     if (flipXY) {

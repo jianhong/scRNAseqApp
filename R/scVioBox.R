@@ -1,6 +1,6 @@
 # Plot violin / boxplot
 #' @importFrom stats rnorm
-#' @importFrom ggplot2 ggplot aes_string geom_violin geom_boxplot
+#' @importFrom ggplot2 ggplot aes .data geom_violin geom_boxplot
 #' geom_jitter xlab ylab scale_fill_manual theme
 scVioBox <- function(
         inpConf,
@@ -55,10 +55,12 @@ scVioBox <- function(
     
     # Actual ggplot
     if (inptyp == "violin") {
-        ggOut <- ggplot(ggData, aes_string("X", "val", fill = "X")) +
+        ggOut <- ggplot(ggData, aes(
+            .data[["X"]], .data[["val"]], fill = .data[["X"]])) +
             geom_violin(scale = "width")
     } else {
-        ggOut <- ggplot(ggData, aes_string("X", "val", fill = "X")) +
+        ggOut <- ggplot(ggData, aes(
+            .data[["X"]], .data[["val"]], fill = .data[["X"]])) +
             geom_boxplot()
     }
     if (inppts) {

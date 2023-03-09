@@ -6,6 +6,7 @@ scGeneList <- function(inp, inpGene) {
         ",|;|\n|\r|\\s+"
     )[[1]])),
     present = TRUE)
+    geneList <- geneList[geneList$gene !="", ]
     geneList[!geneList$gene %in% names(inpGene)]$present <- FALSE
     return(geneList)
 }

@@ -153,7 +153,7 @@ aboutServer <- function(id, dataSource, optCrt) {
                 dataSource()$dataset,
                 "bib",
                 getAppConf())
-            if (!is.na(ref)) {
+            if (!is.null(ref) && !is.na(ref)) {
                 output$ref <- renderUI(tagList(h5(
                     "Reference for current data"
                 ),

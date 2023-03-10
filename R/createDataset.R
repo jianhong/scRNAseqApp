@@ -124,7 +124,9 @@ createDataSet <- function(
                 Misc(seu, "markers") <- markers
             }
         }
-        appconf$markers <- split(markers, markers$cluster)
+        if(length(markers$cluster)>0){
+            appconf$markers <- split(markers, markers$cluster)
+        }
     }
     if (length(markers) == 0) {
         markers <- top10

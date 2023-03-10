@@ -1,6 +1,11 @@
 CHANGES IN VERSION 0.99.14
 -------------------------
 
+    o fix the bug if no reference can be retrieved.
+    
+CHANGES IN VERSION 0.99.14
+-------------------------
+
     o fix the bug if no markers can be detected.
     
 CHANGES IN VERSION 0.99.13

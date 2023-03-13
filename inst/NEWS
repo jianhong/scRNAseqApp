@@ -1,4 +1,9 @@
-CHANGES IN VERSION 0.99.14
+CHANGES IN VERSION 0.99.16
+-------------------------
+
+    o fix the bug for cell index for waffleplot.
+    
+CHANGES IN VERSION 0.99.15
 -------------------------
 
     o fix the bug if no reference can be retrieved.

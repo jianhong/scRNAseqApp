@@ -7,6 +7,7 @@
 #' @param groupCol The column name for `facet_grid`
 #' @param gradientCol Color sets
 #' @param xyMaxRatio The ratio of x,y. The parameter is used to avoid long plots
+#' Not used yet.
 scWafflePlot <- function(
         expr,
         groupCol = 'splitBy',
@@ -24,7 +25,6 @@ scWafflePlot <- function(
                 as.character(expr[[groupCol]]))
         }
     }
-    
     data <- expr[, c("geneName", "grpBy", "val"), with = FALSE]
     data <- data[order(expr$geneName, expr$grpBy, -1 * expr$val),]
     data <- data[!is.na(data$val),]
@@ -33,12 +33,9 @@ scWafflePlot <- function(
     }, by = 'geneName']
     data <- merge(data, groupMax)
     ggData <- data[, {
-        cellPerGridCell <- ceiling(.SD$N[1] / 100)
         .SD[, {
-            list(idx <- rep(seq.int(
-                ceiling(.N / cellPerGridCell)
-            ),
-            each = cellPerGridCell)[seq.int(.N)])
+            list(idx <- as.numeric(
+                cut(seq.int(max(.N, 100)), 100))[seq.int(.N)])
             .SD[, {
                 list(exprs = mean(.SD$val, na.rm = TRUE))
             }, by = 'idx']
@@ -48,20 +45,20 @@ scWafflePlot <- function(
     ggData$x <- (ggData$idx - 1) %% 10 + 1
     ggData$y <- floor((ggData$idx - 1) / 10) + 1
     
-    xyRatio <-
-        length(unique(data$geneName)) / length(unique(data$grpBy))
-    if (xyRatio < 1 / xyMaxRatio) {
-        ## plot is too wider
-        ## change the geneName
-        ## add blank after geneName by grpBy group
-        
-    } else{
-        if (xyRatio > xyMaxRatio) {
-            ## plot is too long
-            ## change the grpBy
-            ## add blank after grpBy
-        }
-    }
+    # len_cols <- length(unique(data$grpBy))
+    # len_rows <- length(unique(data$geneName))
+    # xyRatio <- len_rows / len_cols
+    # if (xyRatio < 1 / xyMaxRatio) {
+    #     ## plot is too wider
+    #     ## change the geneName
+    #     ## add blank after geneName by grpBy group
+    # } else{
+    #     if (xyRatio > xyMaxRatio) {
+    #         ## plot is too long
+    #         ## change the grpBy
+    #         ## add blank after grpBy
+    #     }
+    # }
     
     p <- ggplot(ggData, aes(
         .data[["x"]], .data[["y"]], fill = .data[["exprs"]])) +

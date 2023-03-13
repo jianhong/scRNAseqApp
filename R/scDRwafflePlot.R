@@ -33,9 +33,10 @@ scWafflePlot <- function(
     }, by = 'geneName']
     data <- merge(data, groupMax)
     ggData <- data[, {
+        this_N <- max(100, .SD$N[1])
         .SD[, {
             list(idx <- as.numeric(
-                cut(seq.int(max(.N, 100)), 100))[seq.int(.N)])
+                cut(seq.int(this_N), 100))[seq.int(.N)])
             .SD[, {
                 list(exprs = mean(.SD$val, na.rm = TRUE))
             }, by = 'idx']
@@ -85,9 +86,7 @@ scDRwafflePlot <- function(
         splitBy,
         gradientCol,
         grpKey,
-        grpVal,
-        filterKey,
-        filterVal) {
+        grpVal) {
     if (isQuote(gene)) {
         genenames <- geneIdMap[
             names(geneIdMap) %in% removeQuote(gene)]
@@ -123,19 +122,6 @@ scDRwafflePlot <- function(
                 splitBy,
                 valueOnly = FALSE)
         ggData[ggData$val < 0]$val <- 0
-        # filter the cell
-        if (filterKey %in% inpConf$UI) {
-            ggData$filter <- inpMeta[[inpConf[inpConf$UI == filterKey]$ID]]
-            if (length(filterVal)) {
-                ggData <- ggData[ggData$filter >= filterVal[1], , drop = FALSE]
-            }
-        } else {
-            ggData$filter <-
-                read_exprs(dataset, geneIdMap[filterKey], valueOnly = TRUE)
-            if (length(filterVal)) {
-                ggData <- ggData[ggData$filter >= filterVal[1], , drop = FALSE]
-            }
-        }
         
         ggData <- subGrp(ggData, grpKey, grpVal, inpConf)
         ggData$filter <- NULL

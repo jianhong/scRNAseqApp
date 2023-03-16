@@ -85,7 +85,7 @@ The basic information of the tools are list in the following tables
 | Asc-Seurat     | shiny package  | scatters, heatmap, violin, dot, trajectory |
 | BingleSeq          | shiny package  | scatters, heatmap, violin, ridge       |
 | CellView           | shiny package  | scatters                               |
-| cellxgene VIP      | web-based      | scatters, bar                          |
+| cellxgene VIP      | web-based      | scatters, bar, and visualization plugin|
 | Cerebro/cerebroApp | shiny package  | scatters, 3D scatters                  |
 | CHARTS             | web-based      | scatters, bar                          |
 | ChromSCape         | shiny package  | scatters, heatmap                      |

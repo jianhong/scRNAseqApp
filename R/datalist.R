@@ -1,26 +1,36 @@
-getDataSets <- function(appconf = NULL) {
-    datasets <- list.dirs(
-        .globals$datafolder,
-        full.names = FALSE,
-        recursive = FALSE)
-    datasets <- datasets[vapply(
-        datasets,
-        FUN = checkFiles,
-        FUN.VALUE = logical(1L))]
-    if (!is.null(appconf)) {
-        n <- vapply(appconf, function(.ele)
-            .ele$title,
-            FUN.VALUE = character(1))
-        if (length(n) == length(datasets)) {
-            names(datasets) <- n
+getDataSets <- function(datasets, appconf) {
+    if(missing(datasets)){
+        datasets <- list.dirs(
+            .globals$datafolder,
+            full.names = FALSE,
+            recursive = FALSE)
+        datasets <- datasets[vapply(
+            datasets,
+            FUN = checkFiles,
+            FUN.VALUE = logical(1L))]
+    }
+    if (!missing(appconf)) {
+        if(all(datasets==names(appconf))){
+            n <- vapply(appconf, function(.ele)
+                .ele$title,
+                FUN.VALUE = character(1))
+            if (length(n) == length(datasets)) {
+                names(datasets) <- n
+                datasets <- datasets[order(names(datasets))]
+            }
         }
     }
     return(datasets)
 }
 
-getNamedDataSets <- function() {
-    nds <- getDataSets(appconf = getAppConf())
-    nds[order(names(nds))]
+getNamedDataSets <- function(datasets, appconf) {
+    if(missing(datasets)){
+        datasets <- getDataSets()
+    }
+    if(missing(appconf)){
+        appconf <- getAppConf(datasets=datasets)
+    }
+    nds <- getDataSets(datasets = datasets, appconf = appconf)
 }
 
 # check if all the required files are available
@@ -40,16 +50,16 @@ checkFiles <- function(folder) {
     )
 }
 
-getDefaultDataset <- function(defaultDataset = "pbmc_small") {
-    datasets <- getDataSets()
+getDefaultDataset <- function(defaultDataset = "pbmc_small", datasets) {
+    if(missing(datasets)) datasets <- getDataSets()
     if (!defaultDataset %in% datasets) {
         defaultDataset <- datasets[1]
     }
     defaultDataset
 }
 
-getAppConf <- function() {
-    datasets <- getDataSets()
+getAppConf <- function(datasets) {
+    if(missing(datasets)) datasets <- getDataSets()
     appconf <- lapply(datasets, function(.ele) {
         conf <- readData("appconf", .ele)
         stopifnot(
@@ -68,8 +78,9 @@ getDataType <- function(appconf) {
         FUN.VALUE = character(1))
 }
 
-updateSymbolDict <- function() {
-    symbols <- lapply(getDataSets(), function(.ele) {
+updateSymbolDict <- function(datasets) {
+    if(missing(datasets)) datasets <- getDataSets()
+    symbols <- lapply(datasets, function(.ele) {
         names(readData("sc1gene", .ele))
     })
     sort(unique(unlist(symbols)))

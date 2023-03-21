@@ -56,9 +56,11 @@ scRNAseqApp <- function(
     ## load default parameters
     loginNavbarTitle <- "Switch User"
     datasets <- getDataSets()
-    defaultDataset <- getDefaultDataset(defaultDataset = defaultDataset)
-    appconf <- getAppConf()
-    datasets <- getDataSets(appconf = appconf)
+    defaultDataset <- getDefaultDataset(
+        defaultDataset = defaultDataset,
+        datasets = datasets)
+    appconf <- getAppConf(datasets = datasets)
+    datasets <- getDataSets(datasets = datasets, appconf = appconf)
     data_types <- getDataType(appconf = appconf)
     
     ui0 <- function(req) {
@@ -91,6 +93,8 @@ scRNAseqApp <- function(
                     "about",
                     banner,
                     defaultDataset,
+                    datasets,
+                    appconf,
                     doc = file.path(.globals$app_path, "doc.txt")),
                 homeUI(),
                 ## fake home
@@ -200,6 +204,17 @@ scRNAseqApp <- function(
             token = ""
         ) # toekn
         
+        updateDataSource <- function(
+            appconf,
+            datasets){
+                if(missing(appconf)) appconf <- getAppConf()
+                if(missing(datasets)) datasets <- getDataSets(appconf = appconf)
+                dataSource$appconf <- appconf
+                dataSource$available_datasets <- datasets
+                dataSource$data_types <- getDataType(appconf = appconf)
+                dataSource$symbolDict <- updateSymbolDict(datasets = datasets)
+        }
+        
         ### check available data
         checkAvailableDatasets <- reactivePoll(
             1000,session,
@@ -213,16 +228,16 @@ scRNAseqApp <- function(
             ignoreInit = TRUE,
             {
                 ## update datasets if datasets changed by admin
-                ad <- getNamedDataSets()
+                ad <- getDataSets()
+                appconf <- getAppConf(datasets = ad)
+                ad <- getNamedDataSets(datasets = ad, appconf = appconf)
                 if (!all(
                     dataSource$available_datasets %in% ad,
                     na.rm = TRUE) ||
                     !all(
                         ad %in% dataSource$available_datasets,
                         na.rm = TRUE)) {
-                    dataSource$available_datasets <- ad
-                    dataSource$symbolDict <-
-                        updateSymbolDict()
+                    updateDataSource(appconf, ad)
                     updateSelectInput(
                         session,
                         "selectedDatasets",
@@ -284,8 +299,8 @@ scRNAseqApp <- function(
                         session$userData[["defaultdata_init"]] <- TRUE
                         dd <- isolate(input$default_defaultDataset)
                         if (!is.null(dd)) {
-                            if (dd %in% getDataSets() &&
-                                dd != defaultDataset) {
+                            if (dd %in% dataSource$available_datasets &&
+                                dd != dataSource$dataset) {
                                 showNotification(
                                     "Resuming your last session!",
                                     duration = 3,
@@ -302,10 +317,11 @@ scRNAseqApp <- function(
             }
         })
         ## update gene symbol list
-        dataSource$symbolDict <- updateSymbolDict()
+        dataSource$symbolDict <- updateSymbolDict(
+            isolate(dataSource$available_datasets))
         ## change dataset
         observeEvent(input$selectedDatasets, {
-            availabledb <- getDataSets()
+            availabledb <- getDataSets() ## in case the data is deleted
             if (input$selectedDatasets %in% availabledb) {
                 dataSource$dataset <- input$selectedDatasets
                 if (checkLocker(dataSource$dataset)) {
@@ -349,10 +365,11 @@ scRNAseqApp <- function(
                 }
             } else{
                 ##data was deleted
+                updateDataSource()
                 updateSelectInput(
                     session,
                     "selectedDatasets",
-                    choices = getNamedDataSets(),
+                    choices = dataSource$available_datasets,
                     selected = availabledb[1]
                 )
             }
@@ -366,9 +383,11 @@ scRNAseqApp <- function(
         })
         ## refresh data when change dataset
         refreshData <- function(input, output, session) {
-            if (dataSource$dataset %in% names(data_types)) {
+            if (dataSource$dataset %in% names(dataSource$data_types)) {
                 dataSource$terms <-
-                    .globals$terms[[data_types[[dataSource$dataset]]]]
+                    .globals$terms[[
+                        dataSource$data_types[[
+                            dataSource$dataset]]]]
             }
             dataSource <- loadData(dataSource)
             output$dataTitle <- renderUI({

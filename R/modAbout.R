@@ -7,8 +7,8 @@ homeUI <- function() {
 
 #' @importFrom bibtex read.bib
 #' @importFrom RefManageR GetBibEntryWithDOI PrintBibliography
-aboutUI <-
-    function(request, id, banner, defaultDataset, doc = "doc.txt") {
+aboutUI <- function(
+    request, id, banner, defaultDataset, datasets, appconf, doc = "doc.txt") {
         ns <- NS(id)
         query <- parseQueryString(request[["QUERY_STRING"]])
         defaultDataset <- 
@@ -18,7 +18,9 @@ aboutUI <-
                 selectInput(
                     'selectedDatasets',
                     label = NULL,
-                    choices = getNamedDataSets(),
+                    choices = getNamedDataSets(
+                        datasets=datasets,
+                        appconf=appconf),
                     selected = defaultDataset,
                     width = "90vw"
                 )
@@ -101,7 +103,7 @@ aboutUI <-
             ),
             hr(),
             h4("Full reference list:"),
-            htmlOutput(ns('full_ref_list')),
+            get_full_ref_list(appconf),
             p(
                 imageOutput('total_visitor', width = "50%", height = "150px")
             ),
@@ -127,7 +129,7 @@ aboutServer <- function(id, dataSource, optCrt) {
         bibentry <- getRef(
             dataSource()$dataset,
             "entry",
-            getAppConf())
+            dataSource()$appconf)
         global <- reactiveValues(search_results = list(), evt = list())
         if (is(bibentry, "bibentry")) {
             output$ref <- renderUI(tagList(if (!is.null(bibentry$abstract)) {
@@ -152,7 +154,7 @@ aboutServer <- function(id, dataSource, optCrt) {
             ref <- getRef(
                 dataSource()$dataset,
                 "bib",
-                getAppConf())
+                dataSource()$appconf)
             if (!is.null(ref) && !is.na(ref)) {
                 output$ref <- renderUI(tagList(h5(
                     "Reference for current data"
@@ -160,7 +162,6 @@ aboutServer <- function(id, dataSource, optCrt) {
                 HTML(ref)))
             }
         }
-        output$full_ref_list <- renderUI(get_full_ref_list(getAppConf()))
         observeEvent(input$search, {
             if (input$search != '' && input$search != "Type key words here") {
                 output$search_res <- renderUI(tags$div('searching...'))
@@ -180,7 +181,7 @@ aboutServer <- function(id, dataSource, optCrt) {
             }
         })
         output$dataset_counts <- renderText({
-            length(getDataSets())
+            length(dataSource()$available_datasets)
         })
         output$visitor_count <- renderText({
             counter <- read.delim(
@@ -189,10 +190,10 @@ aboutServer <- function(id, dataSource, optCrt) {
             length(unique(counter$ip))
         })
         output$reference_count <- renderText({
-            get_full_ref_list(getAppConf(), returnLen = TRUE)
+            get_full_ref_list(dataSource()$appconf, returnLen = TRUE)
         })
         output$species_count <- renderText({
-            length(unique(lapply(getAppConf(), `[[`, i = "species")))
+            length(unique(lapply(dataSource()$appconf, `[[`, i = "species")))
         })
     })
 }

@@ -323,7 +323,7 @@ updateGeneAccPlot <-
             output,
             session,
             plotX,
-            .globals$pList1[input$GeneExprpsz],
+            paste0((length(input$subsetCellVal)+4)*150, "px"),
             dataSource()$dataset,
             input$GeneExprdrX,
             input$GeneExprdrY,

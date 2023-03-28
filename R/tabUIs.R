@@ -337,7 +337,29 @@ geneAccUI <- function(id, postfix=1){
     tagList(
         textInput(
             NS0(id, "coord", postfix),
-            "Coordinates:", value=NULL)
+            "Coordinates:", value=NULL),
+        div(
+            actionButton(#zoom in
+                NS(id, 'zoomin'), label = '',
+                icon = icon('plus'),
+                class = "submodule-dot-btn submodule-icon",
+                style = "background: #ED594A;"),
+            actionButton(#zoom out
+                NS(id, 'zoomout'), label = '',
+                icon = icon('minus'),
+                class = "submodule-dot-btn submodule-icon",
+                style = "background: #FDD800;"),
+            actionButton(#move left
+                NS(id, 'moveleft'), label = '',
+                icon = icon('angle-left'),
+                class = "submodule-dot-btn submodule-icon",
+                style = "background: #006EF4;"),
+            actionButton(#move right
+                NS(id, 'moveright'), label = '',
+                icon = icon('angle-right'),
+                class = "submodule-dot-btn submodule-icon",
+                style = "background: #5AC05A;")
+        )
     )
 }
 

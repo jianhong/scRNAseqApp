@@ -256,7 +256,13 @@ updateCellInfoPlot <-
         )
     }
 
+expandGR <- function(coor, ext){
+    start(coor) <- max(1, start(coor) - ext)
+    end(coor) <- max(start(coor), end(coor) + ext)
+    coor
+}
 #' @importFrom GenomicRanges strand start end `strand<-` `start<-` `end<-`
+#' @importFrom IRanges shift
 getCoordByGeneSymbol <- function(symbol, genes, links){
     genes0 <- genes[genes$gene_name %in% symbol | genes$gene_id %in% symbol]
     if(length(genes0)<1) return(NULL)
@@ -271,8 +277,8 @@ getCoordByGeneSymbol <- function(symbol, genes, links){
         peaks0 <- NULL
     }
     g0 <- range(c(genes0, peaks0))
-    start(coor) <- g0[1] - 500
-    end(coor) <- g0[2] + 500
+    start(coor) <- max(1, g0[1] - round(diff(g0)/5))
+    end(coor) <- g0[2] + round(diff(g0)/5)
     coor
 }
 
@@ -296,6 +302,34 @@ updateGeneAccPlot <-
                 session,
                 coordLabel,
                 value = as(coor, "character"))
+        })
+        observeEvent(input$zoomin, {
+            coor <- GRanges(input[[coordLabel]])
+            updateTextInput(
+                session,
+                coordLabel,
+                value = as(expandGR(coor, -width(coor)/4), "character"))
+        })
+        observeEvent(input$zoomout, {
+            coor <- GRanges(input[[coordLabel]])
+            updateTextInput(
+                session,
+                coordLabel,
+                value = as(expandGR(coor, width(coor)*2), "character"))
+        })
+        observeEvent(input$moveleft, {
+            coor <- GRanges(input[[coordLabel]])
+            updateTextInput(
+                session,
+                coordLabel,
+                value = as(shift(coor, -width(coor)/2), "character"))
+        })
+        observeEvent(input$moveright, {
+            coor <- GRanges(input[[coordLabel]])
+            updateTextInput(
+                session,
+                coordLabel,
+                value = as(shift(coor, width(coor)/2), "character"))
         })
         
         plotX <- reactive({

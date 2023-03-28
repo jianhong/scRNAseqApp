@@ -5,6 +5,7 @@
 #' @importFrom rtracklayer import
 #' @importFrom GenomicRanges GRanges strand seqnames gaps
 #' @importFrom patchwork wrap_plots
+#' @importFrom IRanges subsetByOverlaps
 scDRatac <- function(
         inpConf,
         inpMeta,
@@ -34,10 +35,6 @@ scDRatac <- function(
     if (is.null(geneIdMap[gene1])) {
         return(ggplot())
     }
-    coord <- strsplit(coord, "-|:")[[1]]
-    names(coord) <- c("seqnames", "start", "end")
-    coord <- as.list(coord)
-    coord[-1] <- lapply(coord[-1], as.numeric)
     # Prepare ggData
     pf <- file.path(
         .globals$datafolder, dataset,
@@ -47,7 +44,8 @@ scDRatac <- function(
     if(length(bws)==0){
         return(ggplot())
     }
-    gr <- GRanges(as.data.frame(coord))
+    print(coord)
+    gr <- GRanges(coord)
     atac_sig <- lapply(subsetCellVal, function(.ele){
         f <- file.path(pf, paste0(.ele, ".bigwig"))
         if(file.exists(f)){
@@ -60,10 +58,10 @@ scDRatac <- function(
     atac_sig <- lapply(atac_sig, function(.ele){
         .ele <- sort(c(.ele, gaps(.ele)))
         .ele <- .ele[strand(.ele)=="*"]
-        .ele <- .ele[seqnames(.ele)==coord$seqnames]
+        .ele <- subsetByOverlaps(.ele, gr)
         .ele$score[is.na(.ele$score)] <- 0
-        start(.ele)[start(.ele)<coord$start] <- coord$start
-        end(.ele)[end(.ele)>coord$end] <- coord$end
+        start(.ele)[start(.ele)<start(gr)[1]] <- start(gr)[1]
+        end(.ele)[end(.ele)>end(gr)[1]] <- end(gr)[1]
         .ele
     })
     ggData <- lapply(atac_sig, function(.ele){
@@ -109,13 +107,13 @@ scDRatac <- function(
         theme(
             strip.text.y.right = element_text(angle = 0, hjust=0),
             strip.background = element_blank() )
-    anno <- AnnotationPlot(dataset, gr)
-    peaks <- PeakPlot(dataset, gr)
-    links <- LinkPlot(dataset, gr)
+    anno <- AnnotationPlot(dataset, gr) + 
+        PeakPlot(dataset, gr) +
+        LinkPlot(dataset, gr)
     return(wrap_plots(
-        ggOut, anno, peaks, links,
-        nrow=4, ncol=1,
-        heights=c(LN, 1, .5, .5)))
+        ggOut, anno, 
+        nrow=2, ncol=1,
+        heights=c(LN, 1.5)))
 }
 
 #' Plot peaks in a genomic region
@@ -153,24 +151,20 @@ PeakPlot <- function(
     if (nrow(x = peak.df) > 0) {
         peak.df$start[peak.df$start < start.pos] <- start.pos
         peak.df$end[peak.df$end > end.pos] <- end.pos
-        peak.plot <- ggplot(
-            data = peak.df,
-            aes(
-                x = .data$start,
-                y = 0,
-                xend = .data$end,
-                yend = 0)) +
-            geom_segment(size = 2)
+        peak.plot <- geom_segment(
+                data = peak.df,
+                aes(
+                    x = .data$start,
+                    y = .1,
+                    xend = .data$end,
+                    yend = .1),
+                size = 2,
+                color = color,
+                inherit.aes = FALSE)
     } else {
         # no peaks present in region, make empty panel
-        peak.plot <- ggplot(data = peak.df)
+        peak.plot <- NULL
     }
-    peak.plot <- peak.plot + theme_classic() +
-        ylab(label = "Peaks") +
-        theme(axis.ticks.y = element_blank(),
-              axis.text.y = element_blank()) +
-        xlab(label = paste0(chromosome, " position (bp)")) +
-        xlim(c(start.pos, end.pos))
     return(peak.plot)
 }
 
@@ -205,7 +199,13 @@ LinkPlot <- function(
     if (length(x = links) == 0) {
         return(NULL)
     }
-    
+    ## re-scale scores to fit the color bar (.1-.9)
+    min.color <- min(0, min(links$score))
+    oldRange <- range(
+        c(min.color, links$score[is.finite(links$score)]), na.rm = TRUE)
+    oldRange <- diff(oldRange)
+    if(oldRange==0) oldRange <- 1
+    links$score <- (links$score - min.color) * .8 / oldRange + .1
     # subset to those in region
     links.keep <- subsetByOverlaps(x = links, ranges = region)
     
@@ -218,37 +218,21 @@ LinkPlot <- function(
     # plot
     if (nrow(x = link.df) > 0) {
         # convert to format for geom_bezier
-        link.df$group <- seq_len(length.out = nrow(x = link.df))
         df <- data.frame(
             x = c(link.df$start,
                   (link.df$start + link.df$end) / 2,
                   link.df$end),
             y = c(rep(x = 0, nrow(x = link.df)),
-                  rep(x = -1, nrow(x = link.df)),
+                  rep(x = -.5, nrow(x = link.df)),
                   rep(x = 0, nrow(x = link.df))),
-            group = rep(x = link.df$group, 3),
             score = rep(link.df$score, 3)
         )
-        min.color <- min(0, min(df$score))
-        p <- ggplot(data = df, aes(
-            x = .data$x, y = .data$y, group = .data$group, color = .data$score
-        )) + geom_bezier() +
-            geom_hline(yintercept = 0, color = 'grey') +
-            scale_color_gradient2(
-                low = "red", mid = "grey", high = "blue",
-                limits = c(min.color, max(df$score)),
-                n.breaks = 3)
+        p <- geom_bezier(data = df, aes(
+            x = .data$x, y = .data$y, color = .data$score
+        ), inherit.aes = FALSE)
     } else {
-        p <- ggplot(data = link.df)
+        p <- NULL
     }
-    p <- p +
-        theme_classic() +
-        theme(
-            axis.ticks.y = element_blank(),
-            axis.text.y = element_blank()) +
-        ylab("Links") +
-        xlab(label = paste0(chromosome, " position (bp)")) +
-        xlim(c(start(x = region), end(x = region)))
     return(p)
 }
 
@@ -313,7 +297,7 @@ AnnotationPlot <- function(
     if (length(x = annotation.subset) == 0) {
         # make empty plot
         p <- ggplot(data = data.frame())
-        y_limit <- c(0, 1)
+        y_limit <- c(-.6, 1)
     } else {
         annotation_df_list <- reformat_annotations(
             annotation = annotation.subset,
@@ -321,6 +305,9 @@ AnnotationPlot <- function(
             end.pos = end.pos,
             collapse_transcript = collapse_transcript
         )
+        colorFun <- function(strand){
+            ifelse(strand=="-", 0, 1)
+        }
         p <- ggplot() +
             # exons
             geom_segment(
@@ -330,7 +317,7 @@ AnnotationPlot <- function(
                     y = .data$dodge,
                     xend = .data$end,
                     yend = .data$dodge,
-                    color = .data$strand
+                    color = colorFun(.data$strand)
                 ),
                 show.legend = FALSE,
                 size = 3
@@ -343,7 +330,7 @@ AnnotationPlot <- function(
                     y = .data$dodge,
                     xend = .data$end,
                     yend = .data$dodge,
-                    color = .data$strand
+                    color = colorFun(.data$strand)
                 ),
                 show.legend = FALSE,
                 size = 1/2
@@ -357,7 +344,7 @@ AnnotationPlot <- function(
                     y = .data$dodge,
                     xend = .data$end,
                     yend = .data$dodge,
-                    color = .data$strand
+                    color = colorFun(.data$strand)
                 ),
                 arrow = arrow(
                     ends = "last",
@@ -378,7 +365,7 @@ AnnotationPlot <- function(
                     y = .data$dodge,
                     xend = .data$end,
                     yend = .data$dodge,
-                    color = .data$strand
+                    color = colorFun(.data$strand)
                 ),
                 arrow = arrow(
                     ends = "first",
@@ -401,11 +388,17 @@ AnnotationPlot <- function(
                 label = .data[[label]]),
             size = 2.5
         )
-        y_limit <- c(0.9, n_stack + 0.4)
+        y_limit <- c(-.6, n_stack + 0.4)
     }
+    color_breaks <- c(-.05, seq(.1, .9, length.out=9), 1.05)
+    colors <- c(
+        "darkgreen",
+        '#007FFF', '#4CC3FF', '#99EDFF', '#CCFFFF',
+        '#FFFFCC', '#FFEE99', '#FFC34C', '#FF7F00',
+        "darkblue")
     p <- p +
         theme_classic() +
-        ylab("Genes") +
+        ylab("Genes/peaks") +
         xlab(label = paste0(seqnames(region), " position (bp)")) +
         xlim(start.pos, end.pos) +
         ylim(y_limit) +
@@ -413,7 +406,9 @@ AnnotationPlot <- function(
             axis.ticks.y = element_blank(),
             axis.text.y = element_blank()
         ) +
-        scale_color_manual(values = c("darkblue", "darkgreen"))
+        scale_color_gradientn(
+            colors = colors, breaks = color_breaks,
+            name = 'score')
     return(p)
 }
 

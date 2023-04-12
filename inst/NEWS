@@ -1,3 +1,8 @@
+CHANGES IN VERSION 0.99.21
+-------------------------
+
+    o Fix the typo for `createDataset` function.
+    
 CHANGES IN VERSION 0.99.20
 -------------------------
 

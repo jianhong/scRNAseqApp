@@ -378,7 +378,7 @@ createSeuFromCellRanger <- function(outsFolder) {
 #' @importFrom Seurat CreateSeuratObject
 #' @importFrom SeuratObject CreateDimReducObject
 #' @return An SeuratObject
-cteateSeuFromMatrix <- function(
+createSeuFromMatrix <- function(
         matrix, meta, genes, cluster, ...) {
     if (missing(matrix) | missing(meta)) {
         stop('matrix and meta is requred.')

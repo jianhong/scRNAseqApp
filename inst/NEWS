@@ -1,3 +1,8 @@
+CHANGES IN VERSION 0.99.22
+-------------------------
+
+    o Fix the issue if there is no reference.
+    
 CHANGES IN VERSION 0.99.21
 -------------------------
 

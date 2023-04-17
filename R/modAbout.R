@@ -160,6 +160,8 @@ aboutServer <- function(id, dataSource, optCrt) {
                     "Reference for current data"
                 ),
                 HTML(ref)))
+            }else{
+                output$ref <- renderUI(h5("No details for current data"))
             }
         }
         observeEvent(input$search, {

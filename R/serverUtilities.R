@@ -282,6 +282,23 @@ getCoordByGeneSymbol <- function(symbol, genes, links){
     coor
 }
 
+updateAccCoordInputs <- function(session, coordLabel, coor){
+    if(is(coor, "GRanges")){
+        updateTextInput(
+            session,
+            coordLabel,
+            value = as(coor, "character"))
+        updateSliderInput(
+            session,
+            'regionselector',
+            value = c(start(coor), end(coor)),
+            step = max(1, round(width(coor)/100)),
+            min = start(coor),
+            max = end(coor)
+        )
+    }
+}
+
 updateGeneAccPlot <-
     function(
         postfix = 1,
@@ -298,38 +315,40 @@ updateGeneAccPlot <-
         links <- readData("sc1link", dataSource()$dataset)
         observeEvent(input[[GeneNameLabel]], {
             coor <- getCoordByGeneSymbol(input[[GeneNameLabel]], genes, links)
-            updateTextInput(
-                session,
-                coordLabel,
-                value = as(coor, "character"))
+            updateAccCoordInputs(session, coordLabel, coor)
         })
         observeEvent(input$zoomin, {
             coor <- GRanges(input[[coordLabel]])
-            updateTextInput(
-                session,
-                coordLabel,
-                value = as(expandGR(coor, -width(coor)/4), "character"))
+            updateAccCoordInputs(session, coordLabel, expandGR(coor, -width(coor)/4))
         })
         observeEvent(input$zoomout, {
             coor <- GRanges(input[[coordLabel]])
-            updateTextInput(
-                session,
-                coordLabel,
-                value = as(expandGR(coor, width(coor)*2), "character"))
+            updateAccCoordInputs(session, coordLabel, expandGR(coor, width(coor)*2))
         })
         observeEvent(input$moveleft, {
             coor <- GRanges(input[[coordLabel]])
-            updateTextInput(
-                session,
-                coordLabel,
-                value = as(shift(coor, -width(coor)/2), "character"))
+            updateAccCoordInputs(session, coordLabel, shift(coor, -width(coor)/2))
         })
         observeEvent(input$moveright, {
             coor <- GRanges(input[[coordLabel]])
-            updateTextInput(
-                session,
-                coordLabel,
-                value = as(shift(coor, width(coor)/2), "character"))
+            updateAccCoordInputs(session, coordLabel, shift(coor, width(coor)/2))
+        })
+        observeEvent(input$regionsubmit, {
+            if(grepl(":", input[[coordLabel]])){
+                coor <- GRanges(input[[coordLabel]])
+                change <- FALSE
+                if(start(coor) != input$regionselector[1]){
+                    start(coor) <- input$regionselector[1]
+                    change <- TRUE
+                }
+                if(end(coor) != input$regionselector[2]){
+                    end(coor) <- input$regionselector[2]
+                    change <- TRUE
+                }
+                if(change){
+                    updateAccCoordInputs(session, coordLabel, coor)
+                }
+            }
         })
         
         plotX <- reactive({

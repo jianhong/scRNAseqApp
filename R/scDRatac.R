@@ -44,7 +44,6 @@ scDRatac <- function(
     if(length(bws)==0){
         return(ggplot())
     }
-    print(coord)
     gr <- GRanges(coord)
     atac_sig <- lapply(subsetCellVal, function(.ele){
         f <- file.path(pf, paste0(.ele, ".bigwig"))

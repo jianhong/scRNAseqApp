@@ -56,7 +56,19 @@ geneAccPlotControlUI <- function(
             radioButtons(
                 NS0(id, "GeneExprcol", postfix), "Colour:",
                 choices = colorNames,
-                selected = colorNames[1])
+                selected = colorNames[1]),
+            sliderInput(#region selector
+                NS(id, 'regionselector'), label = NULL,
+                min=0, max = 100,
+                step = 1,
+                value = c(0, 100),
+                ticks = FALSE,
+                width = "100%"),
+            actionButton(
+                NS(id, 'regionsubmit'),
+                label = "change region",
+                width = "100%"
+            )
         )
     )
 }
@@ -339,23 +351,24 @@ geneAccUI <- function(id, postfix=1){
             NS0(id, "coord", postfix),
             "Coordinates:", value=NULL),
         div(
+            class = "acccontroler",
             actionButton(#zoom in
-                NS(id, 'zoomin'), label = '',
+                NS(id, 'zoomin'), label = '', title="Zoom In",
                 icon = icon('plus'),
                 class = "submodule-dot-btn submodule-icon",
                 style = "background: #ED594A;"),
             actionButton(#zoom out
-                NS(id, 'zoomout'), label = '',
+                NS(id, 'zoomout'), label = '', title="Zoom Out",
                 icon = icon('minus'),
                 class = "submodule-dot-btn submodule-icon",
                 style = "background: #FDD800;"),
             actionButton(#move left
-                NS(id, 'moveleft'), label = '',
+                NS(id, 'moveleft'), label = '', title="Move Left",
                 icon = icon('angle-left'),
                 class = "submodule-dot-btn submodule-icon",
                 style = "background: #006EF4;"),
             actionButton(#move right
-                NS(id, 'moveright'), label = '',
+                NS(id, 'moveright'), label = '', title="Move Right",
                 icon = icon('angle-right'),
                 class = "submodule-dot-btn submodule-icon",
                 style = "background: #5AC05A;")

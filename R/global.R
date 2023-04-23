@@ -161,9 +161,9 @@
         expression = "expression"
     ),
     scATACseq = c(
-        GeneExpr = "GeneAccs",
-        coexpression = "co-accessibility",
-        expression = "accessibility"
+        GeneExpr = "GeneScore",
+        coexpression = "co-genescore",
+        expression = "genescore"
     ),
     scMultiome = c(
         GeneExpr = "GeneExpr",

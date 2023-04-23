@@ -10,6 +10,7 @@ scRNAseqApp(
   defaultDataset = "pbmc_small",
   windowTitle = "scRNAseq/scATACseq database",
   banner = system.file("assets", "img", "banner.png", package = "scRNAseqApp"),
+  footer = tagList(HTML("&copy;"), "2020 -", format(Sys.Date(), "\%Y"), "jianhong@duke"),
   maxRequestSize = 1073741824,
   timeout = 30,
   theme = bs_theme(bootswatch = "lumen"),
@@ -27,6 +28,8 @@ scRNAseqApp(
 \item{windowTitle}{The title that should be displayed by the browser window.}
 
 \item{banner}{The banner image.}
+
+\item{footer}{The footer html contents.}
 
 \item{maxRequestSize}{Maximal upload file size. Default is 1G.}
 

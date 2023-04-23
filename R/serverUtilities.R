@@ -705,7 +705,9 @@ pointPlot <- function(
 }
 ggXYplot <- function(ggData) {
     ggplot(ggData, aes(
-        .data[["X"]], .data[["Y"]], color = .data[["val"]]))
+        .data[["X"]], .data[["Y"]],
+        color = .data[["val"]] #,customdata = data[["sampleID"]]
+        ))
 }
 getTotalNumber <- function(nGrid = 16, nPad = 2) {
     return(nGrid + nPad * 2)

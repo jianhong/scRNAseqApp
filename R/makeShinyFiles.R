@@ -31,7 +31,8 @@
 #' @importFrom data.table data.table as.data.table
 #' @importFrom hdf5r H5File h5types H5S
 #' @importFrom Rsamtools TabixFile seqnamesTabix scanTabix
-#' @importFrom GenomeInfoDb keepSeqlevels seqinfo seqnames
+#' @importFrom GenomeInfoDb keepSeqlevels seqinfo seqnames seqlevelsStyle
+#' `seqlevelsStyle<-`
 #' @importFrom GenomicRanges GRanges width
 #' @importFrom rtracklayer export
 #' @importFrom utils read.table
@@ -50,7 +51,7 @@ makeShinyFiles <- function(
         chunkSize = 500) {
     ### Preprocessing and checks
     # Generate defaults for assayName / slot
-    stopifnot(is(obj[1], "Seurat"))
+    stopifnot(is(obj, "Seurat"))
     # Seurat Object
     if (missing(assayName)) {
         assayName <- "RNA"
@@ -286,8 +287,11 @@ makeShinyFiles <- function(
             links <- GetAssayData(obj, slot = "links")
             ## annotations, used to plot gene model
             annotations <- GetAssayData(obj, slot = "annotation")
-            if (length(links) < 1 || length(annotations) < 1) {
-                stop("scATAC data are not available.")
+            if (length(annotations) < 1) {
+                stop("scATAC annotation data are not available.")
+            }
+            if (length(links) < 1) {
+                warning("scATAC links data are not available.")
             }
             ## get fragments for each cell and group
             fragments <- GetAssayData(obj, slot = "fragments")
@@ -307,11 +311,19 @@ makeShinyFiles <- function(
                         tabix.file <- TabixFile(fragment.path)
                         open(con = tabix.file)
                         on.exit(close(tabix.file))
+                        region <- regions
+                        seq_x <- as.character(seqnames(x = region))
+                        seq_y <- seqnamesTabix(file = tabix.file)
+                        seq_x_style <- seqlevelsStyle(seq_x)
+                        seq_y_style <- seqlevelsStyle(seq_y)
+                        if(length(intersect(seq_x_style, seq_y_style))==0){
+                            seqlevelsStyle(region)<-seq_y_style[1]
+                        }
                         seqnames.in.both <- intersect(
-                            x = seqnames(x = regions),
+                            x = seqnames(x = region),
                             y = seqnamesTabix(file = tabix.file))
                         region <- keepSeqlevels(
-                            x = regions,
+                            x = region,
                             value = seqnames.in.both,
                             pruning.mode = "coarse")
                         coverage <- lapply(seq_along(region), function(i){
@@ -322,6 +334,16 @@ makeShinyFiles <- function(
                             colnames(reads) <- 
                                 c("seqnames", "start", "end", "name", "score")
                             reads <- GRanges(reads)
+                            if(length(intersect(
+                                reads$name, sc1meta$sampleID))==0){
+                                stop("The reads names are not same format as
+                                     the cell names.\n",
+                                     "The top 5 reads names: ",
+                                     head(reads$name, n=5),
+                                     "\n",
+                                     "The top 5 cell names: ",
+                                     head(sc1meta$sampleID, n=5))
+                             }
                             reads.grp <- lapply(grp, function(.grp){
                                 lapply(split(
                                     reads,
@@ -335,6 +357,7 @@ makeShinyFiles <- function(
                             names(reads.grp) <- grp
                             reads.grp
                         })
+                        seqlevelsStyle(region)<-seq_x_style[1]
                         names(coverage) <- as.character(seqnames(region))
                         ## coverage is 3 level list,
                         ## level 1, chromosome
@@ -361,8 +384,8 @@ makeShinyFiles <- function(
                 if(length(res)>0){
                     if(length(res)>1){
                         for(i in seq_along(res)[-1]){
-                            res[[1]] <- lapply(res[[1]], function(.grp){
-                                lapply(res[[1]][[.grp]], function(.fac){
+                            res[[1]] <- lapply(names(res[[1]]), function(.grp){
+                                lapply(names(res[[1]][[.grp]]), function(.fac){
                                     res[[1]][[.grp]][[.fac]] +
                                         res[[i]][[.grp]][[.fac]]
                                 })

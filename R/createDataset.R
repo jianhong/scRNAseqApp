@@ -54,54 +54,58 @@ createDataSet <- function(
     }
     pf <- file.path(datafolder, appconf$id)
     dir.create(pf, recursive = TRUE)
-    cellInfo <- colnames(seu[[]])
-    assays <- Assays(seu)
-    stopifnot(
-        "Please input a seurat object with 'SCT' or 'RNA' assay" =
-            any(c("SCT", "RNA") %in% assays))
-    if (!DefaultAssay(seu) %in% c("SCT", "RNA")) {
-        DefaultAssay(seu) <- match.arg(
-            assays,
-            choices = c("SCT", "RNA"),
-            several.ok = TRUE)[1]
-    }
-    if (missing(assayName)) {
-        assayName <- DefaultAssay(seu)
-    }
-    assayName <- assayName[1]
-    stopifnot("The assayName is not in input object" = assayName %in% assays)
-    if (length(GetAssayData(seu, "scale.data")) == 0) {
-        seu <- FindVariableFeatures(
-            seu,
-            selection.method = "vst",
-            nfeatures = 1000)
-        seu <- ScaleData(seu)
-    }
-    top10 <- head(VariableFeatures(seu), 10)
     ## markers
     markers <- appconf$markers
-    if (!missing(contrast)) {
-        if (contrast[1] %in% cellInfo) {
-            appconf$groupCol <- contrast[1]
-        } else{
-            stop("The input contrast is not in seu object")
-        }
-    } else{
-        if (!is.null(appconf$groupCol)) {
-            if (appconf$groupCol[1] %in% cellInfo) {
-                contrast <- appconf$groupCol[1]
-            } else{
-                appconf$groupCol <- appconf$groupCol[-1]
-            }
-        } else{
-            contrast <- NULL
-        }
-    }
-    if (length(markers) == 0) {
+    if(length(markers)==0){
         if (!is.null(Misc(seu, "markers"))) {
             ## the markers is available at Misc(seu, "markers") slot
             markers <- Misc(seu, "markers")
+        }
+    }
+    if(length(markers)==0){
+        cellInfo <- colnames(seu[[]])
+        assays <- Assays(seu)
+        stopifnot(
+            "Please input a seurat object with 'SCT' or 'RNA' assay" =
+                any(c("SCT", "RNA") %in% assays))
+        if (!DefaultAssay(seu) %in% c("SCT", "RNA")) {
+            DefaultAssay(seu) <- match.arg(
+                assays,
+                choices = c("SCT", "RNA"),
+                several.ok = TRUE)[1]
+        }
+        if (missing(assayName)) {
+            assayName <- DefaultAssay(seu)
+        }
+        assayName <- assayName[1]
+        stopifnot(
+            "The assayName is not in input object" = assayName %in% assays)
+        if (length(GetAssayData(seu, "scale.data")) == 0) {
+            seu <- FindVariableFeatures(
+                seu,
+                selection.method = "vst",
+                nfeatures = 1000)
+            seu <- ScaleData(seu)
+        }
+        top10 <- head(VariableFeatures(seu), 10)
+        if (!missing(contrast)) {
+            if (contrast[1] %in% cellInfo) {
+                appconf$groupCol <- contrast[1]
+            } else{
+                stop("The input contrast is not in seu object")
+            }
         } else{
+            if (!is.null(appconf$groupCol)) {
+                if (appconf$groupCol[1] %in% cellInfo) {
+                    contrast <- appconf$groupCol[1]
+                } else{
+                    appconf$groupCol <- appconf$groupCol[-1]
+                }
+            } else{
+                contrast <- NULL
+            }
+        }
+        if (length(markers) == 0) {
             if (!is.factor(Idents(seu))) {
                 if (!is.null(contrast)) {
                     Idents(seu) <- contrast
@@ -123,29 +127,54 @@ createDataSet <- function(
             if (length(markers)) {
                 Misc(seu, "markers") <- markers
             }
+            if(length(markers$cluster)>0){
+                appconf$markers <- split(markers, markers$cluster)
+            }
         }
-        if(length(markers$cluster)>0){
-            appconf$markers <- split(markers, markers$cluster)
+        if (length(markers) == 0) {
+            markers <- top10
+        } else{
+            if (is.list(markers) && !is.data.frame(markers)) {
+                markers <- as.data.frame(markers[[1]])
+            }
+            markers <- split(markers, markers$cluster)
+            markers <-
+                lapply(markers, head, n = min(5, ceiling(50 / length(markers))))
         }
     }
-    if (length(markers) == 0) {
-        markers <- top10
-    } else{
-        if (is.list(markers) && !is.data.frame(markers)) {
-            markers <- as.data.frame(markers[[1]])
+    if(!is.character(markers)){
+        if(is.list(markers)){
+            if(is.data.frame(markers)){
+                markers <- list(markers)
+            }
+            ## list of data.frame
+            markers <- lapply(markers, function(.ele){
+                if(is.data.frame(.ele)){
+                    cn <- grepl(
+                        "^(gene|symbol)",
+                        colnames(.ele),
+                        ignore.case = TRUE)
+                    if(any(cn)){
+                        cn <- which(cn)[1]
+                        return(as.character(.ele[, cn, drop=TRUE]))
+                    }else{
+                        return(rownames(.ele))
+                    }
+                }else{
+                    if(is.character(.ele)){
+                        return(.ele)
+                    }else{
+                        return(NULL)
+                    }
+                }
+            })
+            markers <- unique(unlist(markers))
         }
-        markers <- split(markers, markers$cluster)
-        markers <-
-            lapply(markers, head, n = min(5, ceiling(50 / length(markers))))
-        markers <- lapply(markers, function(.ele)
-            (
-                if (!is.null(.ele$gene)) {
-                    return(.ele$gene)
-                } else{
-                    return(rownames(.ele))
-                }))
-        markers <- unique(unlist(markers))
     }
+    if(length(markers)==0 || !is.character(markers)){
+        stop("Can not locate the markers for the inputs.")
+    }
+    
     ## make shiny app
     makeShinyFiles(
         seu,

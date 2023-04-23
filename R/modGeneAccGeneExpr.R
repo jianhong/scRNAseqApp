@@ -41,9 +41,13 @@ geneAccGeneExprUI <- function(id) {
 geneAccGeneExprServer <- function(id, dataSource, optCrt) {
     moduleServer(id, function(input, output, session) {
         ## title
-        if(dataSource()$data_types[[dataSource()$dataset]]=="scMultiome"){
+        if(dataSource()$data_types[[dataSource()$dataset]] %in% 
+           c("scMultiome", "scATACseq")){
+            data_type <- dataSource()$data_types[[dataSource()$dataset]]
             output$AccExpr <- renderUI({
-                HTML("GeneAcc vs GeneExpr")
+                HTML(paste0(
+                    "GeneAcc vs ",
+                    .globals$terms[[data_type]]["GeneExpr"]))
             })
             ## subtitle
             output$AccExprSubTitle <-

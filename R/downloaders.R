@@ -61,6 +61,9 @@ heatmapDownloadHandler <-
 click_event_data <- function(...) {
     event_data(event = "plotly_click", ...)
 }
+lasso_select_data <- function(...) {
+    event_data(event = "plotly_selected", ...)
+}
 exprDownloadHandler <- function(geneIdMap, dataset, meta) {
     downloadHandler(
         filename = function() {
@@ -94,6 +97,16 @@ plotly3d_click <- function(session) {
             "Click cell appear here"
         else {
             paste("Clicked cell", d$customdata)
+        }
+    })
+}
+plotly_selected <- function(session){
+    renderPrint({
+        d <- lasso_select_data(session = session)
+        if (is.null(d))
+            "Selected cell appear here"
+        else {
+            paste("Selected cell", d$customdata)
         }
     })
 }

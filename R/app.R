@@ -5,6 +5,7 @@
 #' @param defaultDataset default dataset for the app.
 #' @param windowTitle The title that should be displayed by the browser window.
 #' @param banner The banner image.
+#' @param footer The footer html contents.
 #' @param maxRequestSize Maximal upload file size. Default is 1G.
 #' @param timeout Timeout session (minutes) before logout if sleeping.
 #'  Default to 30. 0 to disable.
@@ -35,6 +36,12 @@ scRNAseqApp <- function(
         banner = system.file(
             'assets', 'img', 'banner.png',
             package = 'scRNAseqApp'),
+        footer = tagList(
+            HTML("&copy;"),
+            "2020 -",
+            format(Sys.Date(), "%Y"),
+            "jianhong@duke"
+        ),
         maxRequestSize = 1073741824,
         timeout = 30,
         theme = bs_theme(bootswatch = 'lumen'),
@@ -79,10 +86,7 @@ scRNAseqApp <- function(
                             as.character(packageVersion("scRNAseqApp")),
                             ")"
                         ),
-                        HTML("&copy;"),
-                        "2020 -",
-                        format(Sys.Date(), "%Y"),
-                        "jianhong@duke",
+                        footer,
                         style = 'text-align:right;'
                     ),
                     class = "about-right border-top-info"

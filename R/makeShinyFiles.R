@@ -421,15 +421,19 @@ makeShinyFiles <- function(
             # it just show the counts in each called peaks
             acAsy <- GetAssayData(obj, assay = atacAssayName, slot = atacSlot)
             acAsy <- acAsy[, sc1meta$sampleID]
-            writeATACdata(acAsy, appDir)
             peaks <- do.call(rbind, strsplit(rownames(acAsy), "-"))
             peaks <- as.data.frame(peaks)
-            colnames(peaks) <- c("seqnames", "start", "end")
-            mode(peaks[, 2]) <- "numeric"
-            mode(peaks[, 3]) <- "numeric"
-            saveRDS(peaks, file = file.path(
-                appDir, .globals$filenames$sc1peak
-            ))
+            if(ncol(peaks)==3){
+                writeATACdata(acAsy, appDir)
+                colnames(peaks) <- c("seqnames", "start", "end")
+                mode(peaks[, 2]) <- "numeric"
+                mode(peaks[, 3]) <- "numeric"
+                saveRDS(peaks, file = file.path(
+                    appDir, .globals$filenames$sc1peak
+                ))
+            }else{
+                warning("Ask rownames of ATAC assays format is chr-start-end!")
+            }
             saveRDS(links, file = file.path(
                 appDir, .globals$filenames$sc1link
             ))

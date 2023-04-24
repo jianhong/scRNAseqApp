@@ -329,11 +329,12 @@ makeShinyFiles <- function(
                         coverage <- lapply(seq_along(region), function(i){
                             reads <- scanTabix(
                                 file = tabix.file,
-                                param = regions[i])
+                                param = region[i])
                             reads <- read.table(text = reads[[1]])
                             colnames(reads) <- 
                                 c("seqnames", "start", "end", "name", "score")
                             reads <- GRanges(reads)
+                            seqlevelsStyle(reads)<-seq_x_style[1]
                             if(length(intersect(
                                 reads$name, sc1meta$sampleID))==0){
                                 stop("The reads names are not same format as
@@ -384,8 +385,20 @@ makeShinyFiles <- function(
                 if(length(res)>0){
                     if(length(res)>1){
                         for(i in seq_along(res)[-1]){
-                            res[[1]] <- lapply(names(res[[1]]), function(.grp){
-                                lapply(names(res[[1]][[.grp]]), function(.fac){
+                            N_grp <- names(res[[1]])
+                            names(N_grp) <- N_grp
+                            res[[1]] <- lapply(N_grp, function(.grp){
+                                N_fac <- names(res[[1]][[.grp]])
+                                names(N_fac) <- N_fac
+                                lapply(N_fac, function(.fac){
+                                    if(sum(lengths(
+                                        res[[1]][[.grp]][[.fac]]))==0){
+                                        return(res[[i]][[.grp]][[.fac]])
+                                    }
+                                    if(sum(lengths(
+                                        res[[i]][[.grp]][[.fac]]))==0){
+                                        return(res[[1]][[.grp]][[.fac]])
+                                    }
                                     res[[1]][[.grp]][[.fac]] +
                                         res[[i]][[.grp]][[.fac]]
                                 })

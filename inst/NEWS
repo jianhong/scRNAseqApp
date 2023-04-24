@@ -1,3 +1,8 @@
+CHANGES IN VERSION 0.99.25
+-------------------------
+
+    o Fix a typo when fixing the chromsome name style for scATACseq data.
+    
 CHANGES IN VERSION 0.99.24
 -------------------------
 

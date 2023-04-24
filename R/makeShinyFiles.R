@@ -368,7 +368,7 @@ makeShinyFiles <- function(
                             res[[k]] <- list()
                             for(i in names(coverage[[1]])){
                                 res[[k]][[i]] <- list()
-                                for(j in names(coverage[[1]][[1]])){
+                                for(j in names(coverage[[1]][[i]])){
                                     res[[k]][[i]][[j]] <-
                                         Reduce(c, lapply(coverage,
                                                          function(.cvg){

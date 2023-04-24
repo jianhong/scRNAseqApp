@@ -6,7 +6,7 @@ geneExprGeneExprUI <- function(id) {
             id,
             'GeneExpr',
             description = paste(
-                "In this tab, users can visualise two gene expressions ",
+                "In this tab, users can visualise two feature informations ",
                 "side-by-side on low-dimensional representions."
             )
         ),

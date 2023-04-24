@@ -19,7 +19,7 @@ geneAccGeneExprUI <- function(id) {
             column(
                 6,
                 style = "border-right: 2px solid black",
-                h4("ATAC"),
+                h4("ATAC track"),
                 fluidRow(
                     column(6, geneAccUI(id, 1)),
                     column(6, geneAccPlotControlUI(id, 1))),
@@ -27,7 +27,7 @@ geneAccGeneExprUI <- function(id) {
             ),
             column(
                 6,
-                h4("Gene expression"),
+                htmlOutput(NS0(id, "subPlotTitle", 2)),
                 fluidRow(
                     column(6, geneExprUI(id, 2)),
                     column(6, geneExprPlotControlUI(id, 2))),
@@ -47,12 +47,15 @@ geneAccGeneExprServer <- function(id, dataSource, optCrt) {
             output$AccExpr <- renderUI({
                 HTML(paste0(
                     "GeneAcc vs ",
-                    .globals$terms[[data_type]]["GeneExpr"]))
+                    dataSource()$terms["GeneExpr"]))
             })
             ## subtitle
             output$AccExprSubTitle <-
                 renderUI({
-                    h4("ATAC vs Expresion on reduced dimensions")
+                    h4(paste(
+                        "ATAC vs gene",
+                        dataSource()$terms['expression'],
+                        "on reduced dimensions"))
                 })
             ## input column 1
             ### Dimension Reduction
@@ -61,6 +64,11 @@ geneAccGeneExprServer <- function(id, dataSource, optCrt) {
             updateSubsetCellUI(id, input, output, session, dataSource)
             
             ## plot region
+            ### sub region title
+            output$subPlotTitle2 <-
+                renderUI({
+                    h4(paste("Gene", dataSource()$terms['expression']))
+                })
             selectedGene <- dataSource()$sc1def$gene1
             ### geneAcc
             updateGeneAccPlot(

@@ -1,3 +1,8 @@
+CHANGES IN VERSION 1.1.1
+-------------------------
+
+    o Fix the bug that `coverage` function is not imported.
+
 CHANGES IN VERSION 0.99.27
 -------------------------
 

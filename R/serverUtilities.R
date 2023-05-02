@@ -825,3 +825,15 @@ filterCells <- function(
     }
     return(keep)
 }
+
+updateRankList <- function(input, output, dataSource, uid, pid, input_id){
+    observeEvent(input[[uid]], {
+        output[[pid]] <- renderUI(rank_list(
+            text = "Drag, drop and re-order the following items:",
+            labels = sort(as.character(unlist(unique(dataSource()$sc1meta[
+                , dataSource()$sc1conf[
+                    dataSource()$sc1conf$UI == input[[uid]]]$ID, with = FALSE])))),
+            input_id = input_id
+        ))
+    })
+}

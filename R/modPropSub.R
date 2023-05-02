@@ -52,6 +52,12 @@ scPropServer <- function(
             choices = getGroupUI(dataSource),
             selected = defaults$CellInfoY
         )
+        updateRankList(
+            input, output, dataSource, "CellInfoX", "plotXord",
+            NS(NS(pid, id), "cellinfoXorder"))
+        updateRankList(
+            input, output, dataSource, "CellInfoY", "plotYord",
+            NS(NS(pid, id), "cellinfoYorder"))
         
         subModuleMenuObservor(
             id,
@@ -77,7 +83,10 @@ scPropServer <- function(
                 dataset = dataSource()$dataset,
                 geneIdMap = dataSource()$sc1gene,
                 valueFilterKey = p_input$filterCell,
-                valueFilterCutoff = p_input$filterCellVal
+                valueFilterCutoff = p_input$filterCellVal,
+                reorder = input$plotord,
+                orderX = input$cellinfoXorder,
+                orderY = input$cellinfoYorder
             )
         })
         

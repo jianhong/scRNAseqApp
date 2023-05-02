@@ -17,7 +17,7 @@ plotProportionUI <- function(id) {
                 xaxisCellInfoUI(id),
                 subsetCellByInfoUI(id, mini = TRUE),
                 selectInput(
-                    NS(id, "cellInfoY"),
+                    NS(id, "CellInfoY"),
                     "Cell information to group / colour by:",
                     choices = NULL
                 ) %>%
@@ -43,6 +43,16 @@ plotProportionUI <- function(id) {
                 checkboxInput(
                     NS(id, "plotflp"),
                     "Flip X/Y", value = FALSE),
+                checkboxInput(
+                    NS(id, "plotord"),
+                    "Reorder the contents", value = FALSE
+                ),
+                conditionalPanel(
+                    condition = "input.plotord % 2 == 1",
+                    ns=NS(id),
+                    uiOutput(outputId = NS(id, "plotXord")),
+                    uiOutput(outputId = NS(id, "plotYord"))
+                ),
                 boxPlotControlUI(id, withPoints = FALSE)
             ),
             column(
@@ -61,6 +71,7 @@ plotProportionUI <- function(id) {
     )
 }
 #' @importFrom DT datatable
+#' @importFrom sortable rank_list
 plotProportionServer <- function(id, dataSource, optCrt) {
     moduleServer(id, function(input, output, session) {
         ## input column
@@ -76,11 +87,18 @@ plotProportionServer <- function(id, dataSource, optCrt) {
         
         updateSelectInput(
             session,
-            "cellInfoY",
+            "CellInfoY",
             "Cell information to group / colour by:",
             choices = getGroupUI(dataSource),
             selected = dataSource()$sc1def$grp1
         )
+        
+        updateRankList(
+            input, output, dataSource, "CellInfoX", "plotXord",
+            NS(id, "cellinfoXorder"))
+        updateRankList(
+            input, output, dataSource, "CellInfoY", "plotYord",
+            NS(id, "cellinfoYorder"))
         
         ## plot region
         ### plots
@@ -89,12 +107,15 @@ plotProportionServer <- function(id, dataSource, optCrt) {
                 dataSource()$sc1conf,
                 dataSource()$sc1meta,
                 input$CellInfoX,
-                input$cellInfoY,
+                input$CellInfoY,
                 input$subsetCell,
                 input$subsetCellVal,
                 input$plottyp,
                 input$plotflp,
-                input$plotfsz
+                input$plotfsz,
+                reorder = input$plotord,
+                orderX = input$cellinfoXorder,
+                orderY = input$cellinfoYorder
             )
         })
         updateGeneExprDotPlotUI(
@@ -108,7 +129,7 @@ plotProportionServer <- function(id, dataSource, optCrt) {
             dataSource()$dataset,
             input$plottyp,
             input$CellInfoX,
-            input$cellInfoY
+            input$CellInfoY
         )
         
         output$proportion.dt <- renderDataTable({

@@ -590,7 +590,17 @@ contextMenuPropUI <- function(id){
                     selected = "Proportion", inline = TRUE),
                 checkboxInput(
                     NS(id, "plotflp"),
-                    "Flip X/Y", value = FALSE)
+                    "Flip X/Y", value = FALSE),
+                checkboxInput(
+                    NS(id, "plotord"),
+                    "Reorder the contents", value = FALSE
+                ),
+                conditionalPanel(
+                    condition = "input.plotord % 2 == 1",
+                    ns=NS(id),
+                    uiOutput(outputId = NS(id, "plotXord")),
+                    uiOutput(outputId = NS(id, "plotYord"))
+                )
             )
         )
     )
@@ -612,7 +622,16 @@ contextMenuViolinUI <- function(id){
                 checkboxInput(
                     NS(id, "plotpts"),
                     "Show data points",
-                    value = FALSE)
+                    value = FALSE),
+                checkboxInput(
+                    NS(id, "plotord"),
+                    "Reorder the contents", value = FALSE
+                ),
+                conditionalPanel(
+                    condition = "input.plotord % 2 == 1",
+                    ns=NS(id),
+                    uiOutput(outputId = NS(id, "plotXord"))
+                )
             )
         )
     )

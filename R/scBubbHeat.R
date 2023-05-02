@@ -24,17 +24,20 @@ scBubbHeat <- function(
         inpRow,
         inpCol,
         inpcols,
-        inpfsz,
+        pointSize,
+        labelsFontsize,
         flipXY,
         plotAllCells = FALSE,
         save = FALSE,
         colorBreaks,
         legendTitle = "expression",
-        returnColorRange = FALSE) {
+        returnColorRange = FALSE,
+        reorder=FALSE,
+        orderX) {
     # Identify genes that are in our dataset
     if (missing(inpGrp1c))
         inpGrp1c <- 0
-    if (inpPlt == "Bubbleplot") {
+    if (inpPlt != "Heatmap") {
         plotAllCells <- FALSE
     }
     geneList <- scGeneList(inp, inpGene)
@@ -70,6 +73,28 @@ scBubbHeat <- function(
     h5file$close_all()
     
     ggData <- subGrp(ggData, grpKey, grpVal, inpConf)
+    
+    if (inpPlt == "Violin") {
+        if(reorder){
+            ggData$grpBy <- factor(ggData$grpBy, levels=orderX)
+        }
+        ggCol <- relevelCol(inpConf, inpGrp, ggData, "grpBy")
+        ggOut <- ggplot(ggData, aes(
+            .data[["grpBy"]], .data[["val"]], fill = .data[["grpBy"]])) +
+            geom_violin(scale = "width") +
+            facet_grid(rows=as.formula("geneName ~ ."), scales = "free")
+        if(pointSize>0) ggOut <- ggOut +
+            geom_jitter(size = pointSize, shape = 16)
+        ggOut <- ggOut + 
+            xlab(inpGrp) + ylab("expression") +
+            sctheme(
+                base_size = .globals$sList[labelsFontsize],
+                Xang = 45,
+                XjusH = 1) +
+            scale_fill_manual("", values = ggCol) +
+            theme(legend.position = "none")
+        return(plot(ggOut))
+    }
     
     # Aggregate
     ggData$val <- expm1(ggData$val)
@@ -168,6 +193,10 @@ scBubbHeat <- function(
     # reshape the data to matrix
     if (plotAllCells) {
         ggData$grpBy <- paste(ggData$grpBy, ggData$sampleID, sep = "__")
+    }else{
+        if(reorder){
+            ggData$grpBy <- factor(ggData$grpBy, levels=orderX)
+        }
     }
     reshapeMat <- function(value.var) {
         ggMatrix <- dcast.data.table(
@@ -221,7 +250,7 @@ scBubbHeat <- function(
                     labels = hcRow$labels$label,
                     expand = c(0, 0.5)
                 ) +
-                sctheme(base_size = .globals$sList[inpfsz]) +
+                sctheme(base_size = .globals$sList[labelsFontsize]) +
                 theme(
                     axis.title = element_blank(),
                     axis.line = element_blank(),
@@ -274,12 +303,16 @@ scBubbHeat <- function(
             ggData$grpBy <-
                 factor(ggData$grpBy, levels = hcCol$labels$label)
         } else{
-            ggData$grpBy <-
-                factor(
-                    as.character(ggData$grpBy),
-                    levels = sortLevels(sort(as.character(
-                        unique(ggData$grpBy)
-                    ))))
+            if(reorder){
+                ggData$grpBy <- factor(ggData$grpBy, levels=orderX)
+            }else{
+                ggData$grpBy <-
+                    factor(
+                        as.character(ggData$grpBy),
+                        levels = sortLevels(sort(as.character(
+                            unique(ggData$grpBy)
+                        ))))
+            }
         }
         ggOut <- ggplot(
             ggData,
@@ -291,7 +324,7 @@ scBubbHeat <- function(
             )
         ) +
             geom_point() +
-            sctheme(base_size = .globals$sList[inpfsz],
+            sctheme(base_size = .globals$sList[labelsFontsize],
                     Xang = 45,
                     XjusH = 1) +
             scale_x_discrete(expand = c(0.05, 0)) +

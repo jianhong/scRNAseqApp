@@ -71,6 +71,9 @@ scVlnServer <- function(
             dataSource,
             c("CellInfoX", "CellInfoY", "plottyp", "plotpts")
         )
+        updateRankList(
+            input, output, dataSource, "CellInfoX", "plotXord",
+            NS(NS(pid, id), "cellinfoXorder"))
         ## plot
         plot1 <- reactive({
             scVioBox(
@@ -87,7 +90,9 @@ scVlnServer <- function(
                 input$plottyp,
                 input$plotpts,
                 p_input$GeneExprsiz,
-                p_input$GeneExprfsz
+                p_input$GeneExprfsz,
+                reorder = input$plotord,
+                orderX = input$cellinfoXorder
             )
         })
         updateSubModulePlotUI(

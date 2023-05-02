@@ -50,7 +50,7 @@ plotBubbleHeatmapUI <- function(id) {
                 radioButtons(
                     NS(id, "plottyp"),
                     "Plot type:",
-                    choices = c("Bubbleplot", "Heatmap"),
+                    choices = c("Bubbleplot", "Heatmap", "Violin"),
                     selected = "Bubbleplot",
                     inline = TRUE
                 ),
@@ -77,15 +77,42 @@ plotBubbleHeatmapUI <- function(id) {
                         "All cells (time consuming)",
                         value = FALSE)
                 ),
-                actionButton(
-                    NS(id, "userbreaks"),
-                    "ColorKey range"),
                 conditionalPanel(
-                    condition = paste0("input.userbreaks % 2 ==1"),
+                    condition = "input.plottyp != 'Violin'",
                     ns = NS(id),
-                    numericInput(NS(id, "colorb1"), "min cutoff", value = -10),
-                    numericInput(NS(id, "colorb2"), "max cutoff", value = 10),
-                    actionButton(NS(id, "setcolrg"), "Apply colorkey range")
+                    checkboxInput(
+                        NS(id, "userbreaks"),
+                        "Set ColorKey range"),
+                    conditionalPanel(
+                        condition = "input.userbreaks % 2 ==1",
+                        ns = NS(id),
+                        numericInput(NS(id, "colorb1"), "min cutoff", value = -10),
+                        numericInput(NS(id, "colorb2"), "max cutoff", value = 10),
+                        actionButton(NS(id, "setcolrg"), "Apply colorkey range")
+                    )
+                ),
+                conditionalPanel(
+                    condition = "input.plottyp == 'Violin'",
+                    ns = NS(id),
+                    checkboxInput(
+                        NS(id, "plotpts"), "Show data points",
+                        value = FALSE),
+                    sliderInput(
+                        NS(id, "plotsiz"), "Data point size:",
+                        min = 0, max = 4, value = 1.25, step = 0.25)
+                ),
+                conditionalPanel(
+                    condition = "input.plotcol % 2 != 1",
+                    ns = NS(id),
+                    checkboxInput(
+                        NS(id, "plotord"),
+                        "Reorder the contents", value = FALSE
+                    ),
+                    conditionalPanel(
+                        condition = "input.plotord % 2 == 1",
+                        ns=NS(id),
+                        uiOutput(outputId = NS(id, "plotXord"))
+                    )
                 ),
                 br(),
                 boxPlotControlUI(id, withPoints = FALSE, withColor = TRUE)
@@ -137,6 +164,7 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt) {
                 input$plotrow,
                 input$plotcol,
                 input$plotcols,
+                input$plotpts,
                 input$plotfsz,
                 input$plotflp,
                 input$plotall,
@@ -167,6 +195,10 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt) {
                 input$colorb1, input$colorb2
             )))
         })
+        
+        updateRankList(
+            input, output, dataSource, "CellInfoX", "plotXord",
+            NS(id, "cellinfoXorder"))
         
         ## update the ui
         output$oupTxt <- renderUI({
@@ -211,6 +243,7 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt) {
                 input$plotrow,
                 input$plotcol,
                 input$plotcols,
+                if(input$plotpts %% 2 ==0) 0 else input$plotsiz,
                 input$plotfsz,
                 input$plotflp,
                 input$plotall,
@@ -219,7 +252,9 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt) {
                         NA
                     else
                         colrg(),
-                legendTitle = dataSource()$terms['expression']
+                legendTitle = dataSource()$terms['expression'],
+                reorder=input$plotord,
+                orderX = input$cellinfoXorder
             )
         })
         observeEvent(
@@ -235,10 +270,10 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt) {
                 dataSource()$dataset,
                 input$plottyp,
                 input$CellInfoX,
-                handlerFUN = if (input$plottyp == "Bubbleplot") {
-                    plotsDownloadHandler
-                } else
+                handlerFUN = if (input$plottyp == "Heatmap") {
                     heatmapDownloadHandler
+                } else
+                    plotsDownloadHandler
             )
         )
     })

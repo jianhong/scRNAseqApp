@@ -33,7 +33,7 @@
 #' @importFrom Rsamtools TabixFile seqnamesTabix scanTabix
 #' @importFrom GenomeInfoDb keepSeqlevels seqinfo seqnames seqlevelsStyle
 #' `seqlevelsStyle<-`
-#' @importFrom GenomicRanges GRanges width
+#' @importFrom GenomicRanges GRanges width coverage
 #' @importFrom rtracklayer export
 #' @importFrom utils read.table
 makeShinyFiles <- function(

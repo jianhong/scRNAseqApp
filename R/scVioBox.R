@@ -16,7 +16,9 @@ scVioBox <- function(
         inptyp,
         inppts,
         pointSize,
-        labelsFontsize) {
+        labelsFontsize,
+        reorder=FALSE,
+        orderX) {
     # Prepare ggData
     ggData <- inpMeta[, c(
         inpConf[inpConf$UI == infoX]$ID,
@@ -50,7 +52,11 @@ scVioBox <- function(
     ggData <- subGrp(ggData, grpKey, grpVal, inpConf)
     
     # Do factoring
-    ggData <- relevelData(ggData, "X")
+    if(reorder){
+        ggData$X <- factor(ggData$X, levels=orderX)
+    }else{
+        ggData <- relevelData(ggData, "X")
+    }
     ggCol <- relevelCol(inpConf, infoX, ggData, "X")
     
     # Actual ggplot

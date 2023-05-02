@@ -15,7 +15,10 @@ scProp <- function(
         dataset,
         geneIdMap,
         valueFilterKey,
-        valueFilterCutoff) {
+        valueFilterCutoff,
+        reorder=FALSE,
+        orderX,
+        orderY) {
     # Prepare ggData
     if (grpKey != "N/A" && length(grpVal)) {
         colN <- c(
@@ -58,8 +61,13 @@ scProp <- function(
     by = "X"]
     
     # Do factoring
-    ggData <- relevelData(ggData, "grp")
-    ggData <- relevelData(ggData, "X")
+    if(reorder){
+        ggData$X <- factor(ggData$X, levels=orderX)
+        ggData$grp <- factor(ggData$grp, levels=orderY)
+    }else{
+        ggData <- relevelData(ggData, "grp")
+        ggData <- relevelData(ggData, "X")
+    }
     ggCol <- relevelCol(inpConf, infoY, ggData, "grp")
     
     # Actual ggplot

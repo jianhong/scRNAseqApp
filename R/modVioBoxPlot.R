@@ -36,6 +36,15 @@ plotVioBoxUI <- function(id) {
                 checkboxInput(
                     NS(id, "plotpts"), "Show data points",
                     value = FALSE),
+                checkboxInput(
+                    NS(id, "plotord"),
+                    "Reorder the contents", value = FALSE
+                ),
+                conditionalPanel(
+                    condition = "input.plotord % 2 == 1",
+                    ns=NS(id),
+                    uiOutput(outputId = NS(id, "plotXord"))
+                ),
                 boxPlotControlUI(id)
             ),
             column(9, geneExprDotPlotUI(id))
@@ -55,6 +64,9 @@ plotVioBoxServer <- function(id, dataSource, optCrt) {
         
         updateSubsetCellUI(id, input, output, session, dataSource, addNA = TRUE)
         updateFilterCellUI(id, optCrt, input, output, session, dataSource)
+        updateRankList(
+            input, output, dataSource, "CellInfoX", "plotXord",
+            NS(id, "cellinfoXorder"))
         
         ## plot region
         ### plots
@@ -73,7 +85,9 @@ plotVioBoxServer <- function(id, dataSource, optCrt) {
                 input$plottyp,
                 input$plotpts,
                 input$plotsiz,
-                input$plotfsz
+                input$plotfsz,
+                reorder = input$plotord,
+                orderX = input$cellinfoXorder
             )
         })
         updateGeneExprDotPlotUI(

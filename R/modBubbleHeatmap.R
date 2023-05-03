@@ -80,7 +80,7 @@ plotBubbleHeatmapUI <- function(id) {
                 conditionalPanel(
                     condition = "input.plottyp != 'Violin'",
                     ns = NS(id),
-                    checkboxInput(
+                    actionButton(
                         NS(id, "userbreaks"),
                         "Set ColorKey range"),
                     conditionalPanel(

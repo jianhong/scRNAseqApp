@@ -1,5 +1,9 @@
 readData <- function(slot, folder) {
-    readRDS(file.path(.globals$datafolder, folder, .globals$filenames[[slot]]))
+    fs <- file.path(.globals$datafolder, folder, .globals$filenames[[slot]])
+    if(file.exists(fs)){
+        return(readRDS(fs))
+    }
+    return(NULL)
 }
 loadData <- function(dataSource) {
     for (i in c("sc1conf", "sc1def", "sc1gene", "sc1meta")) {
@@ -63,11 +67,15 @@ read_exprs <- function(
         splitName,
         valueOnly = FALSE,
         cell) {
+    fs <- file.path(
+        .globals$datafolder,
+        h5f,
+        .globals$filenames$sc1gexpr)
+    if(!file.exists(fs)){
+        stop("No expression data available. Data may be removed.")
+    }
     h5file <- H5File$new(
-        file.path(
-            .globals$datafolder,
-            h5f,
-            .globals$filenames$sc1gexpr),
+        fs,
         mode = "r")
     on.exit(h5file$close_all())
     h5data <- h5file[["grp"]][["data"]]

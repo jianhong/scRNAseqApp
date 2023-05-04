@@ -51,11 +51,16 @@ webstatsServer <- function(id) {
                     readLines(url, warn = FALSE)
                 }, error = function(.e){
                     message(.e)
-                    NA
+                    NULL
                 })
-                parse_json(json)
+                if(!is.null(json)){
+                    parse_json(json)
+                }else{
+                    NULL
+                }
             })
             names(ip_rds_addition) <- ip
+            ip_rds_addition <- ip_rds_addition[!is.null(ip_rds_addition)]
             ip_rds <- c(ip_rds, ip_rds_addition)
             saveRDS(ip_rds, file = cache)
             ret <- c(ip_, ip_rds_addition)

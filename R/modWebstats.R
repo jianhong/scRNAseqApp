@@ -47,7 +47,13 @@ webstatsServer <- function(id) {
             ip <- ip[!ip %in% names(ip_rds)]
             ip_rds_addition <- lapply(ip, function(.ip) {
                 url <- paste0("http://ip-api.com/json/", .ip)
-                parse_json(readLines(url, warn = FALSE))
+                json <- tryCatch({
+                    readLines(url, warn = FALSE)
+                }, error = function(.e){
+                    message(.e)
+                    NA
+                })
+                parse_json(json)
             })
             names(ip_rds_addition) <- ip
             ip_rds <- c(ip_rds, ip_rds_addition)

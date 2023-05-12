@@ -1,4 +1,4 @@
-getDataSets <- function(datasets, appconf) {
+getDataSets <- function(datasets, appconf, privilege=NULL) {
     if(missing(datasets)){
         datasets <- list.dirs(
             .globals$datafolder,
@@ -7,7 +7,8 @@ getDataSets <- function(datasets, appconf) {
         datasets <- datasets[vapply(
             datasets,
             FUN = checkFiles,
-            FUN.VALUE = logical(1L))]
+            FUN.VALUE = logical(1L),
+            privilege = privilege)]
     }
     if (!missing(appconf)) {
         if(all(datasets==names(appconf))){
@@ -23,18 +24,23 @@ getDataSets <- function(datasets, appconf) {
     return(datasets)
 }
 
-getNamedDataSets <- function(datasets, appconf) {
+getNamedDataSets <- function(datasets, appconf, privilege=NULL) {
     if(missing(datasets)){
-        datasets <- getDataSets()
+        datasets <- getDataSets(privilege = privilege)
     }
     if(missing(appconf)){
-        appconf <- getAppConf(datasets=datasets)
+        appconf <- getAppConf(datasets=datasets, privilege=privilege)
     }
-    nds <- getDataSets(datasets = datasets, appconf = appconf)
+    nds <- getDataSets(datasets = datasets, appconf = appconf, privilege = privilege)
 }
 
 # check if all the required files are available
-checkFiles <- function(folder) {
+checkFiles <- function(folder, privilege) {
+    if(checkLocker(folder)){
+        if(!checkPrivilege(privilege=privilege, datasetname = folder)){
+            return(FALSE)
+        }
+    }
     all(
         c(
             .globals$filenames$appconf,
@@ -50,16 +56,17 @@ checkFiles <- function(folder) {
     )
 }
 
-getDefaultDataset <- function(defaultDataset = "pbmc_small", datasets) {
-    if(missing(datasets)) datasets <- getDataSets()
+getDefaultDataset <- function(
+        defaultDataset = "pbmc_small", datasets, privilege=NULL) {
+    if(missing(datasets)) datasets <- getDataSets(privilege = privilege)
     if (!defaultDataset %in% datasets) {
         defaultDataset <- datasets[1]
     }
     defaultDataset
 }
 
-getAppConf <- function(datasets) {
-    if(missing(datasets)) datasets <- getDataSets()
+getAppConf <- function(datasets, privilege=NULL) {
+    if(missing(datasets)) datasets <- getDataSets(privilege = privilege)
     appconf <- lapply(datasets, function(.ele) {
         conf <- readData("appconf", .ele)
         stopifnot(
@@ -78,8 +85,17 @@ getDataType <- function(appconf) {
         FUN.VALUE = character(1))
 }
 
-updateSymbolDict <- function(datasets) {
-    if(missing(datasets)) datasets <- getDataSets()
+updateDatasetForToken <- function(defaultDataset, datasets, appconf){
+    datasets1 <- getDataSets(privilege = 'all')
+    datasets <- datasets1[datasets1 %in% c(datasets, defaultDataset)]
+    appconf <- getAppConf(datasets = datasets, privilege = 'all')
+    datasets <- getDataSets(datasets = datasets, appconf = appconf)
+    data_types <- getDataType(appconf)
+    return(list(datasets=datasets, appconf=appconf, data_types=data_types))
+}
+
+updateSymbolDict <- function(datasets, privilege=NULL) {
+    if(missing(datasets)) datasets <- getDataSets(privilege = privilege)
     symbols <- lapply(datasets, function(.ele) {
         names(readData("sc1gene", .ele))
     })

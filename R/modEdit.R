@@ -181,14 +181,14 @@ editServer <- function(id) {
         updateSelectInput(
             session,
             "dir",
-            choices = getDataSets(),
-            selected = getDataSets()[1])
+            choices = getDataSets(privilege = "all"),
+            selected = getDataSets(privilege = "all")[1])
         observeEvent(input$refresh, {
             updateSelectInput(
                 session,
                 "dir",
-                choices = getDataSets(),
-                selected = getDataSets()[1])
+                choices = getDataSets(privilege = "all"),
+                selected = getDataSets(privilege = "all")[1])
         })
         observeEvent(input$multigene, {
             if (!is.list(global$markers)) {
@@ -197,7 +197,7 @@ editServer <- function(id) {
         })
         observeEvent(input$dir, {
             if (!is.null(input$dir)) {
-                if (input$dir %in% getDataSets()) {
+                if (input$dir %in% getDataSets(privilege = "all")) {
                     adminProcess({
                         global$sc1meta <- readData("sc1meta", input$dir)
                         global$sc1conf_orig <-
@@ -368,8 +368,8 @@ editServer <- function(id) {
             updateSelectInput(
                 session,
                 "dir",
-                choices = getDataSets(),
-                selected = getDataSets()[1])
+                choices = getDataSets(privilege = "all"),
+                selected = getDataSets(privilege = "all")[1])
             removeModal()
         })
         observeEvent(input$doi, {

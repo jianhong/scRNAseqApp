@@ -211,8 +211,13 @@ scRNAseqApp <- function(
         updateDataSource <- function(
             appconf,
             datasets){
-                if(missing(appconf)) appconf <- getAppConf()
-                if(missing(datasets)) datasets <- getDataSets(appconf = appconf)
+                if(missing(appconf)) appconf <- getAppConf(
+                    privilege = dataSource$auth$privilege
+                )
+                if(missing(datasets)) datasets <- 
+                        getDataSets(
+                            appconf = appconf,
+                            privilege = dataSource$auth$privilege)
                 dataSource$appconf <- appconf
                 dataSource$available_datasets <- datasets
                 dataSource$data_types <- getDataType(appconf = appconf)
@@ -222,7 +227,10 @@ scRNAseqApp <- function(
         ### check available data
         checkAvailableDatasets <- reactivePoll(
             1000,session,
-            checkFunc = getNamedDataSets,
+            checkFunc = function(){
+                getNamedDataSets(
+                    privilege = isolate(dataSource$auth$privilege))
+                },
             valueFunc = function(){
                 return(isolate(dataSource$available_datasets))
             })
@@ -232,9 +240,14 @@ scRNAseqApp <- function(
             ignoreInit = TRUE,
             {
                 ## update datasets if datasets changed by admin
-                ad <- getDataSets()
-                appconf <- getAppConf(datasets = ad)
-                ad <- getNamedDataSets(datasets = ad, appconf = appconf)
+                ad <- getDataSets(privilege = dataSource$auth$privilege)
+                appconf <- getAppConf(
+                    datasets = ad,
+                    privilege = dataSource$auth$privilege)
+                ad <- getNamedDataSets(
+                    datasets = ad,
+                    appconf = appconf,
+                    privilege = dataSource$auth$privilege)
                 if (!all(
                     dataSource$available_datasets %in% ad,
                     na.rm = TRUE) ||
@@ -325,23 +338,32 @@ scRNAseqApp <- function(
             isolate(dataSource$available_datasets))
         ## change dataset
         observeEvent(input$selectedDatasets, {
-            availabledb <- getDataSets() ## in case the data is deleted
+            ## in case the data is deleted, refresh the datasets
+            availabledb <- getDataSets(privilege = "all")
             if (input$selectedDatasets %in% availabledb) {
-                dataSource$dataset <- input$selectedDatasets
-                if (checkLocker(dataSource$dataset)) {
+                if (checkLocker(input$selectedDatasets)) {
                     dataSource$Logged <- FALSE
                     if (dataSource$token != "") {
                         if (checkToken(
                             getToken(),
                             dataSource$token,
-                            dataSource$dataset)) {
+                            input$selectedDatasets)) {
                             dataSource$Logged <- TRUE
+                            dataSource$auth$privilege <- 
+                                input$selectedDatasets
+                            res <- updateDatasetForToken(
+                                input$selectedDatasets,
+                                dataSource$available_datasets,
+                                dataSource$appconf)
+                            dataSource$available_datasets <- res$datasets
+                            dataSource$appconf <- res$appconf
+                            dataSource$data_types <- res$data_types
                         }
                     } else{
                         if (!is.null(dataSource$auth)) {
                             if (checkPrivilege(
                                 dataSource$auth$privilege,
-                                dataSource$dataset)) {
+                                input$selectedDatasets)) {
                                 dataSource$Logged <- TRUE
                             }
                         }
@@ -353,6 +375,7 @@ scRNAseqApp <- function(
                             selected = loginNavbarTitle)
                     }
                 }
+                dataSource$dataset <- input$selectedDatasets
                 refreshData(input, output, session)
                 if (length(dataSource$genelist) == 1) {
                     updateTabsetPanel(

@@ -121,7 +121,7 @@ updateSearch <- function(
     }else{
         key_words <- strsplit(key_words, "\\s+")[[1]]
         key_words <- gsub("[^a-zA-Z0-9._'\"*-]+", "", key_words)
-        res_data <- lapply(getAppConf(), function(.ele){
+        res_data <- lapply(getAppConf(privilege = auth$privilege), function(.ele){
             x <- paste(as.character(.ele), collapse = " ")
             m <- vapply(key_words, grepl, logical(1L), x = x, ignore.case=TRUE)
             m <- sum(m)
@@ -274,7 +274,7 @@ checkGene <- function(
     limit <- 5 # return 5 record
     gene <- mappingToSymbols(gene, gn2sym, transform = TRUE)
     getGeneNamesByKeyword <- function(){
-        appconfs <- getAppConf()
+        appconfs <- getAppConf(privilege = auth$privilege)
         gn <- lapply(appconfs, function(.ele){
             if(checkLocker(.ele$id)){
                 if(!checkPrivilege(auth$privilege, .ele$id)){

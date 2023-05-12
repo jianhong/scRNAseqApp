@@ -164,7 +164,12 @@ webstatsServer <- function(id) {
             levels(dat$variable) <-
                 c(levels(dat$variable), "database counts")
             dat <-
-                rbind(dat, list("database counts", length(getDataSets())))
+                rbind(
+                    dat,
+                    list(
+                        "database counts",
+                        length(getDataSets(
+                            privilege = dataSource$auth$privilege))))
             dat
         }, options = list(dom = 't'), rownames = FALSE)
         output$counter <- renderDT({

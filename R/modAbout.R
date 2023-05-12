@@ -13,6 +13,12 @@ aboutUI <- function(
         query <- parseQueryString(request[["QUERY_STRING"]])
         defaultDataset <- 
             parseQuery(query, defaultDataset)[1]
+        if(!defaultDataset %in% datasets){
+            ## from token
+            res <- updateDatasetForToken(defaultDataset, datasets, appconf)
+            datasets <- res$datasets
+            appconf <- res$appconf
+        }
         tabPanel(
             title = div(
                 selectInput(

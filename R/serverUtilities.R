@@ -185,19 +185,21 @@ updateGeneExprDotPlotUI <-
                 NS0(id, "GeneExproup", postfix),
                 height = height)
         })
+        
         output[[paste0("GeneExproup.pdf", postfix)]] <-
             handlerFUN(
                 "pdf",
                 width = input[[paste0("GeneExproup.w", postfix)]],
                 height = input[[paste0("GeneExproup.h", postfix)]],
-                plotX(),
+                plotX,
                 ...)
+        
         output[[paste0("GeneExproup.png", postfix)]] <-
             handlerFUN(
                 "png",
                 width = input[[paste0("GeneExproup.w", postfix)]],
                 height = input[[paste0("GeneExproup.h", postfix)]],
-                plotX(),
+                plotX,
                 ...)
     }
 

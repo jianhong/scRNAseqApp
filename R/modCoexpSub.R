@@ -84,7 +84,7 @@ scCoexpServer <- function(
                 input$GeneName1,
                 input$GeneName2,
                 p_input$subsetCell,
-                p_input$subsetCellVal,
+                getSubsetCellVal(p_input),
                 dataSource()$dataset,
                 dataSource()$sc1gene,
                 "2D",

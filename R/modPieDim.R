@@ -119,7 +119,7 @@ plotPieDimServer <- function(id, dataSource, optCrt) {
                 input$GeneExprdrY,
                 input$genelist,
                 input$subsetCell,
-                input$subsetCellVal,
+                getSubsetCellVal(input),
                 valueFilterKey = input$filterCell,
                 valueFilterCutoff = input$filterCellVal,
                 input$CoExpred,

@@ -76,7 +76,7 @@ plotWaffleServer <- function(id, dataSource, optCrt, postfix = 1) {
                 input$CellInfoY,
                 input$plotcols,
                 input$subsetCell,
-                input$subsetCellVal
+                getSubsetCellVal(input)
             )
         })
         updateGeneExprDotPlotUI(

@@ -7,8 +7,8 @@ scVioBox <- function(
         inpMeta,
         infoX,
         infoY,
-        grpKey,
-        grpVal,
+        subsetCellKey,
+        subsetCellVal,
         filterKey,
         filterVal,
         dataset,
@@ -22,7 +22,7 @@ scVioBox <- function(
     # Prepare ggData
     ggData <- inpMeta[, c(
         inpConf[inpConf$UI == infoX]$ID,
-        inpConf[inpConf$grp == TRUE]$ID),
+        inpConf[inpConf$grp == TRUE]$ID), ## will include all subsetCellKey
         with = FALSE]
     colnames(ggData)[1] <- c("X")
     # Load in either cell meta or gene expr
@@ -49,7 +49,9 @@ scVioBox <- function(
         }
     }
     
-    ggData <- subGrp(ggData, grpKey, grpVal, inpConf)
+    subsetCellKey <- subsetCellKey[subsetCellKey!="N/A"]
+    subsetCellVal <- namedSubsetCellVals(subsetCellKey, subsetCellVal)
+    ggData <- subGrp(ggData, subsetCellKey, subsetCellVal, inpConf)
     
     # Do factoring
     if(reorder){

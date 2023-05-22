@@ -8,7 +8,7 @@
 #' @importFrom data.table rbindlist dcast.data.table data.table := uniqueN
 #' @importFrom ggdendro dendro_data
 #' @importFrom gridExtra arrangeGrob grid.arrange
-#' @importFrom ggplot2 scale_x_discrete scale_size_continuous
+#' @importFrom ggplot2 scale_x_discrete scale_size_continuous .data
 scBubbHeat <- function(
         inpConf,
         inpMeta,
@@ -234,10 +234,10 @@ scBubbHeat <- function(
                 geom_segment(
                     data = hcRow$segments,
                     aes(
-                        x = hcRow$segments$x,
-                        y = hcRow$segments$y,
-                        xend = hcRow$segments$xend,
-                        yend = hcRow$segments$yend
+                        x = .data$x,
+                        y = .data$y,
+                        xend = .data$xend,
+                        yend = .data$yend
                     )
                 ) +
                 scale_y_continuous(
@@ -274,10 +274,10 @@ scBubbHeat <- function(
                 geom_segment(
                     data = hcCol$segments,
                     aes(
-                        x = hcCol$segments$x,
-                        y = hcCol$segments$y,
-                        xend = hcCol$segments$xend,
-                        yend = hcCol$segments$yend
+                        x = .data$x,
+                        y = .data$y,
+                        xend = .data$xend,
+                        yend = .data$yend
                     )
                 ) +
                 scale_x_continuous(
@@ -317,10 +317,10 @@ scBubbHeat <- function(
         ggOut <- ggplot(
             ggData,
             aes(
-                ggData$grpBy,
-                ggData$geneName,
-                color = ggData$val,
-                size = ggData$prop
+                x = .data$grpBy,
+                y = .data$geneName,
+                color = .data$val,
+                size = .data$prop
             )
         ) +
             geom_point() +

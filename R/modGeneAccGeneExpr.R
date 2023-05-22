@@ -12,7 +12,7 @@ geneAccGeneExprUI <- function(id) {
         ),
         fluidRow(
             column(3, dimensionReductionUI(id)),
-            column(3, subsetCellByInfoUI(id)),
+            column(3, subsetCellByInfoUI(id, multiple=FALSE)),
             column(6, graphicsControlUI(id))
         ),
         fluidRow(

@@ -77,7 +77,7 @@ plotVioBoxServer <- function(id, dataSource, optCrt) {
                 input$CellInfoX,
                 input$filterCell,
                 input$subsetCell,
-                input$subsetCellVal,
+                getSubsetCellVal(input),
                 input$filterCell,
                 input$filterCellVal,
                 dataSource()$dataset,

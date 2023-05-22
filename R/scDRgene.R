@@ -22,8 +22,6 @@ scDRgene <- function(
         inpPlt = "Dotplot",
         inpXlim,
         inpColRange = 0,
-        infoFilterKey,
-        infoFilterVal,
         valueFilterKey,
         valueFilterCutoff,
         ...) {
@@ -37,26 +35,17 @@ scDRgene <- function(
         return(ggplot())
     }
     # Prepare ggData
-    subInfoColname <- 'subInfo'
     subFilterColname <- 'subValue'
     subGrpColname <- 'sub'
     exprColname <- 'val'
+    subsetCellKey <- subsetCellKey[subsetCellKey!="N/A"]
+    subsetCellVal <- namedSubsetCellVals(subsetCellKey, subsetCellVal)
     ggData <- inpMeta[, c(
         inpConf[inpConf$UI == dimRedX]$ID,
         inpConf[inpConf$UI == dimRedY]$ID,
-        inpConf[inpConf$UI == subsetCellKey]$ID),
+        inpConf[inpConf$UI %in% subsetCellKey]$ID),
         with = FALSE]
-    if (ncol(ggData) != 3)
-        return(ggplot())
-    colnames(ggData) <- c("X", "Y", subGrpColname)
-    if (!missing(infoFilterKey) && !missing(infoFilterVal)) {
-        ggData <- cbind(
-            ggData,
-            subInfo =
-                inpMeta[, inpConf[
-                    inpConf$UI == infoFilterKey]$ID, with = FALSE])
-        colnames(ggData)[ncol(ggData)] <- subInfoColname
-    }
+    cnid <- if(ncol(ggData)>2) 3 else 0
     ggData <-
         cbindFilterValues(
             ggData,
@@ -68,7 +57,6 @@ scDRgene <- function(
             valueFilterKey,
             valueFilterCutoff
         )
-    rat <- getRatio(ggData)
     
     ggData[[exprColname]] <- read_exprs(
         dataset,
@@ -79,15 +67,17 @@ scDRgene <- function(
     }
     
     keep <- filterCells(
-        ggData,
-        subGrpColname,
+        ggData[, -c(1, 2)],
+        subsetCellKey,
         subsetCellVal,
         subFilterColname,
-        valueFilterCutoff,
-        subInfoColname,
-        infoFilterVal
+        valueFilterCutoff
     )
     
+    ## make the first subsetCellKey as sub
+    colnames(ggData)[c(1, 2)] <- c("X", "Y")
+    if(cnid>2) colnames(ggData)[cnid] <- subGrpColname
+    rat <- getRatio(ggData)
     bgCells <- sum(!keep) > 0
     
     if (bgCells) {
@@ -95,6 +85,7 @@ scDRgene <- function(
         ggData <- ggData[keep]
     }
     ggData <- orderGeneExpr(ggData, GeneExprDotOrd, exprColname)
+    
     if (is.logical(inpColRange[1])) {
         return(range(ggData[[exprColname]]))
     }

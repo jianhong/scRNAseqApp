@@ -76,7 +76,7 @@ scPropServer <- function(
                 input$CellInfoX,
                 input$CellInfoY,
                 p_input$subsetCell,
-                p_input$subsetCellVal,
+                getSubsetCellVal(p_input),
                 input$plottyp,
                 input$plotflp,
                 p_input$GeneExprfsz,

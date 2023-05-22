@@ -124,7 +124,9 @@ scDRwafflePlot <- function(
         ggData[ggData$val < 0]$val <- 0
         
         ggData <- subGrp(ggData, grpKey, grpVal, inpConf)
-        ggData$filter <- NULL
+        if("filter" %in% colnames(ggData)){
+            ggData$filter <- NULL
+        }
         return(scWafflePlot(
             ggData, 'splitBy', gradientCol))
     } else{

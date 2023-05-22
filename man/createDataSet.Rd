@@ -60,11 +60,13 @@ The misc data should be output of function \code{FindAllMarkers}.
 }
 \examples{
 library(Seurat)
-appconf <- createAppConfig(
-    title="pbmc_small",
-    destinationFolder = "pbmc_small",
-    species = "Homo sapiens",
-    doi="10.1038/nbt.3192",
-    datatype = "scRNAseq")
-createDataSet(appconf, pbmc_small, datafolder=tempdir())
+if(interactive()){
+    appconf <- createAppConfig(
+        title="pbmc_small",
+        destinationFolder = "pbmc_small",
+        species = "Homo sapiens",
+        doi="10.1038/nbt.3192",
+        datatype = "scRNAseq")
+    createDataSet(appconf, pbmc_small, datafolder=tempdir())
+}
 }

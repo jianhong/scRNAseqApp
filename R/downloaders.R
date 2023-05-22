@@ -1,5 +1,8 @@
 outputFileName <- function(ext, ...) {
-    paste0(paste(..., sep = "_"), ".", ext)
+    paste0(paste(
+        ...,
+        format(Sys.time(), "%Y%m%d.%M%S"),
+        sep = "_"), ".", ext)
 }
 #' @noRd
 #' @importFrom ggplot2 ggsave
@@ -17,7 +20,7 @@ plotsDownloadHandler <- function(device, width, height, plot, ...) {
                     height = height,
                     width = width,
                     useDingbats = FALSE,
-                    plot = plot
+                    plot = plot()
                 )
             } else{
                 ggsave(
@@ -25,7 +28,7 @@ plotsDownloadHandler <- function(device, width, height, plot, ...) {
                     device = device,
                     height = height,
                     width = width,
-                    plot = plot
+                    plot = plot()
                 )
             }
         }

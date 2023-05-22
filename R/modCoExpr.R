@@ -115,7 +115,7 @@ coExprServer <- function(id, dataSource, optCrt) {
                 input$GeneName1,
                 input$GeneName2,
                 input$subsetCell,
-                input$subsetCellVal,
+                getSubsetCellVal(input),
                 dataSource()$dataset,
                 dataSource()$sc1gene,
                 "2D",
@@ -170,7 +170,7 @@ coExprServer <- function(id, dataSource, optCrt) {
                 input$GeneName1,
                 input$GeneName2,
                 input$subsetCell,
-                input$subsetCellVal,
+                getSubsetCellVal(input),
                 dataSource()$dataset,
                 dataSource()$sc1gene
             )

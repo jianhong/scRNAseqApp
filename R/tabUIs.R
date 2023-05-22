@@ -235,19 +235,14 @@ dimensionReductionUI <- function(id){
     )
 }
 #' @importFrom magrittr %>%
-subsetCellByInfoUI <- function(id, mini=FALSE){
+subsetCellByInfoUI <- function(id, mini=FALSE, multiple=TRUE){
     if(mini){
         tagList(
-            selectInput(
-                NS(id, "subsetCell"),
-                "Cell information to subset:",
-                choices = NULL) %>%
+            uiOutput(NS(id, "subsetCellSel.ui")) %>%
                 helper1(category="subsetCellInfo"),
-            actionButton(
-                NS(id, 'subsetCell.uncheck'),
-                label=textOutput(
-                    NS(id, 'subsetCell.uncheckLab'),
-                    inline = TRUE)),
+            if(multiple) actionButton(
+                NS(id, 'subsetCell.multi'),
+                label="multiple") else tags$span(),
             uiOutput(NS(id, "subsetCell.ui"))
         )
     }else{
@@ -256,16 +251,11 @@ subsetCellByInfoUI <- function(id, mini=FALSE){
             conditionalPanel(
                 condition = "input.subsetTogT % 2 == 0",
                 ns = NS(id),
-                selectInput(
-                    NS(id, "subsetCell"),
-                    "Cell information to subset:",
-                    choices = NULL) %>%
+                uiOutput(NS(id, "subsetCellSel.ui")) %>%
                     helper1(category="subsetCellInfo"),
-                actionButton(
-                    NS(id, 'subsetCell.uncheck'),
-                    label=textOutput(
-                        NS(id, 'subsetCell.uncheckLab'),
-                        inline = TRUE)),
+                if(multiple) actionButton(
+                    NS(id, 'subsetCell.multi'),
+                    label="multiple") else tags$span(),
                 uiOutput(NS(id, "subsetCell.ui"))
             )
         )

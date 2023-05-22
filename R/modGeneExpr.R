@@ -65,7 +65,7 @@ scExprServer <- function(
                 p_input$GeneExprdrY,
                 input[[GeneNameLabel]],
                 p_input$subsetCell,
-                p_input$subsetCellVal,
+                getSubsetCellVal(p_input),
                 dataSource()$dataset,
                 dataSource()$sc1gene,
                 p_input$GeneExprsiz,

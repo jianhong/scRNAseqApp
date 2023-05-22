@@ -7,8 +7,8 @@ scProp <- function(
         inpMeta,
         infoX,
         infoY,
-        grpKey,
-        grpVal,
+        subsetCellKey,
+        subsetCellVal,
         inptyp,
         flipXY,
         labelsFontsize,
@@ -20,18 +20,20 @@ scProp <- function(
         orderX,
         orderY) {
     # Prepare ggData
-    if (grpKey != "N/A" && length(grpVal)) {
-        colN <- c(
+    subsetCellKey <- subsetCellKey[subsetCellKey!="N/A"]
+    subsetCellVal <- namedSubsetCellVals(subsetCellKey, subsetCellVal)
+    if (sum(lengths(subsetCellVal))) {
+        colN <- unique(c(
             inpConf[inpConf$UI == infoX]$ID,
             inpConf[inpConf$UI == infoY]$ID,
-            inpConf[inpConf$UI == grpKey]$ID)
+            inpConf[inpConf$UI %in% subsetCellKey]$ID))
     } else{
         colN <- c(
             inpConf[inpConf$UI == infoX]$ID,
             inpConf[inpConf$UI == infoY]$ID)
     }
     ggData <- inpMeta[, colN, with = FALSE]
-    ggData <- subGrp(ggData, grpKey, grpVal, inpConf)
+    ggData <- subGrp(ggData, subsetCellKey, subsetCellVal, inpConf)
     subFilterColname <- 'subValue'
     ggData <-
         cbindFilterValues(
@@ -49,6 +51,9 @@ scProp <- function(
         valueFilterKey = subFilterColname,
         valueFilterCutoff = valueFilterCutoff)
     
+    if(ncol(ggData)==1){
+        ggData <- cbind(ggData, ggData) ## X and color grp are same.
+    }
     ggData <- ggData[keep, c(1, 2), drop = FALSE]
     colnames(ggData) <- c("X", "grp")
     ggData <- ggData[, list(nCells = .N), by = c("X", "grp")]

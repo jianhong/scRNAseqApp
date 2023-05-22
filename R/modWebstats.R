@@ -137,13 +137,13 @@ webstatsServer <- function(id) {
             ggplot(
                 dat,
                 aes(
-                    x = dat$month,
-                    y = dat$value,
-                    fill = dat$variable
+                    x = .data[["month"]],
+                    y = .data[["value"]],
+                    fill = .data[["variable"]]
                 )) +
                 geom_bar(stat = "identity", position = position_dodge()) +
                 geom_text(
-                    aes(label = dat$value),
+                    aes(label = .data[["value"]]),
                     vjust = 1.6,
                     color = "black",
                     position = position_dodge(1 / 12)
@@ -169,7 +169,7 @@ webstatsServer <- function(id) {
                     list(
                         "database counts",
                         length(getDataSets(
-                            privilege = dataSource$auth$privilege))))
+                            privilege = "all"))))
             dat
         }, options = list(dom = 't'), rownames = FALSE)
         output$counter <- renderDT({

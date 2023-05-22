@@ -45,72 +45,98 @@ updateSubsetCellUI <-
         } else{
             selected <- dataSource()$sc1def$grp1
         }
-        updateSelectInput(
-            session,
-            "subsetCell",
-            "Cell information to subset:",
-            choices = choices,
-            selected = selected
+        output$subsetCellSel.ui <- renderUI({
+            selectInput(
+                NS(id, "subsetCell"),
+                "Cell information to subset:",
+                choices = choices,
+                selected = selected,
+                multiple = 
+                    if(length(input[["subsetCell.multi"]])>0)
+                        as.logical(input$subsetCell.multi%%2) else FALSE)
+        })
+        observeEvent(
+            input$subsetCell.multi,
+            updateActionButton(
+                session = session,
+                inputId = "subsetCell.multi",
+                label = ifelse(
+                    as.logical(input$subsetCell.multi%%2),
+                    "single", "multiple"))
         )
         
-        output$subsetCell.ui <- renderUI({
-            if (input$subsetCell != "N/A") {
-                x <- dataSource()$sc1conf[
-                    dataSource()$sc1conf$UI == input$subsetCell]$fID
-                if (!is.null(x)) {
-                    sub <-
-                        strsplit(dataSource()$sc1conf[
-                            dataSource()$sc1conf$UI == input$subsetCell]$fID,
-                                    "\\|")
-                    if (length(sub)) {
-                        sub <- sub[[1]]
-                    } else{
-                        sub <- NULL
-                    }
-                    div(
-                        style = 
-                            paste(
-                                "max-height: 150px; display:flex;",
-                                "flex-direction: column; overflow-y: auto;"),
-                        checkboxGroupInput(
-                            NS(id, "subsetCellVal"),
-                            "Select which cells to show",
-                            inline = TRUE,
-                            choices = sub,
-                            selected = sub
-                        ),
+        subsetCell.ui <- reactiveValues()
+        subsetCell.ui$uis <- list()
+        observeEvent(input$subsetCell,{
+            subsetCell <- input$subsetCell[input$subsetCell!="N/A"]
+            sub_name <- dataSource()$sc1conf$UI %in% subsetCell
+            x <- dataSource()$sc1conf[sub_name]$fID
+            if(length(x)!=length(subsetCell)){
+                return(NULL)
+            }
+            sub <-strsplit(x, "\\|")
+            names(sub) <- dataSource()$sc1conf[sub_name]$UI
+            subsetCell.ui$uis <- list()
+            for(subid in subsetCell){
+                choices <- sub[[subid]]
+                if(!is.null(choices)){
+                    subsetCell.ui$uis[[subid]] <- tagList(
                         div(
-                            style = "visibility:hidden;",
-                            textInput(
-                                NS(id, "subsetCellValChoices"),
-                                label = NULL,
-                                value = paste(sub, collapse = "|")
+                            style = 
+                                paste(
+                                    "max-height: 150px; display:flex;",
+                                    "flex-direction: column; overflow-y: auto;")
+                            ,
+                            actionButton(
+                                NS0(id, 'subsetCell.uncheck', subid),
+                                label=textOutput(
+                                    NS0(id, 'subsetCell.uncheckLab', subid),
+                                    inline = TRUE)),
+                            checkboxGroupInput(
+                                NS0(id, "subsetCellVal", subid),
+                                subid,
+                                inline = TRUE,
+                                choices = choices,
+                                selected = choices
+                            ),
+                            div(
+                                style = "visibility:hidden;",
+                                textInput(
+                                    NS0(id, "subsetCellValChoices", subid),
+                                    label = NULL,
+                                    value = paste(choices, collapse = "|")
+                                )
                             )
                         )
                     )
+                    output[[paste0("subsetCell.uncheckLab", subid)]] <-
+                        renderPrint(cat("Uncheck All"))
+                    observeEvent(input[[paste0("subsetCell.uncheck", subid)]], {
+                        sub <- strsplit(
+                            input[[paste0("subsetCellValChoices", subid)]],
+                            "\\|")[[1]]
+                        if(length(input[[paste0("subsetCellVal", subid)]])>0){
+                            selected <- NULL
+                            uncheckLab <- 'Check All'
+                        }else{
+                            selected <- sub
+                            uncheckLab <- 'Uncheck All'
+                        }
+                        output[[paste0("subsetCell.uncheckLab", subid)]] <-
+                            renderPrint(cat(uncheckLab))
+                        updateCheckboxGroupInput(
+                            session = session,
+                            inputId = paste0('subsetCellVal', subid),
+                            inline = TRUE,
+                            choices = sub,
+                            selected = selected
+                        )
+                    }) 
                 }
             }
         })
         
-        output$subsetCell.uncheckLab <- renderPrint(cat('Uncheck All'))
-        observeEvent(input$subsetCell.uncheck, {
-            sub <- strsplit(input$subsetCellValChoices, "\\|")[[1]]
-            if(length(input$subsetCellVal)>0){
-                selected <- NULL
-                uncheckLab <- 'Check All'
-            }else{
-                selected <- sub
-                uncheckLab <- 'Uncheck All'
-            }
-            output$subsetCell.uncheckLab <- renderPrint(cat(uncheckLab))
-            updateCheckboxGroupInput(
-                session = session,
-                inputId = 'subsetCellVal',
-                inline = TRUE,
-                choices = sub,
-                selected = selected
-            )
-        }) 
+        output$subsetCell.ui <- renderUI({subsetCell.ui$uis})
     }
 updateFilterCellUI <-
     function(
@@ -227,7 +253,7 @@ updateCellInfoPlot <-
                 input$GeneExprdrY,
                 input[[cellInfoLabel]],
                 input$subsetCell,
-                input$subsetCellVal,
+                getSubsetCellVal(input),
                 input$GeneExprsiz,
                 input[[paste0("CellInfocol", postfix)]],
                 input[[paste0("CellInfoord", postfix)]],
@@ -362,7 +388,7 @@ updateGeneAccPlot <-
                 input[[GeneNameLabel]],
                 input[[coordLabel]],
                 input$subsetCell,
-                input$subsetCellVal,
+                input[[paste0("subsetCellVal", input$subsetCell)]],
                 dataSource()$dataset,
                 dataSource()$sc1gene,
                 input$GeneExprsiz,
@@ -419,7 +445,7 @@ updateGeneExprPlot <-
                 input$GeneExprdrY,
                 input[[GeneNameLabel]],
                 input$subsetCell,
-                input$subsetCellVal,
+                getSubsetCellVal(input),
                 dataSource()$dataset,
                 dataSource()$sc1gene,
                 input$GeneExprsiz,
@@ -495,8 +521,9 @@ updateSubsetGeneExprPlot <-
                 input$GeneExprdrX,
                 input$GeneExprdrY,
                 input$GeneName,
-                input$CellInfo,
-                input[[GeneNameLabel]],
+                c(input$CellInfo, input$subsetCell),
+                getSubsetCellVal(
+                    input, list(input[[GeneNameLabel]]), input$CellInfo),
                 dataSource()$dataset,
                 dataSource()$sc1gene,
                 input$GeneExprsiz,
@@ -516,8 +543,6 @@ updateSubsetGeneExprPlot <-
                     } else{
                         input[[paste0("GeneExprrg", postfix)]]
                     },
-                infoFilterKey = input$subsetCell,
-                infoFilterVal = input$subsetCellVal,
                 valueFilterKey = input$filterCell,
                 valueFilterCutoff = input$filterCellVal
             )
@@ -634,10 +659,13 @@ orderGeneExpr <- function(ggData, GeneExprDotOrd, coln) {
     return(ggData)
 }
 subGrp <- function(ggData, ui_key, grpVal, config) {
-    if (ui_key != "N/A" && length(grpVal)) {
-        ggData <- ggData[
-            ggData[[config[
-                config$UI == ui_key]$ID]] %in% grpVal, , drop = FALSE]
+    for(k in ui_key){
+        if (k != "N/A" && length(grpVal[[k]])) {
+            ggData <- ggData[
+                ggData[[config[
+                    config$UI == k]$ID]] %in% grpVal[[k]],
+                , drop = FALSE]
+        }
     }
     return(ggData)
 }
@@ -665,7 +693,7 @@ extractGrpColor <- function(config, ui_key) {
 }
 relevelCol <- function(inpConf, ui_key, ggData, coln) {
     ggCol <- NULL
-    if (!is.na(inpConf[inpConf$UI == ui_key]$fCL)) {
+    if (!is.na(inpConf[inpConf$UI == ui_key[1]]$fCL)) {
         ggCol <- extractGrpColor(inpConf, ui_key)
         ggCol <- ggCol[levels(ggData[[coln]])]
     }
@@ -799,25 +827,62 @@ cbindFilterValues <-
         }
         return(ggData)
     }
+# get the subsetCellVals
+getSubsetCellVal <- function(input, extralist, extralistname){
+    if(!missing(extralist)) stopifnot(is.list(extralist)&&length(extralist)==1)
+    subsetCell <- input$subsetCell
+    subsetCell <- subsetCell[subsetCell!="N/A"]
+    names(subsetCell) <- subsetCell
+    subsetCell <- lapply(subsetCell, function(subid){
+        input[[paste0("subsetCellVal", subid)]]
+    })
+    if(!missing(extralist) && !missing(extralistname)){
+        names(extralist) <- extralistname
+        if(extralistname %in% names(subsetCell)){
+            subsetCell[[extralistname]] <- 
+                intersect(subsetCell[[extralistname]], extralist[[1]])
+        }else{
+            subsetCell <- c(extralist, subsetCell)
+        }
+        
+    }
+    return(subsetCell)
+}
+# check the pairs of subsetCellKey and subsetCellVals
+namedSubsetCellVals <- function(subsetCellKey, subsetCellVal){
+    subsetCellKey <- subsetCellKey[subsetCellKey!="N/A"]
+    if(length(subsetCellKey)==1 && !is.list(subsetCellVal)){
+        subsetCellVal <- list(subsetCellVal)
+        names(subsetCellVal) <- subsetCellKey
+        return(subsetCellVal)
+    }
+    stopifnot(is.list(subsetCellVal))
+    stopifnot(length(names(subsetCellVal))==length(subsetCellVal))
+    subsetCellVal[unique(subsetCellKey)]
+}
+
 filterCells <- function(
         ggData,
         subsetCellKey,
         subsetCellVal,
         valueFilterKey,
-        valueFilterCutoff,
-        infoFilterKey,
-        infoFilterVal) {
+        valueFilterCutoff) {
     keep <- rep(TRUE, nrow(ggData))
     if (!missing(subsetCellKey) && !missing(subsetCellVal)) {
-        if (length(subsetCellVal) != 0 &&
-            length(subsetCellVal) != nlevels(ggData[[subsetCellKey]])) {
-            keep <- ggData[[subsetCellKey]] %in% subsetCellVal
+        if(length(subsetCellKey)==1){
+            if(!is.list(subsetCellVal)){
+                subsetCellVal <- list(subsetCellVal)
+                names(subsetCellVal) <- subsetCellKey
+            }
         }
-    }
-    if (!missing(infoFilterKey) && !missing(infoFilterVal)) {
-        if (length(infoFilterVal) != 0 &&
-            length(infoFilterVal) != nlevels(ggData[[infoFilterKey]])) {
-            keep <- keep & ggData[[infoFilterKey]] %in% infoFilterVal
+        if(length(names(subsetCellVal))==0){
+            names(subsetCellVal) <- subsetCellKey
+        }
+        for(skey in subsetCellKey){
+            if(!skey %in% colnames(ggData)) next
+            if (length(subsetCellVal[[skey]]) != nlevels(ggData[[skey]])) {
+                keep <- keep & ggData[[skey]] %in% subsetCellVal[[skey]]
+            }
         }
     }
     if (!missing(valueFilterKey) && !missing(valueFilterCutoff)) {

@@ -27,13 +27,15 @@
 #' @export
 #' @examples
 #' library(Seurat)
-#' appconf <- createAppConfig(
-#'     title="pbmc_small",
-#'     destinationFolder = "pbmc_small",
-#'     species = "Homo sapiens",
-#'     doi="10.1038/nbt.3192",
-#'     datatype = "scRNAseq")
-#' createDataSet(appconf, pbmc_small, datafolder=tempdir())
+#' if(interactive()){
+#'     appconf <- createAppConfig(
+#'         title="pbmc_small",
+#'         destinationFolder = "pbmc_small",
+#'         species = "Homo sapiens",
+#'         doi="10.1038/nbt.3192",
+#'         datatype = "scRNAseq")
+#'     createDataSet(appconf, pbmc_small, datafolder=tempdir())
+#' }
 createDataSet <- function(
         appconf,
         seu,
@@ -224,12 +226,15 @@ createDataSet <- function(
 #' @importFrom RefManageR GetBibEntryWithDOI GetPubMedByID
 #' @export
 #' @examples
-#' config <- createAppConfig(
-#'     title="pbmc_small",
-#'     destinationFolder = "pbmc_small",
-#'     species = "Homo sapiens",
-#'     doi="10.1038/nbt.3192",
-#'     datatype = "scRNAseq")
+#' if(interactive()){
+#'     config <- createAppConfig(
+#'         title="pbmc_small",
+#'         destinationFolder = "pbmc_small",
+#'         species = "Homo sapiens",
+#'         doi="10.1038/nbt.3192",
+#'         datatype = "scRNAseq")
+#' }
+
 createAppConfig <-
     function(
         title,

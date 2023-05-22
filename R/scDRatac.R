@@ -14,7 +14,7 @@ scDRatac <- function(
         gene1,
         coord,
         subsetCellKey,
-        subsetCellVal,
+        subsetCellVal, # not support multiple key and val pairs
         dataset,
         geneIdMap,
         pointSize,
@@ -75,6 +75,9 @@ scDRatac <- function(
     LN <- length(ggData)
     gp <- rep(names(ggData), vapply(ggData, FUN=nrow, FUN.VALUE = integer(1L)))
     ggData <- do.call(rbind, ggData)
+    if(length(dim(ggData))==0){
+        return(ggplot())
+    }
     if(nrow(ggData)<1){
         return(ggplot())
     }

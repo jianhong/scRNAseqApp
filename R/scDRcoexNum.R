@@ -10,14 +10,14 @@ scDRcoexNum <- function(
         geneIdMap) {
     # Prepare ggData
     ggData <-
-        inpMeta[, c(inpConf[inpConf$UI == subsetCellKey]$ID), with = FALSE]
-    colnames(ggData) <- c("sub")
+        inpMeta[, c(inpConf[inpConf$UI %in% subsetCellKey]$ID), with = FALSE]
     ggData <- getCoexpVal(ggData, dataset, geneIdMap, gene1, gene2)
     
-    if (length(subsetCellVal) != 0 &
-        length(subsetCellVal) != nlevels(ggData$sub)) {
-        ggData <- ggData[sub %in% subsetCellVal]
-    }
+    keep <- filterCells(
+        ggData,
+        subsetCellKey,
+        subsetCellVal)
+    ggData <- ggData[keep]
     
     # Actual data.table
     ggData$express <- "none"

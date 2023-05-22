@@ -3,7 +3,7 @@
 #' @importFrom data.table rbindlist
 #' @importFrom scales rescale
 #' @importFrom ggforce geom_arc_bar geom_circle geom_mark_hull
-#' @importFrom ggplot2 geom_rect
+#' @importFrom ggplot2 geom_rect .data
 scPieDim <- function(
         inpConf,
         inpMeta,
@@ -43,11 +43,15 @@ scPieDim <- function(
         "sampleID",
         inpConf[inpConf$UI == dimRedX]$ID,
         inpConf[inpConf$UI == dimRedY]$ID,
-        inpConf[inpConf$UI == subsetCellKey]$ID),
+        inpConf[inpConf$UI %in% subsetCellKey]$ID),
         with = FALSE]
     if (nrow(ggData) == 0)
         return(NULL)
-    colnames(ggData) <- c("sampleID", "X", "Y", subGrpColname)
+    if(ncol(ggData)<4){
+        return(NULL)
+    }
+    cnid <- if(ncol(ggData)>3) 4 else 0
+    colnames(ggData)[seq.int(3)] <- c("sampleID", "X", "Y")
     ggData <-
         cbindFilterValues(
             ggData,
@@ -73,10 +77,13 @@ scPieDim <- function(
         expr_keep <- expr_keep & rowSums(expr > 0) == ncol(expr)
     keep <- filterCells(
         ggData,
-        subGrpColname,
+        subsetCellKey,
         subsetCellVal,
         subFilterColname,
         valueFilterCutoff)
+    
+    if(cnid>3) colnames(ggData)[cnid] <- subGrpColname
+    
     if (sum(keep & expr_keep) * nrow(geneList) > 5000) {
         ## filter the expression event, otherwise too slow
         expr_keep <- rowSums(expr)
@@ -98,16 +105,16 @@ scPieDim <- function(
     expr$X0 <-
         expr$X + (as.numeric(factor(as.character(expr$geneName))) - 1) * size /
         2
-    ggOut <- ggplot(data = expr, aes(x0 = expr$X, y0 = expr$Y))
+    ggOut <- ggplot(data = expr, aes(x0 = .data[["X"]], y0 = .data[["Y"]]))
     if (markGrp) {
         ggOut <- ggOut +
             geom_mark_hull(
                 data = ggData,
                 aes(
-                    x = ggData$X,
-                    y = ggData$Y,
-                    fill = ggData$sub,
-                    label = ggData$sub
+                    x = .data[["X"]],
+                    y = .data[["Y"]],
+                    fill = .data[[subGrpColname]],
+                    label = .data[[subGrpColname]]
                 ),
                 inherit.aes = FALSE,
                 show.legend = FALSE
@@ -117,7 +124,7 @@ scPieDim <- function(
         ggOut <- ggOut +
             geom_point(
                 data = ggData,
-                aes(x = ggData$X, y = ggData$Y),
+                aes(x = .data$X, y = .data$Y),
                 color = 'snow2',
                 shape = 16,
                 inherit.aes = FALSE
@@ -131,8 +138,8 @@ scPieDim <- function(
                     aes(
                         amount = 1,
                         r0 = 0,
-                        r = expr$val,
-                        fill = expr$geneName
+                        r = .data$val,
+                        fill = .data$geneName
                     ),
                     stat = 'pie',
                     color = NA,
@@ -141,10 +148,10 @@ scPieDim <- function(
             pie =
                 geom_arc_bar(
                     aes(
-                        amount = expr$val,
+                        amount = .data$val,
                         r0 = 0,
                         r = size,
-                        fill = expr$geneName
+                        fill = .data$geneName
                     ),
                     stat = 'pie',
                     color = NA,
@@ -153,10 +160,10 @@ scPieDim <- function(
             donut =
                 geom_arc_bar(
                     aes(
-                        amount = expr$val,
+                        amount = .data$val,
                         r0 = size / 2,
                         r = size,
-                        fill = expr$geneName
+                        fill = .data$geneName
                     ),
                     stat = 'pie',
                     color = NA,
@@ -165,11 +172,11 @@ scPieDim <- function(
             bar =
                 geom_rect(
                     aes(
-                        xmin = expr$X0 - .02 * size,
-                        ymin = expr$Y,
-                        xmax = expr$X0 + .46 * size,
-                        ymax = expr$Y + expr$val,
-                        fill = expr$geneName
+                        xmin = .data$X0 - .02 * size,
+                        ymin = .data$Y,
+                        xmax = .data$X0 + .46 * size,
+                        ymax = .data$Y + .data$val,
+                        fill = .data$geneName
                     ),
                     position = "identity",
                     alpha = alpha,
@@ -184,7 +191,7 @@ scPieDim <- function(
         if (plotType != "bar") {
             ggOut <- ggOut +
                 geom_circle(
-                    aes(color = expr$sub, r = size),
+                    aes(color = .data$sub, r = size),
                     fill = NA,
                     lwd = .5) +
                 guides(color = guide_legend(title = subsetCellKey))
@@ -192,11 +199,11 @@ scPieDim <- function(
             ggOut <- ggOut +
                 geom_rect(
                     aes(
-                        xmin = expr$X - .025 * size,
-                        ymin = expr$Y - .05,
-                        xmax = expr$X + (nrow(geneList) + .05) * size / 2,
-                        ymax = expr$Y + size * 1.05,
-                        color = expr$sub
+                        xmin = .data$X - .025 * size,
+                        ymin = .data$Y - .05,
+                        xmax = .data$X + (nrow(geneList) + .05) * size / 2,
+                        ymax = .data$Y + size * 1.05,
+                        color = .data$sub
                     ),
                     fill = NA,
                     linewidth = .5

@@ -58,7 +58,7 @@ scInfoServer <- function(
                 p_input$GeneExprdrY,
                 input[[cellInfoLabel]],
                 p_input$subsetCell,
-                p_input$subsetCellVal,
+                getSubsetCellVal(p_input),
                 p_input$GeneExprsiz,
                 input[[paste0("CellInfocol", postfix)]],
                 input[[paste0("CellInfoord", postfix)]],

@@ -116,8 +116,11 @@ subsetGeneExprServer <- function(id, dataSource, optCrt) {
                 input$GeneExprdrX,
                 input$GeneExprdrY,
                 input$GeneName,
-                input$CellInfo,
-                c(input$GeneExprsub1b, input$GeneExprsub2b),
+                c(input$CellInfo, input$subsetCell),
+                getSubsetCellVal(
+                    input,
+                    list(c(input$GeneExprsub1b, input$GeneExprsub2b)),
+                    input$CellInfo),
                 dataSource()$dataset,
                 dataSource()$sc1gene,
                 input$GeneExprsiz,
@@ -132,8 +135,6 @@ subsetGeneExprServer <- function(id, dataSource, optCrt) {
                 else
                     input$GeneExprxlim1,
                 inpColRange = TRUE,
-                infoFilterKey = input$subsetCell,
-                infoFilterVal = input$subsetCellVal,
                 valueFilterKey = input$filterCell,
                 valueFilterCutoff = input$filterCellVal
             )
@@ -187,7 +188,7 @@ subsetGeneExprServer <- function(id, dataSource, optCrt) {
                     ),
                     input$GeneName,
                     input$subsetCell,
-                    input$subsetCellVal,
+                    getSubsetCellVal(input),
                     dataSource()$dataset,
                     dataSource()$sc1gene,
                     input$GeneExprsplt1

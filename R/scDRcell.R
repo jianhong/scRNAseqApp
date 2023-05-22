@@ -34,16 +34,18 @@ scDRcell <- function(
     subFilterColname <- 'subValue'
     subGrpColname <- 'sub'
     valColname <- 'val'
+    subsetCellKey <- subsetCellKey[subsetCellKey!="N/A"]
+    subsetCellVal <- namedSubsetCellVals(subsetCellKey, subsetCellVal)
     # Prepare ggData
-    ggData <- inpMeta[, c(
+    ggData <- inpMeta[, unique(c(
         inpConf[inpConf$UI == dimRedX]$ID,
         inpConf[inpConf$UI == dimRedY]$ID,
         inpConf[inpConf$UI == inp1]$ID,
-        inpConf[inpConf$UI == subsetCellKey]$ID),
+        inpConf[inpConf$UI %in% subsetCellKey]$ID)),
         with = FALSE]
-    if (ncol(ggData) != 4)
+    if (ncol(ggData) < 3)
         return(ggplot())
-    colnames(ggData) <- c("X", "Y", valColname, subGrpColname)
+    colnames(ggData)[c(1,2)] <- c("X", "Y")
     ggData <-
         cbindFilterValues(
             ggData,
@@ -58,11 +60,20 @@ scDRcell <- function(
     rat <- getRatio(ggData)
     keep <- filterCells(
         ggData,
-        subGrpColname,
+        subsetCellKey,
         subsetCellVal,
         subFilterColname,
         valueFilterCutoff)
     
+    if(subsetCellKey[1]==inp1){
+        subGrpColname <- valColname
+        colnames(ggData)[3] <- valColname
+    }else{## make the first subsetCellKey as sub
+        if(ncol(ggData)<4){
+            return(ggplot())
+        }
+        colnames(ggData)[c(3,4)] <- c(valColname, subGrpColname)
+    }
     bgCells <- sum(!keep) > 0
     
     if (bgCells) {

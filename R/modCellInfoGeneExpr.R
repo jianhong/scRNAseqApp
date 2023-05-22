@@ -80,7 +80,7 @@ cellInfoGeneExprServer <- function(id, dataSource, optCrt) {
                 input$CellInfo1,
                 input$GeneName2,
                 input$subsetCell,
-                input$subsetCellVal,
+                getSubsetCellVal(input),
                 dataSource()$dataset,
                 dataSource()$sc1gene,
                 input$GeneExprsplt1

@@ -82,7 +82,7 @@ scVlnServer <- function(
                 input$CellInfoX,
                 input$CellInfoY,
                 p_input$subsetCell,
-                p_input$subsetCellVal,
+                getSubsetCellVal(p_input),
                 p_input$filterCell,
                 p_input$filterCellVal,
                 dataSource()$dataset,

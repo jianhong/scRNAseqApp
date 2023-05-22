@@ -36,15 +36,20 @@ scDRcoex <- function(
     }
     subFilterColname <- 'subValue'
     subGrpColname <- 'sub'
+    subsetCellKey <- subsetCellKey[subsetCellKey!="N/A"]
+    subsetCellVal <- namedSubsetCellVals(subsetCellKey, subsetCellVal)
     # Prepare ggData
-    ggData <- inpMeta[, c(
+    ggData <- inpMeta[, unique(c(
         inpConf[inpConf$UI == dimRedX]$ID,
         inpConf[inpConf$UI == dimRedY]$ID,
-        inpConf[inpConf$UI == subsetCellKey]$ID),
+        inpConf[inpConf$UI %in% subsetCellKey]$ID)),
         with = FALSE]
     if (nrow(ggData) == 0)
         return(NULL)
-    colnames(ggData) <- c("X", "Y", subGrpColname)
+    if(ncol(ggData)<3){
+        return(NULL)
+    }
+    colnames(ggData)[c(1, 2)] <- c("X", "Y")
     if (plotType == "3D") {
         ggData$sampleID <- inpMeta$sampleID
     }
@@ -64,11 +69,12 @@ scDRcoex <- function(
     ggData <- getCoexpVal(ggData, dataset, geneIdMap, gene1, gene2)
     keep <- filterCells(
         ggData,
-        subGrpColname,
+        subsetCellKey,
         subsetCellVal,
         subFilterColname,
         valueFilterCutoff)
     
+    colnames(ggData)[3] <- subGrpColname ## make the first subsetCellKey as sub
     bgCells <- sum(!keep) > 0
     if (bgCells) {
         ggData2 <- ggData[!keep]
@@ -77,7 +83,9 @@ scDRcoex <- function(
     ## color for group
     # Do factoring if required
     ggData <- relevelData(ggData, subGrpColname)
-    ggCol <- relevelCol(inpConf, subsetCellKey, ggData, subGrpColname)
+    if (plotType == "3D") {
+        ggCol <- relevelCol(inpConf, subsetCellKey[1], ggData, subGrpColname)
+    }
     
     # Generate coex color palette
     cInp <- strsplit(GeneExprDotCol, "; ")[[1]]
@@ -86,21 +94,26 @@ scDRcoex <- function(
     gg <- getCoexpCol(GeneExprDotCol, nGrid = 16, nPad = 2)
     
     # Map colours
+    mv1 <- max(ggData$val1, na.rm = TRUE)
+    mv2 <- max(ggData$val2, na.rm = TRUE)
     ggData$v1 <-
-        round(nTot * ggData$val1 / max(ggData$val1, na.rm = TRUE))
+        round(nTot * ggData$val1 / mv1)
     ggData$v2 <-
-        round(nTot * ggData$val2 / max(ggData$val2, na.rm = TRUE))
+        round(nTot * ggData$val2 / mv2)
     ggData$v0 <- ggData$v1 + ggData$v2
     ggData <- gg[ggData, on = c("v1", "v2")]
     ggData <- orderGeneExpr(ggData, GeneExprDotOrd, 'v0')
+    ggData <- ggData[!is.na(ggData$X) & !is.na(ggData$Y), ]
+    if(nrow(ggData)==0) return(ggplot())
+    ggData$cMix[is.na(ggData$cMix)] <- "snow2"
     
     # Actual ggplot
     if (plotType == "3D") {
         nTot <- max(c(ggData$val1, ggData$val2), na.rm = TRUE)
         ggData$norm1 <-
-            round(nTot * ggData$val1 / max(ggData$val1, na.rm = TRUE))
+            round(nTot * ggData$val1 / mv1)
         ggData$norm2 <-
-            round(nTot * ggData$val2 / max(ggData$val2, na.rm = TRUE))
+            round(nTot * ggData$val2 / mv2)
         ggData$Z <- log2(ggData$norm1 + 1) - log2(ggData$norm2 + 1)
         return(layout(
             plot_ly(
@@ -135,7 +148,7 @@ scDRcoex <- function(
                 )
         ))
     }
-    ggOut <- ggplot(ggData, aes(x = ggData$X, y = ggData$Y))
+    ggOut <- ggplot(ggData, aes(x = .data[["X"]], y = .data[["Y"]]))
     if (bgCells) {
         ggOut <- labelBackgroundCells(
             ggOut,
@@ -152,9 +165,7 @@ scDRcoex <- function(
         xlab(dimRedX) + ylab(dimRedY) +
         sctheme(
             base_size = .globals$sList[labelsFontsize],
-            XYval = keepXYlables) +
-        scale_color_gradientn(gene1, colours = .globals$cList[[1]]) +
-        guides(color = guide_colorbar(barwidth = 15))
+            XYval = keepXYlables)
     
     ggOut <- fixCoord(ggOut, plotAspectRatio, rat)
     return(ggOut)

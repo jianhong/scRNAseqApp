@@ -361,6 +361,13 @@ in the server as root user. Second, in a R session run `scInit()` after load
 the `scRNAseqApp` library. If you initialed the app offline, copy the app folder
 to the shiny server.
 
+Note: the following files need to be writable for shiny: `database.sqlite`,
+`www/counter.tsv` and the app folder should also be writable because the 
+user manager is depend on SQLite, and the SQLite needs to be able to 
+create a journal file in the same directory as the DB, 
+before any modifications can take place. 
+The journal is used to support transaction rollback.
+
 # SessionInfo
 
 ```{r}

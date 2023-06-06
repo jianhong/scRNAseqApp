@@ -78,7 +78,7 @@ scInit <- function(
     # Write the app.R
     writeLines(c(
         "library(scRNAseqApp)",
-        paste0("scRNAseqApp('", datafolder, "')")
+        paste0("scRNAseqApp(datafolder='", datafolder, "')")
     ),
     file.path(app_path, "app.R"))
     return(invisible())

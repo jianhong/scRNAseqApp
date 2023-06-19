@@ -40,20 +40,6 @@ scInit <- function(
         recursive = TRUE,
         overwrite = overwrite
     )
-    # define credentials
-    credentials <- data.frame(
-        user = root,
-        password = hashPassword(password),
-        admin = TRUE,
-        is_hashed_password = TRUE,
-        privilege = 'all',
-        stringsAsFactors = FALSE
-    )
-    # Init the database
-    create_db(
-        credentials_data = credentials,
-        sqlite_path = file.path(app_path, "database.sqlite")
-    )
     # Write the doc.txt
     writeLines(c(
         paste('<h4>', app_title, '</h4>'),
@@ -74,6 +60,21 @@ scInit <- function(
         quote = FALSE,
         sep = "\t",
         row.names = FALSE
+    )
+    # define credentials
+    credentials <- data.frame(
+        user = root,
+        password = hashPassword(password),
+        admin = TRUE,
+        is_hashed_password = TRUE,
+        privilege = 'all',
+        stringsAsFactors = FALSE
+    )
+    # Init the database
+    dir.create(dirname(.globals$credential_path), recursive = TRUE)
+    create_db(
+        credentials_data = credentials,
+        sqlite_path = file.path(app_path, .globals$credential_path)
     )
     # Write the app.R
     writeLines(c(

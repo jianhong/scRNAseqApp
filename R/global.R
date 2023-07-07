@@ -22,7 +22,8 @@
     monocle = "monocle3_pseudotime.rds",
     slingshot = "slingshot.rds"
 )
-.globals$counterFilename <- "www/counter.tsv"
+.globals$counterFilename <- file.path("www", "counter.tsv")
+.globals$credential_path <- file.path("www", "database.sqlite")
 # for home search page, the groupColPattern
 .globals$groupColPattern <- 'group'
 # Colour palette

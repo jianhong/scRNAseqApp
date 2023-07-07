@@ -1,3 +1,13 @@
+CHANGES IN VERSION 1.1.9
+-------------------------
+
+    o Fix the repeat retreive for reference by createAppConfig.
+    
+CHANGES IN VERSION 1.1.8
+-------------------------
+
+    o Change the filepath for credential file.
+    
 CHANGES IN VERSION 1.1.7
 -------------------------
 

@@ -277,15 +277,22 @@ createAppConfig <-
             stopifnot(is.character(keywords))
         } else
             keywords <- character(0L)
+        pmidNotFromDOI <- TRUE
         if (!missing(doi)) {
             stopifnot(is.character(doi))
-            bibentry <- GetBibEntryWithDOI(doi)
-            if (missing(pmid))
+            if(missing(bibentry) || !is(bibentry, "bibentry")){
+                bibentry <- GetBibEntryWithDOI(doi)
+            }
+            if (missing(pmid)){
                 pmid <- idConverter(doi, type = "pmid")
+                pmidNotFromDOI <- FALSE
+            }
         }
-        if (!missing(pmid)) {
+        if (pmidNotFromDOI & !missing(pmid)) {
             stopifnot(is.character(pmid))
-            bibentry <- GetPubMedByID(pmid)
+            if(missing(bibentry) || !is(bibentry, "bibentry")){
+                bibentry <- GetPubMedByID(pmid)
+            }
             if (missing(doi))
                 doi <- idConverter(pmid, type = "doi")
         }

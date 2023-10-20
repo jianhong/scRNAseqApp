@@ -600,14 +600,14 @@ updateSubModulePlotUI <-
                     "pdf",
                     width = input[[paste0("GeneExproup.w", postfix)]],
                     height = input[[paste0("GeneExproup.h", postfix)]],
-                    plotX(),
+                    plotX,
                     ...)
             output[[paste0("GeneExproup.png", postfix)]] <-
                 plotsDownloadHandler(
                     "png",
                     width = input[[paste0("GeneExproup.w", postfix)]],
                     height = input[[paste0("GeneExproup.h", postfix)]],
-                    plotX(),
+                    plotX,
                     ...)
         }
     }

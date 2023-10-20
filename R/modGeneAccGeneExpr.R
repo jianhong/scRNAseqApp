@@ -6,7 +6,7 @@ geneAccGeneExprUI <- function(id) {
             id,
             'AccExpr',
             description = paste(
-                "In this tab, users can visualise both accessbility and ",
+                "In this tab, users can visualise both accessibility and ",
                 "feature information side-by-side."
             )
         ),

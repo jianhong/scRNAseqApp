@@ -10,12 +10,12 @@
 #'     \item{Seurat objects}: "RNA" or "integrated" assay,
 #'       default is "RNA"
 #'   }
-#' @param gexSlot slot in single-cell gex assay to plot.
-#' Default is to use the "data" slot
+#' @param gexSlot layer in single-cell gex assay to plot.
+#' Default is to use the "data" layer
 #' @param atacAssayName assay in single-cell data object to use for plotting
 #' open chromatin.
-#' @param atacSlot slot in single-cell atac assay to plot.
-#' Default is to use the "data" slot
+#' @param atacSlot layer in single-cell atac assay to plot.
+#' Default is to use the "data" layer
 #' @param appDir specify directory to create the shiny app in
 #' @param defaultGene1 specify primary default gene to show
 #' @param defaultGene2 specify secondary default gene to show
@@ -60,7 +60,7 @@ makeShinyFiles <- function(
     }
     gexSlot <- match.arg(gexSlot)
     atacSlot <- match.arg(atacSlot)
-    gexAsy <- GetAssayData(obj, assay = assayName, slot = gexSlot)
+    gexAsy <- GetAssayData(obj, assay = assayName, layer = gexSlot)
     gex.matdim <- dim(gexAsy)
     gex.rownm <- rownames(gexAsy)
     gex.colnm <- colnames(gexAsy)
@@ -282,11 +282,12 @@ makeShinyFiles <- function(
         if (atacAssayName %in% Assays(obj)) {
             rm(gexAsy)
             DefaultAssay(obj) <- atacAssayName
+            peaks <- obj[[atacAssayName]]
             ## links, the links between peaks and gene symbol,
             ## used to create the matrix table
-            links <- GetAssayData(obj, slot = "links")
+            links <- peaks@links #GetAssayData(obj, layer = "links")
             ## annotations, used to plot gene model
-            annotations <- GetAssayData(obj, slot = "annotation")
+            annotations <- peaks@annotation #GetAssayData(obj, layer = "annotation")
             if (length(annotations) < 1) {
                 stop("scATAC annotation data are not available.")
             }
@@ -294,7 +295,7 @@ makeShinyFiles <- function(
                 warning("scATAC links data are not available.")
             }
             ## get fragments for each cell and group
-            fragments <- GetAssayData(obj, slot = "fragments")
+            fragments <- peaks@fragments #GetAssayData(obj, layer = "fragments")
             regions <- seqinfo(annotations)
             tryCatch({
                 regions <- as(regions, "GRanges")
@@ -432,7 +433,7 @@ makeShinyFiles <- function(
             # asy used to create coverage files,
             # Note this is different from fragment signals
             # it just show the counts in each called peaks
-            acAsy <- GetAssayData(obj, assay = atacAssayName, slot = atacSlot)
+            acAsy <- GetAssayData(obj, assay = atacAssayName, layer = atacSlot)
             acAsy <- acAsy[, sc1meta$sampleID]
             peaks <- do.call(rbind, strsplit(rownames(acAsy), "-"))
             peaks <- as.data.frame(peaks)

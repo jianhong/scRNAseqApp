@@ -481,3 +481,15 @@ char2numeric <- function(x, keep="0-9.-eE+"){
     x <- as.numeric(x)
     x
 }
+
+# get assay data by SeuratObject version
+#' @importMethodsFrom utils packageVersion
+#' @importFrom SeuratObject GetAssayData
+extAssayData <- function(object, slot, ...){
+    seuObjVersion <- packageVersion('SeuratObject')
+    if(seuObjVersion<'5.0.0'){
+        GetAssayData(object=object, slot = slot, ...)
+    }else{
+        GetAssayData(object=object, layer = slot, ...)
+    }
+}

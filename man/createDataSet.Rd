@@ -36,14 +36,14 @@ gene expression, which must match one of the following:
 default is "RNA"
 }}
 
-\item{gexSlot}{slot in single-cell assay to plot.
-Default is to use the "data" slot}
+\item{gexSlot}{layer in single-cell assay to plot.
+Default is to use the "data" layer}
 
 \item{atacAssayName}{assay in single-cell data object to use for plotting
 open chromatin.}
 
-\item{atacSlot}{slot in single-cell atac assay to plot.
-Default is to use the "data" slot}
+\item{atacSlot}{layer in single-cell atac assay to plot.
+Default is to use the "data" layer}
 
 \item{LOCKER}{Set locker if the file is required login}
 

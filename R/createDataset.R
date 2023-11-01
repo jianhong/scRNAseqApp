@@ -14,12 +14,12 @@
 #'     \item{Seurat objects}: "RNA" or "integrated" assay,
 #'       default is "RNA"
 #'   }
-#' @param gexSlot slot in single-cell assay to plot.
-#' Default is to use the "data" slot
+#' @param gexSlot layer in single-cell assay to plot.
+#' Default is to use the "data" layer
 #' @param atacAssayName assay in single-cell data object to use for plotting
 #' open chromatin.
-#' @param atacSlot slot in single-cell atac assay to plot.
-#' Default is to use the "data" slot
+#' @param atacSlot layer in single-cell atac assay to plot.
+#' Default is to use the "data" layer
 #' @importFrom SeuratObject Reductions Idents Assays DefaultAssay GetAssayData
 #'  `DefaultAssay<-` VariableFeatures Misc `Misc<-` Embeddings `Idents<-`
 #' @importFrom Seurat FindAllMarkers FindVariableFeatures ScaleData
@@ -82,7 +82,10 @@ createDataSet <- function(
         assayName <- assayName[1]
         stopifnot(
             "The assayName is not in input object" = assayName %in% assays)
-        if (length(GetAssayData(seu, "scale.data")) == 0) {
+        if (length(extAssayData(
+            seu,
+            assay = assayName,
+            slot = "scale.data")) == 0) {
             seu <- FindVariableFeatures(
                 seu,
                 selection.method = "vst",

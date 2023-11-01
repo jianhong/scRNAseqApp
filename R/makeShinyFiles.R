@@ -60,7 +60,7 @@ makeShinyFiles <- function(
     }
     gexSlot <- match.arg(gexSlot)
     atacSlot <- match.arg(atacSlot)
-    gexAsy <- GetAssayData(obj, assay = assayName, layer = gexSlot)
+    gexAsy <- extAssayData(obj, assay = assayName, slot = gexSlot)
     gex.matdim <- dim(gexAsy)
     gex.rownm <- rownames(gexAsy)
     gex.colnm <- colnames(gexAsy)
@@ -433,7 +433,7 @@ makeShinyFiles <- function(
             # asy used to create coverage files,
             # Note this is different from fragment signals
             # it just show the counts in each called peaks
-            acAsy <- GetAssayData(obj, assay = atacAssayName, layer = atacSlot)
+            acAsy <- extAssayData(obj, assay = atacAssayName, slot = atacSlot)
             acAsy <- acAsy[, sc1meta$sampleID]
             peaks <- do.call(rbind, strsplit(rownames(acAsy), "-"))
             peaks <- as.data.frame(peaks)

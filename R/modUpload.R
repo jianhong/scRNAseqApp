@@ -245,8 +245,8 @@ uploadServer <- function(id) {
                     choices = assays,
                     selected = defaultAssay)
                 message("Check scale.data slot")
-                if (length(GetAssayData(
-                    global$seu, layer = "scale.data")) == 0) {
+                if (length(extAssayData(
+                    global$seu, slot = "scale.data")) == 0) {
                     global$seu <- FindVariableFeatures(
                         global$seu,
                         selection.method = "vst",
@@ -330,7 +330,7 @@ uploadServer <- function(id) {
             if (is(global$seu, "Seurat")) {
                 slots <- c("data", "scale.data", "counts")
                 d <- lapply(slots, function(.ele){
-                    GetAssayData(object = global$seu, layer=.ele)
+                    extAssayData(object = global$seu, slot=.ele)
                     })
                 d <- lapply(d, nrow)
                 d <-

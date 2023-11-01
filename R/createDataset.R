@@ -82,10 +82,10 @@ createDataSet <- function(
         assayName <- assayName[1]
         stopifnot(
             "The assayName is not in input object" = assayName %in% assays)
-        if (length(GetAssayData(
+        if (length(extAssayData(
             seu,
             assay = assayName,
-            layer = "scale.data")) == 0) {
+            slot = "scale.data")) == 0) {
             seu <- FindVariableFeatures(
                 seu,
                 selection.method = "vst",

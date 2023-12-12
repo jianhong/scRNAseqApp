@@ -58,16 +58,21 @@ scRNAseqApp <- function(
         .globals$datafolder <- datafolder
     }
     stopifnot(file.exists(.globals$datafolder))
+    # check if the db is encrypted
+    if(isEncrypted()){
+        .globals$passphrase <-
+            readline('Please input the passphrase for the user database:')
+    }
     ## load banner
     banner <- base64_uri(banner)
     ## load default parameters
     loginNavbarTitle <- "Switch User"
-    datasets <- getDataSets()
+    updateConfigTable()
+    datasets <- listDatasets(named=TRUE)
     defaultDataset <- getDefaultDataset(
         defaultDataset = defaultDataset,
         datasets = datasets)
     appconf <- getAppConf(datasets = datasets)
-    datasets <- getDataSets(datasets = datasets, appconf = appconf)
     data_types <- getDataType(appconf = appconf)
     
     ui0 <- function(req) {
@@ -100,8 +105,8 @@ scRNAseqApp <- function(
                     datasets,
                     appconf,
                     doc = file.path(.globals$app_path, "doc.txt")),
-                homeUI(),
                 ## fake home
+                homeUI(),
                 navbarMenu(
                     "CellInfo/GeneExpr",
                     ### Tab: cellInfo vs geneExpr on dimRed
@@ -170,58 +175,67 @@ scRNAseqApp <- function(
         gn2sym <- readRDS(
             system.file('extdata', 'gn2sym.rds', package = 'scRNAseqApp'))
         dataSource <- reactiveValues(
-            available_datasets = datasets,
             # all available datasets
-            dataset = defaultDataset,
+            available_datasets = datasets,
             # current dataset
-            appconf = appconf,
+            dataset = defaultDataset,
             # all data configs, used for search
-            data_types = data_types,
+            appconf = appconf,
             # data type
+            data_types = data_types,
             cell = NULL,
-            genelist = NULL,
             # genelist for cellInfoGeneExpr or heatmap plot from query string
-            sc1conf = NULL,
+            genelist = NULL,
             # config for current sc data
-            sc1def = NULL,
+            sc1conf = NULL,
             # def for current sc data
-            sc1gene = NULL,
+            sc1def = NULL,
             # gene for current sc data
-            sc1meta = NULL,
+            sc1gene = NULL,
             # meta for current sc data
-            search_results = NULL,
+            sc1meta = NULL,
             #search_cache
-            Logged = FALSE,
+            search_results = NULL,
             # user logged
-            terms = .globals$terms[["scRNAseq"]],
+            Logged = FALSE,
             # tab UI for scRNAseq/scATACseq
-            symbolDict = NULL,
+            terms = .globals$terms[["scRNAseq"]],
             # gene symbol dictionary
-            gn2sym = gn2sym,
+            symbolDict = NULL,
             # gene name to gene symbol dictionary
-            auth = NULL,
+            gn2sym = gn2sym,
             # authority
-            Username = "",
+            auth = NULL,
             # username
-            Password = "",
+            Username = "",
             # passward
+            Password = "",
+            # toekn
             token = ""
-        ) # toekn
+        ) 
         
-        updateDataSource <- function(
-            appconf,
-            datasets){
-                if(missing(appconf)) appconf <- getAppConf(
-                    privilege = dataSource$auth$privilege
-                )
-                if(missing(datasets)) datasets <- 
-                        getDataSets(
-                            appconf = appconf,
-                            privilege = dataSource$auth$privilege)
-                dataSource$appconf <- appconf
-                dataSource$available_datasets <- datasets
-                dataSource$data_types <- getDataType(appconf = appconf)
-                dataSource$symbolDict <- updateSymbolDict(datasets = datasets)
+        updateDataSource <- function(datasets, selected){
+            if(missing(datasets)) datasets <- 
+                    listDatasets(privilege = dataSource$auth$privilege,
+                                 named=TRUE)
+            appconf <- getAppConf(
+                datasets = datasets,
+                privilege = 'all'
+            )
+            if(any(!datasets %in% names(appconf))){
+                warning('Some dataset does not contain appconf!')
+            }
+            dataSource$appconf <- appconf
+            dataSource$available_datasets <- datasets
+            dataSource$dataset <- selected
+            dataSource$data_types <- getDataType(appconf = appconf)
+            dataSource$symbolDict <- updateSymbolDict(datasets = datasets)
+            updateSelectInput(
+                session,
+                "selectedDatasets",
+                choices = dataSource$available_datasets,
+                selected = dataSource$dataset
+            )
         }
         
         ### check available data
@@ -239,28 +253,16 @@ scRNAseqApp <- function(
             ignoreNULL = TRUE,
             ignoreInit = TRUE,
             {
-                ## update datasets if datasets changed by admin
-                ad <- getDataSets(privilege = dataSource$auth$privilege)
-                appconf <- getAppConf(
-                    datasets = ad,
-                    privilege = dataSource$auth$privilege)
-                ad <- getNamedDataSets(
-                    datasets = ad,
-                    appconf = appconf,
-                    privilege = dataSource$auth$privilege)
+                updateConfigTable()
+                ad <- listDatasets(privilege = dataSource$auth$privilege,
+                                   named=TRUE)
                 if (!all(
                     dataSource$available_datasets %in% ad,
                     na.rm = TRUE) ||
                     !all(
                         ad %in% dataSource$available_datasets,
                         na.rm = TRUE)) {
-                    updateDataSource(appconf, ad)
-                    updateSelectInput(
-                        session,
-                        "selectedDatasets",
-                        choices = dataSource$available_datasets,
-                        selected = input$selectedDatasets
-                    )
+                    updateDataSource(ad, input$selectedDatasets)
                 }
             })
         ## login
@@ -300,14 +302,26 @@ scRNAseqApp <- function(
             }else{
                 if(p_query['from']=='token'){
                     dataSource$token <- query[["token"]]
+                    defaultDataset <- p_query["defaultDataset"]
                     session$userData[["defaultdata_init"]] <- TRUE
                     query_has_results <- TRUE
+                    showNotification(
+                        "Datasets from token!",
+                        duration = 3,
+                        type = "message")
+                    updateSelectInput(
+                        session,
+                        'selectedDatasets',
+                        choices = c(dataSource$available_datasets,
+                                    p_query["defaultDataset"]),
+                        selected = p_query["defaultDataset"])
                 }
             }
             
             if (!use_bs_themer &
                 !query_has_results) {
                 ## not work when load themer
+                ## load remote user data
                 observeEvent(input$default_defaultDataset, {
                     if (isTRUE(isolate(
                         session$userData[["defaultdata_init"]]))) {
@@ -339,32 +353,51 @@ scRNAseqApp <- function(
         ## change dataset
         observeEvent(input$selectedDatasets, {
             ## in case the data is deleted, refresh the datasets
-            availabledb <- getDataSets(privilege = "all")
+            availabledb <- 
+                checkAvailableDataSets(privilege = dataSource$auth$privilege,
+                                       token = dataSource$token)
             if (input$selectedDatasets %in% availabledb) {
+                # in available datasets for current user
+                if(dataSource$token != ""){#with token
+                    if (checkToken(
+                        getTokenList(),
+                        dataSource$token,
+                        input$selectedDatasets)) {
+                        dataSource$Logged <- TRUE
+                        dataSource$auth$privilege <- 
+                            input$selectedDatasets
+                        res <- updateDatasetForToken(
+                            input$selectedDatasets,
+                            dataSource$available_datasets)
+                        dataSource$available_datasets <- res$datasets
+                        dataSource$appconf <- res$appconf
+                        dataSource$data_types <- res$data_types
+                        dataSource$dataset <- input$selectedDatasets
+                    }
+                    updateDataSource(
+                        datasets = listDatasets(availabledb,
+                                                privilege = 'all',
+                                                named = TRUE),
+                        selected = input$selectedDatasets)
+
+                }
+                redirectionData()
+            } else{
                 if (checkLocker(input$selectedDatasets)) {
+                    # dataset is not open to current user
                     dataSource$Logged <- FALSE
-                    if (dataSource$token != "") {
-                        if (checkToken(
-                            getToken(),
-                            dataSource$token,
-                            input$selectedDatasets)) {
-                            dataSource$Logged <- TRUE
-                            dataSource$auth$privilege <- 
-                                input$selectedDatasets
-                            res <- updateDatasetForToken(
-                                input$selectedDatasets,
-                                dataSource$available_datasets,
-                                dataSource$appconf)
-                            dataSource$available_datasets <- res$datasets
-                            dataSource$appconf <- res$appconf
-                            dataSource$data_types <- res$data_types
-                        }
-                    } else{
+                    if (dataSource$token != "") {} else{
                         if (!is.null(dataSource$auth)) {
                             if (checkPrivilege(
                                 dataSource$auth$privilege,
                                 input$selectedDatasets)) {
                                 dataSource$Logged <- TRUE
+                                dataSource$available_datasets <- 
+                                    listDatasets(dataSource$auth$privilege,
+                                                 named=TRUE)
+                                updateDataSource(
+                                    datasets = dataSource$available_datasets,
+                                    selected = input$selectedDatasets)
                             }
                         }
                     }
@@ -373,32 +406,14 @@ scRNAseqApp <- function(
                             session,
                             "topnav",
                             selected = loginNavbarTitle)
+                    }else{
+                        redirectionData()
                     }
+                }else{
+                    ##data was deleted
+                    updateDataSource(datasets = dataSource$available_datasets,
+                                     selected = availabledb[1])
                 }
-                dataSource$dataset <- input$selectedDatasets
-                refreshData(input, output, session)
-                if (length(dataSource$genelist) == 1) {
-                    updateTabsetPanel(
-                        session,
-                        'topnav',
-                        selected = "cellInfoGeneExpr")
-                } else{
-                    if (length(dataSource$genelist) > 1) {
-                        updateTabsetPanel(
-                            session,
-                            'topnav',
-                            selected = "bubbleHeatmap")
-                    }
-                }
-            } else{
-                ##data was deleted
-                updateDataSource()
-                updateSelectInput(
-                    session,
-                    "selectedDatasets",
-                    choices = dataSource$available_datasets,
-                    selected = availabledb[1]
-                )
             }
             session$sendCustomMessage(
                 "save_key",
@@ -529,7 +544,24 @@ scRNAseqApp <- function(
                 }),
                 optCrt)
         }
-        
+        ## update UI and server
+        redirectionData <- function(){
+            dataSource$dataset <- input$selectedDatasets
+            refreshData(input, output, session)
+            if (length(dataSource$genelist) == 1) {
+                updateTabsetPanel(
+                    session,
+                    'topnav',
+                    selected = "cellInfoGeneExpr")
+            } else{
+                if (length(dataSource$genelist) > 1) {
+                    updateTabsetPanel(
+                        session,
+                        'topnav',
+                        selected = "bubbleHeatmap")
+                }
+            }
+        }
     }
     
     shinyApp(ui = ui, server = server, ...)

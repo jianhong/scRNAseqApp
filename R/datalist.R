@@ -1,43 +1,51 @@
+# rename the function to compatable with old functions
 getDataSets <- function(datasets, appconf, privilege=NULL) {
-    if(missing(datasets)){
-        datasets <- list.dirs(
-            .globals$datafolder,
-            full.names = FALSE,
-            recursive = FALSE)
-        datasets <- datasets[vapply(
-            datasets,
-            FUN = checkFiles,
-            FUN.VALUE = logical(1L),
-            privilege = privilege)]
+    datasets <- listDatasets(key = datasets,
+                             privilege=privilege,
+                             named=missing(appconf))
+    return(datasets)
+}
+# rename the old getDataSets function to checkAvailableDataSets
+# to check the datasets by list the folders
+checkAvailableDataSets <- function(privilege='all', token=NULL) {
+    datasets <- list.dirs(
+        .globals$datafolder,
+        full.names = FALSE,
+        recursive = FALSE)
+    tokenList <- list()
+    if(!is.null(token)){
+        tokenList <- getTokenList()
     }
-    if (!missing(appconf)) {
-        if(all(datasets==names(appconf))){
-            n <- vapply(appconf, function(.ele)
-                .ele$title,
-                FUN.VALUE = character(1))
-            if (length(n) == length(datasets)) {
-                names(datasets) <- n
-                datasets <- datasets[order(names(datasets))]
-            }
-        }
-    }
+    datasets <- datasets[vapply(
+        datasets,
+        FUN = checkFiles,
+        FUN.VALUE = logical(1L),
+        privilege = privilege,
+        token = token,
+        tokenList = tokenList)]
     return(datasets)
 }
 
-getNamedDataSets <- function(datasets, appconf, privilege=NULL) {
-    if(missing(datasets)){
-        datasets <- getDataSets(privilege = privilege)
+getNamedDataSets <- function(privilege=NULL) {
+    datasets <- checkAvailableDataSets(privilege = privilege)
+    names(datasets) <- datasets
+    appconf <- getAppConfObj(datasets=datasets, privilege=privilege)
+    if(all(datasets==names(appconf))){
+        n <- vapply(appconf, function(.ele)
+            .ele$title,
+            FUN.VALUE = character(1))
+        if (length(n) == length(datasets)) {
+            names(datasets) <- n
+        }
     }
-    if(missing(appconf)){
-        appconf <- getAppConf(datasets=datasets, privilege=privilege)
-    }
-    nds <- getDataSets(datasets = datasets, appconf = appconf, privilege = privilege)
+    datasets <- datasets[order(names(datasets))]
 }
 
 # check if all the required files are available
-checkFiles <- function(folder, privilege) {
+checkFiles <- function(folder, privilege, token, tokenList) {
     if(checkLocker(folder)){
-        if(!checkPrivilege(privilege=privilege, datasetname = folder)){
+        if(!checkPrivilege(privilege=privilege, datasetname = folder) &&
+           !checkToken(tokenList=tokenList, token = token, dataset = folder)){
             return(FALSE)
         }
     }
@@ -67,6 +75,19 @@ getDefaultDataset <- function(
 
 getAppConf <- function(datasets, privilege=NULL) {
     if(missing(datasets)) datasets <- getDataSets(privilege = privilege)
+    appconf <- getConfigTable()
+    appconf <- appconf[match(datasets, appconf$id), , drop=FALSE]
+    keep <- !is.na(appconf$id)
+    appconf <- appconf[keep, , drop=FALSE]
+    appconf <- apply(appconf, 1, as.list)
+    names(appconf) <- datasets[keep]
+    return(appconf)
+}
+
+getAppConfObj <- function(datasets, privilege=NULL) {
+    if(missing(datasets)){
+        datasets <- checkAvailableDataSets(privilege = privilege)
+    }
     appconf <- lapply(datasets, function(.ele) {
         conf <- readData("appconf", .ele)
         stopifnot(
@@ -85,11 +106,13 @@ getDataType <- function(appconf) {
         FUN.VALUE = character(1))
 }
 
-updateDatasetForToken <- function(defaultDataset, datasets, appconf){
+updateDatasetForToken <- function(defaultDataset, datasets){
     datasets1 <- getDataSets(privilege = 'all')
     datasets <- datasets1[datasets1 %in% c(datasets, defaultDataset)]
     appconf <- getAppConf(datasets = datasets, privilege = 'all')
-    datasets <- getDataSets(datasets = datasets, appconf = appconf)
+    datasets <- listDatasets(key = datasets,
+                             privilege='all',
+                             named=TRUE)
     data_types <- getDataType(appconf)
     return(list(datasets=datasets, appconf=appconf, data_types=data_types))
 }
@@ -106,8 +129,8 @@ getRef <- function(dataset, key, appconf) {
     stopifnot(!missing(appconf))
     stopifnot(!missing(dataset))
     stopifnot(!missing(key))
-    if (key %in% names(appconf[[dataset]][["ref"]])) {
-        appconf[[dataset]][["ref"]][[key]]
+    if (key %in% names(appconf[[dataset]])) {
+        appconf[[dataset]][[key]]
     } else{
         NA
     }
@@ -170,7 +193,7 @@ get_full_ref_list <- function(appconf, returnLen = FALSE) {
     HTML(ref)
 }
 
-getToken <- function() {
+getTokenList <- function() {
     token <- dir(
         .globals$datafolder,
         .globals$filenames$token,
@@ -192,6 +215,9 @@ checkLocker <- function(datasetname) {
 }
 
 checkToken <- function(tokenList, token, dataset) {
+    if(length(token)==0){
+        return(FALSE)
+    }
     if (token %in% names(tokenList)) {
         return(tokenList[[token]] == dataset)
     } else{

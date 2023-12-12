@@ -11,22 +11,28 @@ aboutUI <- function(
     request, id, banner, defaultDataset, datasets, appconf, doc = "doc.txt") {
         ns <- NS(id)
         query <- parseQueryString(request[["QUERY_STRING"]])
-        defaultDataset <- 
-            parseQuery(query, defaultDataset)[1]
+        query <- parseQuery(query, defaultDataset)
+        defaultDataset <- query['defaultDataset']
         if(!defaultDataset %in% datasets){
-            ## from token
-            res <- updateDatasetForToken(defaultDataset, datasets, appconf)
-            datasets <- res$datasets
-            appconf <- res$appconf
+            if(query['from']=='token'){
+                ## from token
+                res <- updateDatasetForToken(defaultDataset, datasets)
+                datasets <- res$datasets
+                appconf <- res$appconf
+                data_types <- res$data_types
+            }else{## something wrong here
+                defaultDataset <- datasets[1]
+            }
         }
+        refs <- listReferences()
         tabPanel(
             title = div(
                 selectInput(
                     'selectedDatasets',
                     label = NULL,
-                    choices = getNamedDataSets(
-                        datasets=datasets,
-                        appconf=appconf),
+                    choices = listDatasets(
+                        key = datasets,
+                        named = TRUE),
                     selected = defaultDataset,
                     width = "90vw"
                 )
@@ -76,7 +82,7 @@ aboutUI <- function(
                 class = "about-container",
                 summaryBox(
                     "datasets",
-                    textOutput(ns('dataset_counts')),
+                    length(listDatasets()), #textOutput(ns('dataset_counts')),
                     width = 3,
                     icon = "database",
                     style = "success",
@@ -84,7 +90,7 @@ aboutUI <- function(
                 ),
                 summaryBox(
                     "references",
-                    textOutput(ns('reference_count')),
+                    length(refs), #textOutput(ns('reference_count')),
                     width = 3,
                     icon = "book-open",
                     style = "danger",
@@ -92,7 +98,9 @@ aboutUI <- function(
                 ),
                 summaryBox(
                     "visitors",
-                    textOutput(ns('visitor_count')),
+                    length(unique(read.delim(
+                        .globals$counterFilename,
+                        header = TRUE)$ip)), #textOutput(ns('visitor_count')),
                     width = 3,
                     icon = "eye",
                     style = "primary",
@@ -100,7 +108,7 @@ aboutUI <- function(
                 ),
                 summaryBox(
                     "species",
-                    textOutput(ns('species_count')),
+                    length(listSpecies()), #textOutput(ns('species_count')),
                     width = 3,
                     icon = "fish",
                     style = "warning",
@@ -109,7 +117,11 @@ aboutUI <- function(
             ),
             hr(),
             h4("Full reference list:"),
-            get_full_ref_list(appconf),
+            HTML(paste("<ol>\n",
+                       paste(paste("<li>",
+                                   refs,
+                                   "</li>"), collapse = "\n"),
+                       "\n</ol>")),
             p(
                 imageOutput('total_visitor', width = "50%", height = "150px")
             ),
@@ -132,45 +144,32 @@ aboutUI <- function(
     }
 aboutServer <- function(id, dataSource, optCrt) {
     moduleServer(id, function(input, output, session) {
-        bibentry <- getRef(
-            dataSource()$dataset,
-            "entry",
-            dataSource()$appconf)
-        global <- reactiveValues(search_results = list(), evt = list())
-        if (is(bibentry, "bibentry")) {
-            output$ref <- renderUI(tagList(if (!is.null(bibentry$abstract)) {
-                if (!grepl(
-                    "^The abstract of a scientific paper represents a concise",
-                    bibentry$abstract
-                )) {
-                    tagList(h5("Details for current data"),
-                            HTML(format(
-                                bibentry$abstract, style = "html"
-                            )))
-                } else{
-                    h5("Reference for current data")
-                }
-            } else{
-                h5("Reference for current data")
-            },
-            HTML(
-                format(bibentry, style = "html")
-            )))
-        } else{
-            ref <- getRef(
-                dataSource()$dataset,
-                "bib",
-                dataSource()$appconf)
-            if (!is.null(ref) && !is.na(ref)) {
-                output$ref <- renderUI(tagList(h5(
-                    "Reference for current data"
-                ),
-                HTML(ref)))
-            }else{
-                output$ref <- renderUI(h5("No details for current data"))
-            }
+        bibentry <- function(key){
+            getRef(dataSource()$dataset, key, dataSource()$appconf)
         }
+        global <- reactiveValues(search_results = list(), evt = list())
+        output$ref <- renderUI(
+            if(!is.na(bibentry('ref_title'))){
+                tagList(
+                    h5(bibentry('ref_title')),
+                    if (!is.na(bibentry("ref_abstract"))) {
+                        if(!grepl(
+                    "^The abstract of a scientific paper represents a concise",
+                            bibentry("ref_abstract")
+                        )){
+                            HTML(bibentry("ref_abstract"))
+                        }
+                    },
+                    h5("Reference for current data"),
+                    HTML(
+                        bibentry("ref_bib")
+                    )
+                )
+            }else{
+                h5('No reference for current data.')
+            })
         observeEvent(input$search, {
+            invalidateLater(2000, session = session)
             if (input$search != '' && input$search != "Type key words here") {
                 output$search_res <- renderUI(tags$div('searching...'))
                 updateSearch(
@@ -188,20 +187,20 @@ aboutServer <- function(id, dataSource, optCrt) {
                 )
             }
         })
-        output$dataset_counts <- renderText({
-            length(dataSource()$available_datasets)
-        })
-        output$visitor_count <- renderText({
-            counter <- read.delim(
-                .globals$counterFilename,
-                header = TRUE)
-            length(unique(counter$ip))
-        })
-        output$reference_count <- renderText({
-            get_full_ref_list(dataSource()$appconf, returnLen = TRUE)
-        })
-        output$species_count <- renderText({
-            length(unique(lapply(dataSource()$appconf, `[[`, i = "species")))
-        })
+        # output$dataset_counts <- renderText({
+        #     length(dataSource()$available_datasets)
+        # })
+        # output$visitor_count <- renderText({
+        #     counter <- read.delim(
+        #         .globals$counterFilename,
+        #         header = TRUE)
+        #     length(unique(counter$ip))
+        # })
+        # output$reference_count <- renderText({
+        #     get_full_ref_list(dataSource()$appconf, returnLen = TRUE)
+        # })
+        # output$species_count <- renderText({
+        #     length(unique(lapply(dataSource()$appconf, `[[`, i = "species")))
+        # })
     })
 }

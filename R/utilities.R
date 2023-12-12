@@ -12,16 +12,16 @@ visitorDependencies <- function(){
 parseQuery <- function(query, defaultDataset){
     stopifnot(is.list(query))
     from <- 'default'
-    if (!is.null(query[['data']])) {
-        defaultDataset <- query[['data']]
-        from <- 'data'
-    } else{
-        if (!is.null(query[['token']])) {
-            token <- getToken()
-            if (query[["token"]] %in% names(token)) {
-                defaultDataset <- token[[query[['token']]]]
-                from <- 'token'
-            }
+    if (!is.null(query[['token']])) {
+        token <- getTokenList()
+        if (query[["token"]] %in% names(token)) {
+            defaultDataset <- token[[query[['token']]]]
+            from <- 'token'
+        }
+    } else {
+        if (!is.null(query[['data']])) {
+            defaultDataset <- query[['data']]
+            from <- 'data'
         }
     }
     return(c(defaultDataset=defaultDataset, from=from))
@@ -335,9 +335,14 @@ checkGene <- function(
                     celltypePattern =
                         .globals$groupColPattern)
                 if(!is.null(.appconfs$groupCol)){
-                    groupCol <- .appconfs$groupCol
+                    if(.appconfs$groupCol!=""){
+                        groupCol <- .appconfs$groupCol
+                    }
                 }
                 if(is.null(groupCol)){
+                    return(NULL)
+                }
+                if(groupCol==""){
                     return(NULL)
                 }
                 ggData <-

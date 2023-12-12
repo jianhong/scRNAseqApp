@@ -24,6 +24,10 @@
 )
 .globals$counterFilename <- file.path("www", "counter.tsv")
 .globals$credential_path <- file.path("www", "database.sqlite")
+.globals$credentialTableName <- 'credentials'
+.globals$passphrase <- NULL
+.globals$configTableName <- 'config'
+.globals$configTableSep <- ';'
 # for home search page, the groupColPattern
 .globals$groupColPattern <- 'group'
 # Colour palette

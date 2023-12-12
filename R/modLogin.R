@@ -20,7 +20,8 @@ loginUI <- function(loginNavbarTitle, defaultDataset) {
 loginServer <- function(input, output, session) {
     auth <-
         secure_server(check_credentials = check_credentials(
-            file.path(.globals$app_path, .globals$credential_path)))
+            file.path(.globals$app_path, .globals$credential_path),
+            passphrase = .globals$passphrase))
 }
 
 #' @importFrom utils getFromNamespace

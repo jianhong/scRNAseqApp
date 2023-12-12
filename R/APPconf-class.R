@@ -1,12 +1,12 @@
 setClassUnion("character_OR_NULL", c("character", "NULL"))
 
 #' Class \code{"APPconf"}
-#' @description Ano object of class \code{"APPconf"} represents
+#' @description An object of class \code{"APPconf"} represents
 #'  the metadata for a dataset.
 #' @aliases APPconf
 #' @rdname APPconf-class
 #' @slot title character(1). Title of the data
-#' @slot id character(1). Tolder name of the data
+#' @slot id character(1). Folder name of the data
 #' @slot species character(1). species
 #' @slot ref Reference information in a list with element bib, doi, pmid
 #' and entry. Entry must be an object of \link[utils]{bibentry}

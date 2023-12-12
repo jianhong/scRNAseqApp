@@ -16,7 +16,7 @@ APPconf(...)
 A APPconf object.
 }
 \description{
-Ano object of class \code{"APPconf"} represents
+An object of class \code{"APPconf"} represents
 the metadata for a dataset.
 }
 \section{Slots}{
@@ -24,7 +24,7 @@ the metadata for a dataset.
 \describe{
 \item{\code{title}}{character(1). Title of the data}
 
-\item{\code{id}}{character(1). Tolder name of the data}
+\item{\code{id}}{character(1). Folder name of the data}
 
 \item{\code{species}}{character(1). species}
 

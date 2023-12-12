@@ -9,6 +9,7 @@
 #'  a project.
 #' @param app_title,app_description character(1). The title and 
 #' description of the home page.
+#' @param passphrase A password to protect the data inside the database.
 #' @return no returns. This function will copy files to `app_path`
 #' @export
 #' @importFrom shinymanager create_db
@@ -27,9 +28,15 @@ scInit <- function(
     overwrite = FALSE,
     app_title = 'scRNAseq Database',
     app_description = 'This database is a collection of
-        single cell RNA-seq data.') {
+        single cell RNA-seq data.',
+    passphrase = NULL) {
     stopifnot(is.logical(overwrite) && length(overwrite) == 1)
-    .globals$datafolder <- datafolder
+    .globals$app_path <- app_path
+    if(!is_abs_path(datafolder)){
+        .globals$datafolder <- file.path(app_path, datafolder)
+    }else{
+        .globals$datafolder <- datafolder
+    }
     if (!dir.exists(app_path)) {
         dir.create(app_path, recursive = TRUE)
     }
@@ -71,11 +78,14 @@ scInit <- function(
         stringsAsFactors = FALSE
     )
     # Init the database
-    dir.create(dirname(.globals$credential_path), recursive = TRUE)
+    dir.create(file.path(app_path, dirname(.globals$credential_path)),
+               recursive = TRUE, showWarnings = FALSE)
     create_db(
         credentials_data = credentials,
-        sqlite_path = file.path(app_path, .globals$credential_path)
+        sqlite_path = file.path(app_path, .globals$credential_path),
+        passphrase = passphrase
     )
+    updateConfigTable()
     # Write the app.R
     writeLines(c(
         "library(scRNAseqApp)",

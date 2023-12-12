@@ -12,7 +12,8 @@ scInit(
   overwrite = FALSE,
   app_title = "scRNAseq Database",
   app_description =
-    "This database is a collection of\\n        single cell RNA-seq data."
+    "This database is a collection of\\n        single cell RNA-seq data.",
+  passphrase = NULL
 )
 }
 \arguments{
@@ -29,6 +30,8 @@ a project.}
 
 \item{app_title, app_description}{character(1). The title and
 description of the home page.}
+
+\item{passphrase}{A password to protect the data inside the database.}
 }
 \value{
 no returns. This function will copy files to \code{app_path}

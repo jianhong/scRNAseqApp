@@ -67,14 +67,19 @@ scRNAseqApp <- function(
     banner <- base64_uri(banner)
     ## load default parameters
     loginNavbarTitle <- "Switch User"
-    updateConfigTable()
+    if(!tableExists(.globals$configTableName)){
+        updateConfigTable()
+    }
+    if(!tableExists(.globals$geneSymbolTableName)){
+        touchGeneTable()
+    }
     datasets <- listDatasets(named=TRUE)
     defaultDataset <- getDefaultDataset(
         defaultDataset = defaultDataset,
         datasets = datasets)
     appconf <- getAppConf(datasets = datasets)
     data_types <- getDataType(appconf = appconf)
-    
+
     ui0 <- function(req) {
         fluidPage(
             ### theme
@@ -164,7 +169,6 @@ scRNAseqApp <- function(
             is(getShinyOption("bootstrapTheme"), "bs_theme")) {
             bs_themer()
         }
-        
         ### resize the max upload file size for admin
         options(shiny.maxRequestSize = maxRequestSize) # 1G
         ### For all tags and Server-side selectize
@@ -200,8 +204,6 @@ scRNAseqApp <- function(
             Logged = FALSE,
             # tab UI for scRNAseq/scATACseq
             terms = .globals$terms[["scRNAseq"]],
-            # gene symbol dictionary
-            symbolDict = NULL,
             # gene name to gene symbol dictionary
             gn2sym = gn2sym,
             # authority
@@ -229,7 +231,6 @@ scRNAseqApp <- function(
             dataSource$available_datasets <- datasets
             dataSource$dataset <- selected
             dataSource$data_types <- getDataType(appconf = appconf)
-            dataSource$symbolDict <- updateSymbolDict(datasets = datasets)
             updateSelectInput(
                 session,
                 "selectedDatasets",
@@ -254,6 +255,7 @@ scRNAseqApp <- function(
             ignoreInit = TRUE,
             {
                 updateConfigTable()
+                touchGeneTable(updateDB=TRUE)
                 ad <- listDatasets(privilege = dataSource$auth$privilege,
                                    named=TRUE)
                 if (!all(
@@ -277,7 +279,7 @@ scRNAseqApp <- function(
             }
         })
         ## update visitor stats
-        updateVisitor(input, output, session)
+        updateVisitorTable(input, output, session)
         ## parse query strings, and load old session
         observe({
             query <- parseQueryString(session$clientData$url_search)
@@ -347,9 +349,6 @@ scRNAseqApp <- function(
                 })
             }
         })
-        ## update gene symbol list
-        dataSource$symbolDict <- updateSymbolDict(
-            isolate(dataSource$available_datasets))
         ## change dataset
         observeEvent(input$selectedDatasets, {
             ## in case the data is deleted, refresh the datasets
@@ -563,6 +562,5 @@ scRNAseqApp <- function(
             }
         }
     }
-    
     shinyApp(ui = ui, server = server, ...)
 }

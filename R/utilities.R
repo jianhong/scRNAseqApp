@@ -96,17 +96,17 @@ g_legend <- function(a.gplot){
 
 # update search results
 updateSearch <- function(
-        key_words, symbolDict, gn2sym,
+        key_words, datasets, gn2sym,
         auth, global, page=1,
         id, input, output, session){
     if(
         isGene(
             key_words,
-            symbolDict,
+            datasets,
             maxEvent = .globals$maxNumGene) ||
         mappingToSymbols(key_words, gn2sym)){## check if it is a gene
         search_res <- checkGene(
-            key_words, symbolDict=symbolDict,
+            key_words, datasets=datasets,
             gn2sym = gn2sym,
             auth = auth,
             global = global, page=page,
@@ -182,19 +182,23 @@ mappingToSymbols <- function(x, db, transform=FALSE){
 #' check if a symbol is a gene
 #' @noRd
 #' @param symbol the character to be checked
-#' @param dict the gene symbol dictionary available in the data folder
-isGene <- function(symbol, dict, maxEvent=3){
-    symbol <- strsplit(symbol, "\\s+")[[1]][1]
+#' @param datasets the available datasets
+isGene <- function(symbol, datasets, maxEvent=3){
+    symbol <- strsplit(symbol, "\\s+")[[1]]
     if(isQuote(symbol)){
         symbol <- removeQuote(symbol)
-        return(symbol %in% dict)
+        g <- listGeneSymbols(genes = symbol, datasets = datasets)
+        return(length(g)>0)
     }
     if(isAsterisk(symbol)){
-        symbol <- isAsterisk(symbol, transform = TRUE)
+        symbol <- isAsterisk(symbol, transform = TRUE, to = '%')
         maxEvent <- .globals$maxNumGene
+        like <- TRUE
+    }else{
+        like <- FALSE
     }
-    g <- sum(grepl(symbol, dict, ignore.case = TRUE))
-    g > 0 && g < maxEvent
+    g <- listGeneSymbols(genes = symbol, datasets = datasets, like=like)
+    length(g) > 0 && length(g) < maxEvent
 }
 #' check if a symbol is quoted
 #' @noRd
@@ -209,12 +213,13 @@ removeQuote <- function(symbol){
 #' @noRd
 #' @param symbol the character to be checked
 #' @param transform change the '*' to '.*'
-isAsterisk <- function(symbol, transform=FALSE){
+#' @param to The character to be changed to.
+isAsterisk <- function(symbol, transform=FALSE, to='.*'){
     symbol <- symbol[1]
     isT <- grepl("*", symbol, fixed = TRUE)
     if(transform){
         if(isT){
-            symbol <- gsub("*", ".*", symbol, fixed = TRUE)
+            symbol <- gsub("*", to, symbol, fixed = TRUE)
         }
         return(symbol)
     }
@@ -267,7 +272,7 @@ wafflePlot <- function(
 #' @param id namespace
 #' @return Html tags for search results
 checkGene <- function(
-        gene, symbolDict, gn2sym,
+        gene, datasets, gn2sym,
         auth, global, page=1,
         id, input, output, session){
     exprs <- NULL
@@ -403,7 +408,7 @@ checkGene <- function(
                                 observeEvent(input[[paste0("page", .id)]],{
                                     updateSearch(
                                         gene,
-                                        symbolDict=symbolDict,
+                                        datasets=datasets,
                                         gn2sym=gn2sym,
                                         auth=auth,
                                         global=reactive({global}),
@@ -445,38 +450,39 @@ checkGene <- function(
 
 # vistor plots
 updateVisitor <- function(input, output, session){
-    conterFilename <- .globals$counterFilename
-    ## update visitor stats
-    update_visitor <- function(){
-        req(input$remote_addr)
-        counter <- read.delim(conterFilename, header = TRUE)
-        ips <- counter$ip
-        counter <- as.Date(counter$date)
-        visitors <- paste(format(counter, "%d/%m/%y %H"), ips)
-        current <- Sys.time()
-        ip <- isolate(input$remote_addr)
-        agent <- isolate(input$remote_agent)
-        if(!paste(format(current, "%d/%m/%y %H"), ip) %in% visitors){
-            write(
-                paste(as.character(current), ip, agent, sep="\t"),
-                conterFilename, append = TRUE)
-        }
-    }
-    observeEvent(input$remote_addr, update_visitor())
-    output$total_visitor <- renderPlot({
-        counter <- read.delim(conterFilename, header = TRUE)
-        counter <- as.Date(counter$date)
-        counter <- counter[as.numeric(difftime(
-            as.Date(Sys.time()),
-            counter,
-            units = 'days'))<730]
-        counter <- table(format(counter, "%y-%m"))
-        counter <- as.data.frame(counter)
-        ggplot(counter, aes(x=.data[["Var1"]], y=.data[["Freq"]])) +
-            geom_bar(stat = "identity", fill="darkorchid4") +
-            theme_minimal() + xlab("") + ylab("visitor counts") +
-            theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-    })
+    updateVisitorTable(input, output, session)
+    # conterFilename <- .globals$counterFilename
+    # ## update visitor stats
+    # update_visitor <- function(){
+    #     req(input$remote_addr)
+    #     counter <- read.delim(conterFilename, header = TRUE)
+    #     ips <- counter$ip
+    #     counter <- as.Date(counter$date)
+    #     visitors <- paste(format(counter, "%d/%m/%y %H"), ips)
+    #     current <- Sys.time()
+    #     ip <- isolate(input$remote_addr)
+    #     agent <- isolate(input$remote_agent)
+    #     if(!paste(format(current, "%d/%m/%y %H"), ip) %in% visitors){
+    #         write(
+    #             paste(as.character(current), ip, agent, sep="\t"),
+    #             conterFilename, append = TRUE)
+    #     }
+    # }
+    # observeEvent(input$remote_addr, update_visitor())
+    # output$total_visitor <- renderPlot({
+    #     counter <- read.delim(conterFilename, header = TRUE)
+    #     counter <- as.Date(counter$date)
+    #     counter <- counter[as.numeric(difftime(
+    #         as.Date(Sys.time()),
+    #         counter,
+    #         units = 'days'))<730]
+    #     counter <- table(format(counter, "%y-%m"))
+    #     counter <- as.data.frame(counter)
+    #     ggplot(counter, aes(x=.data[["Var1"]], y=.data[["Freq"]])) +
+    #         geom_bar(stat = "identity", fill="darkorchid4") +
+    #         theme_minimal() + xlab("") + ylab("visitor counts") +
+    #         theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+    # })
 }
 
 # used to avoid suppressWarnings(as.numeric)

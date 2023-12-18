@@ -23,11 +23,15 @@
     slingshot = "slingshot.rds"
 )
 .globals$counterFilename <- file.path("www", "counter.tsv")
+.globals$IPlocationFilename <- file.path("www", "iptable.rds")
 .globals$credential_path <- file.path("www", "database.sqlite")
 .globals$credentialTableName <- 'credentials'
 .globals$passphrase <- NULL
 .globals$configTableName <- 'config'
 .globals$configTableSep <- ';'
+.globals$counterTableName <- 'counter'
+.globals$IPlocationTablename <- "iptable"
+.globals$geneSymbolTableName <- 'gene'
 # for home search page, the groupColPattern
 .globals$groupColPattern <- 'group'
 # Colour palette

@@ -117,12 +117,11 @@ updateDatasetForToken <- function(defaultDataset, datasets){
     return(list(datasets=datasets, appconf=appconf, data_types=data_types))
 }
 
-updateSymbolDict <- function(datasets, privilege=NULL) {
+updateSymbolDict <- function(datasets, privilege=NULL, updateDB = FALSE) {
     if(missing(datasets)) datasets <- getDataSets(privilege = privilege)
-    symbols <- lapply(datasets, function(.ele) {
-        names(readData("sc1gene", .ele))
-    })
-    sort(unique(unlist(symbols)))
+    touchGeneTable(updateDB)
+    symbols <- listGeneSymbols(datasets = datasets)
+    symbols$symbol
 }
 
 getRef <- function(dataset, key, appconf) {

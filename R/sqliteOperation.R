@@ -194,6 +194,11 @@ getIPtable <- function(ips){
         return(data.frame(ip=ips))
     }
     ips <- unique(ips)
+    ips <- ips[!is.na(ips)]
+    ips <- ips[ips!='']
+    if(length(ips)==0){
+        return(data.frame(ip=ips))
+    }
     ipb <- ip2bin(ips)
     res <- lapply(ipb, function(.ip){
         query <- paste0('SELECT * FROM ',
@@ -256,7 +261,7 @@ updateVisitorTable <- function(input, output, session){
     }
     observeEvent(input$remote_addr, update_visitor())
     output$total_visitor <- renderPlot({
-        listVisitors(summary=TRUE)
+        counter <- listVisitors(summary=TRUE)
         ggplot(counter, aes(x=.data[["time"]], y=.data[["total"]])) +
             geom_bar(stat = "identity", fill="darkorchid4") +
             theme_minimal() + xlab("") + ylab("visitor counts") +

@@ -35,10 +35,13 @@ scDRnum <- function(
     ggData[ggData$val2 < 0]$val2 <- 0
     if (length(inpsubValue) != 0 &
         length(inpsubValue) != nlevels(ggData$sub)) {
+        if(is.list(inpsubValue)) inpsubValue <- unlist(inpsubValue)
         ggData <- ggData[ggData$sub %in% inpsubValue]
     }
     if (length(inpCellInfoSubGroup) != 0 &
         length(inpCellInfoSubGroup) != nlevels(ggData$group)) {
+        if(is.list(inpCellInfoSubGroup)) inpCellInfoSubGroup <-
+                unlist(inpCellInfoSubGroup)
         ggData <- ggData[ggData$group %in% inpCellInfoSubGroup]
     }
     

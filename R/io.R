@@ -36,11 +36,11 @@ setLocker <- function(folder) {
         character(0),
         file.path(.globals$datafolder, folder, .globals$filenames$locker)
     )
-    updateLocker(folder, TRUE)
+    updateConfigTblLocker(folder, TRUE)
 }
 removeLocker <- function(folder) {
     unlink(file.path(.globals$datafolder, folder, .globals$filenames$locker))
-    updateLocker(folder, FALSE)
+    updateConfigTblLocker(folder, FALSE)
 }
 writeMisc <- function(misc, folder, slot) {
     if (!is.null(misc)) {

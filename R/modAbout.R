@@ -174,7 +174,7 @@ aboutServer <- function(id, dataSource, optCrt) {
                 output$search_res <- renderUI(tags$div('searching...'))
                 updateSearch(
                     input$search,
-                    dataSource()$symbolDict,
+                    dataSource()$available_datasets,
                     dataSource()$gn2sym,
                     auth = dataSource()$auth,
                     global = reactive({
@@ -187,20 +187,5 @@ aboutServer <- function(id, dataSource, optCrt) {
                 )
             }
         })
-        # output$dataset_counts <- renderText({
-        #     length(dataSource()$available_datasets)
-        # })
-        # output$visitor_count <- renderText({
-        #     counter <- read.delim(
-        #         .globals$counterFilename,
-        #         header = TRUE)
-        #     length(unique(counter$ip))
-        # })
-        # output$reference_count <- renderText({
-        #     get_full_ref_list(dataSource()$appconf, returnLen = TRUE)
-        # })
-        # output$species_count <- renderText({
-        #     length(unique(lapply(dataSource()$appconf, `[[`, i = "species")))
-        # })
     })
 }

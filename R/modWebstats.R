@@ -68,16 +68,9 @@ webstatsServer <- function(id) {
         }
         data_1 <- reactiveValues()
         observe({
-            data_record <- reactiveFileReader(
-                intervalMillis = 10000,
-                session,
-                filePath = .globals$counterFilename,
-                readFunc = read.delim
-            )
-            data_1$df <- reactive({
-                req(data_record())
-                data_record()
-            })
+            data_1$df <- reactive(({
+                listVisitors()
+            }))
         })
         data <- reactive(data_1$df())
         
@@ -118,18 +111,24 @@ webstatsServer <- function(id) {
             )
         })
         summaryTable <- reactive({
-            req(ips())
-            tab <- isolate(ips()[, c("ip", "date")])
-            tab[, "date"] <- as.Date(tab[, "date"])
-            tab[, "month"] <-
-                paste(format(tab$date, "%Y"), months(tab$date), sep = "-")
-            tab <- as.data.table(tab)
-            dat <- tab[, {
-                list(
-                    total = length(.SD$ip),
-                    uniqueIP = length(unique(.SD$ip)))
-            }, by = 'month']
-            dat <- melt(dat, id = "month")
+            if(!tableExists(.globals$counterTableName)){
+                req(ips())
+                tab <- isolate(ips()[, c("ip", "date")])
+                tab[, "date"] <- as.Date(tab[, "date"])
+                tab[, "month"] <-
+                    paste(format(tab$date, "%Y"), months(tab$date), sep = "-")
+                tab <- as.data.table(tab)
+                dat <- tab[, {
+                    list(
+                        total = length(.SD$ip),
+                        uniqueIP = length(unique(.SD$ip)))
+                }, by = 'month']
+                dat <- melt(dat, id = "month")
+            }else{
+                dat = listVisitors(summary = TRUE)
+                colnames(dat) <- c('month', 'total', 'uniqueIP')
+                dat <- melt(dat, id = "month")
+            }
         })
         output$distPlot <- renderPlot({
             req(summaryTable)
@@ -173,8 +172,12 @@ webstatsServer <- function(id) {
             dat
         }, options = list(dom = 't'), rownames = FALSE)
         output$counter <- renderDT({
-            req(ips())
-            ips()
+            if(!tableExists(.globals$counterTableName)){
+                req(ips())
+                ips()
+            }else{
+                listVisitors()
+            }
         },
         extensions = 'Buttons',
         options = list(

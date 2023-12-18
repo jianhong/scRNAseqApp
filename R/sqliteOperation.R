@@ -1,13 +1,22 @@
 # sqlite operation
 #' @importFrom DBI dbConnect dbDisconnect dbWriteTable
-#'  dbGetQuery dbSendQuery
+#'  dbGetQuery dbSendQuery dbListTables dbClearResult
 #' @importFrom RSQLite SQLite
+getDBconn <- function(){
+    dbConnect(SQLite(),
+              dbname = file.path(.globals$app_path,
+                                 .globals$credential_path))
+}
 connectDB <- function(FUN, ...){
-    con <- dbConnect(SQLite(),
-                     dbname = file.path(.globals$app_path,
-                                        .globals$credential_path))
+    con <- getDBconn()
     on.exit(dbDisconnect(con))
     FUN(conn = con, ...)
+}
+sendNoreplyQueryToDB <- function(...){
+    conn <- getDBconn()
+    on.exit(dbDisconnect(conn))
+    res <- dbSendQuery(conn = conn, ...)
+    dbClearResult(res)
 }
 #' @importFrom shinymanager read_db_decrypt
 isEncrypted <- function(){
@@ -18,6 +27,9 @@ getCredential <- function(){
     res <- connectDB(read_db_decrypt, 
                      .globals$credentialTableName,
                      .globals$passphrase)
+}
+tableExists <- function(tableName){
+    tableName %in% connectDB(dbListTables)
 }
 getConfigTable <- function(){
     res <- connectDB(read_db_decrypt, .globals$configTableName)
@@ -65,9 +77,9 @@ updateConfigTblKey <- function(key, feild, value){
                    .globals$configTableName,
                    ' SET ', feild, '="', value, '"',
                    ' WHERE id="', key, '"')
-    connectDB(dbSendQuery, statement = query)
+    sendNoreplyQueryToDB(statement = query)
 }
-updateLocker <- function(key, value){
+updateConfigTblLocker <- function(key, value){
     updateConfigTblKey(key = key, feild = 'locker', value = as.numeric(value))
 }
 
@@ -139,3 +151,194 @@ listSpecies <- function(key){
     checkKeyFromConfig(key, feild='species')
 }
 
+intToBin <- function(x) {
+    y <- as.integer(x)
+    class(y) <- "binmode"
+    y <- as.character(y)
+    dim(y) <- dim(x)
+    y
+}
+
+ip2bin <- function(x){
+    x <- strsplit(x, "\\.")
+    x <- do.call(rbind, x)
+    mode(x) <- "integer"
+    x <- intToBin(x)
+    mode(x) <- "integer"
+    d <- dim(x)
+    x <- sprintf("%08d", x)
+    x <- matrix(x, nrow = d[1], ncol = d[2], byrow = FALSE)
+    x <- apply(x, 1, paste, collapse="")
+    y <- strsplit(x, "")
+    y <- do.call(rbind, y)
+    mode(y) <- "integer"
+    apply(y, 1, function(.y) sum(.y * 2^rev((seq_along(.y)-1))))
+}
+
+touchIPtable <- function(){
+    if(!is.null(.globals$IPlocationFilename)){
+        if(file.exists(file.path(.globals$app_path,
+                                 .globals$IPlocationFilename))){
+            iptable <- readRDS(file.path(.globals$app_path,
+                                         .globals$IPlocationFilename))
+            connectDB(dbWriteTable, name = .globals$IPlocationTablename,
+                      value = iptable, overwrite = TRUE)
+            query <- paste0('CREATE UNIQUE INDEX `from` ON ',
+                            .globals$IPlocationTablename, '(`from`)')
+            sendNoreplyQueryToDB(statement = query)
+        }
+    }
+}
+getIPtable <- function(ips){
+    if(!tableExists(.globals$IPlocationTablename)){
+        return(data.frame(ip=ips))
+    }
+    ips <- unique(ips)
+    ips <- ips[!is.na(ips)]
+    ips <- ips[ips!='']
+    if(length(ips)==0){
+        return(data.frame(ip=ips))
+    }
+    ipb <- ip2bin(ips)
+    res <- lapply(ipb, function(.ip){
+        query <- paste0('SELECT * FROM ',
+                        .globals$IPlocationTablename,
+                        ' INNER JOIN (SELECT MAX(`from`) AS `start` FROM ',
+                        .globals$IPlocationTablename,
+                        ' WHERE `from` <= ', .ip,
+                        ') AS f ON ', .globals$IPlocationTablename,
+                        '.`from` = f.`start`',
+                        ' WHERE `to` >= ', .ip)
+        connectDB(dbGetQuery, statement = query)
+    })
+    names(res) <- as.character(ips)
+    res <- do.call(rbind, res)
+    res$from <- rownames(res)
+    res$to <- NULL
+    res$start <- NULL ## remove the start column introduced by the inner join
+    colnames(res)[colnames(res)=='from'] <- 'ip'
+    res
+}
+touchVisitorTable <- function(){
+    if(!tableExists(.globals$counterTableName)){
+        counter <- read.delim(.globals$counterFilename, header = TRUE)
+        if(!tableExists(.globals$IPlocationTablename)){
+            touchIPtable()
+        }
+        counterIP <- getIPtable(counter$ip)
+        counter <- merge(counter, counterIP, by='ip', all.x = TRUE)
+        counter <- counter[order(counter$date), ]
+        connectDB(dbWriteTable, name = .globals$counterTableName,
+                  value = counter, overwrite = TRUE)
+    }
+}
+## visitor table
+updateVisitorTable <- function(input, output, session){
+    touchVisitorTable()
+    ## update visitor stats
+    update_visitor <- function(){
+        req(input$remote_addr)
+        current <- Sys.time()
+        ip <- isolate(input$remote_addr)
+        agent <- isolate(input$remote_agent)
+        ## check ip and time not within 10 min
+        query <- paste0('SELECT `date` FROM ',
+                        .globals$counterTableName,
+                        ' WHERE `date` BETWEEN "',
+                        current, '" AND "', current+600,
+                        '" AND `ip`="', ip, '"')
+        res <- connectDB(dbGetQuery, statement = query)
+        if(nrow(res)==0){
+            ip2loc <- getIPtable(ip)
+            ip2loc$date <- as.character(current)
+            ip2loc$agent <- agent
+            th <- paste(colnames(ip2loc), collapse = "`,`")
+            bd <- paste(ip2loc[1, ], collapse = '","')
+            query <- paste0('INSERT INTO ', .globals$counterTableName,
+                            ' (`', th, '`) VALUES ("', bd, '")')
+            sendNoreplyQueryToDB(statement = query)
+        }
+    }
+    observeEvent(input$remote_addr, update_visitor())
+    output$total_visitor <- renderPlot({
+        counter <- listVisitors(summary=TRUE)
+        ggplot(counter, aes(x=.data[["time"]], y=.data[["total"]])) +
+            geom_bar(stat = "identity", fill="darkorchid4") +
+            theme_minimal() + xlab("") + ylab("visitor counts") +
+            theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+    })
+}
+listVisitors <- function(summary=FALSE){
+    if(summary){
+        current <- Sys.time()
+        # select ~730 day data 63072000 = 730*60*60*24
+        query <- paste0('SELECT strftime("%Y-%m", `date`) AS `time`,',
+                        ' count(`ip`) AS total,',
+                        ' count(DISTINCT `ip`) AS uniqueIP FROM ',
+                        .globals$counterTableName,
+                        ' WHERE `date` BETWEEN "',
+                        current - 63072000, '" AND "', current,
+                        '" GROUP BY `time`')
+    }else{
+        query <- paste0('SELECT * FROM ',
+                        .globals$counterTableName)
+    }
+    
+    counter <- connectDB(dbGetQuery, query)
+}
+
+## gene table
+## gene name, expressed datasets
+touchGeneTable <- function(updateDB=FALSE){
+    if(updateDB || !tableExists(.globals$geneSymbolTableName)){
+        datasets <- listDatasets()
+        symbols <- lapply(datasets, function(.ele) {
+            names(readData("sc1gene", .ele))
+        })
+        symbols <- data.frame(dataset = rep(datasets, lengths(symbols)),
+                              symbol = unlist(symbols))
+        symbols$expr <- NA
+        connectDB(dbWriteTable, name = .globals$geneSymbolTableName,
+                  value = symbols, overwrite = TRUE)
+    }
+}
+listGeneSymbols <- function(genes, datasets, like = FALSE){
+    query <- paste0('SELECT DISTINCT `symbol` FROM ',
+                    .globals$geneSymbolTableName)
+    where <- NULL
+    if(!missing(datasets)){
+        datasets <- datasets[!is.null(datasets)]
+        datasets <- datasets[!is.na(datasets)]
+        if(length(datasets)==1){
+            where <- c(where, paste0('`dataset` = "', datasets, '"'))
+        }else{
+            if(length(datasets)>1){
+                where <- c(where,
+                           paste0('`dataset` IN ("', 
+                                  paste(datasets, collapse = '", "'), '")'))
+            }
+        }
+    }
+    if(!missing(genes)){
+        genes <- genes[!is.null(genes)]
+        genes <- genes[!is.na(genes)]
+        genes <- tolower(genes)
+        if(length(genes)==1){
+            if(like){
+                where <- c(where, paste0('LOWER(`symbol`) LIKE "', genes, '"'))
+            }else{
+                where <- c(where, paste0('LOWER(`symbol`) = "', genes, '"'))
+            }
+        }else{
+            if(length(genes)>1){
+                where <- c(where, paste0('LOWER(`symbol`) IN ("', 
+                           paste(genes, collapse = '", "'), '")'))
+            }
+        }
+    }
+    if(length(where)){
+        query <- paste(query, 'WHERE', paste(where, collapse = ' AND '))
+    }
+    res <- connectDB(dbGetQuery, statement = query)
+    res$symbol
+}

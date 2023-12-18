@@ -86,6 +86,7 @@ scInit <- function(
         passphrase = passphrase
     )
     updateConfigTable()
+    touchGeneTable()
     # Write the app.R
     writeLines(c(
         "library(scRNAseqApp)",

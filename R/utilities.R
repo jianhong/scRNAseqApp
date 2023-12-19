@@ -96,18 +96,16 @@ g_legend <- function(a.gplot){
 
 # update search results
 updateSearch <- function(
-        key_words, datasets, gn2sym,
+        key_words, datasets,
         auth, global, page=1,
         id, input, output, session){
-    if(
-        isGene(
-            key_words,
-            datasets,
-            maxEvent = .globals$maxNumGene) ||
-        mappingToSymbols(key_words, gn2sym)){## check if it is a gene
+    if( isGene(
+        key_words,
+        datasets,
+        maxEvent = .globals$maxNumGene) ||
+        mappingToSymbols(key_words)){## check if it is a gene
         search_res <- checkGene(
             key_words, datasets=datasets,
-            gn2sym = gn2sym,
             auth = auth,
             global = global, page=page,
             id=id, input=input, output=output, session=session)
@@ -157,21 +155,19 @@ updateSearch <- function(
 #' convert search keys to gene symbols
 #' @noRd
 #' @param x the key words to be converted
-#' @param db the gene name to gene symbol map
 #' @param transform convert the x to gene symbol
-mappingToSymbols <- function(x, db, transform=FALSE){
+mappingToSymbols <- function(x, transform=FALSE){
     # quote all gene symbols
     # convert names in database to gene symbols
-    stopifnot(is.list(db))
+    rs <- unique(mapGeneSymbols(x)$gene)
     if(!transform){
-        return(tolower(x) %in% c(names(db$unique), names(db$multiple)))
+        return(length(rs)>0)
     }else{
-        if(mappingToSymbols(x, db)){
-            x <- tolower(x)
-            if(x %in% names(db$unique)){
-                return(paste0('"', db$unique[[x]], '"'))
+        if(length(rs)>0){
+            if(length(rs)==1){
+                return(paste0('"', rs, '"'))
             }else{
-                return(db$multiple[[x]])
+                return(rs)
             }
         }else{
             return(x)
@@ -184,7 +180,6 @@ mappingToSymbols <- function(x, db, transform=FALSE){
 #' @param symbol the character to be checked
 #' @param datasets the available datasets
 isGene <- function(symbol, datasets, maxEvent=3){
-    symbol <- strsplit(symbol, "\\s+")[[1]]
     if(isQuote(symbol)){
         symbol <- removeQuote(symbol)
         g <- listGeneSymbols(genes = symbol, datasets = datasets)
@@ -266,18 +261,18 @@ wafflePlot <- function(
 }
 #' get search result by gene name
 #' @noRd
-#' @param gene character(1L), gene name
+#' @param key_words character(1L), gene name
 #' @param datafolder the data folder
 #' @param auth for locked data
 #' @param id namespace
 #' @return Html tags for search results
 checkGene <- function(
-        gene, datasets, gn2sym,
+        key_words, datasets,
         auth, global, page=1,
         id, input, output, session){
     exprs <- NULL
     limit <- 5 # return 5 record
-    gene <- mappingToSymbols(gene, gn2sym, transform = TRUE)
+    gene <- mappingToSymbols(key_words, transform = TRUE)
     getGeneNamesByKeyword <- function(){
         appconfs <- getAppConf(privilege = auth$privilege)
         gn <- lapply(appconfs, function(.ele){
@@ -287,7 +282,7 @@ checkGene <- function(
                 }
             }
             geneIds <- readData("sc1gene", .ele$id)
-            if(isQuote(gene)){
+            if(any(isQuote(gene))){
                 genenames <- geneIds[
                     tolower(names(geneIds)) %in%
                         tolower(removeQuote(gene))]
@@ -314,21 +309,21 @@ checkGene <- function(
     }
     tryCatch({
         global <- global()
-        if(is.null(global$search_results[[gene]])){
+        if(is.null(global$search_results[[key_words]])){
             gn <- getGeneNamesByKeyword()
-            global$search_results[[gene]] <-
+            global$search_results[[key_words]] <-
                 list(
                     genenames= gn$genenames,
                     appconfs = gn$appconfs,
                     page=1,
                     total=ceiling(length(gn$genenames)/limit))
         }
-        global$search_results[[gene]]$page <- page
+        global$search_results[[key_words]]$page <- page
         from <- limit*(page-1)+1
-        to <- min(from+limit-1, length(global$search_results[[gene]]$genenames))
+        to <- min(from+limit-1, length(global$search_results[[key_words]]$genenames))
         if(to>=from){
-            genenames <- global$search_results[[gene]]$genenames[from:to]
-            appconfs <- global$search_results[[gene]]$appconfs[from:to]
+            genenames <- global$search_results[[key_words]]$genenames[from:to]
+            appconfs <- global$search_results[[key_words]]$appconfs[from:to]
             
             exprs <- mapply(function(.appconfs, .genenames){
                 .genenames <- .genenames[seq.int(min(
@@ -398,18 +393,17 @@ checkGene <- function(
                     .ele$destroy()
                 }
             })
-        if(!is.null(global$search_results[[gene]])){
-            if(global$search_results[[gene]]$total>1){
+        if(!is.null(global$search_results[[key_words]])){
+            if(global$search_results[[key_words]]$total>1){
                 lapply(
-                    seq.int(global$search_results[[gene]]$total),
+                    seq.int(global$search_results[[key_words]]$total),
                     function(.id){
-                        if(.id!=global$search_results[[gene]]$page){
+                        if(.id!=global$search_results[[key_words]]$page){
                             global$evt[[local({.id})]] <-
                                 observeEvent(input[[paste0("page", .id)]],{
                                     updateSearch(
-                                        gene,
+                                        key_words,
                                         datasets=datasets,
-                                        gn2sym=gn2sym,
                                         auth=auth,
                                         global=reactive({global}),
                                         page = local({.id}),
@@ -427,11 +421,11 @@ checkGene <- function(
                 UI=tagList(
                     ##pagination
                     div(style="padding-left:2rem;",
-                        if(global$search_results[[gene]]$total>1){
+                        if(global$search_results[[key_words]]$total>1){
                             lapply(
-                                seq.int(global$search_results[[gene]]$total),
+                                seq.int(global$search_results[[key_words]]$total),
                                 function(.id){
-                                    if(.id!=global$search_results[[gene]]$page){
+                                    if(.id!=global$search_results[[key_words]]$page){
                                         tags$span(actionLink(
                                             NS(id, paste0("page", .id)),
                                             paste("page", .id),

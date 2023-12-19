@@ -32,6 +32,7 @@
 .globals$counterTableName <- 'counter'
 .globals$IPlocationTablename <- "iptable"
 .globals$geneSymbolTableName <- 'gene'
+.globals$gn2symTableName <- 'gn2sym'
 # for home search page, the groupColPattern
 .globals$groupColPattern <- 'group'
 # Colour palette

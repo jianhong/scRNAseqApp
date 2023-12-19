@@ -87,6 +87,7 @@ scInit <- function(
     )
     updateConfigTable()
     touchGeneTable()
+    touchGenename2Symbol()
     # Write the app.R
     writeLines(c(
         "library(scRNAseqApp)",

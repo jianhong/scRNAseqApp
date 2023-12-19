@@ -74,6 +74,12 @@ scRNAseqApp <- function(
         touchGeneTable()
     }
     datasets <- listDatasets(named=TRUE)
+    avdb <- sort(checkAvailableDataSets(privilege = NULL))
+    if(!identical(avdb, sort(unname(datasets)))){
+        updateConfigTable()
+        touchGeneTable(updateDB=TRUE)
+        datasets <- listDatasets(named=TRUE)
+    }
     defaultDataset <- getDefaultDataset(
         defaultDataset = defaultDataset,
         datasets = datasets)
@@ -176,8 +182,7 @@ scRNAseqApp <- function(
         optCrt <- "{ option_create: function(data,escape) {
     return('<div class=\"create\"><strong>' + '</strong></div>');
     } }"
-        gn2sym <- readRDS(
-            system.file('extdata', 'gn2sym.rds', package = 'scRNAseqApp'))
+        touchGenename2Symbol()
         dataSource <- reactiveValues(
             # all available datasets
             available_datasets = datasets,
@@ -204,8 +209,6 @@ scRNAseqApp <- function(
             Logged = FALSE,
             # tab UI for scRNAseq/scATACseq
             terms = .globals$terms[["scRNAseq"]],
-            # gene name to gene symbol dictionary
-            gn2sym = gn2sym,
             # authority
             auth = NULL,
             # username
@@ -240,17 +243,17 @@ scRNAseqApp <- function(
         }
         
         ### check available data
-        checkAvailableDatasets <- reactivePoll(
+        compareAvailableDatasets <- reactivePoll(
             1000,session,
             checkFunc = function(){
-                getNamedDataSets(
-                    privilege = isolate(dataSource$auth$privilege))
+                sort(checkAvailableDataSets(
+                    privilege = dataSource$autho$privilege))
                 },
             valueFunc = function(){
-                return(isolate(dataSource$available_datasets))
+                sort(unname(isolate(dataSource$available_datasets)))
             })
         observeEvent(
-            checkAvailableDatasets(),
+            compareAvailableDatasets(),
             ignoreNULL = TRUE,
             ignoreInit = TRUE,
             {

@@ -41,6 +41,7 @@ getNamedDataSets <- function(privilege=NULL) {
     datasets <- datasets[order(names(datasets))]
 }
 
+
 # check if all the required files are available
 checkFiles <- function(folder, privilege, token, tokenList) {
     if(checkLocker(folder)){

@@ -175,7 +175,6 @@ aboutServer <- function(id, dataSource, optCrt) {
                 updateSearch(
                     input$search,
                     dataSource()$available_datasets,
-                    dataSource()$gn2sym,
                     auth = dataSource()$auth,
                     global = reactive({
                         global

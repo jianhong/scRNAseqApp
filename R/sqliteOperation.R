@@ -342,3 +342,33 @@ listGeneSymbols <- function(genes, datasets, like = FALSE){
     res <- connectDB(dbGetQuery, statement = query)
     res$symbol
 }
+
+touchGenename2Symbol <- function(){
+    if(!tableExists(.globals$gn2symTableName)){
+        gn2sym <- readRDS(
+            system.file('extdata', 'gn2sym.rds', package = 'scRNAseqApp'))
+        db <- rbind(
+            data.frame(gene=gn2sym$unique, name=names(gn2sym$unique)),
+            data.frame(gene=unlist(gn2sym$multiple),
+                       name=rep(names(gn2sym$multiple),
+                                lengths(gn2sym$multiple))))
+        db <- unique(db)
+        connectDB(dbWriteTable, name = .globals$gn2symTableName,
+                  value = db, overwrite = TRUE)
+    }
+}
+
+mapGeneSymbols <- function(genes){
+    genes <- tolower(genes)
+    if(length(genes)==1){
+        where <- paste0('LOWER(`gene`)="', genes,
+                        '" OR LOWER(`name`)="', genes, '"')
+    }else{
+        genes <- paste(genes, collapse = '","')
+        where <- paste0('LOWER(`gene`) IN ("', genes,
+                        '") OR LOWER(`name`) IN ("', genes, '")')
+    }
+    query <- paste0('SELECT `gene` FROM ', .globals$gn2symTableName,
+                    ' WHERE ', where)
+    rs <- connectDB(dbGetQuery, statement = query)
+}

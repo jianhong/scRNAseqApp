@@ -247,7 +247,7 @@ scRNAseqApp <- function(
             1000,session,
             checkFunc = function(){
                 sort(checkAvailableDataSets(
-                    privilege = dataSource$autho$privilege))
+                    privilege = dataSource$auth$privilege))
                 },
             valueFunc = function(){
                 sort(unname(isolate(dataSource$available_datasets)))

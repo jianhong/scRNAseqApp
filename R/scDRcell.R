@@ -209,11 +209,22 @@ scDRcell <- function(
             collapse = "")), 200)
         sListX <- 0.75 * (.globals$sList - (1.5 * floor(sListX / 50)))
         ggOut <- ggOut + scale_color_manual("", values = ggCol) +
-            guides(color = guide_legend(
-                override.aes = list(size = 5),
-                nrow = inpConf[inpConf$UI == inp1]$fRow
-            )) +
             theme(legend.text = element_text(size = sListX[labelsFontsize]))
+        if(length(ggCol)>50){
+            ggOut <- ggOut +
+                guides(color = "none")
+            showNotification(paste('Too many overlapping labels.',
+                                   'Not all labels can be show!',
+                                   'The legend are also removed.',
+                                   'Consider filter out some data points.'),
+                             type = "warning")
+        }else{
+            ggOut <- ggOut +
+                guides(color = guide_legend(
+                    override.aes = list(size = 5),
+                    nrow = inpConf[inpConf$UI == inp1]$fRow
+                ))
+        }
         if (inplab) {
             ggData3 <- 
                 ggData[, list(

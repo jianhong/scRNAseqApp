@@ -310,6 +310,12 @@ checkGene <- function(
     tryCatch({
         global <- global()
         if(is.null(global$search_results[[key_words]])){
+            showNotification(
+                paste('Ploting expression data for multiple datasets.',
+                      'It will take a while. Please be patient.'),
+                duration = 10,
+                type = 'message'
+            )
             gn <- getGeneNamesByKeyword()
             global$search_results[[key_words]] <-
                 list(

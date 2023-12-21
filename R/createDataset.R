@@ -254,6 +254,7 @@ createAppConfig <-
             if (is.character(markers)) {
                 markers <- markers[!is.na(markers)]
                 markers <- markers[markers != ""]
+                markers <- unique(markers)
                 markers <- t(t(markers))
                 rownames(markers) <- markers
                 markers <- list(markers = as.data.frame(markers))

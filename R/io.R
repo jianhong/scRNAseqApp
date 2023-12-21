@@ -112,6 +112,11 @@ read_exprs <- function(
         }
         tmp$geneName <- names(genesID)[idx]
         tmp$val <- h5data$read(args = list(genesID[idx], quote(expr = )))
+        if(all(tmp$val==0) && length(tmp$val)>0){
+            setGeneExprForData(symbol = names(genesID)[idx],
+                               dataset = h5f,
+                               expr = 0)
+        }
         exprs <- rbindlist(list(exprs, tmp))
     }
     h5file$close_all()

@@ -302,6 +302,12 @@ checkGene <- function(
                         geneIds[tolower(names(geneIds)) %in% tolower(gene)]
                 }
             }
+            if(length(genenames)>0){
+                lgs <- listGeneSymbols(genes = names(genenames),
+                                       datasets = .ele$id,
+                                       checkExpr=TRUE)
+                genenames <- genenames[names(genenames) %in% lgs]
+            }
             return(genenames)
         })
         keep <- lengths(gn)>0
@@ -313,7 +319,7 @@ checkGene <- function(
             showNotification(
                 paste('Ploting expression data for multiple datasets.',
                       'It will take a while. Please be patient.'),
-                duration = 10,
+                duration = 5,
                 type = 'message'
             )
             gn <- getGeneNamesByKeyword()

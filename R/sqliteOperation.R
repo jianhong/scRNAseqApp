@@ -302,7 +302,7 @@ touchGeneTable <- function(updateDB=FALSE){
                   value = symbols, overwrite = TRUE)
     }
 }
-listGeneSymbols <- function(genes, datasets, like = FALSE){
+listGeneSymbols <- function(genes, datasets, like = FALSE, checkExpr = FALSE){
     query <- paste0('SELECT DISTINCT `symbol` FROM ',
                     .globals$geneSymbolTableName)
     where <- NULL
@@ -336,11 +336,30 @@ listGeneSymbols <- function(genes, datasets, like = FALSE){
             }
         }
     }
+    if(checkExpr){
+        ## default is NULL
+        ## when user do search, if all expr is 0, the value will be set to 0
+        ## and the updated value will not be NULL anymore.
+        where <- c(where, '`expr` is NULL')
+    }
     if(length(where)){
         query <- paste(query, 'WHERE', paste(where, collapse = ' AND '))
     }
     res <- connectDB(dbGetQuery, statement = query)
     res$symbol
+}
+
+setGeneExprForData <- function(symbol, dataset, expr){
+    if(length(symbol)!=length(dataset)){
+        return(NULL)
+    }
+    mapply(FUN=function(.symbol, .dataset, .expr){
+        query <- paste0('UPDATE ', .globals$geneSymbolTableName,
+                        ' SET `expr` = ', .expr,
+                        ' WHERE `symbol` = "', .symbol, '"',
+                        ' AND `dataset` = "', .dataset, '"')
+        sendNoreplyQueryToDB(statement = query)
+    }, symbol, dataset, expr)
 }
 
 touchGenename2Symbol <- function(){

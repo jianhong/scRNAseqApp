@@ -173,7 +173,7 @@ createDataSet <- function(
                     }
                 }
             })
-            markers <- unique(unlist(markers))
+            markers <- unique(unlist(markers, use.names = FALSE))
         }
     }
     if(length(markers)==0 || !is.character(markers)){

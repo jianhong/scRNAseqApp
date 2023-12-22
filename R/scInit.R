@@ -53,9 +53,12 @@ scInit <- function(
         paste('<p>', app_description, '</p>')
     ),
     file.path(app_path, "doc.txt"))
-    # Write the counter file
+    
     www <- file.path(app_path, "www")
     dir.create(www)
+    # Prepare the downloader folder
+    dir.create(file.path(app_path, .globals$downloadFolder))
+    # Write the counter file
     visitor <-
         data.frame(
             date = Sys.time(),

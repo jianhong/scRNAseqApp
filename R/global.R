@@ -22,6 +22,7 @@
     monocle = "monocle3_pseudotime.rds",
     slingshot = "slingshot.rds"
 )
+.globals$downloadFolder <- file.path("www", "download")
 .globals$counterFilename <- file.path("www", "counter.tsv")
 .globals$IPlocationFilename <- file.path("www", "iptable.rds")
 .globals$credential_path <- file.path("www", "database.sqlite")
@@ -182,5 +183,6 @@
     )
 )
 # number of gene by search
+.globals$maxHeatmapGene <- 100
 .globals$maxNumGene <- 50
 .globals$limitNumGene <- 3

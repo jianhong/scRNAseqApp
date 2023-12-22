@@ -154,6 +154,8 @@ scRNAseqApp <- function(
                     plotWaffleUI("waffle")
                 ),
                 subsetPlotsUI('explorer'),
+                ### Tab: downloader
+                downloaderUI('downloader'),
                 ### Tab: Login form
                 #tabLogin(),
                 loginUI(loginNavbarTitle, defaultDataset)
@@ -564,6 +566,8 @@ scRNAseqApp <- function(
                 }
             }
         }
+        ## download server
+        downloaderServer("downloader")
     }
     shinyApp(ui = ui, server = server, ...)
 }

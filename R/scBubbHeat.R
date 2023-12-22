@@ -43,13 +43,22 @@ scBubbHeat <- function(
     geneList <- scGeneList(inp, inpGene)
     geneList <- geneList[geneList$present == TRUE]
     shiny::validate(need(
-        nrow(geneList) <= 500,
-        "More than 500 genes to plot! Please reduce the gene list!"
+        nrow(geneList) <= .globals$maxHeatmapGene,
+        paste("More than", .globals$maxHeatmapGene,
+              "genes to plot! Please reduce the gene list!")
     ))
     shiny::validate(need(
         nrow(geneList) > 1,
         "Please input at least 2 genes to plot!"))
-
+    if(nrow(geneList)>.globals$maxNumGene){
+        showNotification(
+            paste('Ploting expression data for too many genes.',
+                  'It will take a while. Please be patient.'),
+            duration = 5,
+            type = 'message'
+        )
+    }
+    
     # Prepare ggData
     h5file <- H5File$new(file.path(
         .globals$datafolder,

@@ -17,11 +17,11 @@ plotBubbleHeatmapUI <- function(id) {
                 style = "border-right: 2px solid black",
                 textAreaInput(
                     NS(id, "genelist"),
-                    HTML(
-                        "List of gene names <br />
-                            (Max 500 genes (over 50 will response slow), <br />
-                            separated by , or ; or newline):"
-                    ),
+                    HTML(paste(
+                        "List of gene names <br /> (Max", 
+                        .globals$maxHeatmapGene,
+                        "genes, <br />separated by , or ; or newline):"
+                    )),
                     height = "200px",
                     value = NULL
                 ) %>%

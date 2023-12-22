@@ -354,6 +354,13 @@ createDataSet(
 dir(file.path(publish_folder, 'data'))
 ```
 
+# Add downloadable file
+
+If you have files intended for user download, kindly save them in the
+`www/download` folder.
+The application will then generate a list, differentiating between files and
+user folder names, for convenient access to download options.
+
 # Distribute to a shiny server
 
 There are two steps to distribute to a shiny server. First, install the package

@@ -4,6 +4,7 @@
 .navbar-nav>li:first-child>a>div>div.form-group {margin-bottom: 0rem!important;}
 .consoleOutput>pre {max-height: 400px;}
 .align-action-button {margin-top: 31px!important;}
+.inline-float {display:inline-block; float: right;}
 /*About icon stats*/
 .about-container:after,.about-container:before,.about-clear:after,.about-clear:before{content:"";display:table;clear:both}
 .about-margin-bottom{margin-bottom:16px!important}

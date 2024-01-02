@@ -11,12 +11,18 @@ downloaderUI <- function(id) {
         folders <- dirname(files)
         files <- split(files, folders)
         fr <- mapply(files, names(files), FUN=function(fn, fd){
-            tagList(
-                h4(sub('^\\/', '', fd)),
-                do.call(fluidRow,
-                        lapply(fn, function(.fn){
-                            downloadLink(NS(id, make.names(.fn)),
-                                         basename(.fn))}))
+            readme <- file.path(fd, 'readme')
+            fluidRow(
+                div(strong(sub('^\\/', '', fd)),
+                    if(readme %in% fn){
+                        includeText(file.path(.globals$app_path,
+                                              .globals$downloadFolder,
+                                              readme))
+                    }),
+                div(class='inline-float',
+                    lapply(fn, function(.fn){
+                        downloadButton(NS(id, make.names(.fn)),
+                                       basename(.fn))}))
             )
         }, SIMPLIFY = FALSE)
         tabPanel(
@@ -43,19 +49,21 @@ downloaderServer <- function(id) {
                 .globals$downloadFolder), "", files, fixed = TRUE)
             folders <- dirname(files)
             files <- split(files, folders)
-            for(i in seq_along(files)){
-                for(j in seq_along(files[[i]])){
-                    output[[make.names(files[[i]][j])]] <- downloadHandler(
-                        filename = basename(files[[i]][j]),
-                        content = function(file){
-                            file.copy(file.path(.globals$app_path,
-                                                .globals$downloadFolder,
-                                                files[[i]][j]),
-                                      file)
-                        }
-                    )
-                }
-            }
+            observe({
+                lapply(seq_along(files), function(i){
+                    lapply(seq_along(files[[i]]), function(j){
+                        output[[make.names(files[[i]][j])]] <- downloadHandler(
+                            filename = basename(files[[i]][j]),
+                            content = function(file){
+                                file.copy(file.path(.globals$app_path,
+                                                    .globals$downloadFolder,
+                                                    files[[i]][j]),
+                                          file)
+                            }
+                        )
+                    })
+                })
+            })
         }
     })
 }

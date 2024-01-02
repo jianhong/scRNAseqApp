@@ -360,6 +360,8 @@ If you have files intended for user download, kindly save them in the
 `www/download` folder.
 The application will then generate a list, differentiating between files and
 user folder names, for convenient access to download options.
+The file named as `readme` in text format in each folder will be used as 
+descriptions for the files.
 
 # Distribute to a shiny server
 

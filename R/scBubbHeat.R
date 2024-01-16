@@ -4,7 +4,7 @@
 #' HeatmapAnnotation Legend
 #' @importFrom circlize colorRamp2
 #' @importFrom grid gpar grid.circle unit.c
-#' @importFrom hdf5r H5File
+#' @importFrom rhdf5 h5read
 #' @importFrom data.table rbindlist dcast.data.table data.table := uniqueN
 #' @importFrom ggdendro dendro_data
 #' @importFrom gridExtra arrangeGrob grid.arrange
@@ -60,27 +60,23 @@ scBubbHeat <- function(
     }
     
     # Prepare ggData
-    h5file <- H5File$new(file.path(
+    ggData <- data.table()
+    vals <- h5read(file.path(
         .globals$datafolder,
         dataset,
         .globals$filenames$sc1gexpr
-    ),
-    mode = "r")
-    h5data <- h5file[["grp"]][["data"]]
-    ggData <- data.table()
+    ), .globals$h5fGrp, index=list(inpGene[geneList$gene], NULL))
+    rownames(vals) <- geneList$gene
+    tmp <- inpMeta[, c(
+        "sampleID",
+        inpConf[inpConf$grp == TRUE]$ID),
+        with = FALSE]
+    tmp$grpBy <- inpMeta[[inpConf[inpConf$UI == inpGrp]$ID]]
     for (iGene in geneList$gene) {
-        tmp <- inpMeta[, c(
-            "sampleID",
-            inpConf[inpConf$grp == TRUE]$ID),
-            with = FALSE]
-        tmp$grpBy <- inpMeta[[inpConf[inpConf$UI == inpGrp]$ID]]
         tmp$geneName <- iGene
-        tmp$val <-
-            h5data$read(args = list(inpGene[iGene], quote(expr = )))
+        tmp$val <- vals[iGene, ]
         ggData <- rbindlist(list(ggData, tmp))
     }
-    h5file$close_all()
-    
     ggData <- subGrp(ggData, grpKey, grpVal, inpConf)
     
     if (inpPlt == "Violin") {

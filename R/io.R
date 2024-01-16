@@ -58,7 +58,7 @@ writeMisc <- function(misc, folder, slot) {
 #' @param cell barcode/sampleID pos retrieved from sc1meta.rds
 #' @return If valueOnly is TRUE, return expression values for first gene.
 #' Otherwise, return a data.table with expressions and group information.
-#' @importFrom hdf5r H5File
+#' @importFrom rhdf5 h5read
 #'
 read_exprs <- function(
         h5f,
@@ -76,26 +76,24 @@ read_exprs <- function(
     if(!file.exists(fs)){
         stop("No expression data available. Data may be removed.")
     }
-    h5file <- H5File$new(
-        fs,
-        mode = "r")
-    on.exit(h5file$close_all())
-    h5data <- h5file[["grp"]][["data"]]
     if (valueOnly) {
         if (!missing(cell)) {
-            expr <- h5data$read(args = list(quote(expr = ), cell[1]))
+            expr <- h5read(fs,
+                           .globals$h5fGrp,
+                           index=list(NULL, cell[1]))[, 1]
         } else{
             if (!is.na(genesID)) {
-                expr <- h5data$read(args = list(genesID[1], quote(expr = )))
+                expr <- h5read(fs,
+                               .globals$h5fGrp,
+                               index=list(genesID[1], NULL))[1, ]
             } else{
                 expr <- 0
             }
         }
-        h5file$close_all()
-        on.exit()
         return(expr)
     }
     exprs <- data.table()
+    vals <- h5read(fs, .globals$h5fGrp, index=list(genesID, NULL))
     for (idx in seq_along(genesID)) {
         tmp <- meta[, c("sampleID",
                         config[config$grp == TRUE]$ID),
@@ -111,7 +109,7 @@ read_exprs <- function(
             }
         }
         tmp$geneName <- names(genesID)[idx]
-        tmp$val <- h5data$read(args = list(genesID[idx], quote(expr = )))
+        tmp$val <- vals[idx, , drop=TRUE]
         if(all(tmp$val==0) && length(tmp$val)>0){
             setGeneExprForData(symbol = names(genesID)[idx],
                                dataset = h5f,
@@ -119,8 +117,6 @@ read_exprs <- function(
         }
         exprs <- rbindlist(list(exprs, tmp))
     }
-    h5file$close_all()
-    on.exit()
     exprs
 }
 
@@ -130,49 +126,41 @@ read_exprs <- function(
 #' matrix is sparse matrix, the first column is the index number start from 1
 #' of the peak; the second column is the count number.
 #' @noRd
-#' @importFrom hdf5r H5File h5types H5S
+#' @importFrom rhdf5 h5createFile h5createGroup h5write
 writeATACdata <- function(acAsy, appDir){
     filename <- file.path(appDir, .globals$filenames$sc1atac)
-    sc1atac <- H5File$new(filename, mode = "w")
-    sc1atac.cell <- sc1atac$create_group("cell")
-    lapply(colnames(acAsy), function(j){## time consuming
-        x <- acAsy[, j]
-        i <- which(x!=0)
-        N <- length(i)
-        if(N>0){
-            x <- matrix(c(i, x[i]), nrow = N)
-            type <- if(all(x==round(x)))  h5types$H5T_NATIVE_INT else
-                h5types$H5T_NATIVE_DOUBLE
-            sc1atac.cell.data <- sc1atac.cell$create_dataset(
-                j,
-                dtype = type,
-                space = H5S$new("simple", dims = dim(x), maxdims = dim(x)),
-                dim = dim(x)
-            )
-            sc1atac.cell.data[, ] <- x 
+    if(h5createFile(filename)){
+        if(h5createGroup(filename, .globals$h5fATACcell)){
+            lapply(colnames(acAsy), function(j){## time consuming
+                x <- acAsy[, j]
+                i <- which(x!=0)
+                N <- length(i)
+                if(N>0){
+                    x <- matrix(c(i, x[i]), nrow = N)
+                    h5write(x,
+                            filename,
+                            paste(.globals$h5fATACcell, j, sep='/'))
+                }
+            })
         }
-    })
-    sc1atac$close_all()
+    }
 }
-#' @importFrom hdf5r H5File
+#' @importFrom rhdf5 h5read H5Lexists H5Fopen H5Fclose
 readATACdata <- function(h5f, cell){
     stopifnot(is.character(cell))
     stopifnot(length(cell)==1)
-    
-    h5file <- H5File$new(
-        file.path(
-            .globals$datafolder,
-            h5f,
-            .globals$filenames$sc1atac),
-        mode = "r")
-    on.exit(h5file$close_all())
-    if(cell %in% names(h5file[["cell"]])){
-        h5data <- h5file[["cell"]][[cell]]
-        cnts <- h5data$read()
+    fs <- file.path(
+        .globals$datafolder,
+        h5f,
+        .globals$filenames$sc1atac)
+    h5f <- H5Fopen(fs)
+    on.exit(H5Fclose(h5f))
+    if(H5Lexists(h5f, paste0(.globals$h5fATACcell, '/', cell))){
+        cnts <- h5read(h5f, paste0(.globals$h5fATACcell, '/', cell))
     }else{
         cnts <- matrix(nrow = 0, ncol=2)
     }
-    h5file$close_all()
+    H5Fclose(h5f)
     on.exit()
     cnts
 }

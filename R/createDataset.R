@@ -55,7 +55,11 @@ createDataSet <- function(
         config <- createConfig(seu)
     }
     pf <- file.path(datafolder, appconf$id)
-    dir.create(pf, recursive = TRUE)
+    if(!file.exists(pf)){
+        dir.create(pf, recursive = TRUE)
+    }else{
+        stop(pf, ' already exists')
+    }
     ## markers
     markers <- appconf$markers
     if(length(markers)==0){

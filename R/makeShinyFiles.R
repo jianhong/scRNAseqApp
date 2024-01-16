@@ -29,7 +29,7 @@
 #' @return data files required for shiny app
 #' @importFrom SeuratObject GetAssayData VariableFeatures Embeddings Reductions
 #' @importFrom data.table data.table as.data.table
-#' @importFrom hdf5r H5File h5types H5S
+#' @importFrom rhdf5 h5createFile h5createGroup h5createDataset h5write
 #' @importFrom Rsamtools TabixFile seqnamesTabix scanTabix
 #' @importFrom GenomeInfoDb keepSeqlevels seqinfo seqnames seqlevelsStyle
 #' `seqlevelsStyle<-`
@@ -161,28 +161,41 @@ makeShinyFiles <- function(
         dir.create(appDir)
     }
     filename <- file.path(appDir, .globals$filenames$sc1gexpr)
-    sc1gexpr <- H5File$new(filename, mode = "w")
-    sc1gexpr.grp <- sc1gexpr$create_group("grp")
-    sc1gexpr.grp.data <- sc1gexpr.grp$create_dataset(
-        "data",
-        dtype = h5types$H5T_NATIVE_FLOAT,
-        space = H5S$new("simple", dims = gex.matdim, maxdims = gex.matdim),
-        chunk_dims = c(1, gex.matdim[2])
-    )
-    chk <- chunkSize
-    while (chk > (gex.matdim[1] - 8)) {
-        chk <-
-            floor(chk / 2)     # Account for cases where nGene < chunkSize
+    if(h5createFile(filename)){
+        if(h5createGroup(filename, .globals$h5fGrpPrefix)){
+            if(h5createDataset(
+                filename,
+                dataset = .globals$h5fGrp,
+                dims = gex.matdim,
+                maxdims = gex.matdim,
+                storage.mode = "double",
+                chunk = c(1, gex.matdim[2]))){
+                chk <- chunkSize
+                while (chk > (gex.matdim[1] - 8)) {
+                    # Account for cases where nGene < chunkSize
+                    chk <-
+                        floor(chk / 2)
+                }
+                for (i in seq.int(floor((gex.matdim[1] - 8) / chk))) {
+                    h5write(as.matrix(gexAsy[((i - 1) * chk + 1):(i * chk), ]),
+                            file = filename,
+                            name = .globals$h5fGrp,
+                            index = list(((i - 1) * chk + 1):(i * chk), NULL))
+                }
+                h5write(as.matrix(gexAsy[(i * chk + 1):gex.matdim[1], ]),
+                        file = filename,
+                        name = .globals$h5fGrp,
+                        index = list((i * chk + 1):gex.matdim[1], NULL))
+            }else{
+                stop("can not create dataset:", .globals$h5fGrp)
+            }
+        }else{
+            stop("can not create group:", .globals$h5fGrpPrefix)
+        }
+    }else{
+        stop("can not create file:", filename)
     }
-    for (i in seq.int(floor((gex.matdim[1] - 8) / chk))) {
-        sc1gexpr.grp.data[((i - 1) * chk + 1):(i * chk),] <-
-            as.matrix(gexAsy[((i - 1) * chk + 1):(i * chk), ])
-    }
-    sc1gexpr.grp.data[(i * chk + 1):gex.matdim[1],] <-
-        as.matrix(gexAsy[(i * chk + 1):gex.matdim[1], ])
     
-    # sc1gexpr.grp.data[, ] <- as.matrix(gex.matrix[,])
-    sc1gexpr$close_all()
     if (!isTRUE(all.equal(sc1meta$sampleID, gex.colnm))) {
         sc1meta$sampleID <- factor(sc1meta$sampleID, levels = gex.colnm)
         sc1meta <- sc1meta[order(sc1meta$sampleID)]

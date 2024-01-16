@@ -1,5 +1,4 @@
 # Plot gene expression scatter_pie
-#' @importFrom hdf5r H5File
 #' @importFrom data.table rbindlist
 #' @importFrom scales rescale
 #' @importFrom ggforce geom_arc_bar geom_circle geom_mark_hull

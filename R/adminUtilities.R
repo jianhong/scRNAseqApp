@@ -255,21 +255,16 @@ formatfID_CL <- function(x, rev = FALSE) {
 #' @param rown,coln rownames and colnames for the expression file.
 #' rownames = names(readRDS('sc1gene.rds'));
 #' colnames = readRDS('sc1meta.rds')$sampleID
-#' @importFrom hdf5r readDataSet
+#' @importFrom rhdf5 h5read
 readDataMatrix <- function(h5filename, rown, coln) {
-    h5file <- H5File$new(
+    expr <- h5read(
         file.path(
             .globals$datafolder,
             h5filename,
             .globals$filenames$sc1gexpr
         ),
-        mode = "r"
+        .globals$h5fGrp
     )
-    on.exit(h5file$close_all())
-    h5data <- h5file[["grp"]][["data"]]
-    expr <- readDataSet(h5data)
-    h5file$close_all()
-    on.exit()
     rownames(expr) <- rown
     colnames(expr) <- coln
     return(expr)

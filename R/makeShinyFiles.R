@@ -158,8 +158,9 @@ makeShinyFiles <- function(
     
     # Make XXXgexpr.h5
     if (!dir.exists(appDir)) {
-        dir.create(appDir)
+        dir.create(appDir, recursive = TRUE)
     }
+    
     filename <- file.path(appDir, .globals$filenames$sc1gexpr)
     if(h5createFile(filename)){
         if(h5createGroup(filename, .globals$h5fGrpPrefix)){
@@ -170,6 +171,7 @@ makeShinyFiles <- function(
                 maxdims = gex.matdim,
                 H5type = "H5T_NATIVE_FLOAT", #storage.mode(gexAsy[1]),
                 chunk = c(1, gex.matdim[2]),
+                filter = 'SZIP',
                 level = 9)){
                 chk <- chunkSize
                 while (chk > (gex.matdim[1] - 8)) {

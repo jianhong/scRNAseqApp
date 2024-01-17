@@ -171,7 +171,7 @@ makeShinyFiles <- function(
                 maxdims = gex.matdim,
                 H5type = "H5T_NATIVE_FLOAT", #storage.mode(gexAsy[1]),
                 chunk = c(1, gex.matdim[2]),
-                filter = 'SZIP',
+                filter = 'BZIP2',
                 level = 9)){
                 chk <- chunkSize
                 while (chk > (gex.matdim[1] - 8)) {

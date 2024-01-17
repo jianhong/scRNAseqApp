@@ -168,7 +168,7 @@ makeShinyFiles <- function(
                 dataset = .globals$h5fGrp,
                 dims = gex.matdim,
                 maxdims = gex.matdim,
-                storage.mode = 'double', #storage.mode(gexAsy[1]),
+                H5type = "H5T_NATIVE_FLOAT", #storage.mode(gexAsy[1]),
                 chunk = c(1, gex.matdim[2]),
                 level = 9)){
                 chk <- chunkSize

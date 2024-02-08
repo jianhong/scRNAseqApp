@@ -25,6 +25,7 @@ aboutUI <- function(
             }
         }
         refs <- listReferences()
+        species <- listSpecies()
         tabPanel(
             title = div(
                 selectInput(
@@ -81,7 +82,7 @@ aboutUI <- function(
             div(
                 class = "about-container",
                 summaryBox(
-                    "datasets",
+                    "DATASETS",
                     length(listDatasets()), #textOutput(ns('dataset_counts')),
                     width = 3,
                     icon = "database",
@@ -89,7 +90,7 @@ aboutUI <- function(
                     border = "bottom"
                 ),
                 summaryBox(
-                    "references",
+                    "REFERENCES",
                     length(refs), #textOutput(ns('reference_count')),
                     width = 3,
                     icon = "book-open",
@@ -97,7 +98,7 @@ aboutUI <- function(
                     border = "bottom"
                 ),
                 summaryBox(
-                    "visitors",
+                    "VISITORS",
                     length(unique(read.delim(
                         .globals$counterFilename,
                         header = TRUE)$ip)), #textOutput(ns('visitor_count')),
@@ -107,8 +108,14 @@ aboutUI <- function(
                     border = "bottom"
                 ),
                 summaryBox(
-                    "species",
-                    length(listSpecies()), #textOutput(ns('species_count')),
+                    tags$a("SPECIES",
+                           'data-toggle'='tooltip',
+                           title=paste(species,
+                                       collapse = ', ')),
+                    tags$a(length(species),
+                           'data-toggle'='tooltip',
+                           title=paste(species,
+                                       collapse = ', ')), #textOutput(ns('species_count')),
                     width = 3,
                     icon = "fish",
                     style = "warning",
@@ -184,6 +191,8 @@ aboutServer <- function(id, dataSource, optCrt) {
                     output = output,
                     session = session
                 )
+            }else{
+                output$search_res <- renderUI(tags$div())
             }
         })
     })

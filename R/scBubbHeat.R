@@ -52,7 +52,7 @@ scBubbHeat <- function(
         "Please input at least 2 genes to plot!"))
     if(nrow(geneList)>.globals$maxNumGene){
         showNotification(
-            paste('Ploting expression data for too many genes.',
+            paste('Plotting expression data for too many genes.',
                   'It will take a while. Please be patient.'),
             duration = 5,
             type = 'message'

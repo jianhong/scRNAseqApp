@@ -51,7 +51,7 @@ summaryBox <- function(
                             class = paste0(
                                 "text-xs font-weight-bold text-",
                                 style, " text-uppercase mb-1"),
-                            toupper(title)
+                            title
                         ),
                         div(
                             class = "h5 mb-0 font-weight-bold text-gray-800",
@@ -316,13 +316,15 @@ checkGene <- function(
     tryCatch({
         global <- global()
         if(is.null(global$search_results[[key_words]])){
-            showNotification(
-                paste('Ploting expression data for multiple datasets.',
-                      'It will take a while. Please be patient.'),
-                duration = 5,
-                type = 'message'
-            )
             gn <- getGeneNamesByKeyword()
+            if(length(gn$genenames)>0){
+                showNotification(
+                    paste('Plotting expression data for multiple datasets.',
+                          'It will take a while. Please be patient.'),
+                    duration = 5,
+                    type = 'message'
+                )
+            }
             global$search_results[[key_words]] <-
                 list(
                     genenames= gn$genenames,

@@ -136,7 +136,7 @@ plotProportionServer <- function(id, dataSource, optCrt) {
         
         output$proportion.dt <- renderDT({
             proportion <- plot1()$data
-            proportion <- dcast(proportion, as.formula('X~grp'),
+            proportion <- dcast.data.table(proportion, as.formula('X~grp'),
                                 value.var = 'nCells')
             proportion[is.na(proportion)] <- 0
             proportion <- as.data.frame(proportion)

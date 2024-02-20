@@ -64,7 +64,7 @@ plotProportionUI <- function(id) {
                     condition = "input.statstog % 2 == 1",
                     ns = NS(id),
                     h4("Statistics"),
-                    dataTableOutput(NS(id, "proportion.dt"))
+                    DTOutput(NS(id, "proportion.dt"))
                 )
             )
         )
@@ -72,6 +72,8 @@ plotProportionUI <- function(id) {
 }
 #' @importFrom DT datatable
 #' @importFrom sortable rank_list
+#' @importFrom data.table dcast.data.table
+#' @importFrom stats chisq.test
 plotProportionServer <- function(id, dataSource, optCrt) {
     moduleServer(id, function(input, output, session) {
         ## input column
@@ -132,9 +134,49 @@ plotProportionServer <- function(id, dataSource, optCrt) {
             input$CellInfoY
         )
         
-        output$proportion.dt <- renderDataTable({
+        output$proportion.dt <- renderDT({
+            proportion <- plot1()$data
+            proportion <- dcast(proportion, as.formula('X~grp'),
+                                value.var = 'nCells')
+            proportion[is.na(proportion)] <- 0
+            proportion <- as.data.frame(proportion)
+            rownames(proportion) <- proportion$X
+            proportion$X <- NULL
+            tryCatch({
+                chisq <- chisq.test(proportion)
+            }, warning = function(w){
+                showNotification(
+                    as.character(w),
+                    duration = 5,
+                    type = 'warning'
+                )
+            }, error = function(e){
+                showNotification(
+                    as.character(e),
+                    duration = 5,
+                    type = 'warning'
+                )
+                chisq <- list('observed'=data.frame(nodata=NA),
+                              'expected'=data.frame(nodata=NA),
+                              'residuals'=data.frame(nodata=NA),
+                              'p.value'=NA)
+            })
+            
+            chi_out <- lapply(c('observed', 'expected', 'residuals'),
+                              function(.ele){
+                                  colnames(chisq[[.ele]]) <-
+                                      paste(.ele, colnames(chisq[[.ele]]),
+                                            sep='.')
+                                  chisq[[.ele]]
+                              })
+            chi_out <- do.call(cbind, chi_out)
+            chi_out <- as.data.frame(chi_out)
+            chi_out <- cbind(chisq.test.p.value=
+                                 c(chisq$p.value,
+                                   rep(NA, nrow(chi_out)-1)),
+                             chi_out)
             datatable(
-                plot1()$data,
+                chi_out,
                 rownames = FALSE,
                 extensions = "Buttons",
                 options = list(

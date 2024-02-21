@@ -142,7 +142,7 @@ plotProportionServer <- function(id, dataSource, optCrt) {
             proportion <- as.data.frame(proportion)
             rownames(proportion) <- proportion$X
             proportion$X <- NULL
-            tryCatch({
+            withCallingHandlers({
                 chisq <- chisq.test(proportion)
             }, warning = function(w){
                 showNotification(

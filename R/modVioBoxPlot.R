@@ -47,10 +47,20 @@ plotVioBoxUI <- function(id) {
                 ),
                 boxPlotControlUI(id)
             ),
-            column(9, geneExprDotPlotUI(id))
+            column(9, geneExprDotPlotUI(id),
+                   br(),
+                   actionButton(NS(id, "statstog"), "Toggle to show statistics"),
+                   conditionalPanel(
+                       condition = "input.statstog % 2 == 1",
+                       ns = NS(id),
+                       h4("Statistics"),
+                       DTOutput(NS(id, "violin.dt"))
+                   ))
         )
     )
 }
+#' @importFrom utils combn
+#' @importFrom stats wilcox.test
 plotVioBoxServer <- function(id, dataSource, optCrt) {
     moduleServer(id, function(input, output, session) {
         ## input column
@@ -103,6 +113,49 @@ plotVioBoxServer <- function(id, dataSource, optCrt) {
             input$CellInfoX,
             input$filterCell
         )
-        
+        output$violin.dt <- renderDT({
+            violin <- plot1()$data
+            violin <- split(violin$val, violin$X)
+            cbn <- combn(names(violin), 2, simplify = FALSE)
+            res <- lapply(cbn, function(.ele) {
+                withCallingHandlers({
+                    wt <- wilcox.test(violin[[.ele[1]]],
+                                      violin[[.ele[2]]])
+                }, warning = function(w){
+                    showNotification(
+                        as.character(w),
+                        duration = 5,
+                        type = 'warning'
+                    )
+                }, error = function(e){
+                    showNotification(
+                        as.character(e),
+                        duration = 5,
+                        type = 'error'
+                    )
+                    wt <- list('p.value'=NA)
+                })
+                
+                return(as.data.frame(wt[
+                    c('alternative',
+                      'statistic',
+                      'p.value',
+                      'method')
+                ]))
+            })
+            
+            res <- cbind(do.call(rbind, cbn), do.call(rbind, res))
+            colnames(res)[c(1, 2)] <- c('group 1', 'group 2')
+            datatable(
+                res,
+                rownames = FALSE,
+                extensions = "Buttons",
+                options = list(
+                    pageLength = -1,
+                    dom = "tB",
+                    buttons = c("copy", "csv", "excel")
+                )
+            )
+        })
     })
 }

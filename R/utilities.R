@@ -494,9 +494,11 @@ updateVisitor <- function(input, output, session){
 }
 
 # used to avoid suppressWarnings(as.numeric)
-char2numeric <- function(x, keep="0-9.-eE+"){
-    keep <- grepl(paste0("^[, ", keep, "]+$"), x)
+char2numeric <- function(x, keep="[., 0-9eE+-]"){
+    keep <- grepl(paste0("^", keep, "+$"), x)
     x[!keep] <- NA
+    x <- gsub('[ ,]+', '', x)
+    x <- gsub('eminus', 'e-', gsub('-', '', gsub('e-', 'eminus', x)))
     x <- as.numeric(x)
     x
 }

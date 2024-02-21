@@ -154,7 +154,7 @@ plotProportionServer <- function(id, dataSource, optCrt) {
                 showNotification(
                     as.character(e),
                     duration = 5,
-                    type = 'warning'
+                    type = 'error'
                 )
                 chisq <- list('observed'=data.frame(nodata=NA),
                               'expected'=data.frame(nodata=NA),
@@ -177,7 +177,7 @@ plotProportionServer <- function(id, dataSource, optCrt) {
                              chi_out)
             datatable(
                 chi_out,
-                rownames = FALSE,
+                rownames = TRUE,
                 extensions = "Buttons",
                 options = list(
                     pageLength = -1,

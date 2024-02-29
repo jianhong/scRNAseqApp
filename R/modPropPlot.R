@@ -66,7 +66,7 @@ plotProportionUI <- function(id) {
                     DTOutput(NS(id, "proportion.dt"))
                 ),
                 actionButton(NS(id, "pearsontog"),
-                             "Toggle to show corelation plot"),
+                             "Toggle to show correlation plot"),
                 conditionalPanel(
                     condition = "input.pearsontog % 2 == 1",
                     ns = NS(id),

@@ -5,7 +5,7 @@
 #' @importFrom stats prcomp
 scCorProp <- function(
         proportions,
-        orderX,
+        testby = 'Y',
         method = c("pearson", "kendall", "spearman"),
         type=c('heatmap', 'PCA'),
         labelsFontsize='Medium',
@@ -13,6 +13,9 @@ scCorProp <- function(
         ) {
     type <- match.arg(type)
     method <- match.arg(method)
+    if(testby=='X'){
+        proportions <- t(proportions)
+    }
     ggOut <- switch(type,
                     PCA={
                         pca <- prcomp(proportions)
@@ -31,15 +34,8 @@ scCorProp <- function(
                         cor <- melt(data.table(cor, keep.rownames = TRUE),
                                     id.vars = c("rn"))
                         colnames(cor) <- c('Var1', 'Var2', 'value')
-                        if(!is.null(orderX)){
-                            cor$Var1 <- factor(as.character(cor$Var1),
-                                               levels = orderX)
-                            cor$Var2 <- factor(as.character(cor$Var2),
-                                               levels = orderX)
-                        }else{
-                            cor$Var1 <- factor(as.character(cor$Var1),
-                                               levels = levels(cor$Var2))
-                        }
+                        cor$Var1 <- factor(as.character(cor$Var1),
+                                           levels = levels(cor$Var2))
                         ggplot(cor, aes(.data[["Var1"]], .data[["Var2"]],
                                         fill = .data[["value"]],
                                         label = round(.data[["value"]], 3))) +

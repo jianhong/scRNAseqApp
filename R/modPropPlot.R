@@ -71,6 +71,13 @@ plotProportionUI <- function(id) {
                     condition = "input.pearsontog % 2 == 1",
                     ns = NS(id),
                     radioButtons(
+                        NS(id, "testby"),
+                        "Group by:",
+                        choices = c("X", "Y"),
+                        selected = "Y",
+                        inline = TRUE
+                    ),
+                    radioButtons(
                         NS(id, "testmethod"),
                         "Method:",
                         choices = c("spearman", "kendall", "pearson"),
@@ -218,7 +225,7 @@ plotProportionServer <- function(id, dataSource, optCrt) {
         plot2 <- reactive({
             scCorProp(
                 getProportion(plot1),
-                orderX = input$cellinfoXorder,
+                testby = input$testby,
                 method = input$testmethod,
                 type = input$cortyp,
                 labelsFontsize = input$plotfsz,

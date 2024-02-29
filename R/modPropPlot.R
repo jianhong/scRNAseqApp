@@ -59,12 +59,36 @@ plotProportionUI <- function(id) {
                 9,
                 geneExprDotPlotUI(id),
                 br(),
-                actionButton(NS(id, "statstog"), "Toggle to show statistics"),
+                actionButton(NS(id, "statstog"), "Toggle to show Chi-squared statistics"),
                 conditionalPanel(
                     condition = "input.statstog % 2 == 1",
                     ns = NS(id),
-                    h4("Statistics"),
                     DTOutput(NS(id, "proportion.dt"))
+                ),
+                actionButton(NS(id, "pearsontog"),
+                             "Toggle to show corelation plot"),
+                conditionalPanel(
+                    condition = "input.pearsontog % 2 == 1",
+                    ns = NS(id),
+                    radioButtons(
+                        NS(id, "testmethod"),
+                        "Method:",
+                        choices = c("spearman", "kendall", "pearson"),
+                        selected = "spearman",
+                        inline = TRUE
+                    ),
+                    radioButtons(
+                        NS(id, "cortyp"),
+                        "Method:",
+                        choices = c("heatmap", "PCA"),
+                        selected = "heatmap",
+                        inline = TRUE
+                    ),
+                    radioButtons(
+                        NS(id, "plotcols"), "Colour scheme:",
+                        choices = names(.globals$cList),
+                        selected = names(.globals$cList)[2]),
+                    geneExprDotPlotUI(id, postfix=2)
                 )
             )
         )
@@ -134,14 +158,18 @@ plotProportionServer <- function(id, dataSource, optCrt) {
             input$CellInfoY
         )
         
-        output$proportion.dt <- renderDT({
+        getProportion <- function(plot1){
             proportion <- plot1()$data
             proportion <- dcast.data.table(proportion, as.formula('X~grp'),
-                                value.var = 'nCells')
+                                           value.var = 'nCells')
             proportion[is.na(proportion)] <- 0
             proportion <- as.data.frame(proportion)
             rownames(proportion) <- proportion$X
             proportion$X <- NULL
+            proportion
+        }
+        output$proportion.dt <- renderDT({
+            proportion <- getProportion(plot1)
             withCallingHandlers({
                 chisq <- chisq.test(proportion)
             }, warning = function(w){
@@ -186,5 +214,29 @@ plotProportionServer <- function(id, dataSource, optCrt) {
                 )
             )
         })
+        
+        plot2 <- reactive({
+            scCorProp(
+                getProportion(plot1),
+                orderX = input$cellinfoXorder,
+                method = input$testmethod,
+                type = input$cortyp,
+                labelsFontsize = input$plotfsz,
+                inpcols = input$plotcols
+            )
+        })
+        updateGeneExprDotPlotUI(
+            postfix = 2,
+            id,
+            input,
+            output,
+            session,
+            plot2,
+            .globals$pList2[input$plotpsz],
+            dataSource()$dataset,
+            input$plottyp,
+            input$CellInfoX,
+            input$CellInfoY
+        )
     })
 }

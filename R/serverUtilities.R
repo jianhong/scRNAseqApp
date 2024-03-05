@@ -880,10 +880,10 @@ filterCells <- function(
             names(subsetCellVal) <- subsetCellKey
         }
         for(skey in subsetCellKey){
-            skey <- inpConf[inpConf$UI == skey]$ID
+            sid <- inpConf[inpConf$UI == skey]$ID
             if(!skey %in% colnames(ggData)) next
-            if (length(subsetCellVal[[skey]]) != nlevels(ggData[[skey]])) {
-                keep <- keep & ggData[[skey]] %in% subsetCellVal[[skey]]
+            if (length(subsetCellVal[[skey]]) != nlevels(ggData[[sid]])) {
+                keep <- keep & ggData[[sid]] %in% subsetCellVal[[skey]]
             }
         }
     }

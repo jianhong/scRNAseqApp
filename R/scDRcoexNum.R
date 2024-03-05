@@ -16,7 +16,8 @@ scDRcoexNum <- function(
     keep <- filterCells(
         ggData,
         subsetCellKey,
-        subsetCellVal)
+        subsetCellVal,
+        inpConf=inpConf)
     ggData <- ggData[keep]
     
     # Actual data.table

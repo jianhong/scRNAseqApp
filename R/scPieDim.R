@@ -79,7 +79,8 @@ scPieDim <- function(
         subsetCellKey,
         subsetCellVal,
         subFilterColname,
-        valueFilterCutoff)
+        valueFilterCutoff,
+        inpConf=inpConf)
     
     if(cnid>3) colnames(ggData)[cnid] <- subGrpColname
     

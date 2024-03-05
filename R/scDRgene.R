@@ -71,7 +71,8 @@ scDRgene <- function(
         subsetCellKey,
         subsetCellVal,
         subFilterColname,
-        valueFilterCutoff
+        valueFilterCutoff,
+        inpConf=inpConf
     )
     
     ## make the first subsetCellKey as sub

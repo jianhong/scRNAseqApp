@@ -63,7 +63,8 @@ scDRcell <- function(
         subsetCellKey,
         subsetCellVal,
         subFilterColname,
-        valueFilterCutoff)
+        valueFilterCutoff,
+        inpConf)
     
     if(subsetCellKey[1]==inp1){
         subGrpColname <- valColname

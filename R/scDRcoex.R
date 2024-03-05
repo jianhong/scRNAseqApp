@@ -72,7 +72,8 @@ scDRcoex <- function(
         subsetCellKey,
         subsetCellVal,
         subFilterColname,
-        valueFilterCutoff)
+        valueFilterCutoff,
+        inpConf)
     
     colnames(ggData)[3] <- subGrpColname ## make the first subsetCellKey as sub
     bgCells <- sum(!keep) > 0

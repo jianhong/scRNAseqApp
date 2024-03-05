@@ -49,7 +49,8 @@ scProp <- function(
     keep <- filterCells(
         ggData,
         valueFilterKey = subFilterColname,
-        valueFilterCutoff = valueFilterCutoff)
+        valueFilterCutoff = valueFilterCutoff,
+        inpConf=inpConf)
     
     if(ncol(ggData)==1){
         ggData <- cbind(ggData, ggData) ## X and color grp are same.

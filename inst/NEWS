@@ -1,3 +1,8 @@
+CHANGES IN VERSION 1.3.15
+-------------------------
+
+    o Fix the no id column issue when update the database.
+    
 CHANGES IN VERSION 1.3.14
 -------------------------
 

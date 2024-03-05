@@ -36,7 +36,7 @@ scExprServer <- function(
             server = TRUE,
             selected = defaults[[GeneNameLabel]],
             options = list(
-                maxOptions = 6,
+                maxOptions = .globals$maxNumGene,
                 create = TRUE,
                 persist = TRUE,
                 render = I(optCrt)

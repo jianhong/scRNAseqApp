@@ -86,7 +86,7 @@ coExprServer <- function(id, dataSource, optCrt) {
             server = TRUE,
             selected = dataSource()$sc1def$gene1,
             options = list(
-                maxOptions = 6,
+                maxOptions = .globals$maxNumGene,
                 create = TRUE,
                 persist = TRUE,
                 render = I(optCrt)
@@ -99,7 +99,7 @@ coExprServer <- function(id, dataSource, optCrt) {
             server = TRUE,
             selected = dataSource()$sc1def$gene2,
             options = list(
-                maxOptions = 6,
+                maxOptions = .globals$maxNumGene,
                 create = TRUE,
                 persist = TRUE,
                 render = I(optCrt)

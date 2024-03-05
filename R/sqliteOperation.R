@@ -57,6 +57,10 @@ createConfigTable <- function(appconf){
           ref_abstract=replaceNULL(.ele$ref$entry$abstract))
     })
     appData <- do.call(rbind, appData)
+    colnames(appData) <- c('title', 'id', 'species', 'type', 'markers',
+                           'keywords', 'groupCol', 'ref_bib', 'ref_doi',
+                           'ref_pmid', 'ref_title', 'ref_author',
+                           'ref_year', 'ref_journal', 'ref_abstract')
     appData <- as.data.frame(appData)
     appData$locker <- vapply(appData$id, FUN = checkLocker,
                              FUN.VALUE = logical(1L))

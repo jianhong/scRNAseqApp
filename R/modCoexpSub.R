@@ -47,7 +47,7 @@ scCoexpServer <- function(
             server = TRUE,
             selected = defaults$GeneName1,
             options = list(
-                maxOptions = 6,
+                maxOptions = .globals$maxNumGene,
                 create = TRUE,
                 persist = TRUE,
                 render = I(optCrt)
@@ -60,7 +60,7 @@ scCoexpServer <- function(
             server = TRUE,
             selected = defaults$GeneName2,
             options = list(
-                maxOptions = 6,
+                maxOptions = .globals$maxNumGene,
                 create = TRUE,
                 persist = TRUE,
                 render = I(optCrt)

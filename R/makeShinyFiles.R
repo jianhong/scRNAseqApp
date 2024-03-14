@@ -23,6 +23,7 @@
 #'   show in bubbleplot / heatmap
 #' @param default.dimred character vector specifying the two default dimension
 #'   reductions. Default is to use UMAP if not TSNE embeddings
+#' @param default.symbol character(1L) specifying the default rownames to be used. If use default, the gene symbols will be the row names of the assay. If one column name of the meta.feature of the assay is supplied, the function will try to extract the symbols from the meta.feature slot of the assay. 
 #' @param chunkSize number of genes written to h5file at any one time. Lower
 #'   this number to reduce memory consumption. Should not be less than 10
 #'
@@ -48,6 +49,7 @@ makeShinyFiles <- function(
         defaultGene2 = NA,
         default.multigene = NA,
         default.dimred = NA,
+        default.symbol = 'rownames',
         chunkSize = 500) {
     ### Preprocessing and checks
     # Generate defaults for assayName / slot
@@ -64,6 +66,20 @@ makeShinyFiles <- function(
     gex.matdim <- dim(gexAsy)
     gex.rownm <- rownames(gexAsy)
     gex.colnm <- colnames(gexAsy)
+    useRownames <- TRUE
+    if(default.symbol!='rownames'){
+        featureMeta <- obj[[assayName]][[]]
+        if(default.symbol %in% colnames(featureMeta)){
+            ## rename the gexAsy
+            newRN <- featureMeta[, default.symbol[1]]
+            newRN[is.na(newRN)] <- gex.rownm[is.na(newRN)]
+            newRN[newRN==''] <- gex.rownm[newRN=='']
+            oldRN <- gex.rownm
+            gex.rownm <- newRN
+            rm(newRN)
+            useRownames <- FALSE
+        }
+    }
     defGenes <- VariableFeatures(obj)[seq.int(10)]
     if (is.na(defGenes[1])) {
         warning(
@@ -71,6 +87,15 @@ makeShinyFiles <- function(
             "ran `FindVariableFeatures` or `SCTransform`?"
         )
         defGenes <- gex.rownm[seq.int(10)]
+    }
+    if(!useRownames){
+        if(any(oldRN %in% gex.rownm)){
+            defGenes <- gex.rownm[match(defGenes, oldRN)]
+            defGenes <- defGenes[!is.na(defGenes)]
+            if(length(defGenes)==0){
+                defGenes <- gex.rownm[seq.int(10)]
+            }
+        }
     }
     sc1meta <- data.table(sampleID = rownames(obj[[]]), obj[[]])
     
@@ -82,6 +107,17 @@ makeShinyFiles <- function(
     # Check defaultGene1 / defaultGene2 / default.multigene
     defaultGene1 <- defaultGene1[1]
     defaultGene2 <- defaultGene2[1]
+    if(!useRownames){
+        if(!defaultGene1 %in% gex.rownm){
+            defaultGene1 <- gex.rownm[match(defaultGene1, oldRN)]
+        }
+        if(!defaultGene2 %in% gex.rownm){
+            defaultGene2 <- gex.rownm[match(defaultGene2, oldRN)]
+        }
+        if(any(!default.multigene %in% gex.rownm)){
+            default.multigene <- gex.rownm[match(default.multigene, oldRN)]
+        }
+    }
     if (is.na(defaultGene1)) {
         defaultGene1 <- defGenes[1]
     }

@@ -20,6 +20,7 @@
 #' open chromatin.
 #' @param atacSlot layer in single-cell atac assay to plot.
 #' Default is to use the "data" layer
+#' @param default.symbol character(1L) specifying the default rownames to be used. If use default, the gene symbols will be the row names of the assay. If one column name of the meta.feature of the assay is supplied, the function will try to extract the symbols from the meta.feature slot of the assay. 
 #' @importFrom SeuratObject Reductions Idents Assays DefaultAssay GetAssayData
 #'  `DefaultAssay<-` VariableFeatures Misc `Misc<-` Embeddings `Idents<-`
 #' @importFrom Seurat FindAllMarkers FindVariableFeatures ScaleData
@@ -46,7 +47,8 @@ createDataSet <- function(
         atacAssayName,
         atacSlot = c("data", "scale.data", "counts"),
         LOCKER = FALSE,
-        datafolder = "data") {
+        datafolder = "data",
+        default.symbol = 'rownames') {
     stopifnot(file.exists(datafolder))
     stopifnot(is(seu, "Seurat"))
     stopifnot(is(appconf, "APPconf"))
@@ -195,7 +197,8 @@ createDataSet <- function(
         appDir = pf,
         defaultGene1 = markers[1],
         defaultGene2 = markers[2],
-        default.multigene = markers
+        default.multigene = markers,
+        default.symbol = default.symbol
     )
     
     .globals$datafolder <- datafolder

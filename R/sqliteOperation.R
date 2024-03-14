@@ -195,7 +195,7 @@ touchIPtable <- function(){
 }
 getIPtable <- function(ips){
     if(!tableExists(.globals$IPlocationTablename)){
-        return(data.frame(ip=ips))
+        return(data.frame(ip=unique(ips)))
     }
     ips <- unique(ips)
     ips <- ips[!is.na(ips)]
@@ -224,16 +224,28 @@ getIPtable <- function(ips){
     res
 }
 touchVisitorTable <- function(){
+    counter <- NULL
     if(!tableExists(.globals$counterTableName)){
         counter <- read.delim(.globals$counterFilename, header = TRUE)
-        if(!tableExists(.globals$IPlocationTablename)){
-            touchIPtable()
+    }else{
+        query <- paste('SELECT * FROM',
+                       .globals$counterTableName)
+        counter <- 
+            connectDB(dbGetQuery,
+                      statement = query)
+    }
+    if(!tableExists(.globals$IPlocationTablename)){
+        touchIPtable()
+    }
+    if(length(counter)){
+        if(!all(c('latitude', 'longitude', 'region', 'city') %in%
+                colnames(counter))){
+            counterIP <- getIPtable(counter$ip)
+            counter <- merge(counter, counterIP, by='ip', all.x = TRUE)
+            counter <- counter[order(counter$date), ]
+            connectDB(dbWriteTable, name = .globals$counterTableName,
+                      value = counter, overwrite = TRUE)
         }
-        counterIP <- getIPtable(counter$ip)
-        counter <- merge(counter, counterIP, by='ip', all.x = TRUE)
-        counter <- counter[order(counter$date), ]
-        connectDB(dbWriteTable, name = .globals$counterTableName,
-                  value = counter, overwrite = TRUE)
     }
 }
 ## visitor table

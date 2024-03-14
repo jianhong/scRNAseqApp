@@ -17,7 +17,8 @@ createDataSet(
   atacAssayName,
   atacSlot = c("data", "scale.data", "counts"),
   LOCKER = FALSE,
-  datafolder = "data"
+  datafolder = "data",
+  default.symbol = "rownames"
 )
 }
 \arguments{
@@ -48,6 +49,8 @@ Default is to use the "data" layer}
 \item{LOCKER}{Set locker if the file is required login}
 
 \item{datafolder}{app data folder}
+
+\item{default.symbol}{character(1L) specifying the default rownames to be used. If use default, the gene symbols will be the row names of the assay. If one column name of the meta.feature of the assay is supplied, the function will try to extract the symbols from the meta.feature slot of the assay.}
 }
 \value{
 The updated Seurat object.

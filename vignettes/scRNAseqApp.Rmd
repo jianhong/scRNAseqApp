@@ -346,7 +346,8 @@ appconf <- createAppConfig(
             destinationFolder = "pbmc_small_test",
             species = "Homo sapiens",
             doi="10.1038/nbt.3192",
-            datatype = "scRNAseq")
+            datatype = "scRNAseq",
+            abstract = 'Put the description of the data here.')
 createDataSet(
     appconf,
     pbmc_small,

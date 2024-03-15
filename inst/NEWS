@@ -1,3 +1,8 @@
+CHANGES IN VERSION 1.3.18
+-------------------------
+
+    o Add abstract parameter for createAppConfig
+
 CHANGES IN VERSION 1.3.17
 -------------------------
 

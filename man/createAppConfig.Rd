@@ -13,7 +13,8 @@ createAppConfig(
   bibentry,
   datatype = c("scRNAseq", "scATACseq", "scMultiome"),
   markers,
-  keywords
+  keywords,
+  abstract
 )
 }
 \arguments{
@@ -38,6 +39,8 @@ a character vector.}
 \item{keywords}{The keywords for the dataset.
 For example the condition, cell type, tissue information
 The keywords will be used for whole database search}
+
+\item{abstract}{The abstract of the reference.}
 }
 \value{
 An object of \link{APPconf} object

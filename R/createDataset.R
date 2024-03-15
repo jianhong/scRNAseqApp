@@ -232,6 +232,7 @@ createDataSet <- function(
 #' @param keywords The keywords for the dataset.
 #' For example the condition, cell type, tissue information
 #' The keywords will be used for whole database search
+#' @param abstract The abstract of the reference.
 #' @return An object of \link{APPconf} object
 #' @importFrom RefManageR GetBibEntryWithDOI GetPubMedByID
 #' @export
@@ -255,7 +256,8 @@ createAppConfig <-
         bibentry,
         datatype = c("scRNAseq", "scATACseq", "scMultiome"),
         markers,
-        keywords) {
+        keywords,
+        abstract) {
         ## markers is a list of dataframe, rownames is the gene symbols
         if (!missing(markers)) {
             if (is.character(markers)) {
@@ -317,6 +319,9 @@ createAppConfig <-
         if (!missing(bibentry)) {
             if (is(bibentry, "bibentry")) {
                 bib <- format(bibentry, style = 'html')
+                if(!missing(abstract)){
+                    bibentry$abstract <- abstract
+                }
             }
         }else{
             bibentry <- NULL

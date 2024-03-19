@@ -68,16 +68,57 @@ createConfigTable <- function(appconf){
               value = appData, overwrite = TRUE)
 }
 
-updateConfigTable <- function(){
-    appconf <- getAppConfObj(privilege = 'all')
-    createConfigTable(appconf)
+updateConfigTable <- function(appconf){
+    if(missing(appconf)){
+        appconf <- getAppConfObj(privilege = 'all')
+        createConfigTable(appconf)
+    }else{
+        if(is(appconf, 'APPconf')){
+            appconf <- list(ele=appconf)
+        }
+        lapply(appconf, function(.ele){
+            query <- paste0('UPDATE ', 
+                           .globals$configTableName,
+                           ' SET `title`="', .ele$title, '",',
+                           ' `species`="', .ele$species, '",',
+                           ' `type`="', .ele$type, '",',
+                           ' `markers`="',
+                           paste(markers(.ele),
+                                 collapse = .globals$configTableSep), '",',
+                           ' `keywords`="', 
+                           paste(.ele$keywords,
+                                 collapse = .globals$configTableSep), '",',
+                           ' `groupCol`="',
+                           paste(.ele$groupCol,
+                                 collapse = .globals$configTableSep), '",',
+                           ' `ref_bib`="',
+                           magicQuote(trimBib(replaceNULL(.ele$ref$bib))), '",',
+                           ' `ref_doi`="',
+                           replaceNULL(.ele$ref$doi), '",',
+                           ' `ref_pmid`="',
+                           replaceNULL(.ele$ref$pmid), '",',
+                           ' `ref_title`="',
+                           replaceNULL(.ele$ref$entry$title), '",',
+                           ' `ref_author`="',
+                           paste(.ele$ref$entry$author, 
+                                 collapse = .globals$configTableSep), '",',
+                           ' `ref_year`="',
+                           replaceNULL(.ele$ref$entry$year), '",',
+                           ' `ref_journal`="',
+                           replaceNULL(.ele$ref$entry$journal), '",',
+                           ' `ref_abstract`="',
+                           replaceNULL(.ele$ref$entry$abstract), '"',
+                           ' WHERE id="', .ele$id, '"')
+            sendNoreplyQueryToDB(statement = query)
+        })
+    }
 }
 
 updateConfigTblKey <- function(key, feild, value){
     if(missing(key) || missing(feild)){
         stop('Not proper query statement.')
     }
-    query <- paste('UPDATE ', 
+    query <- paste0('UPDATE ', 
                    .globals$configTableName,
                    ' SET ', feild, '="', value, '"',
                    ' WHERE id="', key, '"')

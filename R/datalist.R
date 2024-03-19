@@ -139,6 +139,9 @@ getRef <- function(dataset, key, appconf) {
 trimBib <- function(bib) {
     return(sub("^(<.*?>)\\[\\d+\\]", "\\1", gsub("^\\s+", "", bib)))
 }
+magicQuote <- function(s) {
+    return(gsub('"', "'", s, fixed = TRUE))
+}
 get_full_ref_list <- function(appconf, returnLen = FALSE) {
     ref <- lapply(appconf, function(.ele) {
         .ele <- .ele$ref

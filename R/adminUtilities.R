@@ -204,6 +204,22 @@ updateAppConf <- function(input, global) {
     } else{
         species <- input$species
     }
+    entry <- global()$ref
+    if(!is(entry, 'bibentry')){
+        author <- 'NA'
+        journal <- 'unpublished'
+        year <- format(Sys.time(), '%Y')
+        entry <- bibentry(
+            bibtype = 'Article',
+            title = input$title,
+            doi = input$doi,
+            pmid = input$pmid,
+            author = author,
+            journal = journal,
+            year = year,
+            abstract = input$abstract
+        )
+    }
     appconf <- APPconf(
         title = input$title,
         id = input$dir,
@@ -212,7 +228,7 @@ updateAppConf <- function(input, global) {
             bib = input$reference,
             doi = input$doi,
             pmid = input$pmid,
-            entry = global()$ref
+            entry = entry
         ),
         type = input$datatype,
         markers = markers,

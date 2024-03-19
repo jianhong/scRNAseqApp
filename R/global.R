@@ -39,7 +39,7 @@
 .globals$geneSymbolTableName <- 'gene'
 .globals$gn2symTableName <- 'gn2sym'
 # for home search page, the groupColPattern
-.globals$groupColPattern <- 'group'
+.globals$groupColPattern <- 'celltype'
 # Colour palette
 .globals$cList <- list(
     "White-Red" = c(

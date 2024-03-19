@@ -40,7 +40,7 @@ conditionHandler <- function(cond) {
 #' @noRd
 #' @param startMsg,endMsg messages for start and end of the progress
 #' @param expr expression for the process
-adminProcess <- function(expr, startMsg, endMsg) {
+adminProcess <- function(expr, startMsg, endMsg, duration=5) {
     # Create a Progress object
     assign("progress", shiny::Progress$new(), envir = .globals)
     assign("progress_value", 0, envir = .globals)
@@ -62,7 +62,7 @@ adminProcess <- function(expr, startMsg, endMsg) {
     get("progress", envir = .globals)$close()
     on.exit()
     if (!missing(endMsg)) {
-        adminMsg(endMsg, "message")
+        adminMsg(endMsg, "message", duration = duration)
     }
 }
 
@@ -221,6 +221,7 @@ updateAppConf <- function(input, global) {
     if (!is.null(input$dir)) {
         if (input$dir != "") {
             saveAppConf(appconf)
+            updateConfigTable(appconf)
         }
     }
 }

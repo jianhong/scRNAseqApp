@@ -88,7 +88,7 @@ editUI <- function (id) {
                 selectInput(
                     ns("species"),
                     label = "Species",
-                    choices = .globals$supported_organisms,
+                    choices = c(.globals$supported_organisms, 'others'),
                     selected = NULL
                 ),
                 textInput(
@@ -103,6 +103,9 @@ editUI <- function (id) {
                 textAreaInput(
                     ns("keywords"),
                     label = "The key words for this work"),
+                textAreaInput(
+                    ns("abstract"),
+                    label = "The abstract for this work"),
                 textAreaInput(
                     ns("reference"),
                     label = "BibTeX string"),
@@ -296,6 +299,8 @@ editServer <- function(id) {
                             selected = global$sc1def$grp2
                         )
                         global$appconf <- readData("appconf", input$dir)
+                        global$ref <- global$appconf$ref$entry
+                        
                         if (length(global$appconf$markers)) {
                             global$markers <- global$appconf$markers
                         }
@@ -324,11 +329,22 @@ editServer <- function(id) {
                                 session,
                                 "species2",
                                 value = global$appconf$species)
+                        } else {
+                            updateTextInput(
+                                session,
+                                "species2",
+                                value = ""
+                            )
                         }
                         updateTextInput(
                             session,
                             "reference",
                             value = global$appconf$ref$bib)
+                        updateTextInput(
+                            session,
+                            "abstract",
+                            value = global$appconf$ref$entry$abstract
+                        )
                         updateTextInput(
                             session,
                             "doi",
@@ -341,7 +357,7 @@ editServer <- function(id) {
                         updateCheckboxInput(
                             session, "locker",
                             value = global$locker)
-                    }, "Loading data", "Done loading!")
+                    }, "Loading data", "Done loading!", duration = 1)
                 }
             }
         })
@@ -537,6 +553,17 @@ editServer <- function(id) {
                 sc1conf <- readData("sc1conf", input$dir)
                 sc1conf <- sc1conf[sc1conf$ID %in% input$meta_to_include,]
                 saveData(sc1conf, input$dir, "sc1conf")
+                if(is.null(global$ref$abstract) && input$abstract!=''){
+                    if(nchar(input$abstract)>1){
+                        global$ref$abstract <- input$abstract
+                    }
+                }else{
+                    if(input$abstract!=global$ref$abstract){
+                        if(nchar(input$abstract)>1){
+                            global$ref$abstract <- input$abstract
+                        }
+                    }
+                }
                 updateAppConf(input, reactive({
                     global
                 }))

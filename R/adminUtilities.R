@@ -182,6 +182,7 @@ filterGrpIDs <- function(grp_ids, meta) {
     grp_ids[keep]
 }
 
+#' @importFrom utils bibentry
 updateAppConf <- function(input, global) {
     markers <- global()$markers
     if (is.character(markers)) {

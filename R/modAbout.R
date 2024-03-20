@@ -61,11 +61,20 @@ aboutUI <- function(
                                     "panel-heading",
                                     "about-container",
                                     "about-padding-16"),
-                            textInput(
-                                ns('search'),
-                                label = NULL,
-                                width = "96%",
-                                placeholder = 'Search the database'
+                            fluidRow(
+                                column(9,
+                                       textInput(
+                                           ns('search'),
+                                           label = NULL,
+                                           width = "100%",
+                                           placeholder = 'Search the database'
+                                       )),
+                                column(1, 
+                                      actionButton(
+                                          ns('sbtn'),
+                                          label = 'Search',
+                                          width = '100px'
+                                      ))
                             )
                         ),
                         div(
@@ -74,7 +83,15 @@ aboutUI <- function(
                                 "about-bar",
                                 "border-bottom-info",
                                 "shadow h-100 py-2"),
-                            htmlOutput(ns('search_res')))
+                            htmlOutput(ns('search_res')),
+                            div(
+                                style = "visibility:hidden;",
+                                checkboxInput(
+                                    ns("s_res_flag"),
+                                    label = NULL,
+                                    value = FALSE
+                                )
+                            ))
                     )
                 )
             ),
@@ -175,10 +192,13 @@ aboutServer <- function(id, dataSource, optCrt) {
             }else{
                 h5('No reference for current data.')
             })
-        observeEvent(input$search, {
-            invalidateLater(2000, session = session)
+        observeEvent(input$sbtn, {
             if (input$search != '' && input$search != "Type key words here") {
-                output$search_res <- renderUI(tags$div('searching...'))
+                showNotification(
+                    paste('Searching', input$search, 'in database.'),
+                    duration = 3,
+                    type = 'message'
+                )
                 updateSearch(
                     input$search,
                     dataSource()$available_datasets,

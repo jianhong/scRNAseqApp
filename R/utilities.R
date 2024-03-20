@@ -99,6 +99,14 @@ updateSearch <- function(
         key_words, datasets,
         auth, global, page=1,
         id, input, output, session){
+    updateCheckboxInput(session=session,
+                        inputId='s_res_flag',
+                        value = FALSE)
+    on.exit({
+        updateCheckboxInput(session=session,
+                            inputId='s_res_flag',
+                            value = TRUE)
+    })
     if( isGene(
         key_words,
         datasets,

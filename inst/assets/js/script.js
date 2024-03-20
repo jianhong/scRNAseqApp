@@ -35,5 +35,17 @@
           $('a[data-value="about"]').trigger('click');
           return false;
         });
+    $('#about-search').on('keyup', function(e) {
+        if(e.keyCode == 13){//search box, when enter pressed
+            $("#about-sbtn").trigger('click');
+            $("#about-sbtn").prop('disabled', true); //disable clicked button
+            var intr = setInterval(function(){
+                if($("#about-s_res_flag").prop("checked")){
+                    $("#about-sbtn").prop('disabled', false);
+                    clearInterval(intr);
+                }
+            }, 1000);
+        }
+    });
   });
 }())

@@ -74,6 +74,11 @@ makeShinyFiles <- function(
             newRN <- featureMeta[, default.symbol[1]]
             newRN[is.na(newRN)] <- gex.rownm[is.na(newRN)]
             newRN[newRN==''] <- gex.rownm[newRN=='']
+            if(any(duplicated(newRN))){
+                dup_RN <- newRN %in% newRN[duplicated(newRN)]
+                newRN[dup_RN] <- 
+                    paste(newRN[dup_RN], gex.rownm[dup_RN], sep='-')
+            }
             oldRN <- gex.rownm
             gex.rownm <- newRN
             rm(newRN)

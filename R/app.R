@@ -13,7 +13,7 @@
 #' @param use_bs_themer logical(1). Used to determine the theme.
 #' @param ... parameters can be passed to shinyApp except ui and server.
 #' @import shiny
-#' @importFrom utils packageVersion read.delim
+#' @importFrom utils packageVersion packageDescription read.delim
 #' @importFrom xfun base64_uri is_abs_path
 #' @importFrom shinyhelper observe_helpers
 #' @importFrom ggplot2 ggplot aes geom_bar theme_minimal xlab ylab
@@ -99,7 +99,10 @@ scRNAseqApp <- function(
                         em(
                             windowTitle,
                             " (Version:",
-                            as.character(packageVersion("scRNAseqApp")),
+                            a(as.character(packageVersion("scRNAseqApp")),
+                              href = packageDescription("scRNAseqApp",
+                                                        fields='URL'),
+                              target = "_blank"),
                             ")"
                         ),
                         footer,

@@ -343,7 +343,9 @@ editServer <- function(id) {
                         updateTextInput(
                             session,
                             "abstract",
-                            value = global$appconf$ref$entry$abstract
+                            value = ifelse(
+                                is.null(global$appconf$ref$entry$abstract),
+                                '',global$appconf$ref$entry$abstract)
                         )
                         updateTextInput(
                             session,
@@ -553,16 +555,10 @@ editServer <- function(id) {
                 sc1conf <- readData("sc1conf", input$dir)
                 sc1conf <- sc1conf[sc1conf$ID %in% input$meta_to_include,]
                 saveData(sc1conf, input$dir, "sc1conf")
-                if(is.null(global$ref$abstract) && input$abstract!=''){
-                    if(nchar(input$abstract)>1){
-                        global$ref$abstract <- input$abstract
-                    }
+                if(nchar(input$abstract)>1){
+                    global$ref$abstract <- input$abstract
                 }else{
-                    if(input$abstract!=global$ref$abstract){
-                        if(nchar(input$abstract)>1){
-                            global$ref$abstract <- input$abstract
-                        }
-                    }
+                    global$ref$abstract <- NULL
                 }
                 updateAppConf(input, reactive({
                     global

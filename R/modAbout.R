@@ -116,9 +116,7 @@ aboutUI <- function(
                 ),
                 summaryBox(
                     "VISITORS",
-                    length(unique(read.delim(
-                        .globals$counterFilename,
-                        header = TRUE)$ip)), #textOutput(ns('visitor_count')),
+                    listVisitors(ipCounter = TRUE)$uniqueIP, #textOutput(ns('visitor_count')),
                     width = 3,
                     icon = "eye",
                     style = "primary",

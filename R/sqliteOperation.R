@@ -325,7 +325,7 @@ updateVisitorTable <- function(input, output, session){
             theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
     })
 }
-listVisitors <- function(summary=FALSE){
+listVisitors <- function(summary=FALSE, ipCounter=FALSE){
     if(summary){
         current <- Sys.time()
         # select ~730 day data 63072000 = 730*60*60*24
@@ -337,10 +337,15 @@ listVisitors <- function(summary=FALSE){
                         current - 63072000, '" AND "', current,
                         '" GROUP BY `time`')
     }else{
-        query <- paste0('SELECT * FROM ',
-                        .globals$counterTableName)
+        if(ipCounter){
+            query <- paste0('SELECT count(`ip`) AS total, ',
+                            ' count(DISTINCT `ip`) AS uniqueIP FROM ',
+                            .globals$counterTableName)
+        }else{
+            query <- paste0('SELECT * FROM ',
+                            .globals$counterTableName)
+        }
     }
-    
     counter <- connectDB(dbGetQuery, query)
 }
 

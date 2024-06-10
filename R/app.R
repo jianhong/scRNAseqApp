@@ -4,6 +4,7 @@
 #' @param datafolder the folder where saved the dataset for the app
 #' @param defaultDataset default dataset for the app.
 #' @param windowTitle The title that should be displayed by the browser window.
+#' @param favicon The favicon for the page.
 #' @param banner The banner image.
 #' @param footer The footer html contents.
 #' @param maxRequestSize Maximal upload file size. Default is 1G.
@@ -33,6 +34,9 @@ scRNAseqApp <- function(
         datafolder = "data",
         defaultDataset = "pbmc_small",
         windowTitle = "scRNAseq/scATACseq database",
+        favicon = system.file(
+            'assets', 'img', 'favicon.ico',
+            package = 'scRNAseqApp'),
         banner = system.file(
             'assets', 'img', 'banner.png',
             package = 'scRNAseqApp'),
@@ -91,7 +95,10 @@ scRNAseqApp <- function(
             ### theme
             theme = .globals$theme,
             navbarPage(
-                title = NULL,
+                title = tags$head(
+                    tags$link(rel="icon", 
+                              href=base64_uri(favicon), 
+                              type="image/x-icon")),
                 windowTitle = windowTitle,
                 id = "topnav",
                 footer = div(

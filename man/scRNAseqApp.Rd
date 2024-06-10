@@ -9,6 +9,7 @@ scRNAseqApp(
   datafolder = "data",
   defaultDataset = "pbmc_small",
   windowTitle = "scRNAseq/scATACseq database",
+  favicon = system.file("assets", "img", "favicon.ico", package = "scRNAseqApp"),
   banner = system.file("assets", "img", "banner.png", package = "scRNAseqApp"),
   footer = tagList(HTML("&copy;"), "2020 -", format(Sys.Date(), "\%Y"), "jianhong@duke"),
   maxRequestSize = 1073741824,
@@ -26,6 +27,8 @@ scRNAseqApp(
 \item{defaultDataset}{default dataset for the app.}
 
 \item{windowTitle}{The title that should be displayed by the browser window.}
+
+\item{favicon}{The favicon for the page.}
 
 \item{banner}{The banner image.}
 

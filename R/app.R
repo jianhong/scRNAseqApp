@@ -207,6 +207,8 @@ scRNAseqApp <- function(
             cell = NULL,
             # genelist for cellInfoGeneExpr or heatmap plot from query string
             genelist = NULL,
+            # active tab from query string
+            activetab = NULL,
             # config for current sc data
             sc1conf = NULL,
             # def for current sc data
@@ -304,6 +306,11 @@ scRNAseqApp <- function(
                 dataSource$genelist <- genes
             } else{
                 dataSource$genelist <- NULL
+            }
+            if (!is.null(query[['tab']])) {
+                dataSource$activetab <- query[['tab']]
+            } else {
+                dataSource$activetab <- NULL
             }
             if (!is.null(query[['cell']])) {
                 ## not used yet
@@ -566,7 +573,9 @@ scRNAseqApp <- function(
                 updateTabsetPanel(
                     session,
                     'topnav',
-                    selected = "cellInfoGeneExpr")
+                    selected = ifelse(is.null(dataSource$activetab),
+                                      "cellInfoGeneExpr",
+                                      dataSource$activetab))
             } else{
                 if (length(dataSource$genelist) > 1) {
                     updateTabsetPanel(

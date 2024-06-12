@@ -81,12 +81,16 @@ subsetGeneExprServer <- function(id, dataSource, optCrt) {
         updateDimRedSelInputPair(session, dataSource)
         ### Information to show
         #### gene name to plot
+        selectedGene <- dataSource()$sc1def$gene1
+        if (!is.null(dataSource()$genelist)) {
+            selectedGene <- dataSource()$genelist[1]
+        }
         updateSelectizeInput(
             session,
             "GeneName",
             choices = sort(names(dataSource()$sc1gene)),
             server = TRUE,
-            selected = dataSource()$sc1def$gene1,
+            selected = selectedGene,
             options = list(
                 maxOptions = .globals$maxNumGene,
                 create = TRUE,

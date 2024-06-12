@@ -20,8 +20,13 @@ aboutUI <- function(
                 datasets <- res$datasets
                 appconf <- res$appconf
                 data_types <- res$data_types
-            }else{## something wrong here
-                defaultDataset <- datasets[1]
+            }else{
+                if(defaultDataset %in% names(datasets)){
+                   defaultDataset <- datasets[defaultDataset]
+                }else{
+                    ## something wrong here
+                    defaultDataset <- datasets[1]
+                }
             }
         }
         refs <- listReferences()
@@ -125,12 +130,14 @@ aboutUI <- function(
                 summaryBox(
                     tags$a("SPECIES",
                            'data-toggle'='tooltip',
+                           'data-html'="true",
                            title=paste(species,
-                                       collapse = ', ')),
+                                       collapse = ',<br/>')),
                     tags$a(length(species),
                            'data-toggle'='tooltip',
+                           'data-html'="true",
                            title=paste(species,
-                                       collapse = ', ')), #textOutput(ns('species_count')),
+                                       collapse = ',<br/>')), #textOutput(ns('species_count')),
                     width = 3,
                     icon = "fish",
                     style = "warning",

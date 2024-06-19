@@ -284,13 +284,13 @@ geneExprDotPlotUI <- function(id, postfix=1){
         div(style="display:inline-block",
             numericInput(
                 NS0(id, "GeneExproup.h", postfix),
-                "height:", width = "50px",
-                min = 4, max = 20, value = 6, step = 0.5)),
+                "height:", width = "60px",
+                min = 2, max = 20, value = .globals$figHeight, step = 0.5)),
         div(style="display:inline-block",
             numericInput(
                 NS0(id, "GeneExproup.w", postfix),
-                "width:", width = "50px",
-                min = 4, max = 20, value = 8, step = 0.5)),
+                "width:", width = "60px",
+                min = 2, max = 20, value = .globals$figWidth, step = 0.5)),
         downloadButton(NS0(id, "GeneExproup.pdf", postfix), "PDF"),
         downloadButton(NS0(id, "GeneExproup.png", postfix), "PNG")
     )

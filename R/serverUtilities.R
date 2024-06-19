@@ -209,22 +209,29 @@ updateGeneExprDotPlotUI <-
         output[[paste0("GeneExproup.ui", postfix)]] <- renderUI({
             plotOutput(
                 NS0(id, "GeneExproup", postfix),
-                height = height)
+                width = ifelse(
+                    input[[paste0("GeneExproup.w", postfix)]]==
+                        .globals$figWidth,
+                    '100%', input[[paste0("GeneExproup.w", postfix)]]*72),
+                height = ifelse(
+                    input[[paste0("GeneExproup.h", postfix)]]==
+                        .globals$figHeight, height,
+                    input[[paste0("GeneExproup.h", postfix)]]*72))
         })
         
         output[[paste0("GeneExproup.pdf", postfix)]] <-
             handlerFUN(
                 "pdf",
-                width = input[[paste0("GeneExproup.w", postfix)]],
-                height = input[[paste0("GeneExproup.h", postfix)]],
+                input = input,
+                postfix = postfix,
                 plotX,
                 ...)
         
         output[[paste0("GeneExproup.png", postfix)]] <-
             handlerFUN(
                 "png",
-                width = input[[paste0("GeneExproup.w", postfix)]],
-                height = input[[paste0("GeneExproup.h", postfix)]],
+                input = input,
+                postfix = postfix,
                 plotX,
                 ...)
     }
@@ -593,20 +600,27 @@ updateSubModulePlotUI <-
             output[[paste0("GeneExproup.ui", postfix)]] <- renderUI({
                 plotOutput(
                     NS0(NS(pid, id), "GeneExproup", postfix),
-                    height = height)
+                    width = ifelse(
+                        input[[paste0("GeneExproup.w", postfix)]]==
+                            .globals$figWidth,
+                        '100%', input[[paste0("GeneExproup.w", postfix)]]*72),
+                    height = ifelse(
+                        input[[paste0("GeneExproup.h", postfix)]]==
+                            .globals$figHeight, height,
+                        input[[paste0("GeneExproup.h", postfix)]]*72))
             })
             output[[paste0("GeneExproup.pdf", postfix)]] <-
                 plotsDownloadHandler(
                     "pdf",
-                    width = input[[paste0("GeneExproup.w", postfix)]],
-                    height = input[[paste0("GeneExproup.h", postfix)]],
+                    input = input,
+                    postfix = postfix,
                     plotX,
                     ...)
             output[[paste0("GeneExproup.png", postfix)]] <-
                 plotsDownloadHandler(
                     "png",
-                    width = input[[paste0("GeneExproup.w", postfix)]],
-                    height = input[[paste0("GeneExproup.h", postfix)]],
+                    input = input,
+                    postfix = postfix,
                     plotX,
                     ...)
         }

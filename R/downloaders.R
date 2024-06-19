@@ -7,7 +7,7 @@ outputFileName <- function(ext, ...) {
 #' @noRd
 #' @importFrom ggplot2 ggsave
 #' @importFrom shiny downloadHandler
-plotsDownloadHandler <- function(device, width, height, plot, ...) {
+plotsDownloadHandler <- function(device, input, postfix, plot, ...) {
     downloadHandler(
         filename = function() {
             outputFileName(device, ...)
@@ -17,8 +17,8 @@ plotsDownloadHandler <- function(device, width, height, plot, ...) {
                 ggsave(
                     file,
                     device = device,
-                    height = height,
-                    width = width,
+                    height = input[[paste0("GeneExproup.h", postfix)]],
+                    width = input[[paste0("GeneExproup.w", postfix)]],
                     useDingbats = FALSE,
                     plot = plot()
                 )
@@ -26,8 +26,8 @@ plotsDownloadHandler <- function(device, width, height, plot, ...) {
                 ggsave(
                     file,
                     device = device,
-                    height = height,
-                    width = width,
+                    height = input[[paste0("GeneExproup.h", postfix)]],
+                    width = input[[paste0("GeneExproup.w", postfix)]],
                     plot = plot()
                 )
             }
@@ -36,7 +36,7 @@ plotsDownloadHandler <- function(device, width, height, plot, ...) {
 }
 #' @importFrom grDevices dev.off pdf
 heatmapDownloadHandler <-
-    function(device, width, height, plot, ...) {
+    function(device, input, postfix, plot, ...) {
         downloadHandler(
             filename = function() {
                 outputFileName(device, ...)
@@ -45,14 +45,18 @@ heatmapDownloadHandler <-
                 if (device == "pdf") {
                     pdf(
                         file,
-                        height = height,
-                        width = width,
+                        height = input[[paste0("GeneExproup.h", postfix)]],
+                        width = input[[paste0("GeneExproup.w", postfix)]],
                         useDingbats = FALSE
                     )
                 } else{
                     get(device)(file,
-                                height = height * 100,
-                                width = width * 100)
+                                height = 
+                                    input[[paste0("GeneExproup.h",
+                                                  postfix)]] * 72,
+                                width = 
+                                    input[[paste0("GeneExproup.w",
+                                                  postfix)]] * 72)
                 }
                 draw(plot) ## for complexheatmap
                 dev.off()

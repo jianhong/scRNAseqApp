@@ -153,6 +153,9 @@
     "Medium" = 1,
     "Large" = 2)
 
+.globals$figWidth = 8.01
+.globals$figHeight = 6.01
+
 # supported organisms
 .globals$supported_organisms <- c(
     "Bos taurus",

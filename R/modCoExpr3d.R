@@ -107,23 +107,24 @@ coExpr3dServer <- function(id, dataSource, optCrt) {
         ### plots
         plot3d <- reactive({
             scDRcoex(
-                dataSource()$sc1conf,
-                dataSource()$sc1meta,
-                input$GeneExprdrX,
-                input$GeneExprdrY,
-                input$GeneName1,
-                input$GeneName2,
-                input$subsetCell,
-                getSubsetCellVal(input),
-                dataSource()$dataset,
-                dataSource()$sc1gene,
-                "3D",
-                input$GeneExprsiz,
-                input$CoExprcol1,
-                input$CoExprord1,
-                input$GeneExprfsz,
-                input$GeneExprasp,
-                input$GeneExprtxt
+                inpConf=dataSource()$sc1conf,
+                inpMeta=dataSource()$sc1meta,
+                dimRedX=input$GeneExprdrX,
+                dimRedY=input$GeneExprdrY,
+                gene1=input$GeneName1,
+                gene2=input$GeneName2,
+                subsetCellKey=input$subsetCell,
+                subsetCellVal=getSubsetCellVal(input),
+                dataset=dataSource()$dataset,
+                geneIdMap=dataSource()$sc1gene,
+                plotType="3D",
+                pointSize=input$GeneExprsiz,
+                GeneExprDotCol=input$CoExprcol1,
+                GeneExprDotOrd=input$CoExprord1,
+                labelsFontsize=input$GeneExprfsz,
+                plotAspectRatio=input$GeneExprasp,
+                keepXYlables=input$GeneExprtxt,
+                hideFilterCell=input$CoExprhid1
             )
         })
         output$GeneExpr3Doup1 <- renderPlotly({

@@ -587,6 +587,10 @@ scRNAseqApp <- function(
         }
         ## download server
         downloaderServer("downloader")
+        ## observe event for editor
+        observeEvent(input$editorStatus, {
+            refreshData(input, output, session)
+        })
     }
     shinyApp(ui = ui, server = server, ...)
 }

@@ -202,7 +202,9 @@ updateGeneExprDotPlotUI <-
         plotX,
         height,
         ...,
-        handlerFUN = plotsDownloadHandler) {
+        handlerFUN = plotsDownloadHandler,
+        isInfoPlot = FALSE,
+        dataSource = NULL) {
         output[[paste0("GeneExproup", postfix)]] <- renderPlot({
             plotX()
         })
@@ -216,8 +218,108 @@ updateGeneExprDotPlotUI <-
                 height = ifelse(
                     input[[paste0("GeneExproup.h", postfix)]]==
                         .globals$figHeight, height,
-                    input[[paste0("GeneExproup.h", postfix)]]*72))
+                    input[[paste0("GeneExproup.h", postfix)]]*72),
+                dblclick = NS0(id, 'GeneExproup.dbl', postfix))
         })
+        nearest_element <- function(e){
+            if(is.null(e)) return("undefined")
+            p <- plotX()
+            ggp1 <- ggplot_build(p)
+            xrg <- ggp1$layout$panel_params[[1]]$x.range
+            yrg <- ggp1$layout$panel_params[[1]]$y.range
+            text_layer_id <- vapply(p$layers, function(.ele){
+                is(.ele$geom, 'GeomTextRepel')
+            }, FUN.VALUE = logical(1L))
+            text_layers <- 
+                do.call(rbind, 
+                        lapply(ggp1$data[text_layer_id],
+                               function(.ele){
+                                   .ele[, c('x', 'y', 'label', 'size')]
+                               }))
+            points_layers <- 
+                do.call(rbind,
+                        lapply(ggp1$data[!text_layer_id],
+                               function(.ele){
+                                   .ele[, c('x', 'y', 'colour')]
+                               }))
+            text_layers$width <-
+                grid::convertWidth(grid::stringWidth('W'),
+                                   'npc', valueOnly = TRUE)*
+                (nchar(as.character(text_layers$label))+2)
+            text_layers$height <-
+                grid::convertHeight(grid::stringHeight('H'),
+                                    'npc', valueOnly = TRUE)*2.25
+            nearestLabel <- (e$x - text_layers$x)^2 + (e$y - text_layers$y)^2
+            ## TODO: fix it, the text are in bottom left
+            inRange <- abs((e$x - text_layers$x)/diff(xrg))<=text_layers$width &
+                abs((e$y - text_layers$y)/diff(yrg))<= text_layers$height
+            nearestLabel <- nearestLabel==min(nearestLabel) & inRange
+            if(any(nearestLabel)){
+                nearestLabel <- text_layers$label[which(nearestLabel)[1]]
+            }else{
+                nearestLabel <- (e$x - points_layers$x)^2 +
+                    (e$y - points_layers$y)^2
+                nearestLabel <- points_layers$colour[which.min(nearestLabel)[1]]
+            }
+            return(nearestLabel)
+        }
+        if(isInfoPlot && checkPrivilege(dataSource()$auth$privilege,
+                                        dataSource()$dataset)){
+            observeEvent(input[[paste0("GeneExproup.dbl", postfix)]],{
+                evt <- input[[paste0("GeneExproup.dbl", postfix)]]
+                if(!is.null(evt)){
+                    session$sendCustomMessage(
+                        type='placeGeneExproupInfoEditorBox',
+                        message = id)
+                    output[[paste0("GeneExproup.info", postfix)]] <- renderUI({
+                        val <- nearest_element(evt)
+                        fluidRow(
+                            column(4,
+                                   textInput(NS0(id, "GeneExproup.upd",
+                                                 postfix),
+                                             label = NULL,
+                                             value = val),
+                                   div(
+                                       style = "visibility:hidden;",
+                                       textInput(NS0(id, "GeneExproup.old",
+                                                     postfix),
+                                                 label = NULL,
+                                                 value = val))),
+                            column(4, actionButton(NS0(id, "GeneExproup.submit",
+                                                       postfix),
+                                                   label = 'update')),
+                            column(4),
+                            style=paste0('position:absolute; left:',
+                                         input$current_mouseX,'px; top:',
+                                         input$current_mouseY, 'px;')
+                        )
+                    })
+                }else{
+                    renderUI({div()})
+                }
+            })
+            observeEvent(input[[paste0("GeneExproup.submit",postfix)]], {
+                if(!is.null(dataSource)){
+                    updated <- updateMetaData(
+                        dataset = dataSource()$dataset,
+                        inpConf = dataSource()$sc1conf,
+                        inpMeta = dataSource()$sc1meta,
+                        privilege = dataSource()$auth$privilege,
+                        info = input[[paste0('CellInfo', postfix)]],
+                        oldvalue = input[[paste0("GeneExproup.old",
+                                                 postfix)]],
+                        newvalue = input[[paste0("GeneExproup.upd",
+                                                 postfix)]])
+                    if(updated){
+                        session$sendCustomMessage(
+                            type='updateEditorStatus',
+                            message = id)
+                    }
+                    output[[paste0("GeneExproup.info", postfix)]] <- 
+                        renderUI({div()})
+                }
+            })
+        }
         
         output[[paste0("GeneExproup.pdf", postfix)]] <-
             handlerFUN(
@@ -254,20 +356,21 @@ updateCellInfoPlot <-
         )
         plotX <- reactive({
             scDRcell(
-                dataSource()$sc1conf,
-                dataSource()$sc1meta,
-                input$GeneExprdrX,
-                input$GeneExprdrY,
-                input[[cellInfoLabel]],
-                input$subsetCell,
-                getSubsetCellVal(input),
-                input$GeneExprsiz,
-                input[[paste0("CellInfocol", postfix)]],
-                input[[paste0("CellInfoord", postfix)]],
-                input$GeneExprfsz,
-                input$GeneExprasp,
-                input$GeneExprtxt,
-                input[[paste0("CellInfolab", postfix)]],
+                inpConf=dataSource()$sc1conf,
+                inpMeta=dataSource()$sc1meta,
+                dimRedX=input$GeneExprdrX,
+                dimRedY=input$GeneExprdrY,
+                inp1=input[[cellInfoLabel]],
+                subsetCellKey=input$subsetCell,
+                subsetCellVal=getSubsetCellVal(input),
+                pointSize=input$GeneExprsiz,
+                gradientCol=input[[paste0("CellInfocol", postfix)]],
+                GeneExprDotOrd=input[[paste0("CellInfoord", postfix)]],
+                labelsFontsize=input$GeneExprfsz,
+                plotAspectRatio=input$GeneExprasp,
+                keepXYlables=input$GeneExprtxt,
+                inplab=input[[paste0("CellInfolab", postfix)]],
+                hideFilterCell=input[[paste0("CellInfohid", postfix)]],
                 inpSlingshot = input[[paste0("CellInfoslingshot", postfix)]],
                 slingshotFilename = file.path(
                     .globals$datafolder,
@@ -287,7 +390,9 @@ updateCellInfoPlot <-
             dataSource()$dataset,
             input$GeneExprdrX,
             input$GeneExprdrY,
-            input[[cellInfoLabel]]
+            input[[cellInfoLabel]],
+            isInfoPlot = TRUE,
+            dataSource = dataSource
         )
     }
 
@@ -446,23 +551,23 @@ updateGeneExprPlot <-
         ### plots
         plotX <- reactive({
             scDRgene(
-                dataSource()$sc1conf,
-                dataSource()$sc1meta,
-                input$GeneExprdrX,
-                input$GeneExprdrY,
-                input[[GeneNameLabel]],
-                input$subsetCell,
-                getSubsetCellVal(input),
-                dataSource()$dataset,
-                dataSource()$sc1gene,
-                input$GeneExprsiz,
-                input[[paste0("GeneExprcol", postfix)]],
-                input[[paste0("GeneExprord", postfix)]],
-                input$GeneExprfsz,
-                input$GeneExprasp,
-                input$GeneExprtxt,
-                input[[paste0("GeneExprtype", postfix)]],
-                if (input[[paste0("GeneExprxlimb", postfix)]] %% 2 == 0)
+                inpConf=dataSource()$sc1conf,
+                inpMeta=dataSource()$sc1meta,
+                dimRedX=input$GeneExprdrX,
+                dimRedY=input$GeneExprdrY,
+                gene1=input[[GeneNameLabel]],
+                subsetCellKey=input$subsetCell,
+                subsetCellVal=getSubsetCellVal(input),
+                dataset=dataSource()$dataset,
+                geneIdMap=dataSource()$sc1gene,
+                pointSize=input$GeneExprsiz,
+                gradientCol=input[[paste0("GeneExprcol", postfix)]],
+                GeneExprDotOrd=input[[paste0("GeneExprord", postfix)]],
+                labelsFontsize=input$GeneExprfsz,
+                plotAspectRatio=input$GeneExprasp,
+                keepXYlables=input$GeneExprtxt,
+                inpPlt=input[[paste0("GeneExprtype", postfix)]],
+                inpXlim=if (input[[paste0("GeneExprxlimb", postfix)]] %% 2 == 0)
                     0
                 else
                     input[[paste0("GeneExprxlim", postfix)]],
@@ -470,7 +575,8 @@ updateGeneExprPlot <-
                     if (input[[paste0("GeneExprrgb", postfix)]] %% 2 == 0)
                         0
                     else
-                        input[[paste0("GeneExprrg", postfix)]]
+                        input[[paste0("GeneExprrg", postfix)]],
+                hideFilterCell = input[[paste0("GeneExprhid", postfix)]]
             )
         })
         updateGeneExprDotPlotUI(
@@ -523,24 +629,24 @@ updateSubsetGeneExprPlot <-
         ### plots
         plotX <- reactive({
             scDRgene(
-                dataSource()$sc1conf,
-                dataSource()$sc1meta,
-                input$GeneExprdrX,
-                input$GeneExprdrY,
-                input$GeneName,
-                c(input$CellInfo, input$subsetCell),
-                getSubsetCellVal(
+                inpConf=dataSource()$sc1conf,
+                inpMeta=dataSource()$sc1meta,
+                dimRedX=input$GeneExprdrX,
+                dimRedY=input$GeneExprdrY,
+                gene1=input$GeneName,
+                subsetCellKey=c(input$CellInfo, input$subsetCell),
+                subsetCellVal=getSubsetCellVal(
                     input, list(input[[GeneNameLabel]]), input$CellInfo),
-                dataSource()$dataset,
-                dataSource()$sc1gene,
-                input$GeneExprsiz,
-                input[[paste0("GeneExprcol", postfix)]],
-                input[[paste0("GeneExprord", postfix)]],
-                input$GeneExprfsz,
-                input$GeneExprasp,
-                input$GeneExprtxt,
-                input[[paste0("GeneExprtype", postfix)]],
-                if (input[[paste0("GeneExprxlimb", postfix)]] %% 2 == 0)
+                dataset=dataSource()$dataset,
+                geneIdMap=dataSource()$sc1gene,
+                pointSize=input$GeneExprsiz,
+                gradientCol=input[[paste0("GeneExprcol", postfix)]],
+                GeneExprDotOrd=input[[paste0("GeneExprord", postfix)]],
+                labelsFontsize=input$GeneExprfsz,
+                plotAspectRatio=input$GeneExprasp,
+                keepXYlables=input$GeneExprtxt,
+                inpPlt=input[[paste0("GeneExprtype", postfix)]],
+                inpXlim=if (input[[paste0("GeneExprxlimb", postfix)]] %% 2 == 0)
                     0
                 else
                     input[[paste0("GeneExprxlim", postfix)]],
@@ -551,7 +657,8 @@ updateSubsetGeneExprPlot <-
                         input[[paste0("GeneExprrg", postfix)]]
                     },
                 valueFilterKey = input$filterCell,
-                valueFilterCutoff = input$filterCellVal
+                valueFilterCutoff = input$filterCellVal,
+                hideFilterCell = input[[paste0("GeneExprhid", postfix)]]
             )
         })
         updateGeneExprDotPlotUI(
@@ -726,7 +833,9 @@ labelBackgroundCells <- function(
         ggData,
         pointSize,
         color = "snow2",
-        shape = 16) {
+        shape = 16,
+        hide = FALSE) {
+    if(hide) return(ggOut)
     ggOut + geom_point(
         data = ggData,
         color = color,

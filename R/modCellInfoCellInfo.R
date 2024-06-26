@@ -20,7 +20,7 @@ cellInfoCellInfoUI <- function(id) {
                 fluidRow(
                     column(6, cellInfoUI(id, 1)),
                     column(6, cellInfoPlotControlUI(id, 1))),
-                geneExprDotPlotUI(id, 1)
+                geneExprDotPlotUI(id, 1, editor=TRUE)
             ),
             column(
                 6,
@@ -28,7 +28,7 @@ cellInfoCellInfoUI <- function(id) {
                 fluidRow(
                     column(6, cellInfoUI(id, 2)),
                     column(6, cellInfoPlotControlUI(id, 2))),
-                geneExprDotPlotUI(id, 2)
+                geneExprDotPlotUI(id, 2, editor=TRUE)
             )
         )
     )

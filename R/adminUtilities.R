@@ -307,3 +307,54 @@ getReductionMethod <-
             reduction_method <- tolower(reduction_method)
         reduction_method
     }
+
+# updateMetaData by double click the info plot
+# if it is color, change color
+# if it is label, change label
+updateMetaData <- function(dataset, inpConf, inpMeta, privilege,
+                           info, oldvalue, newvalue){
+    check <- FALSE
+    if(checkPrivilege(privilege, dataset)){
+        id <- inpConf[inpConf$UI==info]$ID
+        fID <- strsplit(inpConf[inpConf$UI==info]$fID, '\\|')[[1]]
+        fCL <- strsplit(inpConf[inpConf$UI==info]$fCL, '\\|')[[1]]
+        if(oldvalue %in% fID){
+            if(!newvalue %in% fID){
+                fID[which(fID==oldvalue)] <- newvalue
+                fID <- paste(fID, collapse = '|')
+                inpConf[inpConf$UI==info, 'fID'] <- fID
+                l <- as.character(inpMeta[[info]])
+                l[which(l==oldvalue)] <- newvalue
+                inpMeta[[info]] <- factor(l)
+                saveData(inpMeta, dataset, "sc1meta")
+                saveData(inpConf, dataset, "sc1conf")
+                check <- TRUE
+            }else{
+                adminMsg(
+                    'duplicated value',
+                    type = 'warning',
+                    duration = 5,
+                    close = TRUE
+                )
+            }
+        }else{
+            if(oldvalue %in% fCL){
+                if(!newvalue %in% fCL){
+                    fCL[which(fCL==oldvalue)] <- newvalue
+                    fCL <- paste(fCL, collapse = '|')
+                    inpConf[inpConf$UI==info, 'fCL'] <- fCL
+                    saveData(inpConf, dataset, "sc1conf")
+                    check <- TRUE
+                }else{
+                    adminMsg(
+                        'duplicated value',
+                        type = 'warning',
+                        duration = 5,
+                        close = TRUE
+                    )
+                }
+            }
+        }
+    }
+    return(check)
+}

@@ -47,5 +47,19 @@
             }, 1000);
         }
     });
+    // Get mouse coordinates
+    var mouseX, mouseY;
+    $(document).mousemove(function(e){
+        mouseX = e.pageX;
+        mouseY = e.pageY;
+    }).mouseover();
+    Shiny.addCustomMessageHandler("placeGeneExproupInfoEditorBox", function(id){
+        Shiny.setInputValue(id+'-current_mouseX', mouseX);
+        Shiny.setInputValue(id+'-current_mouseY', mouseY);
+    })
+    // editorStatus
+    Shiny.addCustomMessageHandler("updateEditorStatus", function(val){
+        Shiny.setInputValue('editorStatus', Date.now());
+    })
   });
 }())

@@ -30,7 +30,8 @@ scDRcoex <- function(
         plotAspectRatio,
         keepXYlables,
         valueFilterKey,
-        valueFilterCutoff) {
+        valueFilterCutoff,
+        hideFilterCell = FALSE) {
     if (is.null(gene1) || is.null(gene2) || gene1 == "" || gene2 == "") {
         return(NULL)
     }
@@ -156,7 +157,8 @@ scDRcoex <- function(
             ggData2,
             pointSize,
             color = "snow2",
-            shape = 16)
+            shape = 16,
+            hide = hideFilterCell)
     }
     ggOut <- ggOut +
         geom_point(

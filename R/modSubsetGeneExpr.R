@@ -115,32 +115,33 @@ subsetGeneExprServer <- function(id, dataSource, optCrt) {
         ### update the Color Range to make two plots comparable
         inpColRange <- reactive({
             scDRgene(
-                dataSource()$sc1conf,
-                dataSource()$sc1meta,
-                input$GeneExprdrX,
-                input$GeneExprdrY,
-                input$GeneName,
-                c(input$CellInfo, input$subsetCell),
-                getSubsetCellVal(
+                inpConf=dataSource()$sc1conf,
+                inpMeta=dataSource()$sc1meta,
+                dimRedX=input$GeneExprdrX,
+                dimRedY=input$GeneExprdrY,
+                gene1=input$GeneName,
+                subsetCellKey=c(input$CellInfo, input$subsetCell),
+                subsetCellVal=getSubsetCellVal(
                     input,
                     list(c(input$GeneExprsub1b, input$GeneExprsub2b)),
                     input$CellInfo),
-                dataSource()$dataset,
-                dataSource()$sc1gene,
-                input$GeneExprsiz,
-                input$GeneExprcol1,
-                input$GeneExprord1,
-                input$GeneExprfsz,
-                input$GeneExprasp,
-                input$GeneExprtxt,
-                input$GeneExprtype1,
-                if (input$GeneExprxlimb1 %% 2 == 0)
+                dataset=dataSource()$dataset,
+                geneIdMap=dataSource()$sc1gene,
+                pointSize=input$GeneExprsiz,
+                gradientCol=input$GeneExprcol1,
+                GeneExprDotOrd=input$GeneExprord1,
+                labelsFontsize=input$GeneExprfsz,
+                plotAspectRatio=input$GeneExprasp,
+                keepXYlables=input$GeneExprtxt,
+                inpPlt=input$GeneExprtype1,
+                inpXlim=if (input$GeneExprxlimb1 %% 2 == 0)
                     0
                 else
                     input$GeneExprxlim1,
                 inpColRange = TRUE,
                 valueFilterKey = input$filterCell,
-                valueFilterCutoff = input$filterCellVal
+                valueFilterCutoff = input$filterCellVal,
+                hideFilterCell = input$GeneExprhid1
             )
         })
         ## plots

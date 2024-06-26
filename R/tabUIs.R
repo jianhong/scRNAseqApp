@@ -98,6 +98,9 @@ geneExprPlotControlUI <- function(
                     choices = c("Max-1st", "Min-1st",
                                 "Original", "Random"),
                     selected = "Max-1st", inline = TRUE),
+                checkboxInput(
+                    NS0(id, "GeneExprhid", postfix),
+                    "Hide filtered cells", value = FALSE),
                 actionButton(
                     NS0(id, "GeneExprrgb", postfix),
                     "Manually set max color value",
@@ -151,6 +154,9 @@ cellInfoPlotControlUI <- function(
                 NS0(id, "CellInfolab", postfix),
                 "Show cell info labels", value = TRUE),
             checkboxInput(
+                NS0(id, "CellInfohid", postfix),
+                "Hide filtered cells", value = FALSE),
+            checkboxInput(
                 NS0(id, "CellInfoslingshot", postfix),
                 "Show lineages", value = TRUE)
         )
@@ -173,7 +179,10 @@ geneCoExprPlotControlUI <- function(id, postfix=1, plotly=FALSE){
             radioButtons(
                 NS0(id, "CoExprord", postfix), "Plot order:",
                 choices = c("Max-1st", "Min-1st", "Original", "Random"),
-                selected = "Max-1st", inline = TRUE)
+                selected = "Max-1st", inline = TRUE),
+            checkboxInput(
+                NS0(id, "CoExprhid", postfix),
+                "Hide filtered cells", value = FALSE)
         )
     )
 }
@@ -277,7 +286,7 @@ subsetCellByFilterUI <- function(
     )
 }
 
-geneExprDotPlotUI <- function(id, postfix=1){
+geneExprDotPlotUI <- function(id, postfix=1, editor=FALSE){
     tagList(
         fluidRow(column(12, uiOutput(NS0(id, "GeneExproup.ui", postfix)))),
         span("Download PDF/PNG "),
@@ -292,7 +301,14 @@ geneExprDotPlotUI <- function(id, postfix=1){
                 "width:", width = "60px",
                 min = 2, max = 20, value = .globals$figWidth, step = 0.5)),
         downloadButton(NS0(id, "GeneExproup.pdf", postfix), "PDF"),
-        downloadButton(NS0(id, "GeneExproup.png", postfix), "PNG")
+        downloadButton(NS0(id, "GeneExproup.png", postfix), "PNG"),
+        if(editor){
+            tagList(
+                uiOutput(NS0(id, 'GeneExproup.info', postfix))
+            )
+        }else{
+            div()
+        }
     )
 }
 
@@ -462,7 +478,10 @@ contextMenuCellInfoUI <- function(
                     "Show cell info labels", value = TRUE),
                 checkboxInput(
                     NS0(id, "CellInfoslingshot", postfix),
-                    "Show lineages", value = TRUE)
+                    "Show lineages", value = TRUE),
+                checkboxInput(
+                    NS0(id, "CellInfohid", postfix),
+                    "Hide filtered cells", value = FALSE)
             )
         )
     )
@@ -498,6 +517,9 @@ contextMenuGeneExprUI <- function(
                         choices = c("Max-1st", "Min-1st",
                                     "Original", "Random"),
                         selected = "Max-1st", inline = TRUE),
+                    checkboxInput(
+                        NS0(id, "GeneExprhid", postfix),
+                        "Hide filtered cells", value = FALSE),
                     actionButton(
                         NS0(id, "GeneExprrgb", postfix),
                         "Manually set max color value",
@@ -558,7 +580,10 @@ contextMenuCoExprUI <- function(
                 radioButtons(
                     NS0(id, "CoExprord", postfix), "Plot order:",
                     choices = c("Max-1st", "Min-1st", "Original", "Random"),
-                    selected = "Max-1st", inline = TRUE)
+                    selected = "Max-1st", inline = TRUE),
+                checkboxInput(
+                    NS0(id, "CoExprhid", postfix),
+                    "Hide filtered cells", value = FALSE)
             )
         )
     )

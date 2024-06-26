@@ -24,6 +24,7 @@ scDRgene <- function(
         inpColRange = 0,
         valueFilterKey,
         valueFilterCutoff,
+        hideFilterCell = FALSE,
         ...) {
     if (gene1[1] == "") {
         return(ggplot())
@@ -109,7 +110,8 @@ scDRgene <- function(
                 ggData2,
                 pointSize,
                 color = "snow2",
-                shape = 16)
+                shape = 16,
+                hide = hideFilterCell)
         }
         ggOut <- pointPlot(
             ggOut,

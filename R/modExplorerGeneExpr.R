@@ -59,23 +59,23 @@ scExprServer <- function(
         ### plots
         plotX <- reactive({
             scDRgene(
-                dataSource()$sc1conf,
-                dataSource()$sc1meta,
-                p_input$GeneExprdrX,
-                p_input$GeneExprdrY,
-                input[[GeneNameLabel]],
-                p_input$subsetCell,
-                getSubsetCellVal(p_input),
-                dataSource()$dataset,
-                dataSource()$sc1gene,
-                p_input$GeneExprsiz,
-                input[[paste0("GeneExprcol", postfix)]],
-                input[[paste0("GeneExprord", postfix)]],
-                p_input$GeneExprfsz,
-                p_input$GeneExprasp,
-                p_input$GeneExprtxt,
-                input[[paste0("GeneExprtype", postfix)]],
-                if (input[[paste0("GeneExprxlimb", postfix)]] %% 2 == 0)
+                inpConf=dataSource()$sc1conf,
+                inpMeta=dataSource()$sc1meta,
+                dimRedX=p_input$GeneExprdrX,
+                dimRedY=p_input$GeneExprdrY,
+                gene1=input[[GeneNameLabel]],
+                subsetCellKey=p_input$subsetCell,
+                subsetCellVal=getSubsetCellVal(p_input),
+                dataset=dataSource()$dataset,
+                geneIdMap=dataSource()$sc1gene,
+                pointSize=p_input$GeneExprsiz,
+                gradientCol=input[[paste0("GeneExprcol", postfix)]],
+                GeneExprDotOrd=input[[paste0("GeneExprord", postfix)]],
+                labelsFontsize=p_input$GeneExprfsz,
+                plotAspectRatio=p_input$GeneExprasp,
+                keepXYlables=p_input$GeneExprtxt,
+                inpPlt=input[[paste0("GeneExprtype", postfix)]],
+                inpXlim=if (input[[paste0("GeneExprxlimb", postfix)]] %% 2 == 0)
                     0
                 else
                     input[[paste0("GeneExprxlim", postfix)]],
@@ -85,7 +85,8 @@ scExprServer <- function(
                     else
                         input[[paste0("GeneExprrg", postfix)]],
                 valueFilterKey = p_input$filterCell,
-                valueFilterCutoff = p_input$filterCellVal
+                valueFilterCutoff = p_input$filterCellVal,
+                hideFilterCell = input[[paste0("GeneExprhid", postfix)]]
             )
         })
         updateSubModulePlotUI(

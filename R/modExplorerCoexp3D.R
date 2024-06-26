@@ -1,4 +1,4 @@
-scCoexpUI <- function(id, postfix = 1) {
+scCoexp3dUI <- function(id, postfix = 1) {
     subModuleContainerUI(
         id,
         mainSelectUI = tagList(
@@ -15,18 +15,23 @@ scCoexpUI <- function(id, postfix = 1) {
                 width = "100px"
             )
         ),
-        menuUI = contextMenuCoExprUI(id),
-        contentUI = geneExprDotPlotUI(id, postfix = postfix)
+        menuUI = contextMenuCoExprUI(id, plotly = TRUE),
+        contentUI = tagList(
+            uiOutput(NS0(id, "GeneExpr3Doup.ui", 1)),
+            downloadButton(
+                NS(id, 'downloadExpr'),
+                "Expression for clicked cell"),
+            verbatimTextOutput(NS(id, 'clicked'))
+        )
     )
 }
-scCoexpServer <- function(
+scCoexp3dServer <- function(
         pid,
         id,
         dataSource,
         optCrt,
         p_input,
         p_session,
-        interactive,
         postfix = 1) {
     moduleServer(id, function(input, output, session) {
         if (is.null(
@@ -75,44 +80,43 @@ scCoexpServer <- function(
             c("GeneName1", "GeneName2", "CoExprcol1", "CoExprord1")
         )
         ## plot
-        plot1 <- reactive({
+        plot3d <- reactive({
             scDRcoex(
-                dataSource()$sc1conf,
-                dataSource()$sc1meta,
-                p_input$GeneExprdrX,
-                p_input$GeneExprdrY,
-                input$GeneName1,
-                input$GeneName2,
-                p_input$subsetCell,
-                getSubsetCellVal(p_input),
-                dataSource()$dataset,
-                dataSource()$sc1gene,
-                "2D",
-                p_input$GeneExprsiz,
-                input$CoExprcol1,
-                input$CoExprord1,
-                p_input$GeneExprfsz,
-                p_input$GeneExprasp,
-                p_input$GeneExprtxt,
+                inpConf=dataSource()$sc1conf,
+                inpMeta=dataSource()$sc1meta,
+                dimRedX=p_input$GeneExprdrX,
+                dimRedY=p_input$GeneExprdrY,
+                gene1=input$GeneName1,
+                gene2=input$GeneName2,
+                subsetCellKey=p_input$subsetCell,
+                subsetCellVal=getSubsetCellVal(p_input),
+                dataset=dataSource()$dataset,
+                geneIdMap=dataSource()$sc1gene,
+                plotType="3D",
+                pointSize=p_input$GeneExprsiz,
+                GeneExprDotCol=input$CoExprcol1,
+                GeneExprDotOrd=input$CoExprord1,
+                labelsFontsize=p_input$GeneExprfsz,
+                plotAspectRatio=p_input$GeneExprasp,
+                keepXYlables=p_input$GeneExprtxt,
                 valueFilterKey = p_input$filterCell,
-                valueFilterCutoff = p_input$filterCellVal
+                valueFilterCutoff = p_input$filterCellVal,
+                hideFilterCell = input$CoExprhid1
             )
         })
-        updateSubModulePlotUI(
-            postfix,
-            pid,
-            id,
-            input,
-            output,
-            session,
-            interactive,
-            plot1,
-            .globals$pList1[p_input$GeneExprpsz],
+        source <- NS0(NS(pid, id), "GeneExpr3Doup", 1)
+        output$GeneExpr3Doup1 <- renderPlotly({
+            plot3d()
+        })
+        output$GeneExpr3Doup.ui1 <- renderUI({
+            plotlyOutput(
+                source,
+                height = .globals$pList1[p_input$GeneExprpsz])
+        })
+        output$downloadExpr <- exprDownloadHandler(
+            dataSource()$sc1gene,
             dataSource()$dataset,
-            p_input$GeneExprdrX,
-            p_input$GeneExprdrY,
-            input$GeneName1,
-            input$GeneName2
-        )
+            dataSource()$sc1meta)
+        output$clicked <- plotly3d_click(session)
     })
 }

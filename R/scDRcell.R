@@ -28,6 +28,7 @@ scDRcell <- function(
         geneIdMap,
         valueFilterKey,
         valueFilterCutoff,
+        hideFilterCell=FALSE,
         inpSlingshot,
         slingshotFilename,
         ...) {
@@ -96,7 +97,8 @@ scDRcell <- function(
             ggData2,
             pointSize,
             color = "snow2",
-            shape = 16)
+            shape = 16,
+            hide = hideFilterCell)
     }
     ggOut <- pointPlot(
         ggOut,

@@ -219,7 +219,8 @@ updateGeneExprDotPlotUI <-
                     input[[paste0("GeneExproup.h", postfix)]]==
                         .globals$figHeight, height,
                     input[[paste0("GeneExproup.h", postfix)]]*72),
-                dblclick = NS0(id, 'GeneExproup.dbl', postfix))
+                dblclick = NS0(id, 'GeneExproup.dbl', postfix),
+                click = NS0(id, 'GeneExproup.clk', postfix))
         })
         nearest_element <- function(e){
             if(is.null(e)) return("undefined")
@@ -294,9 +295,11 @@ updateGeneExprDotPlotUI <-
                                          input$current_mouseY, 'px;')
                         )
                     })
-                }else{
-                    renderUI({div()})
                 }
+            })
+            observeEvent(input[[paste0("GeneExproup.clk", postfix)]],{
+                output[[paste0("GeneExproup.info", postfix)]] <- 
+                    renderUI({div()})
             })
             observeEvent(input[[paste0("GeneExproup.submit",postfix)]], {
                 if(!is.null(dataSource)){

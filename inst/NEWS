@@ -1,3 +1,8 @@
+CHANGES IN VERSION 1.15.7
+-------------------------
+
+    o fix the issue of reload everything when edit the cell info.
+    
 CHANGES IN VERSION 1.15.6
 -------------------------
 

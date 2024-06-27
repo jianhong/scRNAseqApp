@@ -316,7 +316,7 @@ updateGeneExprDotPlotUI <-
                     if(updated){
                         session$sendCustomMessage(
                             type='updateEditorStatus',
-                            message = id)
+                            message = list(id=id, postfix=postfix))
                     }
                     output[[paste0("GeneExproup.info", postfix)]] <- 
                         renderUI({div()})
@@ -379,7 +379,10 @@ updateCellInfoPlot <-
                     .globals$datafolder,
                     dataSource()$dataset,
                     .globals$filenames[["slingshot"]]
-                )
+                ),
+                editorStatus = ifelse(
+                    length(input[[paste0('editorStatus', postfix)]]),
+                    input[[paste0('editorStatus', postfix)]], NA)
             )
         })
         updateGeneExprDotPlotUI(

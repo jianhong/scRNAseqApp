@@ -31,6 +31,7 @@ scDRcell <- function(
         hideFilterCell=FALSE,
         inpSlingshot,
         slingshotFilename,
+        editorStatus,
         ...) {
     subFilterColname <- 'subValue'
     subGrpColname <- 'sub'

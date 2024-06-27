@@ -58,8 +58,9 @@
         Shiny.setInputValue(id+'-current_mouseY', mouseY);
     })
     // editorStatus
-    Shiny.addCustomMessageHandler("updateEditorStatus", function(val){
+    Shiny.addCustomMessageHandler("updateEditorStatus", function(id){
         Shiny.setInputValue('editorStatus', Date.now());
+        Shiny.setInputValue(id.id+'-editorStatus'+id.postfix, Date.now());
     })
   });
 }())

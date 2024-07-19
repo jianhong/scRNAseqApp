@@ -37,7 +37,8 @@ updateSubsetCellUI <-
         output,
         session,
         dataSource,
-        addNA = FALSE) {
+        addNA = FALSE,
+        ABcolumns = "") {
         choices <- dataSource()$sc1conf[dataSource()$sc1conf$grp == TRUE]$UI
         if (addNA) {
             selected  <- "N/A"
@@ -45,98 +46,117 @@ updateSubsetCellUI <-
         } else{
             selected <- dataSource()$sc1def$grp1
         }
-        output$subsetCellSel.ui <- renderUI({
-            selectInput(
-                NS(id, "subsetCell"),
-                "Cell information to subset:",
-                choices = choices,
-                selected = selected,
-                multiple = 
-                    if(length(input[["subsetCell.multi"]])>0)
-                        as.logical(input$subsetCell.multi%%2) else FALSE)
-        })
-        observeEvent(
-            input$subsetCell.multi,
-            updateActionButton(
-                session = session,
-                inputId = "subsetCell.multi",
-                label = ifelse(
-                    as.logical(input$subsetCell.multi%%2),
-                    "single", "multiple"))
-        )
-        
         subsetCell.ui <- reactiveValues()
-        subsetCell.ui$uis <- list()
-        observeEvent(input$subsetCell,{
-            subsetCell <- input$subsetCell[input$subsetCell!="N/A"]
-            sub_name <- dataSource()$sc1conf$UI %in% subsetCell
-            x <- dataSource()$sc1conf[sub_name]$fID
-            if(length(x)!=length(subsetCell)){
-                return(NULL)
-            }
-            sub <-strsplit(x, "\\|")
-            names(sub) <- dataSource()$sc1conf[sub_name]$UI
-            subsetCell.ui$uis <- list()
-            for(subid in subsetCell){
-                choices <- sub[[subid]]
-                if(!is.null(choices)){
-                    subsetCell.ui$uis[[subid]] <- tagList(
-                        div(
-                            style = 
-                                paste(
-                                    "max-height: 150px; display:flex;",
-                                    "flex-direction: column; overflow-y: auto;")
-                            ,
-                            actionButton(
-                                NS0(id, 'subsetCell.uncheck', subid),
-                                label=textOutput(
-                                    NS0(id, 'subsetCell.uncheckLab', subid),
-                                    inline = TRUE)),
-                            checkboxGroupInput(
-                                NS0(id, "subsetCellVal", subid),
-                                subid,
-                                inline = TRUE,
-                                choices = choices,
-                                selected = choices
-                            ),
-                            div(
-                                style = "visibility:hidden;",
-                                textInput(
-                                    NS0(id, "subsetCellValChoices", subid),
-                                    label = NULL,
-                                    value = paste(choices, collapse = "|")
+        lapply(ABcolumns, function(ABcolumn){
+            output[[paste0("subsetCellSel.ui", ABcolumn)]] <- renderUI({
+                selectInput(
+                    NS0(id, "subsetCell", ABcolumn),
+                    "Cell information to subset:",
+                    choices = choices,
+                    selected = selected,
+                    multiple = 
+                        if(length(input[[paste0("subsetCell.multi",
+                                                ABcolumn)]])>0)
+                            as.logical(input[[paste0("subsetCell.multi",
+                                                     ABcolumn)]]%%2)
+                        else FALSE)
+            })
+            observeEvent(
+                input[[paste0("subsetCell.multi", ABcolumn)]],
+                updateActionButton(
+                    session = session,
+                    inputId = paste0("subsetCell.multi", ABcolumn),
+                    label = ifelse(
+                        as.logical(input[[paste0("subsetCell.multi",
+                                                 ABcolumn)]]%%2),
+                        "single", "multiple"))
+            )
+            
+            subsetCell.ui[[paste0("uis", ABcolumn)]] <- list()
+            observeEvent(input[[paste0("subsetCell", ABcolumn)]],{
+                subsetCell <- input[[paste0("subsetCell", ABcolumn)]][
+                    input[[paste0("subsetCell", ABcolumn)]]!="N/A"]
+                sub_name <- dataSource()$sc1conf$UI %in% subsetCell
+                x <- dataSource()$sc1conf[sub_name]$fID
+                if(length(x)!=length(subsetCell)){
+                    return(NULL)
+                }
+                sub <-strsplit(x, "\\|")
+                names(sub) <- dataSource()$sc1conf[sub_name]$UI
+                subsetCell.ui[[paste0("uis", ABcolumn)]] <- list()
+                for(subid in subsetCell){
+                    choices <- sub[[subid]]
+                    if(!is.null(choices)){
+                        subid1 <- paste0(subid, ABcolumn)
+                        subsetCell.ui[[paste0("uis", ABcolumn)]][[subid]] <- 
+                            tagList(
+                                div(
+                                    style = 
+                                        paste(
+                                            "max-height: 150px; display:flex;",
+                                            "flex-direction: column;",
+                                            "overflow-y: auto;")
+                                    ,
+                                    actionButton(
+                                        NS0(id, 'subsetCell.uncheck', subid1),
+                                        label=textOutput(
+                                            NS0(id, 'subsetCell.uncheckLab',
+                                                subid1),
+                                            inline = TRUE)),
+                                    checkboxGroupInput(
+                                        NS0(id, "subsetCellVal", subid1),
+                                        subid,
+                                        inline = TRUE,
+                                        choices = choices,
+                                        selected = choices
+                                    ),
+                                    div(
+                                        style = "visibility:hidden;",
+                                        textInput(
+                                            NS0(id, "subsetCellValChoices",
+                                                subid1),
+                                            label = NULL,
+                                            value = paste(choices,
+                                                          collapse = "|")
+                                        )
+                                    )
                                 )
                             )
-                        )
-                    )
-                    output[[paste0("subsetCell.uncheckLab", subid)]] <-
-                        renderPrint(cat("Uncheck All"))
-                    observeEvent(input[[paste0("subsetCell.uncheck", subid)]], {
-                        sub <- strsplit(
-                            input[[paste0("subsetCellValChoices", subid)]],
-                            "\\|")[[1]]
-                        if(length(input[[paste0("subsetCellVal", subid)]])>0){
-                            selected <- NULL
-                            uncheckLab <- 'Check All'
-                        }else{
-                            selected <- sub
-                            uncheckLab <- 'Uncheck All'
-                        }
-                        output[[paste0("subsetCell.uncheckLab", subid)]] <-
-                            renderPrint(cat(uncheckLab))
-                        updateCheckboxGroupInput(
-                            session = session,
-                            inputId = paste0('subsetCellVal', subid),
-                            inline = TRUE,
-                            choices = sub,
-                            selected = selected
-                        )
-                    }) 
+                        output[[paste0("subsetCell.uncheckLab", subid1)]] <-
+                            renderPrint(cat("Uncheck All"))
+                        observeEvent(input[[paste0("subsetCell.uncheck", 
+                                                   subid1)]],
+                          {
+                              sub <- strsplit(
+                                  input[[paste0("subsetCellValChoices",
+                                                subid1)]],
+                                  "\\|")[[1]]
+                              if(length(input[[paste0("subsetCellVal",
+                                                      subid1)]])>0){
+                                  selected <- NULL
+                                  uncheckLab <- 'Check All'
+                              }else{
+                                  selected <- sub
+                                  uncheckLab <- 'Uncheck All'
+                              }
+                              output[[paste0("subsetCell.uncheckLab",
+                                             subid1)]] <-
+                                  renderPrint(cat(uncheckLab))
+                              updateCheckboxGroupInput(
+                                  session = session,
+                                  inputId = paste0('subsetCellVal', subid1),
+                                  inline = TRUE,
+                                  choices = sub,
+                                  selected = selected
+                              )
+                          })
+                    }
                 }
-            }
+            })
+            
+            output[[paste0("subsetCell.ui", ABcolumn)]] <- 
+                renderUI({subsetCell.ui[[paste0("uis", ABcolumn)]]})
         })
-        
-        output$subsetCell.ui <- renderUI({subsetCell.ui$uis})
     }
 updateFilterCellUI <-
     function(
@@ -350,6 +370,16 @@ updateCellInfoPlot <-
         session,
         dataSource) {
         cellInfoLabel <- paste0('CellInfo', postfix)
+        cellInfoName <- paste0('CellInfoname', postfix)
+        observeEvent(input[[cellInfoLabel]],{
+            updateSelectInput(
+                session,
+                cellInfoName,
+                "Cell info labels",
+                choices = c(dataSource()$sc1conf$UI),
+                selected = input[[cellInfoLabel]]
+            )
+        })
         updateSelectInput(
             session,
             cellInfoLabel,
@@ -363,7 +393,8 @@ updateCellInfoPlot <-
                 inpMeta=dataSource()$sc1meta,
                 dimRedX=input$GeneExprdrX,
                 dimRedY=input$GeneExprdrY,
-                inp1=input[[cellInfoLabel]],
+                cellinfoID=input[[cellInfoLabel]],
+                cellinfoName=input[[cellInfoName]],
                 subsetCellKey=input$subsetCell,
                 subsetCellVal=getSubsetCellVal(input),
                 pointSize=input$GeneExprsiz,
@@ -463,25 +494,50 @@ updateGeneAccPlot <-
             coor <- getCoordByGeneSymbol(input[[GeneNameLabel]], genes, links)
             updateAccCoordInputs(session, coordLabel, coor)
         })
+        getCoor <- function(){
+            coor <- GRanges()
+            tryCatch({coor <- GRanges(input[[coordLabel]])},
+                     error=function(e){
+                         showNotification(
+                             as.character(e),
+                             duration = 5,
+                             type = 'warning'
+                         )
+                     })
+            return(coor)
+        }
         observeEvent(input$zoomin, {
-            coor <- GRanges(input[[coordLabel]])
-            updateAccCoordInputs(session, coordLabel, expandGR(coor, -width(coor)/4))
+            coor <- getCoor()
+            if(length(coor)){
+                updateAccCoordInputs(session, coordLabel,
+                                     expandGR(coor, -width(coor)/4))
+            }
+            
         })
         observeEvent(input$zoomout, {
-            coor <- GRanges(input[[coordLabel]])
-            updateAccCoordInputs(session, coordLabel, expandGR(coor, width(coor)*2))
+            coor <- getCoor()
+            if(length(coor)){
+                updateAccCoordInputs(session, coordLabel,
+                                     expandGR(coor, width(coor)*2))
+            }
         })
         observeEvent(input$moveleft, {
-            coor <- GRanges(input[[coordLabel]])
-            updateAccCoordInputs(session, coordLabel, shift(coor, -width(coor)/2))
+            coor <- getCoor()
+            if(length(coor)){
+                updateAccCoordInputs(session, coordLabel,
+                                     shift(coor, -width(coor)/2))
+            }
         })
         observeEvent(input$moveright, {
-            coor <- GRanges(input[[coordLabel]])
-            updateAccCoordInputs(session, coordLabel, shift(coor, width(coor)/2))
+            coor <- getCoor()
+            if(length(coor)){
+                updateAccCoordInputs(session, coordLabel,
+                                     shift(coor, width(coor)/2))
+            }
         })
         observeEvent(input$regionsubmit, {
             if(grepl(":", input[[coordLabel]])){
-                coor <- GRanges(input[[coordLabel]])
+                coor <- getCoor()
                 change <- FALSE
                 if(start(coor) != input$regionselector[1]){
                     start(coor) <- input$regionselector[1]
@@ -757,6 +813,14 @@ subModuleMenuObservor <- function(
     observeEvent(input$resize, {
         updateTextInput(p_session, "resizePlotModule", value = id)
     })
+    observeEvent(input$CellInfosubgrp1, {
+        if(length(p_session$input[[paste0("subsetCell",
+                                          input$CellInfosubgrp1)]])==0){
+            p_session$sendCustomMessage(
+                'click_subset_btn',
+                paste0("explorer-subsetTogT", input$CellInfosubgrp1))
+        }
+    })
     if (is.null(p_session$userData$defaults[[dataSource()$dataset]][[id]]))
         p_session$userData$defaults[[dataSource()$dataset]][[id]] <-
         list()
@@ -957,13 +1021,13 @@ cbindFilterValues <-
         return(ggData)
     }
 # get the subsetCellVals
-getSubsetCellVal <- function(input, extralist, extralistname){
+getSubsetCellVal <- function(input, extralist, extralistname, group=""){
     if(!missing(extralist)) stopifnot(is.list(extralist)&&length(extralist)==1)
-    subsetCell <- input$subsetCell
+    subsetCell <- input[[paste0("subsetCell", group)]]
     subsetCell <- subsetCell[subsetCell!="N/A"]
     names(subsetCell) <- subsetCell
     subsetCell <- lapply(subsetCell, function(subid){
-        input[[paste0("subsetCellVal", subid)]]
+        input[[paste0("subsetCellVal", subid, group)]]
     })
     if(!missing(extralist) && !missing(extralistname)){
         names(extralist) <- extralistname

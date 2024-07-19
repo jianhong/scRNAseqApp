@@ -12,10 +12,10 @@ plotPieDimUI <- function(id) {
         fluidRow(
             column(3, dimensionReductionUI(id)),
             column(
-                3,
+                5,
                 subsetCellByInfoUI(id),
                 subsetCellByFilterUI(id)),
-            column(6, graphicsControlUI(id, GeneExpraspSelect = 'Fixed'))
+            column(4, graphicsControlUI(id, GeneExpraspSelect = 'Fixed'))
         ),
         br(),
         fluidRow(

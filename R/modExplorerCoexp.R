@@ -15,7 +15,7 @@ scCoexpUI <- function(id, postfix = 1) {
                 width = "100px"
             )
         ),
-        menuUI = contextMenuCoExprUI(id),
+        menuUI = contextMenuCoExprUI(id, group=TRUE),
         contentUI = geneExprDotPlotUI(id, postfix = postfix)
     )
 }
@@ -83,8 +83,13 @@ scCoexpServer <- function(
                 dimRedY=p_input$GeneExprdrY,
                 gene1=input$GeneName1,
                 gene2=input$GeneName2,
-                subsetCellKey=p_input$subsetCell,
-                subsetCellVal=getSubsetCellVal(p_input),
+                subsetCellKey=p_input[[paste0("subsetCell",
+                                              input[[paste0("CellInfosubgrp",
+                                                            postfix)]])]],
+                subsetCellVal=
+                    getSubsetCellVal(p_input,
+                                     group=input[[paste0("CellInfosubgrp",
+                                                         postfix)]]),
                 dataset=dataSource()$dataset,
                 geneIdMap=dataSource()$sc1gene,
                 plotType="2D",

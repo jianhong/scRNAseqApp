@@ -25,11 +25,11 @@ subsetGeneExprUI <- function(id) {
                     choices = NULL)
             ),
             column(
-                3,
+                4,
                 subsetCellByInfoUI(id),
                 subsetCellByFilterUI(id)),
             column(
-                6,
+                5,
                 graphicsControlUI(id), br(),
                 cellInfoTblUI(id, 1))
         ),

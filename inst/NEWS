@@ -1,3 +1,9 @@
+CHANGES IN VERSION 1.15.8
+-------------------------
+
+    o add functionality to allow different labels for cell info.
+    o allow subset groups for explorer.
+    
 CHANGES IN VERSION 1.15.7
 -------------------------
 

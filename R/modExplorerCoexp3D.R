@@ -15,7 +15,7 @@ scCoexp3dUI <- function(id, postfix = 1) {
                 width = "100px"
             )
         ),
-        menuUI = contextMenuCoExprUI(id, plotly = TRUE),
+        menuUI = contextMenuCoExprUI(id, plotly = TRUE, group = TRUE),
         contentUI = tagList(
             uiOutput(NS0(id, "GeneExpr3Doup.ui", 1)),
             downloadButton(
@@ -81,6 +81,7 @@ scCoexp3dServer <- function(
         )
         ## plot
         plot3d <- reactive({
+            ## for some reason, the postfix changed to FALSE.
             scDRcoex(
                 inpConf=dataSource()$sc1conf,
                 inpMeta=dataSource()$sc1meta,
@@ -88,8 +89,11 @@ scCoexp3dServer <- function(
                 dimRedY=p_input$GeneExprdrY,
                 gene1=input$GeneName1,
                 gene2=input$GeneName2,
-                subsetCellKey=p_input$subsetCell,
-                subsetCellVal=getSubsetCellVal(p_input),
+                subsetCellKey=p_input[[paste0("subsetCell",
+                                              input[["CellInfosubgrp1"]])]],
+                subsetCellVal=
+                    getSubsetCellVal(p_input,
+                                     group=input[["CellInfosubgrp1"]]),
                 dataset=dataSource()$dataset,
                 geneIdMap=dataSource()$sc1gene,
                 plotType="3D",

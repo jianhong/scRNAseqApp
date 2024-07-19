@@ -15,7 +15,7 @@ scVlnUI <- function(id, postfix = 1) {
                 width = "100px"
             )
         ),
-        menuUI = contextMenuViolinUI(id),
+        menuUI = contextMenuViolinUI(id, group = TRUE),
         contentUI = geneExprDotPlotUI(id, postfix = postfix)
     )
 }
@@ -77,20 +77,23 @@ scVlnServer <- function(
         ## plot
         plot1 <- reactive({
             scVioBox(
-                dataSource()$sc1conf,
-                dataSource()$sc1meta,
-                input$CellInfoX,
-                input$CellInfoY,
-                p_input$subsetCell,
-                getSubsetCellVal(p_input),
-                p_input$filterCell,
-                p_input$filterCellVal,
-                dataSource()$dataset,
-                dataSource()$sc1gene,
-                input$plottyp,
-                input$plotpts,
-                p_input$GeneExprsiz,
-                p_input$GeneExprfsz,
+                inpConf = dataSource()$sc1conf,
+                inpMeta = dataSource()$sc1meta,
+                infoX = input$CellInfoX,
+                infoY = input$CellInfoY,
+                subsetCellKey=p_input[[paste0("subsetCell",
+                                              input[["CellInfosubgrp"]])]],
+                subsetCellVal=
+                    getSubsetCellVal(p_input,
+                                     group=input[["CellInfosubgrp"]]),
+                filterKey = p_input$filterCell,
+                filterVal = p_input$filterCellVal,
+                dataset = dataSource()$dataset,
+                inpGene = dataSource()$sc1gene,
+                inptyp = input$plottyp,
+                inppts = input$plotpts,
+                pointSize = p_input$GeneExprsiz,
+                labelsFontsize = p_input$GeneExprfsz,
                 reorder = input$plotord,
                 orderX = input$cellinfoXorder
             )

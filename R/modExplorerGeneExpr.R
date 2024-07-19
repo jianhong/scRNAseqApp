@@ -5,7 +5,7 @@ scExprUI <- function(id, postfix = 1) {
             NS0(id, "GeneName", postfix),
             "Gene name:", choices =
                 NULL),
-        menuUI = contextMenuGeneExprUI(id, postfix),
+        menuUI = contextMenuGeneExprUI(id, postfix, group = TRUE),
         contentUI = geneExprDotPlotUI(id, postfix)
     )
 }
@@ -64,8 +64,13 @@ scExprServer <- function(
                 dimRedX=p_input$GeneExprdrX,
                 dimRedY=p_input$GeneExprdrY,
                 gene1=input[[GeneNameLabel]],
-                subsetCellKey=p_input$subsetCell,
-                subsetCellVal=getSubsetCellVal(p_input),
+                subsetCellKey=p_input[[paste0("subsetCell",
+                                              input[[paste0("CellInfosubgrp",
+                                                            postfix)]])]],
+                subsetCellVal=
+                    getSubsetCellVal(p_input,
+                                     group=input[[paste0("CellInfosubgrp",
+                                                         postfix)]]),
                 dataset=dataSource()$dataset,
                 geneIdMap=dataSource()$sc1gene,
                 pointSize=p_input$GeneExprsiz,

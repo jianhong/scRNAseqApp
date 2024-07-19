@@ -16,10 +16,12 @@ subsetPlotsUI <- function(id) {
                 3,
                 dimensionReductionUI(id)),
             column(
-                3,
-                subsetCellByInfoUI(id)),
+                5,
+                subsetCellByInfoUI(id, ABcolumn=.globals$subsetgroup[1]),
+                subsetCellByInfoUI(id, ABcolumn=.globals$subsetgroup[2])
+                ),
             column(
-                6,
+                4,
                 graphicsControlUI(id),
                 subsetCellByFilterUI(id))
         ),
@@ -131,7 +133,10 @@ subsetPlotsServer <- function(id, dataSource, optCrt) {
         ### Information to show
         
         ## input column 2
-        updateSubsetCellUI(id, input, output, session, dataSource)
+        updateSubsetCellUI(id, input, output, session, dataSource,
+                           ABcolumns=.globals$subsetgroup)
+        
+        ## input column 3
         updateFilterCellUI(id, optCrt, input, output, session, dataSource)
         
         ## plot region

@@ -15,7 +15,7 @@ scPropUI <- function(id, postfix = 1) {
                 width = "100px"
             )
         ),
-        menuUI = contextMenuPropUI(id),
+        menuUI = contextMenuPropUI(id, group=TRUE),
         contentUI = geneExprDotPlotUI(id, postfix = postfix)
     )
 }
@@ -71,15 +71,18 @@ scPropServer <- function(
         ### plots
         plot1 <- reactive({
             scProp(
-                dataSource()$sc1conf,
-                dataSource()$sc1meta,
-                input$CellInfoX,
-                input$CellInfoY,
-                p_input$subsetCell,
-                getSubsetCellVal(p_input),
-                input$plottyp,
-                input$plotflp,
-                p_input$GeneExprfsz,
+                inpConf = dataSource()$sc1conf,
+                inpMeta = dataSource()$sc1meta,
+                infoX = input$CellInfoX,
+                infoY = input$CellInfoY,
+                subsetCellKey=p_input[[paste0("subsetCell",
+                                              input[["CellInfosubgrp"]])]],
+                subsetCellVal=
+                    getSubsetCellVal(p_input,
+                                     group=input[["CellInfosubgrp"]]),
+                inptyp = input$plottyp,
+                flipXY = input$plotflp,
+                labelsFontsize = p_input$GeneExprfsz,
                 dataset = dataSource()$dataset,
                 geneIdMap = dataSource()$sc1gene,
                 valueFilterKey = p_input$filterCell,

@@ -5,7 +5,7 @@ scInfoUI <- function(id, postfix = 1) {
             NS0(id, "CellInfo", postfix),
             "Cell info:",
             choices = NULL),
-        menuUI = contextMenuCellInfoUI(id, postfix),
+        menuUI = contextMenuCellInfoUI(id, postfix, group=TRUE),
         contentUI = geneExprDotPlotUI(id, postfix)
     )
 }
@@ -56,9 +56,14 @@ scInfoServer <- function(
                 inpMeta=dataSource()$sc1meta,
                 dimRedX=p_input$GeneExprdrX,
                 dimRedY=p_input$GeneExprdrY,
-                inp1=input[[cellInfoLabel]],
-                subsetCellKey=p_input$subsetCell,
-                subsetCellVal=getSubsetCellVal(p_input),
+                cellinfoID=input[[cellInfoLabel]],
+                subsetCellKey=p_input[[paste0("subsetCell",
+                                              input[[paste0("CellInfosubgrp",
+                                                            postfix)]])]],
+                subsetCellVal=
+                    getSubsetCellVal(p_input,
+                                     group=input[[paste0("CellInfosubgrp",
+                                                         postfix)]]),
                 pointSize=p_input$GeneExprsiz,
                 gradientCol=input[[paste0("CellInfocol", postfix)]],
                 GeneExprDotOrd=input[[paste0("CellInfoord", postfix)]],

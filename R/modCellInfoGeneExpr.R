@@ -12,8 +12,8 @@ cellInfoGeneExprUI <- function(id) {
         ),
         fluidRow(
             column(3, dimensionReductionUI(id)),
-            column(3, subsetCellByInfoUI(id)),
-            column(6, graphicsControlUI(id))
+            column(5, subsetCellByInfoUI(id)),
+            column(4, graphicsControlUI(id))
         ),
         fluidRow(
             column(

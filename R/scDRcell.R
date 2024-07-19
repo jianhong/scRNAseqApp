@@ -14,7 +14,8 @@ scDRcell <- function(
         inpMeta,
         dimRedX,
         dimRedY,
-        inp1,
+        cellinfoID,
+        cellinfoName=cellinfoID,
         subsetCellKey,
         subsetCellVal,
         pointSize,
@@ -38,12 +39,18 @@ scDRcell <- function(
     valColname <- 'val'
     subsetCellKey <- subsetCellKey[subsetCellKey!="N/A"]
     subsetCellVal <- namedSubsetCellVals(subsetCellKey, subsetCellVal)
+    if(cellinfoName!=cellinfoID){
+        if(is.na(cellinfoName)||cellinfoName==""){
+            cellinfoName <- cellinfoID
+        }
+    }
     # Prepare ggData
     ggData <- inpMeta[, unique(c(
         inpConf[inpConf$UI == dimRedX]$ID,
         inpConf[inpConf$UI == dimRedY]$ID,
-        inpConf[inpConf$UI == inp1]$ID,
-        inpConf[inpConf$UI %in% subsetCellKey]$ID)),
+        inpConf[inpConf$UI == cellinfoID]$ID,
+        inpConf[inpConf$UI %in% subsetCellKey]$ID,
+        inpConf[inpConf$UI == cellinfoName]$ID)),
         with = FALSE]
     if (ncol(ggData) < 3)
         return(ggplot())
@@ -68,7 +75,10 @@ scDRcell <- function(
         valueFilterCutoff,
         inpConf)
     
-    if(subsetCellKey[1]==inp1){
+    if(length(subsetCellKey)==0){
+        return(ggplot())
+    }
+    if(subsetCellKey[1]==cellinfoID){
         subGrpColname <- valColname
         colnames(ggData)[3] <- valColname
     }else{## make the first subsetCellKey as sub
@@ -88,7 +98,27 @@ scDRcell <- function(
     
     # Do factoring if required
     ggData <- relevelData(ggData, valColname)
-    ggCol <- relevelCol(inpConf, inp1, ggData, valColname)
+    ggCol <- relevelCol(inpConf, cellinfoID, ggData, valColname)
+    
+    if(cellinfoName!=cellinfoID){
+        if(cellinfoName==subsetCellKey[1]){
+            cellinfoName <- subGrpColname
+        }
+        tab <- unique(ggData[, c(valColname, cellinfoName), with = FALSE])
+        if(length(levels(ggData[[valColname]])) != nrow(tab)){
+            # showNotification(paste(
+            #     'The length of cell labels are not identical',
+            #     'with that of the cell info IDs'),
+            #     type = "warning")
+            cellinfoName <- names(ggCol)
+        }else{
+            cellinfoName <- tab[match(names(ggCol), tab[[valColname]]),
+                                cellinfoName, with = FALSE]
+            cellinfoName <- as.character(cellinfoName[[1]])
+        }
+    }else{
+        cellinfoName <- names(ggCol)
+    }
     
     # Actual ggplot
     ggOut <- ggXYplot(ggData)
@@ -112,8 +142,8 @@ scDRcell <- function(
     if (inpSlingshot) {
         if (file.exists(slingshotFilename)) {
             lineages <- readRDS(slingshotFilename)
-            if (inp1 %in% names(lineages)) {
-                lineages <- lineages[[inp1]]
+            if (cellinfoID %in% names(lineages)) {
+                lineages <- lineages[[cellinfoID]]
                 x <- SlingshotDataSet(lineages)
                 X <- reducedDim(x)
                 checkRedDimName <- function(a, b) {
@@ -203,7 +233,7 @@ scDRcell <- function(
         }
     }
     # label
-    if (is.na(inpConf[inpConf$UI == inp1]$fCL)) {
+    if (is.na(inpConf[inpConf$UI == cellinfoID]$fCL)) {
         ggOut <- ggOut +
             scale_color_gradientn("", colours = .globals$cList[[gradientCol]]) +
             guides(color = guide_colorbar(barwidth = 15))
@@ -212,7 +242,8 @@ scDRcell <- function(
             levels(ggData[[valColname]]),
             collapse = "")), 200)
         sListX <- 0.75 * (.globals$sList - (1.5 * floor(sListX / 50)))
-        ggOut <- ggOut + scale_color_manual("", values = ggCol) +
+        ggOut <- ggOut + scale_color_manual(
+            "", values = ggCol, labels=cellinfoName) +
             theme(legend.text = element_text(size = sListX[labelsFontsize]))
         if(length(ggCol)>50){
             ggOut <- ggOut +
@@ -226,7 +257,7 @@ scDRcell <- function(
             ggOut <- ggOut +
                 guides(color = guide_legend(
                     override.aes = list(size = 5),
-                    nrow = inpConf[inpConf$UI == inp1]$fRow
+                    nrow = inpConf[inpConf$UI == cellinfoID]$fRow
                 ))
         }
         if (inplab) {

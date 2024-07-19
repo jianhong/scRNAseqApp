@@ -62,5 +62,9 @@
         Shiny.setInputValue('editorStatus', Date.now());
         Shiny.setInputValue(id.id+'-editorStatus'+id.postfix, Date.now());
     })
+    // explorer when subset group is selected
+    Shiny.addCustomMessageHandler("click_subset_btn", function(id){
+        $("#"+id).trigger('click');
+    })
   });
 }())

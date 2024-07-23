@@ -16,6 +16,7 @@ scRNAseqApp(
   timeout = 30,
   theme = bs_theme(bootswatch = "lumen"),
   use_bs_themer = FALSE,
+  showHelpVideo = FALSE,
   ...
 )
 }
@@ -42,6 +43,10 @@ Default to 30. 0 to disable.}
 \item{theme}{A theme.}
 
 \item{use_bs_themer}{logical(1). Used to determine the theme.}
+
+\item{showHelpVideo}{logical(1) or character(1).
+Show help videos in homepage or not. If an url is provided, the
+url will be embeded as a iframe element.}
 
 \item{...}{parameters can be passed to shinyApp except ui and server.}
 }

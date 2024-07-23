@@ -8,8 +8,15 @@ homeUI <- function() {
 #' @importFrom bibtex read.bib
 #' @importFrom RefManageR GetBibEntryWithDOI PrintBibliography
 aboutUI <- function(
-    request, id, banner, defaultDataset, datasets, appconf, doc = "doc.txt") {
+    request, id, banner, defaultDataset, datasets, appconf, doc = "doc.txt",
+    showHelpVideo=FALSE) {
         ns <- NS(id)
+        if(is.character(showHelpVideo)){
+            helperVideoURL <- showHelpVideo
+            showHelpVideo <- TRUE
+        }else{
+            helperVideoURL <- "https://www.youtube.com/embed/videoseries?si=VgcP3HxCrvtp59yS&amp;list=PL0uThf-sipbnepUDzVmAHpNWUy65F4HOm&amp;showinfo=0"
+        }
         query <- parseQueryString(request[["QUERY_STRING"]])
         query <- parseQuery(query, defaultDataset)
         defaultDataset <- query['defaultDataset']
@@ -151,9 +158,29 @@ aboutUI <- function(
                                    refs,
                                    "</li>"), collapse = "\n"),
                        "\n</ol>")),
-            p(
-                imageOutput('total_visitor', width = "50%", height = "150px")
-            ),
+            if(!showHelpVideo){
+                p(
+                    imageOutput('total_visitor', width = "50%", height = "150px")
+                )
+            }else{
+                fluidRow(
+                    column(
+                        6,
+                        imageOutput('total_visitor',
+                                    width = "100%", height = "240px")),
+                    column(
+                        6,
+                        tags$iframe(
+                            width="100%",
+                            height='240px',
+                            src=helperVideoURL,
+                            frameborder="0",
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share;",
+                            referrerpolicy="strict-origin-when-cross-origin",
+                            allowfullscreen=NA)
+                    )
+                )
+            },
             div(
                 style = "display:none;",
                 textInput(

@@ -1,3 +1,10 @@
+CHANGES IN VERSION 1.15.10
+-------------------------
+
+    o add color picker.
+    o add splitBy for violin plots.
+    o fix the issue that refresh explorer will lost the subset info.
+    
 CHANGES IN VERSION 1.15.9
 -------------------------
 

@@ -1,11 +1,11 @@
-scInfoUI <- function(id, postfix = 1) {
+scInfoUI <- function(id, postfix = 1, subgrp=.globals$subsetgroup[1]) {
     subModuleContainerUI(
         id,
         mainSelectUI = selectInput(
             NS0(id, "CellInfo", postfix),
             "Cell info:",
             choices = NULL),
-        menuUI = contextMenuCellInfoUI(id, postfix, group=TRUE),
+        menuUI = contextMenuCellInfoUI(id, postfix, group=subgrp),
         contentUI = geneExprDotPlotUI(id, postfix)
     )
 }

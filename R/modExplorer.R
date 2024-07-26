@@ -106,6 +106,14 @@ subsetPlotsUI <- function(id) {
                             '',
                             value = '',
                             width = 0
+                        )),
+                    div(
+                        style = 'display: none;',
+                        textInput(
+                            ns("changeSubsetContext"),
+                            '',
+                            value = '',
+                            width = 0
                         ))
                 ))
         ),
@@ -144,16 +152,18 @@ subsetPlotsServer <- function(id, dataSource, optCrt) {
             containerIds = c(),
             containerInteractive = list(),
             containerUIs = list(),
+            containerUIsFUN = list(),
             containerWidth = list(),
             containerServers = list(),
+            containerSubsetGrp = c(),
             Idpointer = 0
         )
         if (is.null(session$userData$defaults))
             session$userData$defaults <- list()
         if (is.null(session$userData$defaults[[dataSource()$dataset]]))
             session$userData$defaults[[dataSource()$dataset]] <- list()
-        uiGrid <- function(ui, width) {
-            column(width = width, ui)
+        uiGrid <- function(ns0, subgrp, uiFUN, width) {
+            column(width = width, uiFUN(NS(id, ns0), subgrp=subgrp))
         }
         getRown <- function(w) {
             base <- 0
@@ -185,12 +195,15 @@ subsetPlotsServer <- function(id, dataSource, optCrt) {
                     globals$containerWidth[globals$containerIds] == "half",
                     6, 12)
             uis <- mapply(
-                globals$containerUIs[globals$containerIds],
+                globals$containerIds,
+                globals$containerSubsetGrp[globals$containerIds],
+                globals$containerUIsFUN[globals$containerIds],
                 coln,
                 FUN = uiGrid,
                 SIMPLIFY = FALSE)
-            uis <- lapply(split(uis, getRown(coln)), fluidRow)
-            output$subplot <- renderUI(uis)
+            names(uis) <- globals$containerIds
+            globals$containerUIs <- lapply(split(uis, getRown(coln)), fluidRow)
+            output$subplot <- renderUI(globals$containerUIs)
             lapply(globals$containerIds, function(cid) {
                 globals$containerServers[[cid]](
                     id,
@@ -218,15 +231,16 @@ subsetPlotsServer <- function(id, dataSource, optCrt) {
                 globals$containerInteractive[[ns0]] <-
                     isolate(input$interactive == 'Yes')
                 globals$containerWidth[[ns0]] <- isolate(input$moduleWidth)
-                globals$containerUIs[[ns0]] <- switch(
+                globals$containerSubsetGrp[ns0] <- .globals$subsetgroup[1]
+                globals$containerUIsFUN[[ns0]] <- switch(
                     input$moduleName,
-                    "cell info" = scInfoUI(NS(id, ns0)),
-                    'gene expression' = scExprUI(NS(id, ns0)),
-                    'proportion' = scPropUI(NS(id, ns0)),
-                    'violin/box plot' = scVlnUI(NS(id, ns0)),
-                    'co-expression' = scCoexpUI(NS(id, ns0)),
-                    'co-expression 3d' = scCoexp3dUI(NS(id, ns0)),
-                    scInfoUI(NS(id, ns0))
+                    "cell info" = scInfoUI,
+                    'gene expression' = scExprUI,
+                    'proportion' = scPropUI,
+                    'violin/box plot' = scVlnUI,
+                    'co-expression' = scCoexpUI,
+                    'co-expression 3d' = scCoexp3dUI,
+                    scInfoUI
                 )
                 globals$containerServers[[ns0]] <- switch(
                     input$moduleName,
@@ -247,6 +261,7 @@ subsetPlotsServer <- function(id, dataSource, optCrt) {
             })
             globals$containerIds <- c()
             globals$containerInteractive <- list()
+            globals$containerUIsFUN <- list()
             globals$containerUIs <- list()
             globals$containerWidth <- list()
             globals$containerServers <- list()
@@ -261,6 +276,7 @@ subsetPlotsServer <- function(id, dataSource, optCrt) {
                 globals$containerInteractive[[input$removePlotModule]] <-
                     NULL
                 globals$containerWidth[[input$removePlotModule]] <- NULL
+                globals$containerUIsFUN[[input$removePlotModule]] <- NULL
                 globals$containerUIs[[input$removePlotModule]] <- NULL
                 updatePlotModules()
             }
@@ -302,6 +318,13 @@ subsetPlotsServer <- function(id, dataSource, optCrt) {
                         "full",
                         "half")
                 updatePlotModules()
+            }
+        })
+        observeEvent(input$changeSubsetContext, {
+            if (input$changeSubsetContext != "") {
+                globals$containerSubsetGrp[[
+                    sub('___.*$', '', input$changeSubsetContext)
+                ]] <- sub('^.*___', '', input$changeSubsetContext)
             }
         })
     })

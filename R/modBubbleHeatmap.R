@@ -39,6 +39,7 @@ plotBubbleHeatmapUI <- function(id) {
                         )
                     ),
                 xaxisCellInfoUI(id),
+                yaxisCellInfoUI(id),
                 subsetCellByInfoUI(id, mini = TRUE),
                 sliderInput(
                     NS(id, "filterVal"),
@@ -145,6 +146,13 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt) {
             "Group by:",
             choices = getGroupUI(dataSource),
             selected = dataSource()$sc1def$grp1
+        )
+        updateSelectInput(
+            session,
+            "CellInfoY",
+            "Split by:",
+            choices = c(NA, getGroupUI(dataSource)),
+            selected = NA
         )
         updateSubsetCellUI(id, input, output, session, dataSource, addNA = TRUE)
         
@@ -254,7 +262,8 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt) {
                         colrg(),
                 legendTitle = dataSource()$terms['expression'],
                 reorder=input$plotord,
-                orderX = input$cellinfoXorder
+                orderX = input$cellinfoXorder,
+                splitBy=input$CellInfoY
             )
         })
         observeEvent(

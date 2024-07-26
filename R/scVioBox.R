@@ -18,7 +18,8 @@ scVioBox <- function(
         pointSize,
         labelsFontsize,
         reorder=FALSE,
-        orderX) {
+        orderX,
+        splitBy) {
     # Prepare ggData
     ggData <- inpMeta[, c(
         inpConf[inpConf$UI == infoX]$ID,
@@ -34,6 +35,14 @@ scVioBox <- function(
         tmpNoise <-
             rnorm(length(ggData$val)) * diff(range(ggData$val)) / 1000
         ggData$val <- ggData$val + tmpNoise
+    }
+    # Load splitBy
+    if(!missing(splitBy)){
+        if(splitBy!=""){
+            if(splitBy %in% inpConf$UI){
+                ggData$splitBy <- inpMeta[[inpConf[inpConf$UI == splitBy]$ID]]
+            }
+        }
     }
     # filter the cell
     if (filterKey %in% inpConf$UI) {
@@ -59,17 +68,44 @@ scVioBox <- function(
     }else{
         ggData <- relevelData(ggData, "X")
     }
-    ggCol <- relevelCol(inpConf, infoX, ggData, "X")
+    if('splitBy' %in% colnames(ggData)){
+        ggCol <- relevelCol(inpConf, splitBy, ggData, "splitBy")
+    }else{
+        ggCol <- relevelCol(inpConf, infoX, ggData, "X")
+    }
+    
     
     # Actual ggplot
+    showLegend <- FALSE
     if (inptyp == "violin") {
-        ggOut <- ggplot(ggData, aes(
-            .data[["X"]], .data[["val"]], fill = .data[["X"]])) +
-            geom_violin(scale = "width")
+        if('splitBy' %in% colnames(ggData)){
+            if(length(unique(ggData$splitBy))==2){
+                ggOut <- ggplot(ggData, aes(
+                    .data[["X"]], .data[["val"]], fill = .data[["splitBy"]])) +
+                    geom_split_violin(scale = "width")
+            }else{
+                ggOut <- ggplot(ggData, aes(
+                    .data[["X"]], .data[["val"]], fill = .data[["splitBy"]])) +
+                    geom_violin(scale = "width")
+            }
+            showLegend <- TRUE
+        }else{
+            ggOut <- ggplot(ggData, aes(
+                .data[["X"]], .data[["val"]], fill = .data[["X"]])) +
+                geom_violin(scale = "width")
+        }
     } else {
-        ggOut <- ggplot(ggData, aes(
-            .data[["X"]], .data[["val"]], fill = .data[["X"]])) +
-            geom_boxplot()
+        if('splitBy' %in% colnames(ggData)){
+            ggOut <- ggplot(ggData, aes(
+                .data[["X"]], .data[["val"]], fill = .data[["splitBy"]])) +
+                geom_boxplot()
+            showLegend <- TRUE
+        }else{
+            ggOut <- ggplot(ggData, aes(
+                .data[["X"]], .data[["val"]], fill = .data[["X"]])) +
+                geom_boxplot()
+        }
+        
     }
     if (inppts) {
         ggOut <- ggOut + geom_jitter(size = pointSize, shape = 16)
@@ -79,7 +115,13 @@ scVioBox <- function(
             base_size = .globals$sList[labelsFontsize],
             Xang = 45,
             XjusH = 1) +
-        scale_fill_manual("", values = ggCol) +
-        theme(legend.position = "none")
+        scale_fill_manual("", values = ggCol)
+    if(showLegend){
+        ggOut <- ggOut +
+            theme(legend.position = "bottom")
+    }else{
+        ggOut <- ggOut +
+            theme(legend.position = "none")
+    }
     return(ggOut)
 }

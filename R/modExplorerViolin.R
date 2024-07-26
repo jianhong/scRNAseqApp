@@ -1,4 +1,4 @@
-scVlnUI <- function(id, postfix = 1) {
+scVlnUI <- function(id, postfix = 1, subgrp=.globals$subsetgroup[1]) {
     subModuleContainerUI(
         id,
         mainSelectUI = tagList(
@@ -15,7 +15,7 @@ scVlnUI <- function(id, postfix = 1) {
                 width = "100px"
             )
         ),
-        menuUI = contextMenuViolinUI(id, group = TRUE),
+        menuUI = contextMenuViolinUI(id, group = subgrp),
         contentUI = geneExprDotPlotUI(id, postfix = postfix)
     )
 }
@@ -82,10 +82,12 @@ scVlnServer <- function(
                 infoX = input$CellInfoX,
                 infoY = input$CellInfoY,
                 subsetCellKey=p_input[[paste0("subsetCell",
-                                              input[["CellInfosubgrp"]])]],
+                                              input[[paste0("CellInfosubgrp",
+                                                            postfix)]])]],
                 subsetCellVal=
                     getSubsetCellVal(p_input,
-                                     group=input[["CellInfosubgrp"]]),
+                                     group=input[[paste0("CellInfosubgrp",
+                                                         postfix)]]),
                 filterKey = p_input$filterCell,
                 filterVal = p_input$filterCellVal,
                 dataset = dataSource()$dataset,

@@ -14,6 +14,7 @@ plotVioBoxUI <- function(id) {
                 3,
                 style = "border-right: 2px solid black",
                 xaxisCellInfoUI(id),
+                yaxisCellInfoUI(id),
                 subsetCellByInfoUI(id, mini = TRUE),
                 subsetCellByFilterUI(
                     id,
@@ -72,6 +73,14 @@ plotVioBoxServer <- function(id, dataSource, optCrt) {
             selected = dataSource()$sc1def$grp1
         )
         
+        updateSelectInput(
+            session,
+            "CellInfoY",
+            "Split by:",
+            choices = c(NA, getGroupUI(dataSource)),
+            selected = NA
+        )
+        
         updateSubsetCellUI(id, input, output, session, dataSource, addNA = TRUE)
         updateFilterCellUI(id, optCrt, input, output, session, dataSource)
         updateRankList(
@@ -97,7 +106,8 @@ plotVioBoxServer <- function(id, dataSource, optCrt) {
                 input$plotsiz,
                 input$plotfsz,
                 reorder = input$plotord,
-                orderX = input$cellinfoXorder
+                orderX = input$cellinfoXorder,
+                splitBy=input$CellInfoY
             )
         })
         updateGeneExprDotPlotUI(

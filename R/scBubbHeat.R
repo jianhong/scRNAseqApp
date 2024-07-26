@@ -33,7 +33,8 @@ scBubbHeat <- function(
         legendTitle = "expression",
         returnColorRange = FALSE,
         reorder=FALSE,
-        orderX) {
+        orderX,
+        splitBy) {
     # Identify genes that are in our dataset
     if (missing(inpGrp1c))
         inpGrp1c <- 0
@@ -72,6 +73,30 @@ scBubbHeat <- function(
         inpConf[inpConf$grp == TRUE]$ID),
         with = FALSE]
     tmp$grpBy <- inpMeta[[inpConf[inpConf$UI == inpGrp]$ID]]
+    # Load splitBy
+    if(!missing(splitBy)){
+        if(splitBy!=""){
+            if(splitBy %in% inpConf$UI){
+                if(plotAllCells){
+                    showNotification(
+                        'Plotting all cells data does not support splitBy.',
+                        duration = 5,
+                        type = 'warning'
+                    )
+                }else{
+                    if(inpPlt == "Bubbleplot"){
+                        showNotification(
+                            'Bubble plot does not support splitBy.',
+                            duration = 5,
+                            type = 'warning'
+                        )
+                    }else{
+                        tmp$splitBy <- inpMeta[[inpConf[inpConf$UI == splitBy]$ID]]
+                    }
+                }
+            }
+        }
+    }
     for (iGene in geneList$gene) {
         tmp$geneName <- iGene
         tmp$val <- vals[iGene, ]
@@ -83,11 +108,29 @@ scBubbHeat <- function(
         if(reorder){
             ggData$grpBy <- factor(ggData$grpBy, levels=orderX)
         }
-        ggCol <- relevelCol(inpConf, inpGrp, ggData, "grpBy")
-        ggOut <- ggplot(ggData, aes(
-            .data[["grpBy"]], .data[["val"]], fill = .data[["grpBy"]])) +
-            geom_violin(scale = "width") +
-            facet_grid(rows=as.formula("geneName ~ ."), scales = "free")
+        showLegend <- FALSE
+        if('splitBy' %in% colnames(ggData)){
+            showLegend <- TRUE
+            ggCol <- relevelCol(inpConf, splitBy, ggData, "splitBy")
+            if(length(unique(ggData$splitBy))==2){
+                ggOut <- ggplot(ggData, aes(
+                    .data[["grpBy"]], .data[["val"]], fill = .data[["splitBy"]])) +
+                    geom_split_violin(scale = "width") +
+                    facet_grid(rows=as.formula("geneName ~ ."), scales = "free")
+            }else{
+                ggOut <- ggplot(ggData, aes(
+                    .data[["grpBy"]], .data[["val"]], fill = .data[["splitBy"]])) +
+                    geom_violin(scale = "width") +
+                    facet_grid(rows=as.formula("geneName ~ ."), scales = "free")
+            }
+        }else{
+            ggCol <- relevelCol(inpConf, inpGrp, ggData, "grpBy")
+            ggOut <- ggplot(ggData, aes(
+                .data[["grpBy"]], .data[["val"]], fill = .data[["grpBy"]])) +
+                geom_violin(scale = "width") +
+                facet_grid(rows=as.formula("geneName ~ ."), scales = "free")
+        }
+        
         if(pointSize>0) ggOut <- ggOut +
             geom_jitter(size = pointSize, shape = 16)
         ggOut <- ggOut + 
@@ -97,7 +140,8 @@ scBubbHeat <- function(
                 Xang = 45,
                 XjusH = 1) +
             scale_fill_manual("", values = ggCol) +
-            theme(legend.position = "none")
+            theme(legend.position = ifelse(
+                showLegend, "bottom", "none"))
         return(plot(ggOut))
     }
     
@@ -105,19 +149,23 @@ scBubbHeat <- function(
     ggData$val <- expm1(ggData$val)
     ggData$val[is.infinite(ggData$val)] <-
         max(ggData$val[!is.infinite(ggData$val)], na.rm = TRUE)
+    cNames <- c("geneName", "grpBy", "splitBy")[
+        c("geneName", "grpBy", "splitBy") %in% 
+            colnames(ggData)
+    ]
     if (!plotAllCells) {
         ggData <- ggData[, list(
             val = mean(.SD$val[.SD$val >= inpGrp1c]),
             prop = sum(.SD$val > 0) / length(.SD$sampleID)
         ),
-        by = c("geneName", "grpBy")]
+        by = cNames]
         ggDataAvg <- NULL
     } else{
         ggDataAvg <- ggData[, list(
             val = mean(.SD$val[.SD$val >= inpGrp1c]),
             prop = sum(.SD$val > 0) / length(.SD$sampleID)
         ),
-        by = c("geneName", "grpBy")]
+        by = cNames]
         ggDataAvg$val <- log1p(ggDataAvg$val)
     }
     ggData$val <- log1p(ggData$val)
@@ -206,8 +254,11 @@ scBubbHeat <- function(
     reshapeMat <- function(value.var) {
         ggMatrix <- dcast.data.table(
             ggData,
-            as.formula("geneName~grpBy"),
-            value.var = value.var)
+            as.formula(ifelse('splitBy' %in% colnames(ggData),
+                              "geneName~grpBy+splitBy", "geneName~grpBy")),
+            value.var = value.var,
+            fun.aggregate = mean,
+            sep = '___')
         tmp <- ggMatrix$geneName
         ggMatrix <- as.matrix(ggMatrix[, -1])
         ggMatrix[is.na(ggMatrix)] <- 0
@@ -218,6 +269,11 @@ scBubbHeat <- function(
     }
     ggMat <- reshapeMat(value.var = "val")
     
+    ggMatSplit <- sub('^.*___', '', colnames(ggMat))
+    ggMat <- ggMat[, order(ggMatSplit)]
+    ggMatSplit <- sub('^.*___', '', colnames(ggMat))
+    ggMatGrp <- sub('___.*$', '', colnames(ggMat))
+    colnames(ggMat) <- sub('___', '_', colnames(ggMat))
     cluster_rows <- inpRow
     if (inpRow) {
         cluster_rows <- as.dendrogram(hclust(dist(ggMat)))
@@ -455,7 +511,8 @@ scBubbHeat <- function(
                 show_row_names = !plotAllCells,
                 column_names_rot = 45,
                 layer_fun = layer_fun,
-                rect_gp = rect_gp
+                rect_gp = rect_gp,
+                row_split = if(inpCol) NULL else ggMatSplit
             )
         }
     } else{
@@ -504,7 +561,8 @@ scBubbHeat <- function(
                 show_column_names = !plotAllCells,
                 column_names_rot = 45,
                 layer_fun = layer_fun,
-                rect_gp = rect_gp
+                rect_gp = rect_gp,
+                column_split = if(inpCol) NULL else ggMatSplit
             )
         }
     }

@@ -212,6 +212,7 @@ updateFilterCellUI <-
         })
     }
 
+#' @importFrom colourpicker colourInput
 updateGeneExprDotPlotUI <-
     function(
         postfix = 1,
@@ -243,7 +244,7 @@ updateGeneExprDotPlotUI <-
                 click = NS0(id, 'GeneExproup.clk', postfix))
         })
         nearest_element <- function(e){
-            if(is.null(e)) return("undefined")
+            if(is.null(e)) return("undefined", 'undefined')
             p <- plotX()
             ggp1 <- ggplot_build(p)
             xrg <- ggp1$layout$panel_params[[1]]$x.range
@@ -276,11 +277,14 @@ updateGeneExprDotPlotUI <-
                 abs((e$y - text_layers$y)/diff(yrg))<= text_layers$height
             nearestLabel <- nearestLabel==min(nearestLabel) & inRange
             if(any(nearestLabel)){
-                nearestLabel <- text_layers$label[which(nearestLabel)[1]]
+                nearestLabel <- 
+                    c('text',
+                      as.character(text_layers$label[which(nearestLabel)[1]]))
             }else{
                 nearestLabel <- (e$x - points_layers$x)^2 +
                     (e$y - points_layers$y)^2
-                nearestLabel <- points_layers$colour[which.min(nearestLabel)[1]]
+                nearestLabel <- c('colour',
+                                  points_layers$colour[which.min(nearestLabel)[1]])
             }
             return(nearestLabel)
         }
@@ -296,16 +300,29 @@ updateGeneExprDotPlotUI <-
                         val <- nearest_element(evt)
                         fluidRow(
                             column(4,
-                                   textInput(NS0(id, "GeneExproup.upd",
-                                                 postfix),
-                                             label = NULL,
-                                             value = val),
+                                   if(val[1]=='colour'){
+                                       colourInput(
+                                           NS0(id, "GeneExproup.upd",
+                                               postfix),
+                                           label = NULL,
+                                           value = val[2]
+                                       )
+                                   }else{
+                                       textInput(NS0(id, "GeneExproup.upd",
+                                                     postfix),
+                                                 label = NULL,
+                                                 value = val[2])
+                                   },
                                    div(
                                        style = "visibility:hidden;",
+                                       textInput(NS0(id, 'GeneExproup.vtp', 
+                                                     postfix),
+                                                 label = NULL,
+                                                 value = val[1]),
                                        textInput(NS0(id, "GeneExproup.old",
                                                      postfix),
                                                  label = NULL,
-                                                 value = val))),
+                                                 value = val[2]))),
                             column(4, actionButton(NS0(id, "GeneExproup.submit",
                                                        postfix),
                                                    label = 'update')),
@@ -813,6 +830,12 @@ subModuleMenuObservor <- function(
     observeEvent(input$resize, {
         updateTextInput(p_session, "resizePlotModule", value = id)
     })
+    observeEvent(input$CellInfosubgrp1, {
+        updateTextInput(p_session, "changeSubsetContext",
+                        value = paste(id, input$CellInfosubgrp1, sep='___'))
+    })
+    #if subset group B is selected but the B have no vale
+    # send click message to the TogT B group
     observeEvent(input$CellInfosubgrp1, {
         if(length(p_session$input[[paste0("subsetCell",
                                           input$CellInfosubgrp1)]])==0){

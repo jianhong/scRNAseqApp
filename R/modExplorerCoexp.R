@@ -1,4 +1,4 @@
-scCoexpUI <- function(id, postfix = 1) {
+scCoexpUI <- function(id, postfix = 1, subgrp=.globals$subsetgroup[1]) {
     subModuleContainerUI(
         id,
         mainSelectUI = tagList(
@@ -15,7 +15,7 @@ scCoexpUI <- function(id, postfix = 1) {
                 width = "100px"
             )
         ),
-        menuUI = contextMenuCoExprUI(id, group=TRUE),
+        menuUI = contextMenuCoExprUI(id, group=subgrp),
         contentUI = geneExprDotPlotUI(id, postfix = postfix)
     )
 }

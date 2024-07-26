@@ -50,11 +50,7 @@ helper1 <- function(...,
                         "box plot / bar plot")
                 ),
                 "cellInfoY" = c(
-                    "Select cell info / gene to plot on Y-axis",
-                    paste(
-                        "- Can be continuous cell information",
-                        "(e.g. nUMIs / scores)"),
-                    "- Can also be gene expression"
+                    "Select cell info to plot for group"
                 ),
                 "subsetCellInfo" = c(
                     "Select categorical cell information to subset cells by",

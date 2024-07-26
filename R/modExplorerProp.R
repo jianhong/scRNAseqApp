@@ -1,4 +1,4 @@
-scPropUI <- function(id, postfix = 1) {
+scPropUI <- function(id, postfix = 1, subgrp=.globals$subsetgroup[1]) {
     subModuleContainerUI(
         id,
         mainSelectUI = tagList(
@@ -15,7 +15,7 @@ scPropUI <- function(id, postfix = 1) {
                 width = "100px"
             )
         ),
-        menuUI = contextMenuPropUI(id, group=TRUE),
+        menuUI = contextMenuPropUI(id, group=subgrp),
         contentUI = geneExprDotPlotUI(id, postfix = postfix)
     )
 }
@@ -76,10 +76,12 @@ scPropServer <- function(
                 infoX = input$CellInfoX,
                 infoY = input$CellInfoY,
                 subsetCellKey=p_input[[paste0("subsetCell",
-                                              input[["CellInfosubgrp"]])]],
+                                              input[[paste0("CellInfosubgrp",
+                                                            postfix)]])]],
                 subsetCellVal=
                     getSubsetCellVal(p_input,
-                                     group=input[["CellInfosubgrp"]]),
+                                     group=input[[paste0("CellInfosubgrp",
+                                                         postfix)]]),
                 inptyp = input$plottyp,
                 flipXY = input$plotflp,
                 labelsFontsize = p_input$GeneExprfsz,

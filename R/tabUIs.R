@@ -490,6 +490,23 @@ subModuleContainerUI <- function(id, mainSelectUI, menuUI, contentUI){
     )
 }
 
+subsetGrpRadioButton <- function(id, label, selected, inline=TRUE){
+    if(is.logical(selected)){
+        if(selected){
+            selected <- .globals$subsetgroup[1]
+        }
+    }
+    if(selected %in% .globals$subsetgroup){
+        radioButtons(
+            inputId = id,
+            label = label,
+            choices = .globals$subsetgroup,
+            selected = selected,
+            inline = inline
+        )
+    }
+}
+
 contextMenuCellInfoUI <- function(
         id, postfix=1,
         colorNames=names(.globals$cList),
@@ -504,15 +521,11 @@ contextMenuCellInfoUI <- function(
             conditionalPanel(
                 condition = paste0("input.CellInfotog", postfix, " % 2 == 1"),
                 ns=NS(id),
-                if(group){
-                    radioButtons(
-                        NS0(id, 'CellInfosubgrp', postfix),
-                        "Subset setting group:",
-                        choices = .globals$subsetgroup,
-                        selected = .globals$subsetgroup[1],
-                        inline = TRUE
-                    )
-                },
+                subsetGrpRadioButton(
+                    id = NS0(id, 'CellInfosubgrp', postfix),
+                    label = "Subset setting group:",
+                    selected = group,
+                    inline=TRUE),
                 radioButtons(
                     NS0(id, "CellInfocol", postfix),
                     "Colour (Continuous data):",
@@ -550,15 +563,11 @@ contextMenuGeneExprUI <- function(
             conditionalPanel(
                 condition = paste0("input.GeneExprtog", postfix, " % 2 == 1"),
                 ns=NS(id),
-                if(group){
-                    radioButtons(
-                        NS0(id, 'CellInfosubgrp', postfix),
-                        "Subset setting group:",
-                        choices = .globals$subsetgroup,
-                        selected = .globals$subsetgroup[1],
-                        inline = TRUE
-                    )
-                },
+                subsetGrpRadioButton(
+                    id = NS0(id, 'CellInfosubgrp', postfix),
+                    label = "Subset setting group:",
+                    selected = group,
+                    inline=TRUE),
                 radioButtons(
                     NS0(id, "GeneExprtype", postfix), "Plot type",
                     choices = c("Dotplot", "Ridgeplot"),
@@ -634,15 +643,11 @@ contextMenuCoExprUI <- function(
             conditionalPanel(
                 condition = paste0("input.CoExprtog", postfix, " % 2 == 1"),
                 ns=NS(id),
-                if(group){
-                    radioButtons(
-                        NS0(id, 'CellInfosubgrp', postfix),
-                        "Subset setting group:",
-                        choices = .globals$subsetgroup,
-                        selected = .globals$subsetgroup[1],
-                        inline = TRUE
-                    )
-                },
+                subsetGrpRadioButton(
+                    id = NS0(id, 'CellInfosubgrp', postfix),
+                    label = "Subset setting group:",
+                    selected = group,
+                    inline=TRUE),
                 radioButtons(
                     NS0(id, "CoExprcol", postfix), "Colour:",
                     choices = choices,
@@ -658,7 +663,7 @@ contextMenuCoExprUI <- function(
         )
     )
 }
-contextMenuPropUI <- function(id, group = FALSE){
+contextMenuPropUI <- function(id, postfix=1, group = FALSE){
     tagList(
         actionButton(
             NS(id, "Proptog"), "",
@@ -668,15 +673,11 @@ contextMenuPropUI <- function(id, group = FALSE){
             class="submodule-contextmenu",
             conditionalPanel(
                 condition = paste0("input.Proptog", " % 2 == 1"), ns=NS(id),
-                if(group){
-                    radioButtons(
-                        NS(id, 'CellInfosubgrp'),
-                        "Subset setting group:",
-                        choices = .globals$subsetgroup,
-                        selected = .globals$subsetgroup[1],
-                        inline = TRUE
-                    )
-                },
+                subsetGrpRadioButton(
+                    id = NS0(id, 'CellInfosubgrp', postfix),
+                    label = "Subset setting group:",
+                    selected = group,
+                    inline=TRUE),
                 radioButtons(
                     NS(id, "plottyp"),
                     "Plot value:",
@@ -699,7 +700,7 @@ contextMenuPropUI <- function(id, group = FALSE){
         )
     )
 }
-contextMenuViolinUI <- function(id, group = FALSE){
+contextMenuViolinUI <- function(id, postfix=1, group = FALSE){
     tagList(
         actionButton(
             NS(id, "Propviolin"), "",
@@ -709,15 +710,11 @@ contextMenuViolinUI <- function(id, group = FALSE){
             class="submodule-contextmenu",
             conditionalPanel(
                 condition = paste0("input.Propviolin", " % 2 == 1"), ns=NS(id),
-                if(group){
-                    radioButtons(
-                        NS(id, 'CellInfosubgrp'),
-                        "Subset setting group:",
-                        choices = .globals$subsetgroup,
-                        selected = .globals$subsetgroup[1],
-                        inline = TRUE
-                    )
-                },
+                subsetGrpRadioButton(
+                    id = NS0(id, 'CellInfosubgrp', postfix),
+                    label = "Subset setting group:",
+                    selected = group,
+                    inline=TRUE),
                 radioButtons(
                     NS(id, "plottyp"), "Plot type:",
                     choices = c("violin", "boxplot"),

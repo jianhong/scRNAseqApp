@@ -1,4 +1,4 @@
-scCoexp3dUI <- function(id, postfix = 1) {
+scCoexp3dUI <- function(id, postfix = 1, subgrp=.globals$subsetgroup[1]) {
     subModuleContainerUI(
         id,
         mainSelectUI = tagList(
@@ -15,7 +15,7 @@ scCoexp3dUI <- function(id, postfix = 1) {
                 width = "100px"
             )
         ),
-        menuUI = contextMenuCoExprUI(id, plotly = TRUE, group = TRUE),
+        menuUI = contextMenuCoExprUI(id, plotly = TRUE, group = subgrp),
         contentUI = tagList(
             uiOutput(NS0(id, "GeneExpr3Doup.ui", 1)),
             downloadButton(

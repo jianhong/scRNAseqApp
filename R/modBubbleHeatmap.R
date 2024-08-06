@@ -115,6 +115,19 @@ plotBubbleHeatmapUI <- function(id) {
                         uiOutput(outputId = NS(id, "plotXord"))
                     )
                 ),
+                conditionalPanel(
+                    condition = "input.CellInfoY != ''",
+                    ns = NS(id),
+                    checkboxInput(
+                        NS(id, "plotsord"),
+                        "Reorder the spliter", value = FALSE
+                    ),
+                    conditionalPanel(
+                        condition = "input.plotsord % 2 == 1",
+                        ns=NS(id),
+                        uiOutput(outputId = NS(id, "plotSord"))
+                    )
+                ),
                 br(),
                 boxPlotControlUI(id, withPoints = FALSE, withColor = TRUE)
             ),
@@ -151,7 +164,7 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt) {
             session,
             "CellInfoY",
             "Split by:",
-            choices = c(NA, getGroupUI(dataSource)),
+            choices = getGroupUI(dataSource),
             selected = NA
         )
         updateSubsetCellUI(id, input, output, session, dataSource, addNA = TRUE)
@@ -207,6 +220,9 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt) {
         updateRankList(
             input, output, dataSource, "CellInfoX", "plotXord",
             NS(id, "cellinfoXorder"))
+        updateRankList(
+            input, output, dataSource, "CellInfoY", "plotSord",
+            NS(id, "cellinfoSorder"))
         
         ## update the ui
         output$oupTxt <- renderUI({
@@ -263,7 +279,9 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt) {
                 legendTitle = dataSource()$terms['expression'],
                 reorder=input$plotord,
                 orderX = input$cellinfoXorder,
-                splitBy=input$CellInfoY
+                splitBy=input$CellInfoY,
+                sreorder = input$plotsord,
+                orderS = input$cellinfoSorder
             )
         })
         observeEvent(

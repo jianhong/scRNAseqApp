@@ -46,6 +46,19 @@ plotVioBoxUI <- function(id) {
                     ns=NS(id),
                     uiOutput(outputId = NS(id, "plotXord"))
                 ),
+                conditionalPanel(
+                    condition = "input.CellInfoY != ''",
+                    ns = NS(id),
+                    checkboxInput(
+                        NS(id, "plotsord"),
+                        "Reorder the spliter", value = FALSE
+                    ),
+                    conditionalPanel(
+                        condition = "input.plotsord % 2 == 1",
+                        ns=NS(id),
+                        uiOutput(outputId = NS(id, "plotSord"))
+                    )
+                ),
                 boxPlotControlUI(id)
             ),
             column(9, geneExprDotPlotUI(id),
@@ -77,7 +90,7 @@ plotVioBoxServer <- function(id, dataSource, optCrt) {
             session,
             "CellInfoY",
             "Split by:",
-            choices = c(NA, getGroupUI(dataSource)),
+            choices = getGroupUI(dataSource),
             selected = NA
         )
         
@@ -86,6 +99,9 @@ plotVioBoxServer <- function(id, dataSource, optCrt) {
         updateRankList(
             input, output, dataSource, "CellInfoX", "plotXord",
             NS(id, "cellinfoXorder"))
+        updateRankList(
+            input, output, dataSource, "CellInfoY", "plotSord",
+            NS(id, "cellinfoSorder"))
         
         ## plot region
         ### plots
@@ -107,7 +123,9 @@ plotVioBoxServer <- function(id, dataSource, optCrt) {
                 input$plotfsz,
                 reorder = input$plotord,
                 orderX = input$cellinfoXorder,
-                splitBy=input$CellInfoY
+                splitBy=input$CellInfoY,
+                sreorder = input$plotsord,
+                orderS = input$cellinfoSorder
             )
         })
         updateGeneExprDotPlotUI(

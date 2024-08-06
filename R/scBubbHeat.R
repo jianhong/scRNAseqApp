@@ -34,7 +34,9 @@ scBubbHeat <- function(
         returnColorRange = FALSE,
         reorder=FALSE,
         orderX,
-        splitBy) {
+        splitBy,
+        sreorder=FALSE,
+        orderS) {
     # Identify genes that are in our dataset
     if (missing(inpGrp1c))
         inpGrp1c <- 0
@@ -92,6 +94,10 @@ scBubbHeat <- function(
                         )
                     }else{
                         tmp$splitBy <- inpMeta[[inpConf[inpConf$UI == splitBy]$ID]]
+                        if(sreorder){
+                            tmp$splitBy <- factor(as.character(tmp$splitBy),
+                                                  levels=orderS)
+                        }
                     }
                 }
             }

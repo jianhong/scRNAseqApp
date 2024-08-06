@@ -19,7 +19,9 @@ scVioBox <- function(
         labelsFontsize,
         reorder=FALSE,
         orderX,
-        splitBy) {
+        splitBy,
+        sreorder=FALSE,
+        orderS) {
     # Prepare ggData
     ggData <- inpMeta[, c(
         inpConf[inpConf$UI == infoX]$ID,
@@ -41,6 +43,10 @@ scVioBox <- function(
         if(splitBy!=""){
             if(splitBy %in% inpConf$UI){
                 ggData$splitBy <- inpMeta[[inpConf[inpConf$UI == splitBy]$ID]]
+                if(sreorder){
+                    ggData$splitBy <- factor(as.character(ggData$splitBy),
+                                             levels = orderS)
+                }
             }
         }
     }

@@ -111,6 +111,7 @@ scBubbHeat <- function(
     ggData <- subGrp(ggData, grpKey, grpVal, inpConf)
     
     if (inpPlt == "Violin") {
+        ggData$geneName <- factor(as.character(ggData$geneName), levels = geneList$gene)
         if(reorder){
             ggData$grpBy <- factor(ggData$grpBy, levels=orderX)
         }

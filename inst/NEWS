@@ -1,4 +1,9 @@
-CHANGES IN VERSION 1.15.10
+CHANGES IN VERSION 1.15.12
+-------------------------
+
+    o order the stacked violin plots by input order.
+    
+CHANGES IN VERSION 1.15.11
 -------------------------
 
     o add reorder function for splitBy for violin plots.

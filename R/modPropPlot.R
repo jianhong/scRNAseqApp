@@ -137,15 +137,16 @@ plotProportionServer <- function(id, dataSource, optCrt) {
         ### plots
         plot1 <- reactive({
             scProp(
-                dataSource()$sc1conf,
-                dataSource()$sc1meta,
-                input$CellInfoX,
-                input$CellInfoY,
-                input$subsetCell,
-                getSubsetCellVal(input),
-                input$plottyp,
-                input$plotflp,
-                input$plotfsz,
+                inpConf = dataSource()$sc1conf,
+                inpMeta = dataSource()$sc1meta,
+                infoX = input$CellInfoX,
+                infoY = input$CellInfoY,
+                subsetCellKey = input$subsetCell,
+                subsetCellVal = getSubsetCellVal(input),
+                inptyp = input$plottyp,
+                flipXY = input$plotflp,
+                labelsFontsize = input$plotfsz,
+                labelsFontFamily = input$plotfml,
                 reorder = input$plotord,
                 orderX = input$cellinfoXorder,
                 orderY = input$cellinfoYorder
@@ -229,6 +230,7 @@ plotProportionServer <- function(id, dataSource, optCrt) {
                 method = input$testmethod,
                 type = input$cortyp,
                 labelsFontsize = input$plotfsz,
+                labelsFontFamily = input$plotfml,
                 inpcols = input$plotcols
             )
         })

@@ -68,6 +68,7 @@ scInfoServer <- function(
                 gradientCol=input[[paste0("CellInfocol", postfix)]],
                 GeneExprDotOrd=input[[paste0("CellInfoord", postfix)]],
                 labelsFontsize=p_input$GeneExprfsz,
+                labelsFontFamily=p_input$GeneExprfml,
                 plotAspectRatio=p_input$GeneExprasp,
                 keepXYlables=p_input$GeneExprtxt,
                 inplab=input[[paste0("CellInfolab", postfix)]],

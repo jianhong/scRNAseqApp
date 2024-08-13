@@ -101,6 +101,7 @@ scCoexp3dServer <- function(
                 GeneExprDotCol=input$CoExprcol1,
                 GeneExprDotOrd=input$CoExprord1,
                 labelsFontsize=p_input$GeneExprfsz,
+                labelsFontFamily=p_input$GeneExprfml,
                 plotAspectRatio=p_input$GeneExprasp,
                 keepXYlables=p_input$GeneExprtxt,
                 valueFilterKey = p_input$filterCell,

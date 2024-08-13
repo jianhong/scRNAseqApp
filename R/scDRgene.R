@@ -17,6 +17,7 @@ scDRgene <- function(
         gradientCol,
         GeneExprDotOrd,
         labelsFontsize,
+        labelsFontFamily,
         plotAspectRatio,
         keepXYlables,
         inpPlt = "Dotplot",
@@ -114,12 +115,13 @@ scDRgene <- function(
                 hide = hideFilterCell)
         }
         ggOut <- pointPlot(
-            ggOut,
-            pointSize,
-            labelsFontsize,
-            dimRedX,
-            dimRedY,
-            keepXYlables) +
+            ggOut = ggOut,
+            pointSize = pointSize,
+            fontSize = labelsFontsize,
+            labelsFontFamily = labelsFontFamily,
+            dimRedX = dimRedX,
+            dimRedY = dimRedY,
+            keepXYlables = keepXYlables) +
             guides(color = guide_colorbar(barwidth = 15))
         if (inpColRange[2] > 0) {
             ggOut <- ggOut +

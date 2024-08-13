@@ -418,6 +418,7 @@ updateCellInfoPlot <-
                 gradientCol=input[[paste0("CellInfocol", postfix)]],
                 GeneExprDotOrd=input[[paste0("CellInfoord", postfix)]],
                 labelsFontsize=input$GeneExprfsz,
+                labelsFontFamily=input$GeneExprfml,
                 plotAspectRatio=input$GeneExprasp,
                 keepXYlables=input$GeneExprtxt,
                 inplab=input[[paste0("CellInfolab", postfix)]],
@@ -572,21 +573,23 @@ updateGeneAccPlot <-
         
         plotX <- reactive({
             scDRatac(
-                dataSource()$sc1conf,
-                dataSource()$sc1meta,
-                input$GeneExprdrX,
-                input$GeneExprdrY,
-                input[[GeneNameLabel]],
-                input[[coordLabel]],
-                input$subsetCell,
-                input[[paste0("subsetCellVal", input$subsetCell)]],
-                dataSource()$dataset,
-                dataSource()$sc1gene,
-                input$GeneExprsiz,
-                input[[paste0("GeneExprcol", postfix)]],
-                input$GeneExprfsz,
-                input$GeneExprasp,
-                input$GeneExprtxt)
+                inpConf = dataSource()$sc1conf,
+                inpMeta = dataSource()$sc1meta,
+                dimRedX = input$GeneExprdrX,
+                dimRedY = input$GeneExprdrY,
+                gene1 = input[[GeneNameLabel]],
+                coord = input[[coordLabel]],
+                subsetCellKey = input$subsetCell,
+                subsetCellVal = 
+                    input[[paste0("subsetCellVal", input$subsetCell)]],
+                dataset = dataSource()$dataset,
+                geneIdMap = dataSource()$sc1gene,
+                pointSize = input$GeneExprsiz,
+                gradientCol = input[[paste0("GeneExprcol", postfix)]],
+                labelsFontsize = input$GeneExprfsz,
+                labelsFontFamily=input$GeneExprfml,
+                plotAspectRatio = input$GeneExprasp,
+                keepXYlables = input$GeneExprtxt)
         })
         updateGeneExprDotPlotUI(
             postfix,
@@ -643,6 +646,7 @@ updateGeneExprPlot <-
                 gradientCol=input[[paste0("GeneExprcol", postfix)]],
                 GeneExprDotOrd=input[[paste0("GeneExprord", postfix)]],
                 labelsFontsize=input$GeneExprfsz,
+                labelsFontFamily=input$GeneExprfml,
                 plotAspectRatio=input$GeneExprasp,
                 keepXYlables=input$GeneExprtxt,
                 inpPlt=input[[paste0("GeneExprtype", postfix)]],
@@ -722,6 +726,7 @@ updateSubsetGeneExprPlot <-
                 gradientCol=input[[paste0("GeneExprcol", postfix)]],
                 GeneExprDotOrd=input[[paste0("GeneExprord", postfix)]],
                 labelsFontsize=input$GeneExprfsz,
+                labelsFontFamily=input$GeneExprfml,
                 plotAspectRatio=input$GeneExprasp,
                 keepXYlables=input$GeneExprtxt,
                 inpPlt=input[[paste0("GeneExprtype", postfix)]],
@@ -939,14 +944,16 @@ labelBackgroundCells <- function(
 pointPlot <- function(
         ggOut,
         pointSize,
-        fontSize,
+        fontSize = 24,
+        labelsFontFamily = 'Helvetica',
         dimRedX,
         dimRedY,
         keepXYlables,
         shape = 16) {
     ggOut + geom_point(size = pointSize, shape = 16) +
         xlab(dimRedX) + ylab(dimRedY) +
-        sctheme(base_size = .globals$sList[fontSize],
+        sctheme(base_size = fontSize,
+                family = labelsFontFamily,
                 XYval = keepXYlables)
 }
 ggXYplot <- function(ggData) {

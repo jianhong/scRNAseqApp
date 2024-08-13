@@ -96,6 +96,7 @@ scVlnServer <- function(
                 inppts = input$plotpts,
                 pointSize = p_input$GeneExprsiz,
                 labelsFontsize = p_input$GeneExprfsz,
+                labelsFontFamily=p_input$GeneExprfml,
                 reorder = input$plotord,
                 orderX = input$cellinfoXorder
             )

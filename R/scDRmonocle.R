@@ -8,7 +8,8 @@ scDRmonocle <- function(
         trajectory_graph_segment_size = .75,
         trajectory_graph_color = 'grey28',
         graph_label_size = 2,
-        font_size = 'Medium',
+        font_size = 24,
+        labelsFontFamily = 'Helvetica',
         show_trajectory_graph = TRUE,
         label_principal_points = TRUE,
         label_leaves = TRUE,
@@ -128,6 +129,7 @@ scDRmonocle <- function(
     ggOut <- ggOut +
         xlab(paste(reduction_method, "_1")) +
         ylab(paste(reduction_method, "_2")) +
-        sctheme(base_size = .globals$sList[font_size])
+        sctheme(base_size = font_size,
+                family = labelsFontFamily)
     return(ggOut)
 }

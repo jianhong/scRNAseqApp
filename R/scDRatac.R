@@ -19,7 +19,8 @@ scDRatac <- function(
         geneIdMap,
         pointSize,
         gradientCol,
-        labelsFontsize,
+        labelsFontsize=24,
+        labelsFontFamily="Helvetica",
         plotAspectRatio,
         keepXYlables,
         ...) {
@@ -107,7 +108,9 @@ scDRatac <- function(
         scale_y_continuous(breaks = scales::breaks_extended(n = 2)) +
         theme_classic() +
         theme(
-            strip.text.y.right = element_text(angle = 0, hjust=0),
+            strip.text.y.right = element_text(angle = 0, hjust=0, 
+                                              size = labelsFontsize,
+                                              family = labelsFontFamily),
             strip.background = element_blank() )
     anno <- AnnotationPlot(dataset, gr) + 
         PeakPlot(dataset, gr) +

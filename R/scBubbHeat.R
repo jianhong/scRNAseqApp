@@ -4,7 +4,7 @@
 #' HeatmapAnnotation Legend pindex
 #' @importFrom circlize colorRamp2
 #' @importFrom grid gpar grid.circle unit.c unit grid.xaxis grid.yaxis 
-#'  seekViewport current.viewport
+#'  seekViewport current.viewport grid.lines
 #' @importFrom rhdf5 h5read
 #' @importFrom data.table rbindlist dcast.data.table data.table := uniqueN
 #' @importFrom ggdendro dendro_data
@@ -261,6 +261,7 @@ scBubbHeat <- function(
     if(sreorder){
         ggData$splitBy <- factor(as.character(ggData$splitBy), levels =orderS)
     }
+    
     reshapeMat <- function(value.var) {
         ggMatrix <- dcast.data.table(
             ggData,
@@ -281,8 +282,11 @@ scBubbHeat <- function(
     if(!plotAllCells) ggProp <- reshapeMat(value.var = 'prop')
     
     ggMatSplit <- sub('^.*___', '', colnames(ggMat))
-    ggMat <- ggMat[, order(ggMatSplit), drop=FALSE]
-    if(!plotAllCells) ggProp <- ggProp[, order(ggMatSplit), drop=FALSE]
+    ggMat <- ggMat[geneList$gene[geneList$gene %in% rownames(ggMat)],
+                   order(ggMatSplit), drop=FALSE]
+    if(!plotAllCells) ggProp <- 
+        ggProp[geneList$gene[geneList$gene %in% rownames(ggProp)],
+               order(ggMatSplit), drop=FALSE]
     ggMatSplit <- sub('^.*___', '', colnames(ggMat))
     ggMatGrp <- sub('___.*$', '', colnames(ggMat))
     colnames(ggMat) <- sub('___', '_', colnames(ggMat))
@@ -524,16 +528,20 @@ scBubbHeat <- function(
             plot_axis(
                 legendTitle,
                 {
+                    xmain <- ifelse(flipXY,
+                                    row_dend_side=='top', 
+                                    column_dend_side == "top")
+                    ymain <- ifelse(flipXY,
+                                    column_dend_side == "right",
+                                    row_dend_side == "right")
+                    grid.lines(c(0, 1), as.numeric(!xmain))
                     grid.xaxis(at = (seq.int(ncol(ggMat))-.5)/ncol(ggMat),
                                label = FALSE,
-                               main = ifelse(flipXY,
-                                             row_dend_side == "top",
-                                             column_dend_side == "top"))
+                               main = xmain)
+                    grid.lines(as.numeric(!ymain), c(0, 1))
                     grid.yaxis(at = (seq.int(nrow(ggMat))-.5)/nrow(ggMat),
                                label = FALSE,
-                               main = ifelse(flipXY,
-                                             column_dend_side == "right",
-                                             row_dend_side == "right"))
+                               main = ymain)
                 })
         })
     }else{

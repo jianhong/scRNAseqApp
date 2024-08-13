@@ -2,7 +2,8 @@
 #' @importFrom data.table data.table
 #' @importFrom ggplot2 ggplot aes .data xlab ylab coord_fixed
 #' scale_x_continuous scale_y_continuous geom_tile
-scDRcoexLeg <- function(gene1, gene2, colorPairs, labelsFontsize) {
+scDRcoexLeg <- function(gene1, gene2, colorPairs, labelsFontsize = 24,
+                        labelsFontFamily = 'Helvetica') {
     # Generate coex color palette
     nTot <- getTotalNumber(nGrid = 16, nPad = 2)
     gg <- getCoexpCol(colorPairs, nGrid = 16, nPad = 2)
@@ -17,6 +18,7 @@ scDRcoexLeg <- function(gene1, gene2, colorPairs, labelsFontsize) {
         scale_y_continuous(
             breaks = c(0, nTot),
             labels = c("low", "high")) +
-        sctheme(base_size = .globals$sList[labelsFontsize], XYval = TRUE)
+        sctheme(base_size = labelsFontsize,
+                family = labelsFontFamily, XYval = TRUE)
     return(ggOut)
 }

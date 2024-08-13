@@ -26,7 +26,8 @@ scDRcoex <- function(
         pointSize,
         GeneExprDotCol,
         GeneExprDotOrd,
-        labelsFontsize,
+        labelsFontsize = 24,
+        labelsFontFamily = 'Helvetica',
         plotAspectRatio,
         keepXYlables,
         valueFilterKey,
@@ -167,7 +168,8 @@ scDRcoex <- function(
             color = ggData$cMix) +
         xlab(dimRedX) + ylab(dimRedY) +
         sctheme(
-            base_size = .globals$sList[labelsFontsize],
+            base_size = labelsFontsize,
+            family = labelsFontFamily,
             XYval = keepXYlables)
     
     ggOut <- fixCoord(ggOut, plotAspectRatio, rat)

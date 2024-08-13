@@ -21,7 +21,8 @@ scDRcell <- function(
         pointSize,
         gradientCol,
         GeneExprDotOrd,
-        labelsFontsize,
+        labelsFontsize = 24,
+        labelsFontFamily = 'Helvetica',
         plotAspectRatio,
         keepXYlables,
         inplab,
@@ -132,12 +133,13 @@ scDRcell <- function(
             hide = hideFilterCell)
     }
     ggOut <- pointPlot(
-        ggOut,
-        pointSize,
-        labelsFontsize,
-        dimRedX,
-        dimRedY,
-        keepXYlables)
+        ggOut = ggOut,
+        pointSize = pointSize,
+        fontSize = labelsFontsize,
+        labelsFontFamily = labelsFontFamily,
+        dimRedX = dimRedX,
+        dimRedY = dimRedY,
+        keepXYlables = keepXYlables)
     # slingshot
     if (inpSlingshot) {
         if (file.exists(slingshotFilename)) {
@@ -238,13 +240,10 @@ scDRcell <- function(
             scale_color_gradientn("", colours = .globals$cList[[gradientCol]]) +
             guides(color = guide_colorbar(barwidth = 15))
     } else {
-        sListX <- min(nchar(paste0(
-            levels(ggData[[valColname]]),
-            collapse = "")), 200)
-        sListX <- 0.75 * (.globals$sList - (1.5 * floor(sListX / 50)))
         ggOut <- ggOut + scale_color_manual(
             "", values = ggCol, labels=cellinfoName) +
-            theme(legend.text = element_text(size = sListX[labelsFontsize]))
+            theme(legend.text = element_text(size = labelsFontsize,
+                                             family = labelsFontFamily))
         if(length(ggCol)>50){
             ggOut <- ggOut +
                 guides(color = "none")
@@ -277,7 +276,8 @@ scDRcell <- function(
                     color = "grey10",
                     bg.color = "grey95",
                     bg.r = 0.15,
-                    size = lListX[labelsFontsize],
+                    size = labelsFontsize*.3508333,
+                    family = labelsFontFamily,
                     seed = 123
                 )
         }

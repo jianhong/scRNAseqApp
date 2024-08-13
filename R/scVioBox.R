@@ -16,7 +16,8 @@ scVioBox <- function(
         inptyp,
         inppts,
         pointSize,
-        labelsFontsize,
+        labelsFontsize = 24,
+        labelsFontFamily = 'Helvetica',
         reorder=FALSE,
         orderX,
         splitBy,
@@ -118,7 +119,8 @@ scVioBox <- function(
     }
     ggOut <- ggOut + xlab(infoX) + ylab(infoY) +
         sctheme(
-            base_size = .globals$sList[labelsFontsize],
+            base_size = labelsFontsize,
+            family = labelsFontFamily,
             Xang = 45,
             XjusH = 1) +
         scale_fill_manual("", values = ggCol)

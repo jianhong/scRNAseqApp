@@ -1,3 +1,9 @@
+CHANGES IN VERSION 1.15.13
+-------------------------
+
+    o add detailed fontsize and font family control.
+    o change the dotplot from ggplot2 to complexheatmap.
+    
 CHANGES IN VERSION 1.15.12
 -------------------------
 

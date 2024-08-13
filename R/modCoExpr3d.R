@@ -122,6 +122,7 @@ coExpr3dServer <- function(id, dataSource, optCrt) {
                 GeneExprDotCol=input$CoExprcol1,
                 GeneExprDotOrd=input$CoExprord1,
                 labelsFontsize=input$GeneExprfsz,
+                labelsFontFamily=input$GeneExprfml,
                 plotAspectRatio=input$GeneExprasp,
                 keepXYlables=input$GeneExprtxt,
                 hideFilterCell=input$CoExprhid1

@@ -11,7 +11,8 @@ scProp <- function(
         subsetCellVal,
         inptyp,
         flipXY,
-        labelsFontsize,
+        labelsFontsize = 24,
+        labelsFontFamily = 'Helvetica',
         dataset,
         geneIdMap,
         valueFilterKey,
@@ -91,7 +92,8 @@ scProp <- function(
     }
     ggOut <- ggOut + xlab(infoX) +
         sctheme(
-            base_size = .globals$sList[labelsFontsize],
+            base_size = labelsFontsize,
+            family = labelsFontFamily,
             Xang = 45,
             XjusH = 1) +
         scale_fill_manual("", values = ggCol) +

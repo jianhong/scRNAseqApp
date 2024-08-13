@@ -111,27 +111,28 @@ plotPieDimServer <- function(id, dataSource, optCrt) {
         ### plots
         plot1 <- reactive({
             scPieDim(
-                dataSource()$sc1conf,
-                dataSource()$sc1meta,
-                dataSource()$dataset,
-                dataSource()$sc1gene,
-                input$GeneExprdrX,
-                input$GeneExprdrY,
-                input$genelist,
-                input$subsetCell,
-                getSubsetCellVal(input),
+                inpConf = dataSource()$sc1conf,
+                inpMeta = dataSource()$sc1meta,
+                dataset = dataSource()$dataset,
+                geneIdMap = dataSource()$sc1gene,
+                dimRedX = input$GeneExprdrX,
+                dimRedY = input$GeneExprdrY,
+                genelist = input$genelist,
+                subsetCellKey = input$subsetCell,
+                subsetCellVal = getSubsetCellVal(input),
                 valueFilterKey = input$filterCell,
                 valueFilterCutoff = input$filterCellVal,
-                input$CoExpred,
-                input$GeneExprsiz,
-                input$CoExprCircle,
-                input$CoExprBg,
-                input$CoExprMarkGrp,
-                input$CoExprAlpha,
-                input$CoExprType,
-                input$GeneExprfsz,
-                input$GeneExprasp,
-                input$GeneExprtxt
+                CoExpred = input$CoExpred,
+                pointSize = input$GeneExprsiz,
+                lableCircle = input$CoExprCircle,
+                plotCellBg = input$CoExprBg,
+                markGrp = input$CoExprMarkGrp,
+                alpha = input$CoExprAlpha,
+                plotType = input$CoExprType,
+                labelsFontsize = input$GeneExprfsz,
+                labelsFontFamily=input$GeneExprfml,
+                plotAspectRatio = input$GeneExprasp,
+                keepXYlables = input$GeneExprtxt
             )
         })
         updateGeneExprDotPlotUI(

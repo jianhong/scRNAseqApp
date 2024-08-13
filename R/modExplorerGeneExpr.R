@@ -77,6 +77,7 @@ scExprServer <- function(
                 gradientCol=input[[paste0("GeneExprcol", postfix)]],
                 GeneExprDotOrd=input[[paste0("GeneExprord", postfix)]],
                 labelsFontsize=p_input$GeneExprfsz,
+                labelsFontFamily=p_input$GeneExprfml,
                 plotAspectRatio=p_input$GeneExprasp,
                 keepXYlables=p_input$GeneExprtxt,
                 inpPlt=input[[paste0("GeneExprtype", postfix)]],

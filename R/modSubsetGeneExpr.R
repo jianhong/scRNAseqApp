@@ -131,6 +131,7 @@ subsetGeneExprServer <- function(id, dataSource, optCrt) {
                 gradientCol=input$GeneExprcol1,
                 GeneExprDotOrd=input$GeneExprord1,
                 labelsFontsize=input$GeneExprfsz,
+                labelsFontFamily=input$GeneExprfml,
                 plotAspectRatio=input$GeneExprasp,
                 keepXYlables=input$GeneExprtxt,
                 inpPlt=input$GeneExprtype1,

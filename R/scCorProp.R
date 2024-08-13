@@ -8,7 +8,8 @@ scCorProp <- function(
         testby = 'Y',
         method = c("pearson", "kendall", "spearman"),
         type=c('heatmap', 'PCA'),
-        labelsFontsize='Medium',
+        labelsFontsize=24,
+        labelsFontFamily = 'Helvetica',
         inpcols='White-Red'
         ) {
     type <- match.arg(type)
@@ -27,7 +28,8 @@ scCorProp <- function(
                             geom_point() +
                             geom_text(hjust=0, vjust=1) +
                             sctheme(
-                                base_size = .globals$sList[labelsFontsize])
+                                base_size = labelsFontsize,
+                                family = labelsFontFamily)
                     },
                     heatmap={
                         cor <- cor(proportions, method = method)
@@ -43,7 +45,8 @@ scCorProp <- function(
                             geom_text() +
                             xlab("") + ylab("") +
                             sctheme(
-                                base_size = .globals$sList[labelsFontsize],
+                                base_size = labelsFontsize,
+                                family = labelsFontFamily,
                                 Xang = 45,
                                 XjusH = 1) +
                             scale_fill_gradientn(

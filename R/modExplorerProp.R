@@ -85,6 +85,7 @@ scPropServer <- function(
                 inptyp = input$plottyp,
                 flipXY = input$plotflp,
                 labelsFontsize = p_input$GeneExprfsz,
+                labelsFontFamily=p_input$GeneExprfml,
                 dataset = dataSource()$dataset,
                 geneIdMap = dataSource()$sc1gene,
                 valueFilterKey = p_input$filterCell,

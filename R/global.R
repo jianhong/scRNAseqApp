@@ -140,15 +140,11 @@
     "Small" = "600px",
     "Medium" = "800px",
     "Large" = "1000px")
-.globals$sList <- c(
-    "Small" = 18,
-    "Medium" = 24,
-    "Large" = 30)
-.globals$lList <- c(
+.globals$lList <- c(#ggrepel font size in scDRcell
     "Small" = 5,
     "Medium" = 6,
     "Large" = 7)
-.globals$fList <- c(
+.globals$fList <- c(#monocle plot point size
     "Small" = .5,
     "Medium" = 1,
     "Large" = 2)

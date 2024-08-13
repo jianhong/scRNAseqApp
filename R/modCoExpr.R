@@ -123,6 +123,7 @@ coExprServer <- function(id, dataSource, optCrt) {
                 GeneExprDotCol=input$CoExprcol1,
                 GeneExprDotOrd=input$CoExprord1,
                 labelsFontsize=input$GeneExprfsz,
+                labelsFontFamily=input$GeneExprfml,
                 plotAspectRatio=input$GeneExprasp,
                 keepXYlables=input$GeneExprtxt,
                 hideFilterCell=input$CoExprhid1
@@ -146,8 +147,9 @@ coExprServer <- function(id, dataSource, optCrt) {
         plot2 <- reactive({
             scDRcoexLeg(input$GeneName1,
                         input$GeneName2,
-                        input$CoExprcol1,
-                        input$GeneExprfsz)
+                        colorPairs = input$CoExprcol1,
+                        labelsFontsize = input$GeneExprfsz,
+                        labelsFontFamily=input$GeneExprfml)
         })
         updateGeneExprDotPlotUI(
             postfix = 2,

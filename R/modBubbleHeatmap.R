@@ -79,8 +79,53 @@ plotBubbleHeatmapUI <- function(id) {
                         value = FALSE)
                 ),
                 conditionalPanel(
+                    condition = "input.plottyp == 'Violin'",
+                    ns = NS(id),
+                    checkboxInput(
+                        NS(id, "plotpts"), "Show data points",
+                        value = FALSE),
+                ),
+                conditionalPanel(
+                    condition = "input.plottyp != 'Heatmap'",
+                    ns = NS(id),
+                    sliderInput(
+                        NS(id, "plotsiz"), "Data point size:",
+                        min = 0, max = 4, value = 1.25, step = 0.25)
+                ),
+                conditionalPanel(
                     condition = "input.plottyp != 'Violin'",
                     ns = NS(id),
+                    conditionalPanel(
+                        condition = "input.plotrow==1",
+                        ns = NS(id),
+                        radioButtons(NS(id, 'row_dend_side'),
+                                     'Row dendrogram side (gene)',
+                                     choices = c('left', 'right'),
+                                     selected = 'left',
+                                     inline = TRUE),
+                        sliderInput(NS(id, 'row_dend_width'),
+                                     'Width of row dendrogram (mm)',
+                                     value = 10,
+                                    min = 0, max = 100, step = 0.1)
+                    ),
+                    conditionalPanel(
+                        condition = "input.plotcol==1",
+                        ns = NS(id),
+                        radioButtons(NS(id, 'column_dend_side'),
+                                     'Column dendrogram side (sample))',
+                                     choices = c('top', 'bottom'),
+                                     selected = 'top',
+                                     inline = TRUE),
+                        sliderInput(NS(id, 'column_dend_height'),
+                                    'Height of column dendrogram (mm)',
+                                    value = 10,
+                                    min = 0, max = 100, step = 0.1)
+                    ),
+                    radioButtons(NS(id, 'legend_side'),
+                                  "Legend side",
+                                  choices = c('right', 'bottom'),
+                                  selected = 'bottom',
+                                  inline = TRUE),
                     actionButton(
                         NS(id, "userbreaks"),
                         "Set ColorKey range"),
@@ -91,16 +136,6 @@ plotBubbleHeatmapUI <- function(id) {
                         numericInput(NS(id, "colorb2"), "max cutoff", value = 10),
                         actionButton(NS(id, "setcolrg"), "Apply colorkey range")
                     )
-                ),
-                conditionalPanel(
-                    condition = "input.plottyp == 'Violin'",
-                    ns = NS(id),
-                    checkboxInput(
-                        NS(id, "plotpts"), "Show data points",
-                        value = FALSE),
-                    sliderInput(
-                        NS(id, "plotsiz"), "Data point size:",
-                        min = 0, max = 4, value = 1.25, step = 0.25)
                 ),
                 conditionalPanel(
                     condition = "input.plotcol % 2 != 1",
@@ -169,26 +204,54 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt) {
         )
         updateSubsetCellUI(id, input, output, session, dataSource, addNA = TRUE)
         
+        observeEvent(input$plotflp, {
+            if(input$plotflp){
+                updateRadioButtons(session,
+                                   "row_dend_side",
+                                   choices = c("top", "bottom"),
+                                   selected = "top")
+                updateRadioButtons(session,
+                                   "column_dend_side",
+                                   choices = c("left", "right"),
+                                   selected = "left")
+            }else{
+                updateRadioButtons(session,
+                                   "row_dend_side",
+                                   choices = c("left", "right"),
+                                   selected = "left")
+                updateRadioButtons(session,
+                                   "column_dend_side",
+                                   choices = c("top", "bottom"),
+                                   selected = "top")
+            }
+        }, ignoreInit = FALSE)
+        
         observeEvent(input$userbreaks, {
             rg <- scBubbHeat(
-                dataSource()$sc1conf,
-                dataSource()$sc1meta,
-                input$genelist,
-                input$CellInfoX,
-                input$subsetCell,
-                getSubsetCellVal(input),
-                input$filterVal,
-                input$plottyp,
-                dataSource()$dataset,
-                dataSource()$sc1gene,
-                input$plotscl,
-                input$plotrow,
-                input$plotcol,
-                input$plotcols,
-                input$plotpts,
-                input$plotfsz,
-                input$plotflp,
-                input$plotall,
+                inpConf = dataSource()$sc1conf,
+                inpMeta = dataSource()$sc1meta,
+                inp = input$genelist,
+                inpGrp = input$CellInfoX,
+                grpKey = input$subsetCell,
+                grpVal = getSubsetCellVal(input),
+                inpGrp1c = input$filterVal,
+                inpPlt = input$plottyp,
+                dataset = dataSource()$dataset,
+                inpGene = dataSource()$sc1gene,
+                inpScl = input$plotscl,
+                inpRow = input$plotrow,
+                row_dend_side = input$row_dend_side,
+                row_dend_width = unit(input$row_dend_width, 'mm'),
+                inpCol = input$plotcol,
+                column_dend_side = input$column_dend_side,
+                column_dend_height = unit(input$column_dend_height, 'mm'),
+                legend_side = input$legend_side,
+                inpcols = input$plotcols,
+                pointSize = input$plotpts,
+                labelsFontsize = input$plotfsz,
+                labelsFontFamily = input$plotfml,
+                flipXY = input$plotflp,
+                plotAllCells = input$plotall,
                 legendTitle = dataSource()$terms['expression'],
                 returnColorRange = TRUE
             )
@@ -253,24 +316,34 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt) {
         ### plots
         plot1 <- reactive({
             ht <- scBubbHeat(
-                dataSource()$sc1conf,
-                dataSource()$sc1meta,
-                input$genelist,
-                input$CellInfoX,
-                input$subsetCell,
-                getSubsetCellVal(input),
-                input$filterVal,
-                input$plottyp,
-                dataSource()$dataset,
-                dataSource()$sc1gene,
-                input$plotscl,
-                input$plotrow,
-                input$plotcol,
-                input$plotcols,
-                if(input$plotpts %% 2 ==0) 0 else input$plotsiz,
-                input$plotfsz,
-                input$plotflp,
-                input$plotall,
+                inpConf = dataSource()$sc1conf,
+                inpMeta = dataSource()$sc1meta,
+                inp = input$genelist,
+                inpGrp = input$CellInfoX,
+                grpKey = input$subsetCell,
+                grpVal = getSubsetCellVal(input),
+                inpGrp1c = input$filterVal,
+                inpPlt = input$plottyp,
+                dataset = dataSource()$dataset,
+                inpGene = dataSource()$sc1gene,
+                inpScl = input$plotscl,
+                inpRow = input$plotrow,
+                row_dend_side = input$row_dend_side,
+                row_dend_width = unit(input$row_dend_width, 'mm'),
+                inpCol = input$plotcol,
+                column_dend_side = input$column_dend_side,
+                column_dend_height = unit(input$column_dend_height, 'mm'),
+                legend_side = input$legend_side,
+                inpcols = input$plotcols,
+                pointSize = if(input$plottyp=='Bubbleplot'){
+                    input$plotsiz
+                }else{
+                    if(input$plotpts %% 2 ==0) 0 else input$plotsiz
+                },
+                labelsFontsize = input$plotfsz,
+                labelsFontFamily = input$plotfml,
+                flipXY = input$plotflp,
+                plotAllCells = input$plotall,
                 colorBreaks = 
                     if (input$userbreaks %% 2 == 0 && !is.na(colrg()[1]))
                         NA

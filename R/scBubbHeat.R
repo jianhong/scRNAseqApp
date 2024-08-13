@@ -1,14 +1,15 @@
 # Plot gene expression bubbleplot / heatmap
 #' @importFrom stats as.dendrogram dist hclust quantile as.formula
 #' @importFrom ComplexHeatmap merge_dendrogram Heatmap draw rowAnnotation
-#' HeatmapAnnotation Legend
+#' HeatmapAnnotation Legend pindex
 #' @importFrom circlize colorRamp2
-#' @importFrom grid gpar grid.circle unit.c
+#' @importFrom grid gpar grid.circle unit.c unit grid.xaxis grid.yaxis 
+#'  seekViewport current.viewport
 #' @importFrom rhdf5 h5read
 #' @importFrom data.table rbindlist dcast.data.table data.table := uniqueN
 #' @importFrom ggdendro dendro_data
 #' @importFrom gridExtra arrangeGrob grid.arrange
-#' @importFrom ggplot2 scale_x_discrete scale_size_continuous .data
+#' @importFrom ggplot2 .data
 scBubbHeat <- function(
         inpConf,
         inpMeta,
@@ -22,10 +23,16 @@ scBubbHeat <- function(
         inpGene,
         inpScl,
         inpRow,
+        row_dend_side = "left",
+        row_dend_width = unit(10, "mm"),
         inpCol,
+        column_dend_side = "top",
+        column_dend_height = unit(10, "mm"),
+        legend_side = 'bottom',
         inpcols,
         pointSize,
-        labelsFontsize,
+        labelsFontsize = 24,
+        labelsFontFamily = 'Helvetica',
         flipXY,
         plotAllCells = FALSE,
         save = FALSE,
@@ -86,18 +93,10 @@ scBubbHeat <- function(
                         type = 'warning'
                     )
                 }else{
-                    if(inpPlt == "Bubbleplot"){
-                        showNotification(
-                            'Bubble plot does not support splitBy.',
-                            duration = 5,
-                            type = 'warning'
-                        )
-                    }else{
-                        tmp$splitBy <- inpMeta[[inpConf[inpConf$UI == splitBy]$ID]]
-                        if(sreorder){
-                            tmp$splitBy <- factor(as.character(tmp$splitBy),
-                                                  levels=orderS)
-                        }
+                    tmp$splitBy <- inpMeta[[inpConf[inpConf$UI == splitBy]$ID]]
+                    if(sreorder){
+                        tmp$splitBy <- factor(as.character(tmp$splitBy),
+                                              levels=orderS)
                     }
                 }
             }
@@ -143,7 +142,8 @@ scBubbHeat <- function(
         ggOut <- ggOut + 
             xlab(inpGrp) + ylab("expression") +
             sctheme(
-                base_size = .globals$sList[labelsFontsize],
+                base_size = labelsFontsize,
+                family = labelsFontFamily,
                 Xang = 45,
                 XjusH = 1) +
             scale_fill_manual("", values = ggCol) +
@@ -255,8 +255,11 @@ scBubbHeat <- function(
         ggData$grpBy <- paste(ggData$grpBy, ggData$sampleID, sep = "__")
     }else{
         if(reorder){
-            ggData$grpBy <- factor(ggData$grpBy, levels=orderX)
+            ggData$grpBy <- factor(as.character(ggData$grpBy), levels=orderX)
         }
+    }
+    if(sreorder){
+        ggData$splitBy <- factor(as.character(ggData$splitBy), levels =orderS)
     }
     reshapeMat <- function(value.var) {
         ggMatrix <- dcast.data.table(
@@ -275,12 +278,15 @@ scBubbHeat <- function(
         return(ggMatrix)
     }
     ggMat <- reshapeMat(value.var = "val")
+    if(!plotAllCells) ggProp <- reshapeMat(value.var = 'prop')
     
     ggMatSplit <- sub('^.*___', '', colnames(ggMat))
-    ggMat <- ggMat[, order(ggMatSplit)]
+    ggMat <- ggMat[, order(ggMatSplit), drop=FALSE]
+    if(!plotAllCells) ggProp <- ggProp[, order(ggMatSplit), drop=FALSE]
     ggMatSplit <- sub('^.*___', '', colnames(ggMat))
     ggMatGrp <- sub('___.*$', '', colnames(ggMat))
     colnames(ggMat) <- sub('___', '_', colnames(ggMat))
+    if(!plotAllCells) colnames(ggProp) <- sub('___', '_', colnames(ggProp))
     cluster_rows <- inpRow
     if (inpRow) {
         cluster_rows <- as.dendrogram(hclust(dist(ggMat)))
@@ -290,188 +296,57 @@ scBubbHeat <- function(
         cluster_columns <- as.dendrogram(hclust(dist(t(ggMat))))
     }
     
-    if (inpPlt == "Bubbleplot") {
-        ## giveup complexHeatmap becase the size if not fixed
-        axis_fontsize <-
-            round(min(c(500 / nrow(geneList), 12), na.rm = TRUE), digits = 1)
-        bulb_pointsize <-
-            min(c(round(400 / nrow(geneList)), 8), na.rm = TRUE)
-        if (inpRow) {
-            hcRow <- dendro_data(cluster_rows)
-            ggRow <- ggplot() + coord_flip() +
-                geom_segment(
-                    data = hcRow$segments,
-                    aes(
-                        x = .data$x,
-                        y = .data$y,
-                        xend = .data$xend,
-                        yend = .data$yend
-                    )
-                ) +
-                scale_y_continuous(
-                    breaks = rep(0, uniqueN(ggData$grpBy)),
-                    labels = unique(ggData$grpBy),
-                    expand = c(0, 0)
-                ) +
-                scale_x_continuous(
-                    breaks = seq_along(hcRow$labels$label),
-                    labels = hcRow$labels$label,
-                    expand = c(0, 0.5)
-                ) +
-                sctheme(base_size = .globals$sList[labelsFontsize]) +
-                theme(
-                    axis.title = element_blank(),
-                    axis.line = element_blank(),
-                    axis.ticks = element_blank(),
-                    axis.text.y = element_blank(),
-                    axis.text.x = element_text(
-                        color = "white",
-                        angle = 45,
-                        hjust = 1
-                    )
-                )
-            ggData$geneName <-
-                factor(ggData$geneName, levels = hcRow$labels$label)
-        } else {
-            ggData$geneName <-
-                factor(ggData$geneName, levels = rev(geneList$gene))
-        }
-        if (inpCol) {
-            hcCol <- dendro_data(cluster_columns)
-            ggCol <- ggplot() +
-                geom_segment(
-                    data = hcCol$segments,
-                    aes(
-                        x = .data$x,
-                        y = .data$y,
-                        xend = .data$xend,
-                        yend = .data$yend
-                    )
-                ) +
-                scale_x_continuous(
-                    breaks = seq_along(hcCol$labels$label),
-                    labels = hcCol$labels$label,
-                    expand = c(0.05, 0)
-                ) +
-                scale_y_continuous(
-                    breaks = rep(0, uniqueN(ggData$geneName)),
-                    labels = unique(ggData$geneName),
-                    expand = c(0, 0)
-                ) +
-                sctheme(base_size = axis_fontsize,
-                        Xang = 45,
-                        XjusH = 1) +
-                theme(
-                    axis.title = element_blank(),
-                    axis.line = element_blank(),
-                    axis.ticks = element_blank(),
-                    axis.text.x = element_blank(),
-                    axis.text.y = element_text(color = "white")
-                )
-            ggData$grpBy <-
-                factor(ggData$grpBy, levels = hcCol$labels$label)
-        } else{
-            if(reorder){
-                ggData$grpBy <- factor(ggData$grpBy, levels=orderX)
-            }else{
-                ggData$grpBy <-
-                    factor(
-                        as.character(ggData$grpBy),
-                        levels = sortLevels(sort(as.character(
-                            unique(ggData$grpBy)
-                        ))))
-            }
-        }
-        ggOut <- ggplot(
-            ggData,
-            aes(
-                x = .data$grpBy,
-                y = .data$geneName,
-                color = .data$val,
-                size = .data$prop
-            )
-        ) +
-            geom_point() +
-            sctheme(base_size = .globals$sList[labelsFontsize],
-                    Xang = 45,
-                    XjusH = 1) +
-            scale_x_discrete(expand = c(0.05, 0)) +
-            scale_y_discrete(expand = c(0, 0.5)) +
-            scale_size_continuous(
-                "proportion",
-                range = c(0, bulb_pointsize),
-                limits = c(0, 1),
-                breaks = c(0.00, 0.25, 0.50, 0.75, 1.00)
-            ) +
-            scale_color_gradientn(
-                legendTitle,
-                limits = colRange,
-                colours = .globals$cList[[inpcols]]) +
-            guides(color = guide_colorbar(barwidth = 15)) +
-            theme(
-                axis.title = element_blank(),
-                axis.text.y = element_text(size = axis_fontsize),
-                legend.box = "vertical"
-            )
-        ggLeg <- g_legend(ggOut)
-        ggOut <- ggOut + theme(legend.position = "none")
-        if (flipXY) {
-            ggOut <- ggOut + coord_flip()
-            ggOut <-
-                grid.arrange(
-                    ggOut,
-                    ggLeg,
-                    heights = c(7, 2),
-                    layout_matrix = rbind(c(1), c(2))
-                )
-        } else{
-            FUN <- if (save)
-                arrangeGrob
-            else
-                grid.arrange
-            if (inpRow & inpCol) {
-                ggOut <- FUN(
-                    ggOut,
-                    ggLeg,
-                    ggCol,
-                    ggRow,
-                    widths = c(7, 1),
-                    heights = c(1, 7, 2),
-                    layout_matrix = rbind(c(3, NA), c(1, 4), c(2, NA))
-                )
-            } else if (inpRow) {
-                ggOut <- FUN(
-                    ggOut,
-                    ggLeg,
-                    ggRow,
-                    widths = c(7, 1),
-                    heights = c(7, 2),
-                    layout_matrix = rbind(c(1, 3), c(2, NA))
-                )
-            } else if (inpCol) {
-                ggOut <- FUN(
-                    ggOut,
-                    ggLeg,
-                    ggCol,
-                    heights = c(1, 7, 2),
-                    layout_matrix = rbind(c(3), c(1), c(2))
-                )
-            } else {
-                ggOut <- FUN(
-                    ggOut,
-                    ggLeg,
-                    heights = c(7, 2),
-                    layout_matrix = rbind(c(1), c(2))
-                )
-            }
-        }
-        return(ggOut)
-    }
-    
     layer_fun <- NULL
     rect_gp <- gpar(col = NA)
+    font_gp <- gpar(fontsize = labelsFontsize, fontfamily = labelsFontFamily)
+    title_position <- ifelse(legend_side=='bottom',
+                             "lefttop","topleft")
+    legend_direction <- ifelse(legend_side=='bottom',
+                               "horizontal","vertical")
+    if (inpPlt == "Bubbleplot") {
+        if(pointSize>0){
+            dotsize <- unit(pointSize*3.2, 'mm')
+        }else{
+            dotsize <- unit(4, "mm")
+        }
+        layer_fun <- function(j, i, x, y, w, h, fill){
+            grid.circle(x=x,y=y,
+                        r= sqrt(pindex(ggProp, i, j)) * dotsize,
+                        gp = gpar(fill = col_fun(pindex(ggMat, i, j)),
+                                  col = NA))
+        }
+        lgd_list = list(
+            Legend( labels = c(0, 10, 25, 50, 75), title = "percentage",
+                    title_position = title_position,
+                    graphics = list(
+                        function(x, y, w, h) {
+                            grid.circle(x = x, y = y, r = 0  * dotsize,
+                                        gp = gpar(fill = "black"))},
+                        function(x, y, w, h) {
+                            grid.circle(x = x, y = y, r = sqrt(0.1)  * dotsize,
+                                        gp = gpar(fill = "black"))},
+                        function(x, y, w, h) {
+                            grid.circle(x = x, y = y, r = sqrt(0.25) * dotsize,
+                                        gp = gpar(fill = "black"))},
+                        function(x, y, w, h) {
+                            grid.circle(x = x, y = y, r = sqrt(0.5) * dotsize,
+                                        gp = gpar(fill = "black"))},
+                        function(x, y, w, h) {
+                            grid.circle(x = x, y = y, r = sqrt(0.75) * dotsize,
+                                        gp = gpar(fill = "black"))}
+                    ),
+                    grid_width = 2*dotsize,
+                    grid_height = 2*dotsize,
+                    ncol = ifelse(legend_side=='bottom',
+                                  5, 1),
+                    direction = legend_direction
+            ))
+        rect_gp <- gpar(type = 'none')
+    }
     if (flipXY) {
         ggMat <- t(ggMat)
+        ggProp <- t(ggProp)
+        
         if (plotAllCells) {
             group <- ggData[[inpGrp]][match(rownames(ggMat), ggData$grpBy)]
             anno <- rowAnnotation(
@@ -486,8 +361,8 @@ scBubbHeat <- function(
                 heatmap_legend_param =
                     list(
                         title = legendTitle,
-                        direction = "horizontal",
-                        title_position = "lefttop"
+                        direction = legend_direction,
+                        title_position = title_position
                     ),
                 cluster_rows = TRUE,
                 cluster_row_slices = inpCol,
@@ -495,12 +370,27 @@ scBubbHeat <- function(
                 show_row_names = !plotAllCells,
                 row_split = group,
                 right_annotation = anno,
-                row_title_side = "right",
                 row_title_rot = 0,
                 column_names_rot = 45,
                 layer_fun = layer_fun,
                 rect_gp = rect_gp,
-                use_raster = TRUE
+                use_raster = TRUE,
+                row_title_gp = font_gp,
+                column_title_gp = font_gp,
+                row_names_gp = font_gp,
+                column_names_gp = font_gp,
+                row_dend_side = ifelse(column_dend_side == "right",
+                                       "right", "left"),
+                row_dend_width = column_dend_height,
+                column_dend_side = ifelse(row_dend_side=="top",
+                                          "top", "bottom"),
+                column_dend_height = row_dend_width,
+                row_names_side = ifelse(column_dend_side == "right",
+                                        "left", "right"),
+                row_title_side = ifelse(column_dend_side == "right",
+                                        "left", "right"),
+                column_title_side = ifelse(row_dend_side=="top",
+                                           "bottom", "top")
             )
         } else{
             ht_list <- Heatmap(
@@ -510,8 +400,8 @@ scBubbHeat <- function(
                 heatmap_legend_param =
                     list(
                         title = legendTitle,
-                        direction = "horizontal",
-                        title_position = "lefttop"
+                        direction = legend_direction,
+                        title_position = title_position
                     ),
                 cluster_rows = cluster_columns,
                 cluster_columns = cluster_rows,
@@ -519,7 +409,21 @@ scBubbHeat <- function(
                 column_names_rot = 45,
                 layer_fun = layer_fun,
                 rect_gp = rect_gp,
-                row_split = if(inpCol) NULL else ggMatSplit
+                row_split = if(inpCol) NULL else ggMatSplit,
+                row_title_gp = font_gp,
+                column_title_gp = font_gp,
+                row_names_gp = font_gp,
+                column_names_gp = font_gp,
+                row_dend_side = ifelse(column_dend_side == "right",
+                                       "right", "left"),
+                row_dend_width = column_dend_height,
+                column_dend_side = ifelse(row_dend_side=="top",
+                                          "top", "bottom"),
+                column_dend_height = row_dend_width,
+                row_names_side = ifelse(column_dend_side == "right",
+                                        "left", "right"),
+                column_names_side = ifelse(row_dend_side=="top",
+                                           "bottom", "top")
             )
         }
     } else{
@@ -537,8 +441,8 @@ scBubbHeat <- function(
                 heatmap_legend_param =
                     list(
                         title = legendTitle,
-                        direction = "horizontal",
-                        title_position = "lefttop"
+                        direction = legend_direction,
+                        title_position = title_position
                     ),
                 cluster_rows = cluster_rows,
                 cluster_columns = TRUE,
@@ -546,11 +450,24 @@ scBubbHeat <- function(
                 show_column_names = !plotAllCells,
                 column_split = group,
                 bottom_annotation = anno,
-                column_title_side = "bottom",
-                column_title_rot = 45,
                 layer_fun = layer_fun,
                 rect_gp = rect_gp,
-                use_raster = TRUE
+                use_raster = TRUE,
+                row_title_gp = font_gp,
+                column_title_gp = font_gp,
+                row_names_gp = font_gp,
+                column_names_gp = font_gp,
+                row_dend_side = ifelse(row_dend_side == "right",
+                                       "right", "left"),
+                row_dend_width = row_dend_width,
+                column_dend_side = ifelse(column_dend_side=="top",
+                                          "top", "bottom"),,
+                column_dend_height = column_dend_height,
+                row_names_side = ifelse(row_dend_side == "right",
+                                        "left", "right"),
+                column_title_side = ifelse(column_dend_side=="top",
+                                           "bottom", "top"),
+                column_title_rot = 45
             )
         } else{
             ht_list <- Heatmap(
@@ -560,22 +477,72 @@ scBubbHeat <- function(
                 heatmap_legend_param =
                     list(
                         title = legendTitle,
-                        direction = "horizontal",
-                        title_position = "lefttop"
+                        direction = legend_direction,
+                        title_position = title_position
                     ),
                 cluster_rows = cluster_rows,
                 cluster_columns = cluster_columns,
                 show_column_names = !plotAllCells,
-                column_names_rot = 45,
                 layer_fun = layer_fun,
                 rect_gp = rect_gp,
-                column_split = if(inpCol) NULL else ggMatSplit
+                column_split = if(inpCol) NULL else ggMatSplit,
+                row_title_gp = font_gp,
+                column_title_gp = font_gp,
+                row_names_gp = font_gp,
+                column_names_gp = font_gp,
+                row_dend_side = ifelse(row_dend_side == "right",
+                                       "right", "left"),
+                row_dend_width = row_dend_width,
+                column_dend_side = ifelse(column_dend_side=="top",
+                                          "top", "bottom"),
+                column_dend_height = column_dend_height,
+                row_names_side = ifelse(row_dend_side == "right",
+                                        "left", "right"),
+                column_names_side = ifelse(column_dend_side=="top",
+                                           "bottom", "top")
             )
         }
     }
-    return(draw(
-        ht_list,
-        heatmap_legend_side = "bottom",
-        annotation_legend_side = "bottom"
-    ))
+    plot_axis <- function(heatmap, code,
+                          envir = new.env(parent = parent.frame())){
+        current_vp = current.viewport()$name
+        if (current_vp == "ROOT") {
+            current_vp = "global"
+        }
+        vp_name = paste0(heatmap, "_heatmap_body_wrap")
+        seekViewport(vp_name)
+        eval(substitute(code), envir = envir)
+        seekViewport(current_vp)
+    }
+    if (inpPlt == "Bubbleplot") {
+        return({
+            draw(
+            ht_list,
+            heatmap_legend_side = legend_side,
+            annotation_legend_side = legend_side,
+            annotation_legend_list = lgd_list)
+            plot_axis(
+                legendTitle,
+                {
+                    grid.xaxis(at = (seq.int(ncol(ggMat))-.5)/ncol(ggMat),
+                               label = FALSE,
+                               main = ifelse(flipXY,
+                                             row_dend_side == "top",
+                                             column_dend_side == "top"))
+                    grid.yaxis(at = (seq.int(nrow(ggMat))-.5)/nrow(ggMat),
+                               label = FALSE,
+                               main = ifelse(flipXY,
+                                             column_dend_side == "right",
+                                             row_dend_side == "right"))
+                })
+        })
+    }else{
+        return(
+            draw(
+            ht_list,
+            heatmap_legend_side = legend_side,
+            annotation_legend_side = legend_side
+            )
+        )
+    }
 }

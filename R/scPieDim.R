@@ -22,7 +22,8 @@ scPieDim <- function(
         markGrp,
         alpha,
         plotType,
-        labelsFontsize,
+        labelsFontsize = 24,
+        labelsFontFamily = 'Helvetica',
         plotAspectRatio,
         keepXYlables) {
     subFilterColname <- 'subValue'
@@ -214,7 +215,8 @@ scPieDim <- function(
     ggOut <- ggOut +
         xlab(dimRedX) + ylab(dimRedY) +
         sctheme(
-            base_size = .globals$sList[labelsFontsize], XYval = keepXYlables)
+            base_size = labelsFontsize,
+            family = labelsFontFamily, XYval = keepXYlables)
     ggOut <- fixCoord(ggOut, plotAspectRatio, rat)
     return(ggOut)
 }

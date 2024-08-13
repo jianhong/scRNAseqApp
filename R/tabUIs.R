@@ -5,6 +5,39 @@ tabsubTitleUI <- function(id, title, description){
         br(),br()
     )
 }
+
+#' @importFrom grDevices pdfFonts X11Fonts
+fontUI <- function(id, fontsizePrefix='plot'){
+    pdfs <- names(pdfFonts())
+    x11s <- names(X11Fonts())
+    if(length(pdfs)>0){
+        if(length(x11s)>0){
+            family <- intersect(pdfs, x11s)
+        }else{
+            family <- pdfs
+        }
+    }else{
+        if(length(x11s)>0){
+            family <- x11s
+        }else{
+            family <- c('Helvetica', 'serif', 'mono')
+        }
+    }
+    if('Helvetica' %in% family){
+        selected <- 'Helvetica'
+    }else{
+        selected <- family[1]
+    }
+    tagList(
+        selectInput(NS(id, paste0(fontsizePrefix, 'fml')),
+                    "Font family:",
+                    choices = family, selected = selected),
+        numericInput(
+            NS(id, paste0(fontsizePrefix, "fsz")), "Font size:",
+            value = 24, min=3, max = 72, step = .5)
+    )
+}
+
 graphicsControlUI <- function(id, GeneExpraspSelect="Square"){
     tagList(
         actionButton(
@@ -24,11 +57,7 @@ graphicsControlUI <- function(id, GeneExpraspSelect="Square"){
                     "Plot size:",
                     choices = c("Small", "Medium", "Large"),
                     selected = "Medium", inline = TRUE),
-                radioButtons(
-                    NS(id, "GeneExprfsz"),
-                    "Font size:",
-                    choices = c("Small", "Medium", "Large"),
-                    selected = "Medium", inline = TRUE)
+                fontUI(id, "GeneExpr")
             ),
             column(
                 6, radioButtons(
@@ -191,6 +220,7 @@ geneCoExprPlotControlUI <- function(id, postfix=1, plotly=FALSE){
         )
     )
 }
+
 boxPlotControlUI <- function(
         id, withPoints=TRUE, withColor=FALSE,
         withFontSize=TRUE,
@@ -221,16 +251,14 @@ boxPlotControlUI <- function(
                 choices = c("Small", "Medium", "Large"),
                 selected = "Medium", inline = TRUE),
             if(withFontSize){
-                radioButtons(
-                    NS(id, "plotfsz"), "Font size:",
-                    choices = c("Small", "Medium", "Large"),
-                    selected = "Medium", inline = TRUE)
+                fontUI(id)
             }else{
                 span()
             }
             )
     )
 }
+
 dimensionReductionUI <- function(id){
     tagList(
         h4("Dimension Reduction"),

@@ -43,7 +43,8 @@ coExpr3dUI <- function(id) {
 
 #' @importFrom DT renderDT
 #' @importFrom magrittr %>%
-#' @importFrom plotly plotlyOutput renderPlotly event_data
+#' @importFrom plotly plotlyOutput renderPlotly event_data ggplotly
+#'  event_register
 coExpr3dServer <- function(id, dataSource, optCrt) {
     moduleServer(id, function(input, output, session) {
         ## title
@@ -129,7 +130,7 @@ coExpr3dServer <- function(id, dataSource, optCrt) {
             )
         })
         output$GeneExpr3Doup1 <- renderPlotly({
-            plot3d()
+            ggplotly(plot3d()) %>% event_register("plotly_click")
         })
         output$GeneExpr3Doup.ui1 <- renderUI({
             plotlyOutput(

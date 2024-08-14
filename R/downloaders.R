@@ -58,7 +58,7 @@ heatmapDownloadHandler <-
                                     input[[paste0("GeneExproup.w",
                                                   postfix)]] * 72)
                 }
-                draw(plot) ## for complexheatmap
+                draw(plot()) ## for complexheatmap
                 dev.off()
             }
         )

@@ -280,6 +280,8 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt) {
             )))
         })
         
+        observeEvent(input$CellInfoX,
+                     updateCheckboxInput(session, 'plotord', value = FALSE))
         updateRankList(
             input, output, dataSource, "CellInfoX", "plotXord",
             NS(id, "cellinfoXorder"))

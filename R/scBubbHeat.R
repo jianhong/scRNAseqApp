@@ -281,12 +281,21 @@ scBubbHeat <- function(
     ggMat <- reshapeMat(value.var = "val")
     if(!plotAllCells) ggProp <- reshapeMat(value.var = 'prop')
     
-    ggMatSplit <- sub('^.*___', '', colnames(ggMat))
-    ggMat <- ggMat[geneList$gene[geneList$gene %in% rownames(ggMat)],
+    if(reorder&&length(orderX)>0&&all(orderX %in% colnames(ggMat))){
+        ggMat <- ggMat[geneList$gene[geneList$gene %in% rownames(ggMat)],
+                       orderX, drop=FALSE]
+        if(!plotAllCells) ggProp <- 
+                ggProp[geneList$gene[geneList$gene %in% rownames(ggProp)],
+                       orderX, drop=FALSE]
+    }else{
+        ggMatSplit <- sub('^.*___', '', colnames(ggMat))
+        ggMat <- ggMat[geneList$gene[geneList$gene %in% rownames(ggMat)],
+                       order(ggMatSplit), drop=FALSE]
+        if(!plotAllCells) ggProp <- 
+            ggProp[geneList$gene[geneList$gene %in% rownames(ggProp)],
                    order(ggMatSplit), drop=FALSE]
-    if(!plotAllCells) ggProp <- 
-        ggProp[geneList$gene[geneList$gene %in% rownames(ggProp)],
-               order(ggMatSplit), drop=FALSE]
+    }
+    
     ggMatSplit <- sub('^.*___', '', colnames(ggMat))
     ggMatGrp <- sub('___.*$', '', colnames(ggMat))
     colnames(ggMat) <- sub('___', '_', colnames(ggMat))
@@ -445,7 +454,6 @@ scBubbHeat <- function(
                 column_names_rot = 45,
                 layer_fun = layer_fun,
                 rect_gp = rect_gp,
-                row_split = if(inpCol) NULL else ggMatSplit,
                 row_title_gp = font_gp,
                 column_title_gp = font_gp,
                 row_names_gp = font_gp,
@@ -521,7 +529,6 @@ scBubbHeat <- function(
                 show_column_names = !plotAllCells,
                 layer_fun = layer_fun,
                 rect_gp = rect_gp,
-                column_split = if(inpCol) NULL else ggMatSplit,
                 row_title_gp = font_gp,
                 column_title_gp = font_gp,
                 row_names_gp = font_gp,

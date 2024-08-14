@@ -5,5 +5,10 @@ test_that("utilities works not correct", {
   expect_true(file.exists(file.path(app_path, .globals$credential_path)))
   expect_true(file.exists(file.path(app_path, 'www', 'counter.tsv')))
   setwd(app_path)
-  scRNAseqApp()
+  
+  app <- scRNAseqApp()
+  env <- environment(app$serverFuncSource)
+  testServer(env$server, {
+      session$setInputs(selectedDatasets = 'pbmc_small')
+  })
 })

@@ -370,10 +370,11 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt) {
                 dataSource()$dataset,
                 input$plottyp,
                 input$CellInfoX,
-                handlerFUN = if (input$plottyp == "Heatmap") {
-                    heatmapDownloadHandler
-                } else
+                handlerFUN = if (input$plottyp == "Violin") {
                     plotsDownloadHandler
+                } else{
+                    heatmapDownloadHandler
+                }
             )
         )
     })

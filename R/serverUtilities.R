@@ -777,7 +777,7 @@ updateSubModulePlotUI <-
         if (isTRUE(interactive)) {
             output[[paste0("GeneExproup", postfix)]] <-
                 renderPlotly({
-                    plotX()
+                    ggplotly(plotX()) %>% event_register("plotly_click")
                 })
             output[[paste0("GeneExproup.ui", postfix)]] <- renderUI({
                 plotlyOutput(

@@ -346,6 +346,38 @@ scBubbHeat <- function(
                     direction = legend_direction
             ))
         rect_gp <- gpar(type = 'none')
+        ## add gap for rownames and colnames
+        if(flipXY){
+            if(row_dend_side == 'bottom'){
+                rownames(ggMat) <- rownames(ggProp) <-
+                    paste0(" ", rownames(ggMat))
+            }else{
+                rownames(ggMat) <- rownames(ggProp) <-
+                    paste0(rownames(ggMat), " ")
+            }
+            if(column_dend_side == "left"){
+                colnames(ggMat) <- colnames(ggProp) <-
+                    paste0(" ", colnames(ggMat))
+            }else{
+                colnames(ggMat) <- colnames(ggProp) <-
+                    paste0(colnames(ggMat), " ")
+            }
+        }else{
+            if(row_dend_side == 'left'){
+                rownames(ggMat) <- rownames(ggProp) <-
+                    paste0(" ", rownames(ggMat))
+            }else{
+                rownames(ggMat) <- rownames(ggProp) <-
+                    paste0(rownames(ggMat), " ")
+            }
+            if(column_dend_side == 'bottom'){
+                colnames(ggMat) <- colnames(ggProp) <-
+                    paste0(" ", colnames(ggMat))
+            }else{
+                colnames(ggMat) <- colnames(ggProp) <-
+                    paste0(colnames(ggMat), " ")
+            }
+        }
     }
     if (flipXY) {
         ggMat <- t(ggMat)
@@ -507,43 +539,39 @@ scBubbHeat <- function(
             )
         }
     }
-    plot_axis <- function(heatmap, code,
-                          envir = new.env(parent = parent.frame())){
-        current_vp = current.viewport()$name
+    plot_axis <- function(object){
+        current_vp <- current.viewport()$name
         if (current_vp == "ROOT") {
-            current_vp = "global"
+            current_vp <- "global"
         }
-        vp_name = paste0(heatmap, "_heatmap_body_wrap")
+        vp_name <- paste0(legendTitle, "_heatmap_body_wrap")
         seekViewport(vp_name)
-        eval(substitute(code), envir = envir)
+        xmain <- ifelse(flipXY,
+                        row_dend_side=='top', 
+                        column_dend_side == "top")
+        ymain <- ifelse(flipXY,
+                        column_dend_side == "right",
+                        row_dend_side == "right")
+        grid.lines(c(0, 1), as.numeric(!xmain))
+        grid.xaxis(at = (seq.int(ncol(ggMat))-.5)/ncol(ggMat),
+                   label = FALSE,
+                   main = xmain)
+        grid.lines(as.numeric(!ymain), c(0, 1))
+        grid.yaxis(at = (seq.int(nrow(ggMat))-.5)/nrow(ggMat),
+                   label = FALSE,
+                   main = ymain)
         seekViewport(current_vp)
     }
     if (inpPlt == "Bubbleplot") {
-        return({
+        return(
             draw(
             ht_list,
             heatmap_legend_side = legend_side,
             annotation_legend_side = legend_side,
-            annotation_legend_list = lgd_list)
-            plot_axis(
-                legendTitle,
-                {
-                    xmain <- ifelse(flipXY,
-                                    row_dend_side=='top', 
-                                    column_dend_side == "top")
-                    ymain <- ifelse(flipXY,
-                                    column_dend_side == "right",
-                                    row_dend_side == "right")
-                    grid.lines(c(0, 1), as.numeric(!xmain))
-                    grid.xaxis(at = (seq.int(ncol(ggMat))-.5)/ncol(ggMat),
-                               label = FALSE,
-                               main = xmain)
-                    grid.lines(as.numeric(!ymain), c(0, 1))
-                    grid.yaxis(at = (seq.int(nrow(ggMat))-.5)/nrow(ggMat),
-                               label = FALSE,
-                               main = ymain)
-                })
-        })
+            annotation_legend_list = lgd_list,
+            post_fun = plot_axis
+            )
+        )
     }else{
         return(
             draw(

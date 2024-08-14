@@ -111,7 +111,7 @@ scCoexp3dServer <- function(
         })
         source <- NS0(NS(pid, id), "GeneExpr3Doup", 1)
         output$GeneExpr3Doup1 <- renderPlotly({
-            plot3d()
+            ggplotly(plot3d()) %>% event_register("plotly_click")
         })
         output$GeneExpr3Doup.ui1 <- renderUI({
             plotlyOutput(

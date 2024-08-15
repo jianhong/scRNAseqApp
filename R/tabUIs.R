@@ -255,7 +255,7 @@ boxPlotControlUI <- function(
             }else{
                 span()
             }
-            )
+        )
     )
 }
 

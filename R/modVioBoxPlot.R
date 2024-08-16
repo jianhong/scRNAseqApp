@@ -90,7 +90,7 @@ plotVioBoxServer <- function(id, dataSource, optCrt) {
             session,
             "CellInfoY",
             "Split by:",
-            choices = getGroupUI(dataSource),
+            choices = c("N/A", getGroupUI(dataSource)),
             selected = NA
         )
         

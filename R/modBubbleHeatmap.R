@@ -199,7 +199,7 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt) {
             session,
             "CellInfoY",
             "Split by:",
-            choices = getGroupUI(dataSource),
+            choices = c("N/A", getGroupUI(dataSource)),
             selected = NA
         )
         updateSubsetCellUI(id, input, output, session, dataSource, addNA = TRUE)

@@ -357,7 +357,12 @@ subsetCellByFilterUI <- function(
 geneExprDotPlotUI <- function(id, postfix=1, editor=FALSE){
     tagList(
         fluidRow(column(12, uiOutput(NS0(id, "GeneExproup.ui", postfix)))),
-        span("Download PDF/PNG "),
+        div(style="display:inline-block",
+            selectInput(
+                NS0(id, "GeneExproup.fmt", postfix),
+                "Format:", width = "75px",
+                choices = .globals$figFormats,
+                selected = .globals$figFormats[1])),
         div(style="display:inline-block",
             numericInput(
                 NS0(id, "GeneExproup.h", postfix),
@@ -368,8 +373,7 @@ geneExprDotPlotUI <- function(id, postfix=1, editor=FALSE){
                 NS0(id, "GeneExproup.w", postfix),
                 "width:", width = "60px",
                 min = 2, max = 20, value = .globals$figWidth, step = 0.5)),
-        downloadButton(NS0(id, "GeneExproup.pdf", postfix), "PDF"),
-        downloadButton(NS0(id, "GeneExproup.png", postfix), "PNG"),
+        downloadButton(NS0(id, "GeneExproup.dwn", postfix), "download"),
         if(editor){
             tagList(
                 uiOutput(NS0(id, 'GeneExproup.info', postfix))

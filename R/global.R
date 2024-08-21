@@ -151,6 +151,7 @@
 
 .globals$figWidth = 8.01
 .globals$figHeight = 6.01
+.globals$figFormats = c('PDF', 'PNG', 'TIFF', 'JPEG', 'BMP')
 
 # supported organisms
 .globals$supported_organisms <- c(

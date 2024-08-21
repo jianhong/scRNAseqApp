@@ -361,21 +361,13 @@ updateGeneExprDotPlotUI <-
             })
         }
         
-        output[[paste0("GeneExproup.pdf", postfix)]] <-
+        output[[paste0("GeneExproup.dwn", postfix)]] <-
             handlerFUN(
-                "pdf",
                 input = input,
                 postfix = postfix,
                 plotX,
                 ...)
         
-        output[[paste0("GeneExproup.png", postfix)]] <-
-            handlerFUN(
-                "png",
-                input = input,
-                postfix = postfix,
-                plotX,
-                ...)
     }
 
 updateCellInfoPlot <-
@@ -800,16 +792,8 @@ updateSubModulePlotUI <-
                             .globals$figHeight, height,
                         input[[paste0("GeneExproup.h", postfix)]]*72))
             })
-            output[[paste0("GeneExproup.pdf", postfix)]] <-
+            output[[paste0("GeneExproup.dwn", postfix)]] <-
                 plotsDownloadHandler(
-                    "pdf",
-                    input = input,
-                    postfix = postfix,
-                    plotX,
-                    ...)
-            output[[paste0("GeneExproup.png", postfix)]] <-
-                plotsDownloadHandler(
-                    "png",
                     input = input,
                     postfix = postfix,
                     plotX,

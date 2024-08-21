@@ -2,21 +2,22 @@ outputFileName <- function(ext, ...) {
     paste0(paste(
         ...,
         format(Sys.time(), "%Y%m%d.%M%S"),
-        sep = "_"), ".", ext)
+        sep = "_"), ".", tolower(ext))
 }
 #' @noRd
 #' @importFrom ggplot2 ggsave
 #' @importFrom shiny downloadHandler
-plotsDownloadHandler <- function(device, input, postfix, plot, ...) {
+plotsDownloadHandler <- function(input, postfix, plot, ...) {
     downloadHandler(
         filename = function() {
-            outputFileName(device, ...)
+            outputFileName(input[[paste0("GeneExproup.fmt", postfix)]], ...)
         },
         content = function(file) {
-            if (device == "pdf") {
+            if (input[[paste0("GeneExproup.fmt", postfix)]] == "PDF") {
                 ggsave(
                     file,
-                    device = device,
+                    device = 
+                        tolower(input[[paste0("GeneExproup.fmt", postfix)]]),
                     height = input[[paste0("GeneExproup.h", postfix)]],
                     width = input[[paste0("GeneExproup.w", postfix)]],
                     useDingbats = FALSE,
@@ -25,7 +26,8 @@ plotsDownloadHandler <- function(device, input, postfix, plot, ...) {
             } else{
                 ggsave(
                     file,
-                    device = device,
+                    device =
+                        tolower(input[[paste0("GeneExproup.fmt", postfix)]]),
                     height = input[[paste0("GeneExproup.h", postfix)]],
                     width = input[[paste0("GeneExproup.w", postfix)]],
                     plot = plot()
@@ -36,13 +38,13 @@ plotsDownloadHandler <- function(device, input, postfix, plot, ...) {
 }
 #' @importFrom grDevices dev.off pdf
 heatmapDownloadHandler <-
-    function(device, input, postfix, plot, ...) {
+    function(input, postfix, plot, ...) {
         downloadHandler(
             filename = function() {
-                outputFileName(device, ...)
+                outputFileName(input[[paste0("GeneExproup.fmt", postfix)]], ...)
             },
             content = function(file) {
-                if (device == "pdf") {
+                if (input[[paste0("GeneExproup.fmt", postfix)]] == "PDF") {
                     pdf(
                         file,
                         height = input[[paste0("GeneExproup.h", postfix)]],
@@ -50,14 +52,15 @@ heatmapDownloadHandler <-
                         useDingbats = FALSE
                     )
                 } else{
-                    get(device)(file,
-                                height = 
-                                    input[[paste0("GeneExproup.h",
-                                                  postfix)]] * 300,
-                                width = 
-                                    input[[paste0("GeneExproup.w",
-                                                  postfix)]] * 300,
-                                res = 300)
+                    get(tolower(input[[paste0("GeneExproup.fmt", postfix)]]))(
+                        file,
+                        height = 
+                            input[[paste0("GeneExproup.h",
+                                          postfix)]] * 300,
+                        width = 
+                            input[[paste0("GeneExproup.w",
+                                          postfix)]] * 300,
+                        res = 300)
                 }
                 on.exit({
                     dev.off()

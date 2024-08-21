@@ -53,13 +53,16 @@ heatmapDownloadHandler <-
                     get(device)(file,
                                 height = 
                                     input[[paste0("GeneExproup.h",
-                                                  postfix)]] * 72,
+                                                  postfix)]] * 300,
                                 width = 
                                     input[[paste0("GeneExproup.w",
-                                                  postfix)]] * 72)
+                                                  postfix)]] * 300,
+                                res = 300)
                 }
+                on.exit({
+                    dev.off()
+                })
                 draw(plot()) ## for complexheatmap
-                dev.off()
             }
         )
     }

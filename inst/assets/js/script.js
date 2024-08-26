@@ -66,5 +66,9 @@
     Shiny.addCustomMessageHandler("click_subset_btn", function(id){
         $("#"+id).trigger('click');
     })
+    // show duplicated botton
+    Shiny.addCustomMessageHandler("toggle_div", function(id){
+        $("#"+id).css('visibility', 'visible');
+    })
   });
 }())

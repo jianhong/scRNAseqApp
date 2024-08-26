@@ -72,6 +72,9 @@ createConfig <- function(
         # Additional preprocessing for categorical metadata
         nLevels <- nlevels(objMeta[[iMeta]])
         if (nLevels <= maxLevels) {
+            if(any(grepl('\\|', levels(objMeta[[iMeta]])))){
+                stop('metadata can not contain "|".')
+            }
             if (nLevels >= 2) {
                 tmpConf$fID <- paste0(levels(objMeta[[iMeta]]), collapse = "|")
                 tmpConf$fUI <- tmpConf$fID

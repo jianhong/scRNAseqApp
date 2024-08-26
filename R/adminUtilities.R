@@ -315,43 +315,101 @@ updateMetaData <- function(dataset, inpConf, inpMeta, privilege,
                            info, oldvalue, newvalue){
     check <- FALSE
     if(checkPrivilege(privilege, dataset)){
-        id <- inpConf[inpConf$UI==info]$ID
-        fID <- strsplit(inpConf[inpConf$UI==info]$fID, '\\|')[[1]]
-        fCL <- strsplit(inpConf[inpConf$UI==info]$fCL, '\\|')[[1]]
-        if(oldvalue %in% fID){
-            if(!newvalue %in% fID){
-                fID[which(fID==oldvalue)] <- newvalue
-                fID <- paste(fID, collapse = '|')
-                inpConf[inpConf$UI==info, 'fID'] <- fID
-                l <- as.character(inpMeta[[info]])
-                l[which(l==oldvalue)] <- newvalue
-                inpMeta[[info]] <- factor(l)
+        if(!info %in% inpConf$UI){
+            if(newvalue=='duplicate'){
+                newvalue <- inpConf[inpConf$UI==oldvalue]
+                id <- newvalue$ID
+                newvalue$UI <- info
+                newvalue$ID <- make.names(info)
+                inpConf <- rbind(inpConf, newvalue)
+                inpMeta[[newvalue$ID]] <- inpMeta[[id]]
                 saveData(inpMeta, dataset, "sc1meta")
                 saveData(inpConf, dataset, "sc1conf")
                 check <- TRUE
-            }else{
-                adminMsg(
-                    'duplicated value',
-                    type = 'warning',
-                    duration = 5,
-                    close = TRUE
-                )
+            }else if(newvalue=='rename'){
+                newvalue <- inpConf[inpConf$UI==oldvalue]
+                id <- newvalue$ID
+                newvalue$UI <- info
+                newvalue$ID <- make.names(info)
+                inpConf[inpConf$UI==oldvalue] <- newvalue
+                colnames(inpMeta)[colnames(inpMeta)==id] <- newvalue$ID
+                saveData(inpMeta, dataset, "sc1meta")
+                saveData(inpConf, dataset, "sc1conf")
+                check <- TRUE
+            }else if(newvalue=='delete'){
+                newvalue <- inpConf[inpConf$UI==oldvalue]
+                #inpMeta[, (newvalue$ID):=NULL]
+                inpConf <- inpConf[inpConf$UI!=oldvalue]
+                saveData(inpMeta, dataset, "sc1meta")
+                saveData(inpConf, dataset, "sc1conf")
+                check <- TRUE
             }
         }else{
-            if(oldvalue %in% fCL){
-                if(!newvalue %in% fCL){
-                    fCL[which(fCL==oldvalue)] <- newvalue
+            id <- inpConf[inpConf$UI==info]$ID
+            fID <- strsplit(inpConf[inpConf$UI==info]$fID, '\\|')[[1]]
+            fCL <- strsplit(inpConf[inpConf$UI==info]$fCL, '\\|')[[1]]
+            if(oldvalue %in% fID){
+                if(grepl('Merging to:', newvalue)){
+                    newvalue <- sub('Merging to:', '', newvalue)
+                    newvalue <- sub('^ *', '', newvalue)
+                    nCL <- fCL[which(fID==newvalue)]
+                    idx <- which(fID==oldvalue)
+                    fCL <- fCL[-idx]
+                    fID <- fID[-idx]
+                    lfactor <- is.factor(inpMeta[[info]])
+                    l <- inpMeta[[info]]
+                    if(lfactor){
+                        l <- as.character(l)
+                    }
+                    l[which(l==oldvalue)] <- newvalue
+                    if(lfactor){
+                        inpMeta[[info]] <- factor(l, levels = fID)
+                    }
+                    fID <- paste(fID, collapse = '|')
+                    inpConf[inpConf$UI==info, 'fID'] <- fID
                     fCL <- paste(fCL, collapse = '|')
                     inpConf[inpConf$UI==info, 'fCL'] <- fCL
+                    saveData(inpMeta, dataset, "sc1meta")
+                    saveData(inpConf, dataset, "sc1conf")
+                    check <- TRUE
+                }else if(!newvalue %in% fID){
+                    fID[which(fID==oldvalue)] <- newvalue
+                    lfactor <- is.factor(inpMeta[[info]])
+                    l <- inpMeta[[info]]
+                    if(lfactor){
+                        l <- as.character(l)
+                    }
+                    l[which(l==oldvalue)] <- newvalue
+                    if(lfactor) inpMeta[[info]] <- factor(l, levels = fID)
+                    fID <- paste(fID, collapse = '|')
+                    inpConf[inpConf$UI==info, 'fID'] <- fID
+                    saveData(inpMeta, dataset, "sc1meta")
                     saveData(inpConf, dataset, "sc1conf")
                     check <- TRUE
                 }else{
                     adminMsg(
-                        'duplicated value',
+                        'duplicated value. If you want to merge the cell info, please add "Merging to:" to the label.',
                         type = 'warning',
                         duration = 5,
                         close = TRUE
                     )
+                }
+            }else{
+                if(oldvalue %in% fCL){
+                    if(!newvalue %in% fCL){
+                        fCL[which(fCL==oldvalue)] <- newvalue
+                        fCL <- paste(fCL, collapse = '|')
+                        inpConf[inpConf$UI==info, 'fCL'] <- fCL
+                        saveData(inpConf, dataset, "sc1conf")
+                        check <- TRUE
+                    }else{
+                        adminMsg(
+                            'duplicated value',
+                            type = 'warning',
+                            duration = 5,
+                            close = TRUE
+                        )
+                    }
                 }
             }
         }

@@ -1,3 +1,9 @@
+CHANGES IN VERSION 1.15.17
+-------------------------
+
+    o Error handle if metadata contains '|'.
+    o add cell info editor funcitons.
+    
 CHANGES IN VERSION 1.15.16
 -------------------------
 

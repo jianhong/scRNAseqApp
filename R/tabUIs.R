@@ -193,6 +193,21 @@ cellInfoPlotControlUI <- function(
             checkboxInput(
                 NS0(id, "CellInfoslingshot", postfix),
                 "Show lineages", value = TRUE)
+        ),
+        div(style = "visibility:hidden;",
+            id = paste0(NS0(id, "CellInfodup", postfix), 'container'),
+            div(style="display:inline-block",
+            textInput(NS0(id, "CellInfodname", postfix), "",
+                      placeholder = "new name", width = "100px")),
+            actionButton(NS0(id, "CellInfodup", postfix),
+                         "Dup",
+                         disabled = TRUE),
+            actionButton(NS0(id, "CellInforename", postfix),
+                         "Ren",
+                         disabled = TRUE),
+            actionButton(NS0(id, "CellInfodel", postfix),
+                         "Del",
+                         disabled = TRUE)
         )
     )
 }

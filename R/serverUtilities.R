@@ -290,6 +290,131 @@ updateGeneExprDotPlotUI <-
         }
         if(isInfoPlot && checkPrivilege(dataSource()$auth$privilege,
                                         dataSource()$dataset)){
+            ## make the duplicate button available
+            updateActionButton(session,
+                               paste0("CellInfodup", postfix),
+                               disabled = FALSE)
+            updateActionButton(session,
+                               paste0("CellInforename", postfix),
+                               disabled = FALSE)
+            updateActionButton(session,
+                               paste0("CellInfodel", postfix),
+                               disabled = FALSE)
+            session$sendCustomMessage("toggle_div",
+                                      paste0(NS0(id, "CellInfodup", postfix),
+                                             'container'))
+            observeEvent(input[[paste0("CellInfodup",postfix)]], {
+                ## duplicated current cell info
+                if(input[[paste0('CellInfodname', postfix)]]!=""){
+                    updated <- updateMetaData(
+                        dataset = dataSource()$dataset,
+                        inpConf = dataSource()$sc1conf,
+                        inpMeta = dataSource()$sc1meta,
+                        privilege = dataSource()$auth$privilege,
+                        info = input[[paste0('CellInfodname', postfix)]],
+                        oldvalue = input[[paste0('CellInfo', postfix)]],
+                        newvalue = 'duplicate')
+                    if(updated){
+                        session$sendCustomMessage(
+                            type='updateEditorStatus',
+                            message = list(id=id, postfix=postfix))
+                        updateSelectInput(
+                            session,
+                            inputId = paste0('CellInfo', postfix),
+                            choices = c(dataSource()$sc1conf$UI,
+                                        input[[paste0('CellInfodname',
+                                                      postfix)]]),
+                            selected = input[[paste0('CellInfodname', postfix)]]
+                        )
+                    }else{
+                        adminMsg('Something wrong! Please check the name.',
+                                 "error")
+                    }
+                }else{
+                    adminMsg('New name is not provided!',
+                             "error")
+                }
+            })
+            observeEvent(input[[paste0("CellInforename",postfix)]], {
+                ## rename current cell info
+                if(input[[paste0('CellInfodname', postfix)]]!=""){
+                    updated <- updateMetaData(
+                        dataset = dataSource()$dataset,
+                        inpConf = dataSource()$sc1conf,
+                        inpMeta = dataSource()$sc1meta,
+                        privilege = dataSource()$auth$privilege,
+                        info = input[[paste0('CellInfodname', postfix)]],
+                        oldvalue = input[[paste0('CellInfo', postfix)]],
+                        newvalue = 'rename')
+                    if(updated){
+                        session$sendCustomMessage(
+                            type='updateEditorStatus',
+                            message = list(id=id, postfix=postfix))
+                        updateSelectInput(
+                            session,
+                            inputId = paste0('CellInfo', postfix),
+                            choices = c(dataSource()$sc1conf$UI[
+                                dataSource()$sc1conf$UI!=
+                                    input[[paste0('CellInfo', postfix)]]
+                            ],
+                            input[[paste0('CellInfodname', postfix)]]),
+                            selected = input[[paste0('CellInfodname', postfix)]]
+                        )
+                    }else{
+                        adminMsg('Something wrong! Please check the name.',
+                                 "error")
+                    }
+                }else{
+                    adminMsg('New name is not provided!',
+                             "error")
+                }
+            })
+            observeEvent(input[[paste0("CellInfodel",postfix)]], {
+                showModal(modalDialog(
+                    tagList(p(
+                        "Are you sure you want to delete the cell info: ",
+                        input[[paste0("CellInfo",postfix)]])
+                    ),
+                    title = paste("Delete info",
+                                  input[[paste0("CellInfo",postfix)]]),
+                    footer = tagList(
+                        actionButton(
+                            NS0(id, "CellInfoConfirmDelete",postfix),
+                            "Delete"),
+                        modalButton("Cancel")
+                    )
+                ))
+            })
+            observeEvent(input[[paste0("CellInfoConfirmDelete",  postfix)]], {
+                ## delete current cell info
+                updated <- updateMetaData(
+                    dataset = dataSource()$dataset,
+                    inpConf = dataSource()$sc1conf,
+                    inpMeta = dataSource()$sc1meta,
+                    privilege = dataSource()$auth$privilege,
+                    info = 'CellInfoConfirmDelete',
+                    oldvalue = input[[paste0('CellInfo', postfix)]],
+                    newvalue = 'delete')
+                if(updated){
+                    session$sendCustomMessage(
+                        type='updateEditorStatus',
+                        message = list(id=id, postfix=postfix))
+                    choices <- c(dataSource()$sc1conf$UI[
+                        dataSource()$sc1conf$UI!=
+                            input[[paste0('CellInfo', postfix)]]
+                    ])
+                    updateSelectInput(
+                        session,
+                        inputId = paste0('CellInfo', postfix),
+                        choices = choices,
+                        selected = choices[1]
+                    )
+                }else{
+                    adminMsg('Something wrong!',
+                             "error")
+                }
+                removeModal()
+            })
             observeEvent(input[[paste0("GeneExproup.dbl", postfix)]],{
                 evt <- input[[paste0("GeneExproup.dbl", postfix)]]
                 if(!is.null(evt)){

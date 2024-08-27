@@ -200,14 +200,11 @@ cellInfoPlotControlUI <- function(
             textInput(NS0(id, "CellInfodname", postfix), "",
                       placeholder = "new name", width = "100px")),
             actionButton(NS0(id, "CellInfodup", postfix),
-                         "Dup",
-                         disabled = TRUE),
+                         "Dup"),
             actionButton(NS0(id, "CellInforename", postfix),
-                         "Ren",
-                         disabled = TRUE),
+                         "Ren"),
             actionButton(NS0(id, "CellInfodel", postfix),
-                         "Del",
-                         disabled = TRUE)
+                         "Del")
         )
     )
 }

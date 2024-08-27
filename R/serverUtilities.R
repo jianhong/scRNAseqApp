@@ -291,15 +291,15 @@ updateGeneExprDotPlotUI <-
         if(isInfoPlot && checkPrivilege(dataSource()$auth$privilege,
                                         dataSource()$dataset)){
             ## make the duplicate button available
-            updateActionButton(session,
-                               paste0("CellInfodup", postfix),
-                               disabled = FALSE)
-            updateActionButton(session,
-                               paste0("CellInforename", postfix),
-                               disabled = FALSE)
-            updateActionButton(session,
-                               paste0("CellInfodel", postfix),
-                               disabled = FALSE)
+            # updateActionButton(session,
+            #                    paste0("CellInfodup", postfix),
+            #                    disabled = FALSE)
+            # updateActionButton(session,
+            #                    paste0("CellInforename", postfix),
+            #                    disabled = FALSE)
+            # updateActionButton(session,
+            #                    paste0("CellInfodel", postfix),
+            #                    disabled = FALSE)
             session$sendCustomMessage("toggle_div",
                                       paste0(NS0(id, "CellInfodup", postfix),
                                              'container'))

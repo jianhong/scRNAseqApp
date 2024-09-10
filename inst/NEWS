@@ -1,3 +1,8 @@
+CHANGES IN VERSION 1.15.18
+-------------------------
+
+    o add protection of column sampleID in cell info editor funcitons.
+    
 CHANGES IN VERSION 1.15.17
 -------------------------
 

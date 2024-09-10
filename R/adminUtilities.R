@@ -316,7 +316,14 @@ updateMetaData <- function(dataset, inpConf, inpMeta, privilege,
     check <- FALSE
     if(checkPrivilege(privilege, dataset)){
         if(!info %in% inpConf$UI){
-            if(newvalue=='duplicate'){
+            if(info=='sampleID'){
+                adminMsg(
+                    'sampleID is not a proper info name.',
+                    type = 'warning',
+                    duration = 5,
+                    close = TRUE
+                )
+            }else if(newvalue=='duplicate'){
                 newvalue <- inpConf[inpConf$UI==oldvalue]
                 id <- newvalue$ID
                 newvalue$UI <- info

@@ -101,6 +101,7 @@ redirectOutput <- function(
 
 #' @noRd
 #' @importFrom xml2 read_xml as_list
+#' @importFrom utils download.file
 #' @param id id to be convert
 #' @param type target id type
 #' @param url the service url
@@ -109,7 +110,15 @@ idConverter <- function(
         type = c("doi", "pmid"),
         url = 'https://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/') {
     type <- match.arg(type)
-    res <- read_xml(paste0(url, "?format=xml&ids=", id))
+    url0 <- paste0(url, "?format=xml&ids=", id)
+    res <- tryCatch({
+        read_xml(url0)
+    }, error = function(e){
+        message(e, ' Try it again.')
+        tmp <- tempfile()
+        download.file(url0, destfile = tmp)
+        read_xml(tmp)
+    })
     res <- as_list(res)
     if (!is.null(res$pmcids$record)) {
         return(attr(res$pmcids$record, type))

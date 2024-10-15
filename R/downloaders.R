@@ -23,6 +23,9 @@ plotsDownloadHandler <- function(input, postfix, plot, ...) {
                     useDingbats = FALSE,
                     plot = plot()
                 )
+            } else if(input[[paste0("GeneExproup.fmt", postfix)]] == "CSV"){
+                plot <- plot()
+                write.csv(plot$data, file = file)
             } else{
                 ggsave(
                     file,
@@ -44,28 +47,45 @@ heatmapDownloadHandler <-
                 outputFileName(input[[paste0("GeneExproup.fmt", postfix)]], ...)
             },
             content = function(file) {
-                if (input[[paste0("GeneExproup.fmt", postfix)]] == "PDF") {
-                    pdf(
-                        file,
-                        height = input[[paste0("GeneExproup.h", postfix)]],
-                        width = input[[paste0("GeneExproup.w", postfix)]],
-                        useDingbats = FALSE
-                    )
-                } else{
-                    get(tolower(input[[paste0("GeneExproup.fmt", postfix)]]))(
-                        file,
-                        height = 
-                            input[[paste0("GeneExproup.h",
-                                          postfix)]] * 300,
-                        width = 
-                            input[[paste0("GeneExproup.w",
-                                          postfix)]] * 300,
-                        res = 300)
+                if(input[[paste0("GeneExproup.fmt", postfix)]] == "CSV"){
+                    plot <- plot()
+                    env <- environment(
+                        plot@ht_list$expression@matrix_param$layer_fun)
+                    if('ggProp' %in% names(env)){
+                        dat <- cbind(env$ggProp, env$ggMat)
+                        colnames(dat) <- c(
+                            paste(colnames(env$ggProp), 'prop',
+                                  sep='.'),
+                            paste(colnames(env$ggMat), 'rescaled.expr',
+                                  sep='.'))
+                    }else{
+                        dat <- plot@ht_list$expression@matrix
+                    }
+                    write.csv(dat, file = file)
+                }else{
+                    if (input[[paste0("GeneExproup.fmt", postfix)]] == "PDF") {
+                        pdf(
+                            file,
+                            height = input[[paste0("GeneExproup.h", postfix)]],
+                            width = input[[paste0("GeneExproup.w", postfix)]],
+                            useDingbats = FALSE
+                        )
+                    } else{
+                        get(tolower(input[[paste0("GeneExproup.fmt", postfix)]]))(
+                            file,
+                            height = 
+                                input[[paste0("GeneExproup.h",
+                                              postfix)]] * 300,
+                            width = 
+                                input[[paste0("GeneExproup.w",
+                                              postfix)]] * 300,
+                            res = 300)
+                    }
+                    on.exit({
+                        dev.off()
+                    })
+                    draw(plot()) ## for complexheatmap
                 }
-                on.exit({
-                    dev.off()
-                })
-                draw(plot()) ## for complexheatmap
             }
         )
     }

@@ -1,6 +1,6 @@
 Package: scRNAseqApp
 Title: A single-cell RNAseq Shiny app-package
-Version: 1.5.20
+Version: 1.5.21
 Authors@R:
     c(person(given = "Jianhong",
              family = "Ou",

@@ -91,6 +91,8 @@ scInit <- function(
     updateConfigTable()
     touchGeneTable()
     touchGenename2Symbol()
+    .globals$counterFilename <- file.path(www, 'counter.tsv')
+    touchVisitorTable()
     # Write the app.R
     writeLines(c(
         "library(scRNAseqApp)",

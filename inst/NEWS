@@ -1,3 +1,8 @@
+CHANGES IN VERSION 1.15.21
+-------------------------
+
+    o fix a bug that counter table is not available.
+    
 CHANGES IN VERSION 1.15.20
 -------------------------
 

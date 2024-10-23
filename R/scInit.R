@@ -54,6 +54,8 @@ scInit <- function(
     ),
     file.path(app_path, "doc.txt"))
     
+    dir.create(file.path(app_path, 'app_cache'))
+    
     www <- file.path(app_path, "www")
     dir.create(www)
     # Prepare the downloader folder

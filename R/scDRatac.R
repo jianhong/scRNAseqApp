@@ -43,6 +43,7 @@ scDRatac <- function(
         subsetCellKey)
     bws <- dir(pf, ".bigwig$")
     if(length(bws)==0){
+        warning('no bws detected. Please check the folder privileges for ', pf)
         return(ggplot())
     }
     gr <- GRanges(coord)

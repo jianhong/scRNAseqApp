@@ -24,7 +24,6 @@ scDRatac <- function(
         plotAspectRatio,
         keepXYlables,
         ...) {
-    saveRDS(as.list(environment()), 'www/tmp.rds')
     if (gene1[1] == "") {
         return(ggplot())
     }

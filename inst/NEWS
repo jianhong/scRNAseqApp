@@ -1,3 +1,8 @@
+CHANGES IN VERSION 1.15.22
+-------------------------
+
+    o add warning message to log file when the atac bigwig files are not available.
+    
 CHANGES IN VERSION 1.15.21
 -------------------------
 

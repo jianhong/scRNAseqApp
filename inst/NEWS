@@ -1,3 +1,8 @@
+CHANGES IN VERSION 1.17.1
+-------------------------
+
+    o fix the bug if no signals for atac coverage and invalid filenames.
+    
 CHANGES IN VERSION 1.15.22
 -------------------------
 

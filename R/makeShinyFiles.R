@@ -37,6 +37,7 @@
 #' @importFrom GenomicRanges GRanges width coverage
 #' @importFrom rtracklayer export
 #' @importFrom utils read.table
+#' @importFrom fs path_sanitize
 makeShinyFiles <- function(
         obj,
         scConf,
@@ -384,6 +385,7 @@ makeShinyFiles <- function(
                             x = region,
                             value = seqnames.in.both,
                             pruning.mode = "coarse")
+                        message('Creating coverage for ', fragment.path)
                         coverage <- lapply(seq_along(region), function(i){
                             reads <- scanTabix(
                                 file = tabix.file,
@@ -441,6 +443,8 @@ makeShinyFiles <- function(
                     }
                 }
                 if(length(res)>0){
+                    message('Exporting coverage to bigwig files.')
+                    ## accumulate the signals
                     if(length(res)>1){
                         for(i in seq_along(res)[-1]){
                             N_grp <- names(res[[1]])
@@ -463,6 +467,7 @@ makeShinyFiles <- function(
                             })
                         }
                     }
+                    ## normalization
                     res <- lapply(res[[1]], function(.grp) {
                         lapply(.grp, function(.fac){
                             .fac <- GRanges(.fac)
@@ -473,8 +478,11 @@ makeShinyFiles <- function(
                             .fac
                         })
                     })
+                    ## export
                     mapply(res, names(res), FUN=function(.grp, .grpname){
+                        .grp <- .grp[lengths(.grp)>0]
                         mapply(.grp, names(.grp), FUN=function(.fac, .facname){
+                            .facname <- path_sanitize(.facname)
                             pf <- file.path(
                                 appDir, .globals$filenames$bwspath, .grpname)
                             dir.create(pf,

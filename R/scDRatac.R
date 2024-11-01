@@ -279,7 +279,6 @@ AnnotationPlot <- function(
     if (is.null(x = annotation)) {
         return(NULL)
     }
-    
     # get names of genes that overlap region, then subset to include only those
     # genes. This avoids truncating the gene if it runs outside the region
     annotation.subset <- subsetByOverlaps(x = annotation, ranges = region)
@@ -471,6 +470,7 @@ record_overlapping <- function(
     return(idx)
 }
 
+#' @importFrom S4Vectors mcols
 reformat_annotations <- function(
         annotation,
         start.pos,
@@ -479,6 +479,17 @@ reformat_annotations <- function(
 ) {
     total.width <- end.pos - start.pos
     tick.freq <- total.width / 50
+    for(i in c('tx_id', 'gene_name', 'type')){
+        if(!i %in% colnames(mcols(annotation))){
+            stop(i, ' is missing from annotation.',
+                 ' Please reprepare the annotations.')
+        }
+    }
+    if(length(annotation$gene_biotype)!=length(annotation)){
+        if(length(annotation)){
+            annotation$gene_biotype <- NA
+        }
+    }
     annotation <- unname(annotation[annotation$type == "exon"])
     exons <- as.data.frame(x = annotation)
     if (collapse_transcript) {

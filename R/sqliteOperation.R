@@ -39,6 +39,9 @@ replaceNULL <- function(x, by=NA){
 }
 createConfigTable <- function(appconf){
     appData <- lapply(appconf, FUN = function(.ele){
+        if(!is(.ele, 'APPconf')){
+            stop('Please check the folder privilege')
+        }
         c(title=.ele$title,
           id=.ele$id,
           species=.ele$species,
@@ -77,6 +80,9 @@ updateConfigTable <- function(appconf){
             appconf <- list(ele=appconf)
         }
         lapply(appconf, function(.ele){
+            if(!is(.ele, 'APPconf')){
+                stop('Please check the folder privilege')
+            }
             query <- paste0('UPDATE ', 
                            .globals$configTableName,
                            ' SET `title`="', .ele$title, '",',

@@ -21,6 +21,8 @@
 #' @param atacSlot layer in single-cell atac assay to plot.
 #' Default is to use the "data" layer
 #' @param default.symbol character(1L) specifying the default rownames to be used. If use default, the gene symbols will be the row names of the assay. If one column name of the meta.feature of the assay is supplied, the function will try to extract the symbols from the meta.feature slot of the assay. 
+#' @param binSize number of bps for each bin for ATAC fragment coverage. Used
+#' to reduce the file size of bigwig.
 #' @importFrom SeuratObject Reductions Idents Assays DefaultAssay GetAssayData
 #'  `DefaultAssay<-` VariableFeatures Misc `Misc<-` Embeddings `Idents<-`
 #' @importFrom Seurat FindAllMarkers FindVariableFeatures ScaleData
@@ -48,7 +50,8 @@ createDataSet <- function(
         atacSlot = c("data", "scale.data", "counts"),
         LOCKER = FALSE,
         datafolder = "data",
-        default.symbol = 'rownames') {
+        default.symbol = 'rownames',
+        binSize = 1) {
     stopifnot(file.exists(datafolder))
     stopifnot(is(seu, "Seurat"))
     stopifnot(is(appconf, "APPconf"))
@@ -198,7 +201,8 @@ createDataSet <- function(
         defaultGene1 = markers[1],
         defaultGene2 = markers[2],
         default.multigene = markers,
-        default.symbol = default.symbol
+        default.symbol = default.symbol,
+        binSize = binSize
     )
     
     .globals$datafolder <- datafolder

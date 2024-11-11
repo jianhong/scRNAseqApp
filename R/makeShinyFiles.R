@@ -26,15 +26,17 @@
 #' @param default.symbol character(1L) specifying the default rownames to be used. If use default, the gene symbols will be the row names of the assay. If one column name of the meta.feature of the assay is supplied, the function will try to extract the symbols from the meta.feature slot of the assay. 
 #' @param chunkSize number of genes written to h5file at any one time. Lower
 #'   this number to reduce memory consumption. Should not be less than 10
-#'
+#' @param binSize number of bps for each bin for ATAC fragment coverage. Used
+#' to reduce the file size of bigwig.
 #' @return data files required for shiny app
+#' @importFrom IRanges tile Views viewMeans ranges 
 #' @importFrom SeuratObject GetAssayData VariableFeatures Embeddings Reductions
 #' @importFrom data.table data.table as.data.table
 #' @importFrom rhdf5 h5createFile h5createGroup h5createDataset h5write
 #' @importFrom Rsamtools TabixFile seqnamesTabix scanTabix
 #' @importFrom GenomeInfoDb keepSeqlevels seqinfo seqnames seqlevelsStyle
 #' `seqlevelsStyle<-`
-#' @importFrom GenomicRanges GRanges width coverage
+#' @importFrom GenomicRanges GRanges width coverage GRangesList
 #' @importFrom rtracklayer export
 #' @importFrom utils read.table
 #' @importFrom fs path_sanitize
@@ -51,7 +53,9 @@ makeShinyFiles <- function(
         default.multigene = NA,
         default.dimred = NA,
         default.symbol = 'rownames',
-        chunkSize = 500) {
+        chunkSize = 500,
+        binSize = 1) {
+    stopifnot(is.numeric(binSize))
     ### Preprocessing and checks
     # Generate defaults for assayName / slot
     stopifnot(is(obj, "Seurat"))
@@ -469,14 +473,52 @@ makeShinyFiles <- function(
                     }
                     ## normalization
                     res <- lapply(res[[1]], function(.grp) {
-                        lapply(.grp, function(.fac){
-                            .fac <- GRanges(.fac)
-                            .fac <- .fac[.fac$score!=0]
-                            ## normalize by FPKM
-                            .s <- .fac$score * width(.fac)/1e3
-                            .fac$score <- 1e6*.fac$score/sum(.s)
-                            .fac
-                        })
+                        mapply(
+                            .grp,
+                            rep(binSize, length(.grp))[seq_along(.grp)],
+                            FUN=function(.fac, bs){
+                                if(bs>1){
+                                    # summarize by bin
+                                    .fac_gr <- GRanges(.fac)
+                                    wid <- width(.fac_gr)
+                                    k <- wid<bs
+                                    if(any(k)){
+                                        .fac_0 <- .fac_gr[!k]
+                                        .fac_1 <- .fac_gr[k]
+                                        ## sumarize signal by bin size
+                                        .fac_1.rd <- reduce(.fac_1,
+                                                            with.revmap=TRUE)
+                                        .fac_1_tile <- tile(.fac_1.rd, width=bs)
+                                        .fac_1 <- unlist(.fac_1_tile)
+                                        .fac_0 <- c(.fac_0, .fac_1)
+                                        .fac_gr <- split(.fac_0,
+                                                         seqnames(.fac_0))
+                                        .fac <- 
+                                            mapply(
+                                                .fac, .fac_gr[names(.fac)],
+                                                FUN=function(.rle, .gr){
+                                                    .ir <- ranges(.gr)
+                                                    .gr$score <-
+                                                        viewMeans(Views(.rle,
+                                                                        .ir),
+                                                                  na.rm=TRUE)
+                                                    .gr
+                                                })
+                                        rm(.fac_0, .fac_1,
+                                           .fac_1.rd, .fac_1_tile, .fac_gr)
+                                        .fac <- unlist(GRangesList(.fac))
+                                    }else{
+                                        .fac <- .fac_gr
+                                    }
+                                }else{
+                                    .fac <- GRanges(.fac)
+                                }
+                                .fac <- .fac[.fac$score!=0]
+                                ## normalize by FPKM
+                                .s <- .fac$score * width(.fac)/1e3
+                                .fac$score <- 1e6*.fac$score/sum(.s)
+                                .fac
+                            }, SIMPLIFY = FALSE)
                     })
                     ## export
                     mapply(res, names(res), FUN=function(.grp, .grpname){

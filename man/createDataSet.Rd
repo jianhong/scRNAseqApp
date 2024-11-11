@@ -18,7 +18,8 @@ createDataSet(
   atacSlot = c("data", "scale.data", "counts"),
   LOCKER = FALSE,
   datafolder = "data",
-  default.symbol = "rownames"
+  default.symbol = "rownames",
+  binSize = 1
 )
 }
 \arguments{
@@ -51,6 +52,9 @@ Default is to use the "data" layer}
 \item{datafolder}{app data folder}
 
 \item{default.symbol}{character(1L) specifying the default rownames to be used. If use default, the gene symbols will be the row names of the assay. If one column name of the meta.feature of the assay is supplied, the function will try to extract the symbols from the meta.feature slot of the assay.}
+
+\item{binSize}{number of bps for each bin for ATAC fragment coverage. Used
+to reduce the file size of bigwig.}
 }
 \value{
 The updated Seurat object.

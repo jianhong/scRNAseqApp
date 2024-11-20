@@ -26,16 +26,21 @@ scDRgene <- function(
         valueFilterKey,
         valueFilterCutoff,
         hideFilterCell = FALSE,
+        geneType = c('gene', 'coor'),
         ...) {
     if (gene1[1] == "") {
         return(ggplot())
     }
-    if (is.na(geneIdMap[gene1])) {
-        return(ggplot())
+    geneType <- match.arg(geneType)
+    if(geneType=='gene'){
+        if (is.na(geneIdMap[gene1])) {
+            return(ggplot())
+        }
+        if (is.null(geneIdMap[gene1])) {
+            return(ggplot())
+        }
     }
-    if (is.null(geneIdMap[gene1])) {
-        return(ggplot())
-    }
+    
     # Prepare ggData
     subFilterColname <- 'subValue'
     subGrpColname <- 'sub'
@@ -60,10 +65,24 @@ scDRgene <- function(
             valueFilterCutoff
         )
     
-    ggData[[exprColname]] <- read_exprs(
-        dataset,
-        geneIdMap[gene1],
-        valueOnly = TRUE)
+    if(geneType=='gene'){
+        ggData[[exprColname]] <- read_exprs(
+            dataset,
+            geneIdMap[gene1],
+            valueOnly = TRUE)
+    }else{
+        coord <- strsplit(gene1[1], '[:-]')[[1]]
+        stopifnot('Wrong coordinates format'=length(coord)==3)
+        names(coord) <- c("seqnames", "start", "end")
+        coord <- as.list(coord)
+        coord[['start']] <- as.integer(coord[['start']])
+        coord[['end']] <- as.integer(coord[['end']])
+        coordExp <- readATACdataByCoor(
+            dataset,
+            coord = coord)
+        ggData[[exprColname]] <- rowSums(coordExp)
+    }
+    
     if (any(ggData[[exprColname]] < 0)) {
         ggData[ggData[[exprColname]] < 0][[exprColname]] <- 0
     }

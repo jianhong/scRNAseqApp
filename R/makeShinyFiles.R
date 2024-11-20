@@ -421,7 +421,7 @@ makeShinyFiles <- function(
             if(any(!c('gene_name', 'tx_id') %in% colnames(mcols(annotations)))){
                 stop('gene_name and tx_id must exist as metadata for scATAC ',
                      'annotations. Check it by Annotation(obj[["',
-                     atacAssyName, '"]])')
+                     atacAssayName, '"]])')
             }
             if (length(links) < 1) {
                 warning("scATAC links data are not available.")

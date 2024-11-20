@@ -25,7 +25,8 @@
 .globals$h5fGrpPrefix <- 'grp' #gene expression table prefix
 .globals$h5fDataPrefix <- 'data'
 .globals$h5fGrp <- paste(.globals$h5fGrpPrefix, .globals$h5fDataPrefix, sep="/") 
-.globals$h5fATACcell <- 'cell' # ATAC cell level signals table prefix
+.globals$h5fATACcell <- 'cell' # ATAC cell level signals table prefix 
+.globals$h5fATACcoor <- 'coor' # ATAC coor level signals table prefix
 .globals$downloadFolder <- file.path("www", "download")
 .globals$counterFilename <- file.path("www", "counter.tsv")
 .globals$IPlocationFilename <- file.path("www", "iptable.rds")

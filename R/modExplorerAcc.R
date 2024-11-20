@@ -29,7 +29,11 @@ scAccServer <- function(
         CoordLabel <- paste0('coord', postfix)
         GeneNameLabel <- paste0('GeneName', postfix)
         links <- readData("sc1link", dataSource()$dataset)
-        
+        if(length(links$peak)!=length(links)){
+            links$peak <- paste(as.character(seqnames(links)),
+                                start(links), end(links),
+                                sep='-')
+        }
         availableTargets <- sort(names(dataSource()$sc1gene))
         if(length(links$gene)){
             availableTargets <- availableTargets[availableTargets %in% 
@@ -38,8 +42,15 @@ scAccServer <- function(
         if(length(links$peak)){
             availablePeaks <- sort(links$peak)
         }else{
-            availablePeaks <- apply(readData("sc1peak", dataSource()$dataset),
-                                    1, paste, collapse='-')
+            if(length(links)){
+                availablePeaks <- paste(as.character(seqnames(links)),
+                                        start(links), end(links),
+                                        sep='-')
+            }else{
+                availablePeaks <-
+                    apply(readData("sc1peak", dataSource()$dataset),
+                          1, paste, collapse='-')
+            }
         }
         
         if (is.null(
@@ -175,7 +186,7 @@ scAccServer <- function(
             CoordLabel,
             choices = availablePeaks,
             server = TRUE,
-            selected = if(length(defaults[[CoordLabel]])) defaults[[CoordLabel]] else links$peak[1],
+            selected = if(length(defaults[[CoordLabel]])) defaults[[CoordLabel]] else availablePeaks[1],
             options = list(
                 maxOptions = .globals$maxNumGene,
                 create = TRUE,

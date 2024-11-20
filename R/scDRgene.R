@@ -77,9 +77,14 @@ scDRgene <- function(
         coord <- as.list(coord)
         coord[['start']] <- as.integer(coord[['start']])
         coord[['end']] <- as.integer(coord[['end']])
+        saveRDS(as.list(environment()), 'tmp.rds')
         coordExp <- readATACdataByCoor(
             dataset,
-            coord = coord)
+            coord = coord,
+            cells = inpMeta$sampleID)
+        if(length(coordExp)==0){
+            return(ggplot())
+        }
         ggData[[exprColname]] <- rowSums(coordExp)
     }
     

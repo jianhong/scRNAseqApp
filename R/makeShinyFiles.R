@@ -29,7 +29,7 @@
 #' @param binSize number of bps for each bin for ATAC fragment coverage. Used
 #' to reduce the file size of bigwig.
 #' @return data files required for shiny app
-#' @importFrom IRanges tile Views viewMeans ranges 
+#' @importFrom IRanges tile Views viewMeans ranges nearest
 #' @importFrom SeuratObject GetAssayData VariableFeatures Embeddings Reductions
 #' @importFrom data.table data.table as.data.table
 #' @importFrom rhdf5 h5createFile h5createGroup h5createDataset h5write
@@ -413,6 +413,9 @@ makeShinyFiles <- function(
             ## links, the links between peaks and gene symbol,
             ## used to create the matrix table
             links <- peaks@links #GetAssayData(obj, layer = "links")
+            if (length(links) < 1) {
+                warning("scATAC links data are not available.")
+            }
             ## annotations, used to plot gene model
             annotations <- peaks@annotation #GetAssayData(obj, layer = "annotation")
             if (length(annotations) < 1) {
@@ -422,9 +425,6 @@ makeShinyFiles <- function(
                 stop('gene_name and tx_id must exist as metadata for scATAC ',
                      'annotations. Check it by Annotation(obj[["',
                      atacAssayName, '"]])')
-            }
-            if (length(links) < 1) {
-                warning("scATAC links data are not available.")
             }
             ## get fragments for each cell and group
             fragments <- peaks@fragments #GetAssayData(obj, layer = "fragments")
@@ -626,6 +626,12 @@ makeShinyFiles <- function(
                 saveRDS(peaks, file = file.path(
                     appDir, .globals$filenames$sc1peak
                 ))
+                if(length(links)<1){
+                    message(" Linking peak by nearest TSS.")
+                    links <- GRanges(peaks)
+                    n <- nearest(links, annotations)
+                    links$gene <- annotations$gene_name[n]
+                }
             }else{
                 warning("Ask rownames of ATAC assays format is chr-start-end!")
             }

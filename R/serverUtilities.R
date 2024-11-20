@@ -584,8 +584,13 @@ getCoordByGeneSymbol <- function(symbol, genes, links){
         genes0 <- c(start(genes0), end(genes0))
         links0 <- links[links$gene %in% symbol]
         if(length(links)>0){
-            peaks0 <- do.call(rbind, strsplit(links0$peak, "-"))
-            peaks0 <- as.numeric(peaks0[, c(2, 3)])
+            if(length(links0$peak)){
+                peaks0 <- do.call(rbind, strsplit(links0$peak, "-"))
+                peaks0 <- as.numeric(peaks0[, c(2, 3)])
+            }else{
+                peaks0 <- cbind(start(links0), end(links0))
+            }
+            
         }else{
             peaks0 <- NULL
         }
@@ -595,7 +600,17 @@ getCoordByGeneSymbol <- function(symbol, genes, links){
     }else{
         links0 <- links[links$gene %in% symbol]
         if(length(links0)>0){
-            coor <- links0[order(links0$pvalue)]
+            if(length(links$pvalue)==length(links0)){
+                coor <- links0[order(links0$pvalue)]
+            }else{
+                coor <- links0
+            }
+            if(length(coor$peak)!=length(coor)){
+                coor$peak <-paste(as.character(seqnames(coor)),
+                                  start(coor),
+                                  end(coor),
+                                  sep='-')
+            }
         }else{
             coor <- NULL
         }
@@ -603,9 +618,18 @@ getCoordByGeneSymbol <- function(symbol, genes, links){
     coor
 }
 getGeneSymbolByCoord <- function(coor, links){
+    if(length(links$peak)!=length(links$peak)){
+        links$peak <- paste(as.character(seqnames(links)),
+                            start(links), end(links),
+                            sep='-')
+    }
     links0 <- links[links$peak %in% coor]
     if(length(links0)>0){
-        return(links0[order(links0$pvalue)]$gene)
+        if(length(links0$pvalue)==length(links0)){
+            return(links0[order(links0$pvalue)]$gene)
+        }else{
+            return(links0$gene)
+        }
     }else{
         return(NULL)
     }

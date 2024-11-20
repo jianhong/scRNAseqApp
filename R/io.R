@@ -127,46 +127,111 @@ read_exprs <- function(
 #' of the peak; the second column is the count number.
 #' @noRd
 #' @importFrom rhdf5 h5createFile h5createGroup h5write
+#' @importMethodsFrom Matrix summary
 writeATACdata <- function(acAsy, appDir){
     filename <- file.path(appDir, .globals$filenames$sc1atac)
     if(h5createFile(filename)){
-        if(h5createGroup(filename, .globals$h5fATACcell)){
-            lapply(colnames(acAsy), function(j){## time consuming
-                x <- acAsy[, j]
-                i <- which(x!=0)
-                N <- length(i)
-                if(N>0){
-                    x <- matrix(c(i, x[i]), nrow = N)
-                    h5write(x,
-                            filename,
-                            paste(.globals$h5fATACcell, j, sep='/'))
-                }
-            })
+        if(is(acAsy, 'sparseMatrix')){
+            x <- summary(acAsy, sparse=TRUE)
+            # search by cells
+            x_cells <- split(x[, c("i", "x")], x[, "j"])
+            if(h5createGroup(filename, .globals$h5fATACcell)){
+                null <- mapply(function(x, n){
+                    h5write(as.matrix(x), filename,
+                            paste(.globals$h5fATACcell, n, sep='/'))
+                }, x_cells, colnames(acAsy)[as.numeric(names(x_cells))])
+            }
+            # search by coordinates
+            x_coors <- split(x[, c("j", "x")], x[, "i"])
+            if(h5createGroup(filename, .globals$h5fATACcoor)){
+                null <- mapply(function(x, n){
+                    h5write(as.matrix(x), filename,
+                            paste(.globals$h5fATACcoor, n, sep='/'))
+                }, x_coors, rownames(acAsy)[as.numeric(names(x_coors))])
+            }
+        }else{
+            if(h5createGroup(filename, .globals$h5fATACcell)){
+                lapply(colnames(acAsy), function(j){## time consuming
+                    x <- acAsy[, j]
+                    i <- which(x!=0)
+                    N <- length(i)
+                    if(N>0){
+                        x <- matrix(c(i, x[i]), nrow = N)
+                        h5write(x,
+                                filename,
+                                paste(.globals$h5fATACcell, j, sep='/'))
+                    }
+                })
+            }
+            if(h5createGroup(filename, .globals$h5fATACcoor)){
+                lapply(rownames(acAsy), function(i){## time consuming
+                    x <- acAsy[i, ]
+                    j <- which(x!=0)
+                    N <- length(j)
+                    if(N>0){
+                        x <- matrix(c(j, x[j]), nrow = N)
+                        h5write(x,
+                                filename,
+                                paste(.globals$h5fATACcoor, i, sep='/'))
+                    }
+                })
+            }
         }
+        
     }
 }
 #' @importFrom rhdf5 h5read H5Lexists H5Fopen H5Fclose
-readATACdata <- function(h5f, cell){
-    stopifnot(is.character(cell))
-    stopifnot(length(cell)==1)
+readATACdata <- function(h5f, cell, coor){
     fs <- file.path(
         .globals$datafolder,
         h5f,
         .globals$filenames$sc1atac)
     h5f <- H5Fopen(fs)
     on.exit(H5Fclose(h5f))
-    if(H5Lexists(h5f, paste0(.globals$h5fATACcell, '/', cell))){
-        cnts <- h5read(h5f, paste0(.globals$h5fATACcell, '/', cell))
+    if(!missing(cell)){
+        stopifnot(is.character(cell))
+        stopifnot(length(cell)==1)
+        if(H5Lexists(h5f, paste0(.globals$h5fATACcell, '/', cell))){
+            cnts <- h5read(h5f, paste0(.globals$h5fATACcell, '/', cell))
+        }else{
+            cnts <- matrix(nrow = 0, ncol=2)
+        }
     }else{
-        cnts <- matrix(nrow = 0, ncol=2)
+        stopifnot(is.character(coor))
+        stopifnot(length(coor)==1)
+        if(H5Lexists(h5f, paste0(.globals$h5fATACcoor, '/', coor))){
+            cnts <- h5read(h5f, paste0(.globals$h5fATACcoor, '/', coor))
+        }else{
+            cnts <- matrix(nrow = 0, ncol=2)
+        }
     }
     H5Fclose(h5f)
     on.exit()
     cnts
 }
-#'
-readATACdataByCoor <- function(h5f, cells, coord){
+
+readATACdataByCell <- function(h5f, cells){
+    peaks <- readData("sc1peak", h5f)
+    peaks <- paste(peaks$seqnames, peaks$start, peaks$end, sep='-')
     stopifnot(is.character(cells))
+    cnts <- lapply(cells, function(cell){
+        cnts <- readATACdata(h5f, cell)
+        cnts <- cnts[match(seq_along(peaks), cnts[, 1]), 2, drop=TRUE]
+    })
+    cnts <- do.call(rbind, cnts)
+    rownames(cnts) <- cells
+    cnts[is.na(cnts)] <- 0
+    colnames(cnts) <- peaks
+    cnts <- as.data.frame(cnts)
+}
+#' @importFrom rhdf5 h5ls
+readATACdataByCoor <- function(h5f, coord){
+    cells <- h5ls(file.path(
+        .globals$datafolder,
+        h5f,
+        .globals$filenames$sc1atac
+    ))
+    cells <- cells$name[grep(paste0('/', .globals$h5fATACcell), cells$group)]
     stopifnot(is.list(coord))
     stopifnot(all(c("seqnames", "start", "end") %in% names(coord)))
     peaks <- readData("sc1peak", h5f)
@@ -176,14 +241,15 @@ readATACdataByCoor <- function(h5f, cells, coord){
     if(length(sel)==0){
         return(data.frame())
     }
-    cnts <- lapply(cells, function(cell){
-        cnts <- readATACdata(h5f, cell)
-        cnts <- cnts[match(sel, cnts[, 1]), 2, drop=TRUE]
+    peaks <- paste(peaks$seqnames, peaks$start, peaks$end, sep='-')
+    cnts <- lapply(sel, function(i){
+        cnts <- readATACdata(h5f, coor=peaks[i])
+        cnts <- cnts[match(seq_along(cells), cnts[, 1]), 2, drop=TRUE]
     })
     cnts <- do.call(cbind, cnts)
-    colnames(cnts) <- cells
+    rownames(cnts) <- cells
+    colnames(cnts) <- peaks[sel]
     cnts[is.na(cnts)] <- 0
     cnts <- as.data.frame(cnts)
-    cnts <- cbind(peaks[sel, , drop=FALSE], cnts)
 }
 

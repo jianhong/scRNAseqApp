@@ -34,6 +34,7 @@ subsetPlotsUI <- function(id) {
                     choices = c(
                         'cell info',
                         'gene expression',
+                        'peak expression',
                         'proportion',
                         'violin/box plot',
                         'co-expression',
@@ -217,6 +218,21 @@ subsetPlotsServer <- function(id, dataSource, optCrt) {
             })
         }
         observeEvent(input$newModule, {
+            if(input$moduleName=='peak expression'){
+                if(!file.exists(file.path(
+                    .globals$datafolder,
+                    dataSource()$dataset,
+                    .globals$filenames$sc1atac))){
+                    showNotification(
+                        "Peak expression data not available",
+                        duration = 5,
+                        closeButton = TRUE,
+                        type = "error"
+                    )
+                    return()
+                }
+            }
+                
             if (length(globals$containerIds) >= 8) {
                 showNotification(
                     "Reached the limitation.",
@@ -240,6 +256,7 @@ subsetPlotsServer <- function(id, dataSource, optCrt) {
                     'violin/box plot' = scVlnUI,
                     'co-expression' = scCoexpUI,
                     'co-expression 3d' = scCoexp3dUI,
+                    'peak expression' = scAccUI,
                     scInfoUI
                 )
                 globals$containerServers[[ns0]] <- switch(
@@ -250,6 +267,7 @@ subsetPlotsServer <- function(id, dataSource, optCrt) {
                     'violin/box plot' = scVlnServer,
                     'co-expression' = scCoexpServer,
                     'co-expression 3d' = scCoexp3dServer,
+                    'peak expression' = scAccServer,
                     scInfoServer
                 )
                 updatePlotModules()

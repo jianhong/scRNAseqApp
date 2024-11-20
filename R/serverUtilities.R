@@ -576,22 +576,39 @@ expandGR <- function(coor, ext){
 #' @importFrom GenomicRanges strand start end `strand<-` `start<-` `end<-`
 #' @importFrom IRanges shift
 getCoordByGeneSymbol <- function(symbol, genes, links){
-    genes0 <- genes[genes$gene_name %in% symbol | genes$gene_id %in% symbol]
-    if(length(genes0)<1) return(NULL)
-    strand(genes0) <- "*"
-    coor <- range(genes0)[1]
-    genes0 <- c(start(genes0), end(genes0))
-    links0 <- links[links$gene %in% symbol]
-    if(length(links)>0){
-        peaks0 <- do.call(rbind, strsplit(links0$peak, "-"))
-        peaks0 <- as.numeric(peaks0[, c(2, 3)])
+    if(!missing(genes)){
+        genes0 <- genes[genes$gene_name %in% symbol | genes$gene_id %in% symbol]
+        if(length(genes0)<1) return(NULL)
+        strand(genes0) <- "*"
+        coor <- range(genes0)[1]
+        genes0 <- c(start(genes0), end(genes0))
+        links0 <- links[links$gene %in% symbol]
+        if(length(links)>0){
+            peaks0 <- do.call(rbind, strsplit(links0$peak, "-"))
+            peaks0 <- as.numeric(peaks0[, c(2, 3)])
+        }else{
+            peaks0 <- NULL
+        }
+        g0 <- range(c(genes0, peaks0))
+        start(coor) <- max(1, g0[1] - round(diff(g0)/5))
+        end(coor) <- g0[2] + round(diff(g0)/5)
     }else{
-        peaks0 <- NULL
+        links0 <- links[links$gene %in% symbol]
+        if(length(links0)>0){
+            coor <- links0[order(links0$pvalue)]
+        }else{
+            coor <- NULL
+        }
     }
-    g0 <- range(c(genes0, peaks0))
-    start(coor) <- max(1, g0[1] - round(diff(g0)/5))
-    end(coor) <- g0[2] + round(diff(g0)/5)
     coor
+}
+getGeneSymbolByCoord <- function(coor, links){
+    links0 <- links[links$peak %in% coor]
+    if(length(links0)>0){
+        return(links0[order(links0$pvalue)]$gene)
+    }else{
+        return(NULL)
+    }
 }
 
 updateAccCoordInputs <- function(session, coordLabel, coor){
@@ -948,7 +965,7 @@ subModuleMenuObservor <- function(
         updateTextInput(p_session, "changeSubsetContext",
                         value = paste(id, input$CellInfosubgrp1, sep='___'))
     })
-    #if subset group B is selected but the B have no vale
+    #if subset group B is selected but the B have no value
     # send click message to the TogT B group
     observeEvent(input$CellInfosubgrp1, {
         if(length(p_session$input[[paste0("subsetCell",

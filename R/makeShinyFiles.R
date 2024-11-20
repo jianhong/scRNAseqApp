@@ -160,6 +160,71 @@ makeShinyFiles <- function(
         default.multigene <- defGenes
     }
     
+    ## check for ATAC
+    if (!missing(atacAssayName)) {
+        if (atacAssayName %in% Assays(obj)) {
+            peaks <- obj[[atacAssayName]]
+            ## links, the links between peaks and gene symbol,
+            ## used to create the matrix table
+            links <- peaks@links #GetAssayData(obj, layer = "links")
+            ## annotations, used to plot gene model
+            annotations <- peaks@annotation #GetAssayData(obj, layer = "annotation")
+            if (length(annotations) < 1) {
+                stop("scATAC annotation data are not available.")
+            }
+            if(any(!c('gene_name', 'tx_id') %in% colnames(mcols(annotations)))){
+                stop('gene_name and tx_id must exist as metadata for scATAC ',
+                     'annotations. Check it by Annotation(obj[["',
+                     atacAssayName, '"]])')
+            }
+            if (length(links) < 1) {
+                warning("scATAC links data are not available.")
+            }
+            regions <- seqinfo(annotations)
+            tryCatch({
+                regions <- as(regions, "GRanges")
+            }, error=function(.e){
+                stop("Cannot get genomic informations from annotations.",
+                     "Check it by as(seqinfo(Annotation(obj[['",
+                     atacAssayName, "']])), 'GRanges')")
+            })
+            ## get fragments for each cell and group
+            fragments <- peaks@fragments #GetAssayData(obj, layer = "fragments")
+            ## check reads name
+            for(k in seq_along(fragments)){
+                fragment.path <- fragments[[k]]@path
+                if(file.exists(fragment.path)){
+                    tbx <- open(TabixFile(fragment.path, yieldSize=100))
+                    on.exit({close(tbx)})
+                    if(length(reads <- scanTabix(tbx)[[1]])){
+                        reads <- read.table(text = reads)
+                        colnames(reads) <- 
+                            c("seqnames", "start", "end", "name", "score")
+                        if(length(intersect(
+                            reads$name, sc1meta$sampleID))==0){
+                            reads_name <- paste(head(reads$name, n=5),
+                                                collapse=', ')
+                            cells_name <- paste(head(sc1meta$sampleID, n=5),
+                                                collapse=', ')
+                            stop("The reads names are not same format as
+                                     the cell names.\n",
+                                 "The top 5 reads names: ",
+                                 reads_name,
+                                 "\n",
+                                 "The top 5 cell names: ",
+                                 cells_name)
+                        }
+                    }
+                    close(tbx)
+                    on.exit()
+                }else{
+                    stop('fragments file are missing for ', fragment.path,
+                         '. Please check it by ?Fragment and ?UpdatePath')
+                }
+            }
+        }
+    }
+    
     # save data
     sc1conf <- scConf
     sc1conf$dimred <- FALSE
@@ -353,6 +418,11 @@ makeShinyFiles <- function(
             if (length(annotations) < 1) {
                 stop("scATAC annotation data are not available.")
             }
+            if(any(!c('gene_name', 'tx_id') %in% colnames(mcols(annotations)))){
+                stop('gene_name and tx_id must exist as metadata for scATAC ',
+                     'annotations. Check it by Annotation(obj[["',
+                     atacAssayName, '"]])')
+            }
             if (length(links) < 1) {
                 warning("scATAC links data are not available.")
             }
@@ -401,13 +471,17 @@ makeShinyFiles <- function(
                             seqlevelsStyle(reads)<-seq_x_style[1]
                             if(length(intersect(
                                 reads$name, sc1meta$sampleID))==0){
+                                reads_name <- paste(head(reads$name, n=5),
+                                                    collapse=', ')
+                                cells_name <- paste(head(sc1meta$sampleID, n=5),
+                                                    collapse=', ')
                                 stop("The reads names are not same format as
                                      the cell names.\n",
                                      "The top 5 reads names: ",
-                                     head(reads$name, n=5),
+                                     reads_name,
                                      "\n",
                                      "The top 5 cell names: ",
-                                     head(sc1meta$sampleID, n=5))
+                                     cells_name)
                              }
                             reads.grp <- lapply(grp, function(.grp){
                                 lapply(split(

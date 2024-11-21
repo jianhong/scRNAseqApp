@@ -77,7 +77,6 @@ scDRgene <- function(
         coord <- as.list(coord)
         coord[['start']] <- as.integer(coord[['start']])
         coord[['end']] <- as.integer(coord[['end']])
-        saveRDS(as.list(environment()), 'tmp.rds')
         coordExp <- readATACdataByCoor(
             dataset,
             coord = coord,

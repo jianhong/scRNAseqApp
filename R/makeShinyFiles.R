@@ -224,11 +224,11 @@ makeShinyFiles <- function(
                             c("seqnames", "start", "end", "name", "score")
                         if(length(intersect(
                             reads$name,
-                            names(fragmentNameMapList[[k]])))==0){
+                            fragmentNameMapList[[k]]))==0){
                             reads_name <- paste(head(reads$name, n=5),
                                                 collapse=', ')
                             cells_name <- paste(head(
-                                names(fragmentNameMapList[[k]]),
+                                fragmentNameMapList[[k]],
                                                      n=5),
                                                 collapse=', ')
                             stop("The fragment ", k,
@@ -498,27 +498,6 @@ makeShinyFiles <- function(
                                 c("seqnames", "start", "end", "name", "score")
                             reads <- GRanges(reads)
                             seqlevelsStyle(reads)<-seq_x_style[1]
-                            if(length(intersect(
-                                reads$name,
-                                names(fragmentNameMapList[[k]])))==0){
-                                reads_name <- paste(head(reads$name, n=5),
-                                                    collapse=', ')
-                                cells_name <- paste(head(
-                                    names(fragmentNameMapList[[k]]),
-                                                         n=5),
-                                                    collapse=', ')
-                                stop("The fragment ", k,
-                                     " names are not same format as ",
-                                     "the cell names or the vector of map for",
-                                     ".\nThe top 5 fragment names: ",
-                                     reads_name,
-                                     "\n",
-                                     "The top 5 cell names: ",
-                                     cells_name,
-                                     '\nPlease use the parameter ',
-                                     'fragmentNameMapList',
-                                     ' to map the correct name.')
-                             }
                             reads.grp <- lapply(grp, function(.grp){
                                 lapply(split(
                                     reads,

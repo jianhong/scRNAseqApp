@@ -23,6 +23,9 @@
 #' @param default.symbol character(1L) specifying the default rownames to be used. If use default, the gene symbols will be the row names of the assay. If one column name of the meta.feature of the assay is supplied, the function will try to extract the symbols from the meta.feature slot of the assay. 
 #' @param binSize number of bps for each bin for ATAC fragment coverage. Used
 #' to reduce the file size of bigwig.
+#' @param fragmentNameMap named character vector. The names of the vector are
+#' the cell names (column names of the assay). 
+#' The vector contains the name of the fragment.
 #' @importFrom SeuratObject Reductions Idents Assays DefaultAssay GetAssayData
 #'  `DefaultAssay<-` VariableFeatures Misc `Misc<-` Embeddings `Idents<-`
 #' @importFrom Seurat FindAllMarkers FindVariableFeatures ScaleData
@@ -51,7 +54,8 @@ createDataSet <- function(
         LOCKER = FALSE,
         datafolder = "data",
         default.symbol = 'rownames',
-        binSize = 1) {
+        binSize = 1,
+        fragmentNameMap) {
     stopifnot(file.exists(datafolder))
     stopifnot(is(seu, "Seurat"))
     stopifnot(is(appconf, "APPconf"))
@@ -202,7 +206,8 @@ createDataSet <- function(
         defaultGene2 = markers[2],
         default.multigene = markers,
         default.symbol = default.symbol,
-        binSize = binSize
+        binSize = binSize,
+        fragmentNameMap = fragmentNameMap
     )
     
     .globals$datafolder <- datafolder

@@ -28,9 +28,11 @@
 #'   this number to reduce memory consumption. Should not be less than 10
 #' @param binSize number of bps for each bin for ATAC fragment coverage. Used
 #' to reduce the file size of bigwig.
-#' @param fragmentNameMap named character vector. The names of the vector are
-#' the cell names (column names of the assay). 
-#' The vector contains the name of the fragment.
+#' @param fragmentNameMapList list of named character vector. 
+#' The name map list must be the same order as the fragment list in the object.
+#' For each element of the list,
+#' the names of the vector are the name of the fragment and
+#' the vector contains the cell names (column names of the assay). 
 #' @return data files required for shiny app
 #' @importFrom IRanges tile Views viewMeans ranges nearest
 #' @importFrom SeuratObject GetAssayData VariableFeatures Embeddings Reductions
@@ -58,7 +60,7 @@ makeShinyFiles <- function(
         default.symbol = 'rownames',
         chunkSize = 500,
         binSize = 1,
-        fragmentNameMap) {
+        fragmentNameMapList) {
     stopifnot(is.numeric(binSize))
     ### Preprocessing and checks
     # Generate defaults for assayName / slot
@@ -165,15 +167,6 @@ makeShinyFiles <- function(
     }
     
     ## check for ATAC
-    if (missing(fragmentNameMap)){
-        fragmentNameMap <- sc1meta$sampleID
-        names(fragmentNameMap) <- sc1meta$sampleID
-    }else{
-        stopifnot(
-            'fragmentNameMap does not contain most of cell names' =
-            sum(sc1meta$sampleID  %in% names(fragmentNameMap))/
-                length(sc1meta$sampleID)>0.5)
-    }
     if (!missing(atacAssayName)) {
         if (atacAssayName %in% Assays(obj)) {
             peaks <- obj[[atacAssayName]]
@@ -203,6 +196,18 @@ makeShinyFiles <- function(
             })
             ## get fragments for each cell and group
             fragments <- peaks@fragments #GetAssayData(obj, layer = "fragments")
+            if (missing(fragmentNameMapList)){
+                fragmentNameMapList <- sc1meta$sampleID
+                names(fragmentNameMapList) <- sc1meta$sampleID
+                fragmentNameMapList <- rep(list(fragmentNameMapList),
+                                           length(fragments))
+            }
+            stopifnot(is.list(fragmentNameMapList))
+            null <- lapply(fragmentNameMapList, function(.ele){
+                stopifnot(
+                    'fragmentNameMapList does not contain the cell names' =
+                        sum(sc1meta$sampleID  %in% names(.ele)>0))
+            })
             ## check reads name
             for(k in seq_along(fragments)){
                 fragment.path <- fragments[[k]]@path
@@ -214,20 +219,24 @@ makeShinyFiles <- function(
                         colnames(reads) <- 
                             c("seqnames", "start", "end", "name", "score")
                         if(length(intersect(
-                            reads$name, fragmentNameMap))==0){
+                            reads$name,
+                            names(fragmentNameMapList[[k]])))==0){
                             reads_name <- paste(head(reads$name, n=5),
                                                 collapse=', ')
-                            cells_name <- paste(head(fragmentNameMap,
+                            cells_name <- paste(head(
+                                names(fragmentNameMapList[[k]]),
                                                      n=5),
                                                 collapse=', ')
-                            stop("The fragment names are not same format as
-                                     the cell names or the map vector.\n",
+                            stop("The fragment ", k,
+                                 " names are not same format as",
+                                 " the cell names or the map vector.\n",
                                  "The top 5 fragment names: ",
                                  reads_name,
                                  "\n",
                                  "The top 5 cell names: ",
                                  cells_name,
-                                 '\nPlease use the parameter fragmentNameMap',
+                                 '\nPlease use the parameter ',
+                                 'fragmentNameMapList',
                                  ' to map the correct name.')
                         }
                     }
@@ -486,28 +495,33 @@ makeShinyFiles <- function(
                             reads <- GRanges(reads)
                             seqlevelsStyle(reads)<-seq_x_style[1]
                             if(length(intersect(
-                                reads$name, fragmentNameMap))==0){
+                                reads$name,
+                                names(fragmentNameMapList[[k]])))==0){
                                 reads_name <- paste(head(reads$name, n=5),
                                                     collapse=', ')
-                                cells_name <- paste(head(fragmentNameMap,
+                                cells_name <- paste(head(
+                                    names(fragmentNameMapList[[k]]),
                                                          n=5),
                                                     collapse=', ')
-                                stop("The fragment names are not same format as
-                                     the cell names or the vector of map.\n",
-                                     "The top 5 fragment names: ",
+                                stop("The fragment ", k,
+                                     " names are not same format as ",
+                                     "the cell names or the vector of map for",
+                                     ".\nThe top 5 fragment names: ",
                                      reads_name,
                                      "\n",
                                      "The top 5 cell names: ",
                                      cells_name,
                                      '\nPlease use the parameter ',
-                                     'fragmentNameMap to map the correct name.')
+                                     'fragmentNameMapList',
+                                     ' to map the correct name.')
                              }
                             reads.grp <- lapply(grp, function(.grp){
                                 lapply(split(
                                     reads,
                                     sc1meta[[.grp]][
-                                        match(reads$name,
-                                              fragmentNameMap[sc1meta$sampleID]
+                                        match(fragmentNameMapList[[k]][
+                                            reads$name],
+                                            sc1meta$sampleID
                                               )]),
                                     function(.e){
                                         coverage(.e, weight = .e$score)

@@ -19,7 +19,8 @@ createDataSet(
   LOCKER = FALSE,
   datafolder = "data",
   default.symbol = "rownames",
-  binSize = 1
+  binSize = 1,
+  fragmentNameMap
 )
 }
 \arguments{
@@ -55,6 +56,10 @@ Default is to use the "data" layer}
 
 \item{binSize}{number of bps for each bin for ATAC fragment coverage. Used
 to reduce the file size of bigwig.}
+
+\item{fragmentNameMap}{named character vector. The names of the vector are
+the cell names (column names of the assay).
+The vector contains the name of the fragment.}
 }
 \value{
 The updated Seurat object.

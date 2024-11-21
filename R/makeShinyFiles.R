@@ -224,11 +224,11 @@ makeShinyFiles <- function(
                             c("seqnames", "start", "end", "name", "score")
                         if(length(intersect(
                             reads$name,
-                            fragmentNameMapList[[k]]))==0){
+                            names(fragmentNameMapList[[k]])))==0){
                             reads_name <- paste(head(reads$name, n=5),
                                                 collapse=', ')
                             cells_name <- paste(head(
-                                fragmentNameMapList[[k]],
+                                names(fragmentNameMapList[[k]]),
                                                      n=5),
                                                 collapse=', ')
                             stop("The fragment ", k,

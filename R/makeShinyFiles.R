@@ -206,10 +206,11 @@ makeShinyFiles <- function(
             stopifnot(
                 'The length of fragmentNameMapList is not same as the fragment'
                       =length(fragmentNameMapList)==length(fragments))
-            null <- lapply(fragmentNameMapList, function(.ele){
-                stopifnot(
-                    'fragmentNameMapList does not contain the cell names' =
-                        sum(sc1meta$sampleID  %in% names(.ele)>0))
+            null <- lapply(seq_along(fragmentNameMapList), function(k){
+                if(sum(sc1meta$sampleID  %in% fragmentNameMapList[[k]])==0){
+                    stop('fragmentNameMapList[[',
+                         k, ']] does not contain the cell names')
+                }
             })
             ## check reads name
             for(k in seq_along(fragments)){

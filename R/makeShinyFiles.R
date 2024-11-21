@@ -203,6 +203,9 @@ makeShinyFiles <- function(
                                            length(fragments))
             }
             stopifnot(is.list(fragmentNameMapList))
+            stopifnot(
+                'The length of fragmentNameMapList is not same as the fragment'
+                      =length(fragmentNameMapList)==length(fragments))
             null <- lapply(fragmentNameMapList, function(.ele){
                 stopifnot(
                     'fragmentNameMapList does not contain the cell names' =

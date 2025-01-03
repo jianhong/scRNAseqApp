@@ -1,145 +1,155 @@
-CHANGES IN VERSION 1.17.6
+CHANGES IN VERSION 1.7.7
+-------------------------
+
+    o Update email address.
+    
+CHANGES IN VERSION 1.7.6
 -------------------------
 
     o Add fragmentNameMap to createDataset.
     
-CHANGES IN VERSION 1.17.5
+CHANGES IN VERSION 1.7.6
+-------------------------
+
+    o Add fragmentNameMap to createDataset.
+    
+CHANGES IN VERSION 1.7.5
 -------------------------
 
     o Optimize read and save ATAC peak matrix.
     
-CHANGES IN VERSION 1.17.4
+CHANGES IN VERSION 1.7.4
 -------------------------
 
     o Add module ExplorerAcc.
     
-CHANGES IN VERSION 1.17.3
+CHANGES IN VERSION 1.7.3
 -------------------------
 
     o check parameters before creating dataset.
     
-CHANGES IN VERSION 1.17.2
+CHANGES IN VERSION 1.7.2
 -------------------------
 
     o add binSize parameter for atac bigwig files.
     
-CHANGES IN VERSION 1.17.1
+CHANGES IN VERSION 1.7.1
 -------------------------
 
     o fix the bug if no signals for atac coverage and invalid filenames.
     
-CHANGES IN VERSION 1.15.22
+CHANGES IN VERSION 1.5.22
 -------------------------
 
     o add warning message to log file when the atac bigwig files are not available.
     
-CHANGES IN VERSION 1.15.21
+CHANGES IN VERSION 1.5.21
 -------------------------
 
     o fix a bug that counter table is not available.
     
-CHANGES IN VERSION 1.15.20
+CHANGES IN VERSION 1.5.20
 -------------------------
 
     o Add csv format for figure data download.
     
-CHANGES IN VERSION 1.15.19
+CHANGES IN VERSION 1.5.19
 -------------------------
 
     o Try to handle the error `Timeout was reached: [www.ncbi.nlm.nih.gov] SSL/TLS connection timeout`.
     
-CHANGES IN VERSION 1.15.18
+CHANGES IN VERSION 1.5.18
 -------------------------
 
     o add protection of column sampleID in cell info editor funcitons.
     
-CHANGES IN VERSION 1.15.17
+CHANGES IN VERSION 1.5.17
 -------------------------
 
     o Error handle if metadata contains '|'.
     o add cell info editor funcitons.
     
-CHANGES IN VERSION 1.15.16
+CHANGES IN VERSION 1.5.16
 -------------------------
 
     o add more download format.
     
-CHANGES IN VERSION 1.15.15
+CHANGES IN VERSION 1.5.15
 -------------------------
 
     o fix the low resolution of the plot.
     
-CHANGES IN VERSION 1.15.14
+CHANGES IN VERSION 1.5.14
 -------------------------
 
     o fix the dotplot download issue.
     
-CHANGES IN VERSION 1.15.13
+CHANGES IN VERSION 1.5.13
 -------------------------
 
     o add detailed fontsize and font family control.
     o change the dotplot from ggplot2 to complexheatmap.
     
-CHANGES IN VERSION 1.15.12
+CHANGES IN VERSION 1.5.12
 -------------------------
 
     o order the stacked violin plots by input order.
     
-CHANGES IN VERSION 1.15.11
+CHANGES IN VERSION 1.5.11
 -------------------------
 
     o add reorder function for splitBy for violin plots.
     
-CHANGES IN VERSION 1.15.10
+CHANGES IN VERSION 1.5.10
 -------------------------
 
     o add color picker.
     o add splitBy for violin plots.
     o fix the issue that refresh explorer will lost the subset info.
     
-CHANGES IN VERSION 1.15.9
+CHANGES IN VERSION 1.5.9
 -------------------------
 
     o add help video playlist.
     
-CHANGES IN VERSION 1.15.8
+CHANGES IN VERSION 1.5.8
 -------------------------
 
     o add functionality to allow different labels for cell info.
     o allow subset groups for explorer.
     
-CHANGES IN VERSION 1.15.7
+CHANGES IN VERSION 1.5.7
 -------------------------
 
     o fix the issue of reload everything when edit the cell info.
     
-CHANGES IN VERSION 1.15.6
+CHANGES IN VERSION 1.5.6
 -------------------------
 
     o Editable cell info during login mode.
     o Hiden the cells when check the hidden box.
     
-CHANGES IN VERSION 1.15.5
+CHANGES IN VERSION 1.5.5
 -------------------------
 
     o Response to the download width and height.
     
-CHANGES IN VERSION 1.15.4
+CHANGES IN VERSION 1.5.4
 -------------------------
 
     o Access tab via query string.
     
-CHANGES IN VERSION 1.15.3
+CHANGES IN VERSION 1.5.3
 -------------------------
 
     o Access data via data title.
     
-CHANGES IN VERSION 1.15.2
+CHANGES IN VERSION 1.5.2
 -------------------------
 
     o Add favicon.
     
-CHANGES IN VERSION 1.15.1
+CHANGES IN VERSION 1.5.1
 -------------------------
 
     o Fix the unique vistor counter.

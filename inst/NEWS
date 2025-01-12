@@ -1,3 +1,8 @@
+CHANGES IN VERSION 1.7.8
+-------------------------
+
+    o Remove the import of X11Fonts.
+    
 CHANGES IN VERSION 1.7.7
 -------------------------
 

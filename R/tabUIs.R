@@ -6,10 +6,14 @@ tabsubTitleUI <- function(id, title, description){
     )
 }
 
-#' @importFrom grDevices pdfFonts X11Fonts
+#' @importFrom grDevices pdfFonts
 fontUI <- function(id, fontsizePrefix='plot'){
     pdfs <- names(pdfFonts())
-    x11s <- names(X11Fonts())
+    if(capabilities()[["X11"]]){
+        x11s <- names(grDevices::X11Fonts())
+    } else {
+        x11s <- c()
+    }
     if(length(pdfs)>0){
         if(length(x11s)>0){
             family <- intersect(pdfs, x11s)

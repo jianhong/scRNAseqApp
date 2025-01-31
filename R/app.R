@@ -45,9 +45,9 @@ scRNAseqApp <- function(
             package = 'scRNAseqApp'),
         footer = tagList(
             HTML("&copy;"),
-            "2020 -",
+            "2024 -",
             format(Sys.Date(), "%Y"),
-            "jianhong@duke"
+            "jianhong@morgridge"
         ),
         maxRequestSize = 1073741824,
         timeout = 30,

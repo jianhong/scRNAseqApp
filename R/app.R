@@ -14,7 +14,7 @@
 #' @param use_bs_themer logical(1). Used to determine the theme.
 #' @param showHelpVideo logical(1) or character(1). 
 #' Show help videos in homepage or not. If an url is provided, the
-#' url will be embeded as a iframe element.
+#' url will be embedded as a iframe element.
 #' @param ... parameters can be passed to shinyApp except ui and server.
 #' @import shiny
 #' @importFrom utils packageVersion packageDescription read.delim

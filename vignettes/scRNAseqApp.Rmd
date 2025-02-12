@@ -154,7 +154,7 @@ The basic information of the tools are list in the following tables
 | UCSC Cell Browser | JavaScript,Python,R  | GPL-3   | 3   | 1 | 39 | 46       |
 | Vitessce       | JavaScript,Python,R     | MIT     | 92  | 6 | 23 | 2        |
 | WASP           | R,python   |         | 2      | 1        | 0     | 3        |
-[^2]: the package contribute paritial to the citation
+[^2]: the package contribute partial to the citation
 [^3]: citation is from NASQAR
 
 | Tool              | source code                                              |

@@ -35,7 +35,7 @@ webstatsServer <- function(id) {
         })
         
         ## stats
-        cache <- file.path(.globals$app_path, "www/cache.rds")
+        cache <- file.path(.globals$app_path, "www", "cache.rds")
         
         freegeoip <- function(ip) {
             if (file.exists(cache)) {

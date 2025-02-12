@@ -55,7 +55,7 @@
 
 \item{drop}{see \link[base]{drop}}
 
-\item{X}{an APPconf cobject.}
+\item{X}{an APPconf object.}
 
 \item{FUN}{function used by \code{lapply}}
 

@@ -47,7 +47,7 @@ Default to 30. 0 to disable.}
 
 \item{showHelpVideo}{logical(1) or character(1).
 Show help videos in homepage or not. If an url is provided, the
-url will be embeded as a iframe element.}
+url will be embedded as a iframe element.}
 
 \item{...}{parameters can be passed to shinyApp except ui and server.}
 }

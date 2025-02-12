@@ -96,20 +96,23 @@ makeShinyFiles <- function(
             useRownames <- FALSE
         }
     }
-    defGenes <- VariableFeatures(obj)[seq.int(10)]
+    defGenes <- VariableFeatures(obj)
+    if(length(defGenes)>10) defGenes <- defGenes[seq.int(10)]
     if (is.na(defGenes[1])) {
         warning(
             "Variable genes for seurat object not found! Have you ",
             "ran `FindVariableFeatures` or `SCTransform`?"
         )
-        defGenes <- gex.rownm[seq.int(10)]
+        defGenes <- gex.rownm
+        if(length(defGenes)>10) defGenes <- defGenes[seq.int(10)]
     }
     if(!useRownames){
         if(any(oldRN %in% gex.rownm)){
             defGenes <- gex.rownm[match(defGenes, oldRN)]
             defGenes <- defGenes[!is.na(defGenes)]
             if(length(defGenes)==0){
-                defGenes <- gex.rownm[seq.int(10)]
+                defGenes <- gex.rownm
+                if(length(defGenes)>10) defGenes <- defGenes[seq.int(10)]
             }
         }
     }

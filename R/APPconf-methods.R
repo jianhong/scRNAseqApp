@@ -152,7 +152,7 @@ if (length(getGeneric("lapply")) == 0) {
 }
 #' @rdname APPconf-methods
 #' @export
-#' @param X an APPconf cobject.
+#' @param X an APPconf object.
 #' @param FUN function used by `lapply`
 #' @importFrom methods slotNames
 #' @examples

@@ -224,6 +224,13 @@ aboutServer <- function(id, dataSource, optCrt) {
             }else{
                 h5('No reference for current data.')
             })
+        observeEvent(dataSource()$available_datasets, {
+            updateSelectInput(inputId = 'selectedDatasets',
+                    label = NULL,
+                    choices = dataSource()$available_datasets,
+                    selected = dataSource()$dataset
+            )
+        })
         observeEvent(input$sbtn, {
             if (input$search != '' && input$search != "Type key words here") {
                 showNotification(

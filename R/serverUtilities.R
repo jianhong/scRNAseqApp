@@ -386,6 +386,7 @@ updateGeneExprDotPlotUI <-
                 ))
             })
             observeEvent(input[[paste0("CellInfoConfirmDelete",  postfix)]], {
+                removeModal()
                 ## delete current cell info
                 updated <- updateMetaData(
                     dataset = dataSource()$dataset,

@@ -120,6 +120,22 @@ updateSearch <- function(
                             inputId='s_res_flag',
                             value = TRUE)
     })
+    if(key_words %in% names(getTokenList())){## is token
+        token <- key_words
+        dataset <- getTokenList()[[token]]
+        datasets <- listDatasets(privilege='all', named=TRUE)
+        output$search_res <- renderUI(
+            tags$ul(
+                class='about-ul',
+                tags$li(
+                    tags$a(
+                        href=paste0('?token=', token),
+                        names(datasets)[datasets==dataset])
+                )
+            )
+        )
+        return(invisible())
+    }
     if( isGene(
         key_words,
         datasets,

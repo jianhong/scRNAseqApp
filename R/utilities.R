@@ -17,6 +17,11 @@ parseQuery <- function(query, defaultDataset){
         if (query[["token"]] %in% names(token)) {
             defaultDataset <- token[[query[['token']]]]
             from <- 'token'
+        }else{
+            if (!is.null(query[['data']])) {
+                defaultDataset <- query[['data']]
+                from <- 'data'
+            }
         }
     } else {
         if (!is.null(query[['data']])) {
@@ -94,6 +99,14 @@ g_legend <- function(a.gplot){
     legend
 }
 
+getLogToken <- function(session){
+    query <- getQueryString(session = session)
+    if(!is.null(query$token)){
+        gsub('\"', "", query$token)
+    } else {
+        NULL
+    }
+}
 # update search results
 updateSearch <- function(
         key_words, datasets,
@@ -143,10 +156,21 @@ updateSearch <- function(
                 tags$ul(
                     class='about-ul',
                     apply(res_data, 1, function(.ele){
+                        # add token if logged
+                        token <- getLogToken(session = session)
+                        if(!is.null(token)){
+                            token <- paste0('&token=', token)
+                        }
                         return(tags$li(
                             tags$a(
-                                href=paste0('?data=', .ele[1]),
-                                .ele[2])))
+                                href=paste0('?data=', .ele[1], token),
+                                .ele[2],
+                                onclick = 
+                                    paste0('event.preventDefault();',
+                                    'Shiny.onInputChange(',
+                                    '\"search_results_select_button\",  \"',
+                                    .ele[1],'\");window.scrollTo(0, 0);'))
+                            ))
                     })
                 )
             )
@@ -386,7 +410,13 @@ checkGene <- function(
                         tags$a(href=paste0(
                             '?data=', .appconfs$id, '&gene=',
                             paste(names(.genenames), collapse=";")),
-                            .appconfs$title),
+                            .appconfs$title, 
+                            onclick = 
+                                paste0('event.preventDefault();',
+                                       'Shiny.onInputChange(',
+                                       '\"search_results_select_button\",  \"',
+                                       .appconfs$id,
+                                       '\");window.scrollTo(0, 0);')),
                         wp$UI
                     ),
                     PLOT = wp$PLOT,

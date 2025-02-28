@@ -32,7 +32,7 @@ aboutUI <- function(
                    defaultDataset <- datasets[defaultDataset]
                 }else{
                     ## something wrong here
-                    defaultDataset <- datasets[1]
+                    defaultDataset <- datasets[1] 
                 }
             }
         }
@@ -45,6 +45,7 @@ aboutUI <- function(
                     label = NULL,
                     choices = listDatasets(
                         key = datasets,
+                        privilege='all',
                         named = TRUE),
                     selected = defaultDataset,
                     width = "90vw"

@@ -328,6 +328,15 @@ scRNAseqApp <- function(
             if(p_query['from']=='data'){
                 session$userData[["defaultdata_init"]] <- TRUE
                 query_has_results <- TRUE
+                if(p_query["defaultDataset"] %in% dataSource$available_datasets){
+                    defaultDataset <- p_query["defaultDataset"]
+                    updateSelectInput(
+                        session,
+                        'selectedDatasets',
+                        choices = dataSource$available_datasets,
+                        selected = p_query["defaultDataset"]
+                    )
+                }
             }else{
                 if(p_query['from']=='token'){
                     dataSource$token <- query[["token"]]
@@ -376,6 +385,11 @@ scRNAseqApp <- function(
                 })
             }
         })
+        ## when click the search results
+        observeEvent(input$search_results_select_button, {
+            updateSelectInput(session, 'selectedDatasets',
+                              selected=input$search_results_select_button)
+        })
         ## change dataset
         observeEvent(input$selectedDatasets, {
             ## in case the data is deleted, refresh the datasets
@@ -391,7 +405,8 @@ scRNAseqApp <- function(
                         input$selectedDatasets)) {
                         dataSource$Logged <- TRUE
                         dataSource$auth$privilege <- 
-                            input$selectedDatasets
+                            unique(c(dataSource$auth$privilege,
+                                     input$selectedDatasets))
                         res <- updateDatasetForToken(
                             input$selectedDatasets,
                             dataSource$available_datasets)

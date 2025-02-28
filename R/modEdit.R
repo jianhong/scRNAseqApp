@@ -15,7 +15,11 @@ editUI <- function (id) {
                     label = "Refresh available data",
                     icon = icon("refresh"),
                     inline = TRUE
-                )
+                ),
+                textInput(ns('search'),
+                             label="search",
+                             value='',
+                             placeholder='keywords to search')
             ),
             column(
                 width = 6,
@@ -42,6 +46,11 @@ editUI <- function (id) {
                 textAreaInput(
                     ns("title"),
                     label = "Title for the data"),
+                checkboxInput(
+                    ns("token"),
+                    label = "Use token to access the data",
+                    value = FALSE
+                ),
                 checkboxInput(
                     ns("locker"),
                     label = "Require privilege for the data",
@@ -179,7 +188,9 @@ editServer <- function(id) {
             markers = NULL,
             metaAdditional = NULL,
             ref = NULL,
-            locker = TRUE
+            locker = TRUE,
+            token = NULL,
+            tokenList = NULL
         )
         updateSelectInput(
             session,
@@ -187,11 +198,28 @@ editServer <- function(id) {
             choices = getDataSets(privilege = "all"),
             selected = getDataSets(privilege = "all")[1])
         observeEvent(input$refresh, {
+            ds <- getDataSets(privilege = "all")
             updateSelectInput(
                 session,
                 "dir",
-                choices = getDataSets(privilege = "all"),
-                selected = getDataSets(privilege = "all")[1])
+                choices = ds,
+                selected = ds[1])
+        })
+        observeEvent(input$search, {
+            if(nchar(input$search)>3){
+                ds <- getDataSets(privilege = "all")
+                key <- strsplit(input$search, '[^0-9a-zA-Z]')[[1]]
+                ad <- vapply(ds, FUN=function(.ele){
+                    .ele <- strsplit(.ele, '[^0-9a-zA-Z]')[[1]]
+                    sum(apply(adist(key, .ele), 2, min))
+                }, FUN.VALUE = numeric(1L))
+                updateSelectInput(
+                    session,
+                    "dir",
+                    choices = ds,
+                    selected = ds[which.min(ad)[1]]
+                )
+            }
         })
         observeEvent(input$multigene, {
             if (!is.list(global$markers)) {
@@ -359,6 +387,16 @@ editServer <- function(id) {
                         updateCheckboxInput(
                             session, "locker",
                             value = global$locker)
+                        global$tokenList <- getTokenList()
+                        if(any(global$tokenList==input$dir)){
+                            global$token <- names(global$tokenList)[
+                                which(global$tokenList==input$dir)]
+                        }
+                        if(length(global$token)){
+                            updateCheckboxInput(
+                                session, "token",
+                                value = TRUE)
+                        }
                     }, "Loading data", "Done loading!", duration = 1)
                 }
             }
@@ -430,6 +468,19 @@ editServer <- function(id) {
                     setLocker(input$dir)
                 } else{
                     removeLocker(input$dir)
+                }
+                if (length(global$token)) {
+                    if(nchar(global$token)>=.globals$tokenMinLen){
+                        setToken(input$dir, global$token)
+                    }else{
+                        removeToken(input$dir)
+                        global$token <- NULL
+                        global$tokenList <- getTokenList()
+                    }
+                } else {
+                    removeToken(input$dir)
+                    global$token <- NULL
+                    global$tokenList <- getTokenList()
                 }
             }, "Starting rollback", "Rollback done!")
         })
@@ -568,6 +619,13 @@ editServer <- function(id) {
                     setLocker(input$dir)
                 } else{
                     removeLocker(input$dir)
+                }
+                if (input$token) {
+                    setToken(input$dir, global$token)
+                } else {
+                    removeToken(input$dir)
+                    global$token <- NULL
+                    global$tokenList <- getTokenList()
                 }
             }, "Starting Update.", "Update done!")
         })

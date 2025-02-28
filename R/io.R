@@ -42,6 +42,38 @@ removeLocker <- function(folder) {
     unlink(file.path(.globals$datafolder, folder, .globals$filenames$locker))
     updateConfigTblLocker(folder, FALSE)
 }
+
+generateToken <- function(){
+    tokens <- getTokenList()
+    token <- paste(sample(c(letters, LETTERS, seq(0, 9)),
+                          size=12, replace = TRUE),
+                   collapse = '')
+    while (token %in% names(tokens)) {
+        token <- paste(sample(c(letters, LETTERS, seq(0, 9)),
+                              size=12, replace = TRUE),
+                       collapse = '')
+    }
+    return(token)
+}
+setToken <- function(folder, token){
+    if(is.null(token)){
+        token <- ''
+    }
+    if(nchar(token)<.globals$tokenMinLen){
+        token <- generateToken()
+    }
+    writeLines(
+        token,
+        file.path(.globals$datafolder, folder, .globals$filenames$token)
+    )
+    adminMsg(paste0("new token is: ", token,
+                   "; use link: /?token=", token),
+             "message", duration = 30)
+}
+removeToken <- function(folder){
+    unlink(file.path(.globals$datafolder, folder, .globals$filenames$token))
+}
+
 writeMisc <- function(misc, folder, slot) {
     if (!is.null(misc)) {
         saveData(misc, folder, slot)

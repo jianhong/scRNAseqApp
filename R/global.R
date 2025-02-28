@@ -23,6 +23,7 @@
     monocle = "monocle3_pseudotime.rds",
     slingshot = "slingshot.rds"
 )
+.globals$tokenMinLen <- 8 # minimal token length
 .globals$h5fGrpPrefix <- 'grp' #gene expression table prefix
 .globals$h5fDataPrefix <- 'data'
 .globals$h5fGrp <- paste(.globals$h5fGrpPrefix, .globals$h5fDataPrefix, sep="/") 

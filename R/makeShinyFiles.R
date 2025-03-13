@@ -33,6 +33,7 @@
 #' For each element of the list,
 #' the names of the vector are the name of the fragment and
 #' the vector contains the cell names (column names of the assay). 
+#' You can try \link{extractFragmentNameMapList}.
 #' @return data files required for shiny app
 #' @importFrom IRanges tile Views viewMeans ranges nearest
 #' @importFrom SeuratObject GetAssayData VariableFeatures Embeddings Reductions
@@ -500,7 +501,12 @@ makeShinyFiles <- function(
                             colnames(reads) <- 
                                 c("seqnames", "start", "end", "name", "score")
                             reads <- GRanges(reads)
-                            seqlevelsStyle(reads)<-seq_x_style[1]
+                            tryCatch({
+                                seqlevelsStyle(reads)<-seq_x_style[1]
+                            }, error = function(e){
+                                message(e, '\nCannot convert the seqstyle to ',
+                                        seq_x_style[1],' for ', region[i])
+                            })
                             reads.grp <- lapply(grp, function(.grp){
                                 lapply(split(
                                     reads,
@@ -665,4 +671,33 @@ makeShinyFiles <- function(
         }
     }
     return(sc1conf)
+}
+
+#' Extract fragment name map
+#' @description
+#' Try to extract cell name information. It will be used to map the fragment cell
+#' name to the object cell name.
+#' @param obj input single-cell object for Seurat (v3+)
+#' @param atacAssayName assay in single-cell data object to use for plotting
+#' open chromatin.
+#' @return A list of fragment name map.
+#' @importFrom methods slotNames
+#' @export
+#' @examples
+#' library(Seurat)
+#' #library(Signac)
+#' #fnm <- extractFragmentNameMapList(atac_small, 'peaks')
+#' 
+
+extractFragmentNameMapList <- function(obj, atacAssayName){
+    stopifnot(is(obj, "Seurat"))
+    fragments <- obj[[atacAssayName]]@fragments #GetAssayData(obj, layer = "fragments")
+    if(length(fragments)==0) stop('No fragments available!')
+    fragmentNameMapList <- lapply(fragments, function(.ele) {
+        if(!'cells' %in% slotNames(.ele)) 
+            stop('cells is not a slotName for the fragments!')
+        n=names(.ele@cells)
+        names(n) <- .ele@cells
+        n
+    })
 }

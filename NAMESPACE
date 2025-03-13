@@ -3,6 +3,7 @@
 export(APPconf)
 export(createAppConfig)
 export(createDataSet)
+export(extractFragmentNameMapList)
 export(scInit)
 export(scRNAseqApp)
 exportClasses(APPconf)

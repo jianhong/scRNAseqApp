@@ -61,7 +61,8 @@ to reduce the file size of bigwig.}
 The name map list must be the same order as the fragment list in the object.
 For each element of the list,
 the names of the vector are the name of the fragment and
-the vector contains the cell names (column names of the assay).}
+the vector contains the cell names (column names of the assay).
+You can try \link{extractFragmentNameMapList}.}
 }
 \value{
 The updated Seurat object.

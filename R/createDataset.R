@@ -28,6 +28,7 @@
 #' For each element of the list,
 #' the names of the vector are the name of the fragment and
 #' the vector contains the cell names (column names of the assay). 
+#' You can try \link{extractFragmentNameMapList}.
 #' @importFrom SeuratObject Reductions Idents Assays DefaultAssay GetAssayData
 #'  `DefaultAssay<-` VariableFeatures Misc `Misc<-` Embeddings `Idents<-`
 #' @importFrom Seurat FindAllMarkers FindVariableFeatures ScaleData

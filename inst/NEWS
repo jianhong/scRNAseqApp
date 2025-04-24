@@ -1,4 +1,4 @@
-CHANGES IN VERSION 1.7.15
+CHANGES IN VERSION 1.9.1
 -------------------------
 
     o Fix the issue for ATAC track plot if there is no 'type' in peak annotation

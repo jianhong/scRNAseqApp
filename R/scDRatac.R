@@ -205,6 +205,9 @@ LinkPlot <- function(
     if (length(x = links) == 0) {
         return(NULL)
     }
+    if (!'score' %in% colnames(mcols(links))){
+        return(NULL)
+    }
     ## re-scale scores to fit the color bar (.1-.9)
     min.color <- min(0, min(links$score))
     oldRange <- range(
@@ -479,7 +482,7 @@ reformat_annotations <- function(
 ) {
     total.width <- end.pos - start.pos
     tick.freq <- total.width / 50
-    for(i in c('tx_id', 'gene_name', 'type')){
+    for(i in c('tx_id', 'gene_name')){
         if(!i %in% colnames(mcols(annotation))){
             stop(i, ' is missing from annotation.',
                  ' Please reprepare the annotations.')
@@ -490,7 +493,10 @@ reformat_annotations <- function(
             annotation$gene_biotype <- NA
         }
     }
-    annotation <- unname(annotation[annotation$type == "exon"])
+    if('type' %in% colnames(mcols(annotation))){
+        annotation <- annotation[annotation$type == "exon"]
+    }
+    annotation <- unname(annotation)
     exons <- as.data.frame(x = annotation)
     if (collapse_transcript) {
         annotation <- split(

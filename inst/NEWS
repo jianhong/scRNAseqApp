@@ -1,3 +1,9 @@
+CHANGES IN VERSION 1.7.15
+-------------------------
+
+    o Fix the issue for ATAC track plot if there is no 'type' in peak annotation
+      and no 'score' in links.
+    
 CHANGES IN VERSION 1.7.14
 -------------------------
 

@@ -591,8 +591,9 @@ updateCellInfoPlot <-
     }
 
 expandGR <- function(coor, ext){
+    if(is.na(ext[1])) ext <- 0
     start(coor) <- max(1, start(coor) - ext)
-    end(coor) <- max(start(coor), end(coor) + ext)
+    end(coor) <- min(2^31-1, max(start(coor), end(coor) + ext))
     coor
 }
 #' @importFrom GenomicRanges strand start end `strand<-` `start<-` `end<-`

@@ -6,6 +6,7 @@
 #' @importFrom GenomicRanges GRanges strand seqnames gaps
 #' @importFrom patchwork wrap_plots
 #' @importFrom IRanges subsetByOverlaps
+#' @importFrom shiny Progress
 scDRatac <- function(
         inpConf,
         inpMeta,
@@ -47,13 +48,31 @@ scDRatac <- function(
         return(ggplot())
     }
     gr <- GRanges(coord)
+    if(width(gr)[1]>10000000){
+        showNotification("The region is greater than 10M! Please decrease the plot region.",
+                         type = "error")
+        return(ggplot())
+    }
+    progress <- Progress$new()
+    progress$set(message = 'Plot ATAC signals', value =0)
+    on.exit(progress$close())
+    updateProgress <- function(value = NULL, n = 1, detail=NULL) {
+        if (is.null(value)) {
+            value <- progress$getValue()
+            value <- value + (progress$getMax() - value) / n
+        }
+        progress$set(value = value, detail=detail)
+    }
     atac_sig <- lapply(subsetCellVal, function(.ele){
+        sample <- .ele
         f <- file.path(pf, paste0(.ele, ".bigwig"))
         if(file.exists(f)){
-            import(f, format="BigWig", which=gr, as="GRanges")
+            sig <- import(f, format="BigWig", which=gr, as="GRanges")
         }else{
-            GRanges()
+            sig <- GRanges()
         }
+        updateProgress(n=length(subsetCellVal)+5, detail=paste('loading', sample))
+        return(sig)
     })
     names(atac_sig) <- subsetCellVal
     atac_sig <- lapply(atac_sig, function(.ele){
@@ -65,6 +84,7 @@ scDRatac <- function(
         end(.ele)[end(.ele)>end(gr)[1]] <- end(gr)[1]
         .ele
     })
+    updateProgress(n=5)
     ggData <- lapply(atac_sig, function(.ele){
         .ele <- as.data.frame(.ele)
         .ele <- .ele[, c("start", "end", "score")]
@@ -74,6 +94,7 @@ scDRatac <- function(
             y=c(.ele[, 3], .ele[, 3]))
         .ele[order(.ele[, 1]), , drop=FALSE]
     })
+    updateProgress(n=4)
     LN <- length(ggData)
     gp <- rep(names(ggData), vapply(ggData, FUN=nrow, FUN.VALUE = integer(1L)))
     ggData <- do.call(rbind, ggData)
@@ -113,10 +134,12 @@ scDRatac <- function(
                                               size = labelsFontsize,
                                               family = labelsFontFamily),
             strip.background = element_blank() )
+    updateProgress(n=3)
     linkp <- LinkPlot(dataset, gr)
     anno <- AnnotationPlot(dataset, gr, ylimt0 = ifelse(length(linkp)>0, -1, -0.6)) + 
         PeakPlot(dataset, gr) +
         linkp
+    updateProgress(n=2)
     return(wrap_plots(
         ggOut, anno, 
         nrow=2, ncol=1,

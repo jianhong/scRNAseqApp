@@ -1277,7 +1277,7 @@ filterCells <- function(
         for(skey in subsetCellKey){
             sid <- inpConf[inpConf$UI == skey]$ID
             if(length(sid)==0) next
-            if(length(colnames(ggData))) next
+            if(length(colnames(ggData))==0) next
             if(!sid %in% colnames(ggData)) next
             if (length(subsetCellVal[[skey]]) != nlevels(ggData[[sid]])) {
                 keep <- keep & ggData[[sid]] %in% subsetCellVal[[skey]]

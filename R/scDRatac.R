@@ -257,7 +257,7 @@ LinkPlot <- function(
             group = rep(seq_along(links.keep), 3)
         )
         p <- geom_bezier(data = df, aes(
-            x = .data$x, y = .data$y, color = .data$score, group=group
+            x = .data$x, y = .data$y, color = .data$score, group=.data$group
         ), inherit.aes = FALSE)
     } else {
         p <- NULL

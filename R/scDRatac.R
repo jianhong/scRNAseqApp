@@ -113,13 +113,14 @@ scDRatac <- function(
                                               size = labelsFontsize,
                                               family = labelsFontFamily),
             strip.background = element_blank() )
-    anno <- AnnotationPlot(dataset, gr) + 
+    linkp <- LinkPlot(dataset, gr)
+    anno <- AnnotationPlot(dataset, gr, ylimt0 = ifelse(length(linkp)>0, -1, -0.6)) + 
         PeakPlot(dataset, gr) +
-        LinkPlot(dataset, gr)
+        linkp
     return(wrap_plots(
         ggOut, anno, 
         nrow=2, ncol=1,
-        heights=c(LN, 1.5)))
+        heights=c(LN, ifelse(length(linkp)>0, 2.5, 1.5))))
 }
 
 #' Plot peaks in a genomic region
@@ -216,14 +217,9 @@ LinkPlot <- function(
     if(oldRange==0) oldRange <- 1
     links$score <- (links$score - min.color) * .8 / oldRange + .1
     # subset to those in region
-    links.keep <- subsetByOverlaps(x = links, ranges = region)
+    links.keep <- subsetByOverlaps(x = links, ranges = region, type='within')
     
     link.df <- as.data.frame(x = links.keep)
-    
-    # remove links outside region
-    link.df <- link.df[link.df$start >= start(x = region) & 
-                           link.df$end <= end(x = region), ]
-    
     # plot
     if (nrow(x = link.df) > 0) {
         # convert to format for geom_bezier
@@ -232,12 +228,13 @@ LinkPlot <- function(
                   (link.df$start + link.df$end) / 2,
                   link.df$end),
             y = c(rep(x = 0, nrow(x = link.df)),
-                  rep(x = -.5, nrow(x = link.df)),
+                  rep(x = -1, nrow(x = link.df)),
                   rep(x = 0, nrow(x = link.df))),
-            score = rep(link.df$score, 3)
+            score = rep(link.df$score, 3),
+            group = rep(seq_along(links.keep), 3)
         )
         p <- geom_bezier(data = df, aes(
-            x = .data$x, y = .data$y, color = .data$score
+            x = .data$x, y = .data$y, color = .data$score, group=group
         ), inherit.aes = FALSE)
     } else {
         p <- NULL
@@ -253,6 +250,7 @@ LinkPlot <- function(
 #' @param region A genomic region to plot
 #' @param mode Display mode. Choose either "gene" or "transcript" to determine
 #' whether genes or transcripts are plotted.
+#' @param ylimt0 ylim0
 #' @return Returns a \code{\link[ggplot2]{ggplot}} object
 #' @importFrom IRanges subsetByOverlaps
 #' @importFrom GenomicRanges start end
@@ -264,7 +262,8 @@ LinkPlot <- function(
 AnnotationPlot <- function(
         dataset,
         region,
-        mode = c("gene", "transcript")
+        mode = c("gene", "transcript"),
+        ylimt0 = -0.6
 ) {
     mode <- match.arg(mode)
     if(mode == "gene") {
@@ -305,7 +304,7 @@ AnnotationPlot <- function(
     if (length(x = annotation.subset) == 0) {
         # make empty plot
         p <- ggplot(data = data.frame())
-        y_limit <- c(-.6, 1)
+        y_limit <- c(ylimt0, 1)
     } else {
         annotation_df_list <- reformat_annotations(
             annotation = annotation.subset,
@@ -396,7 +395,7 @@ AnnotationPlot <- function(
                 label = .data[[label]]),
             size = 2.5
         )
-        y_limit <- c(-.6, n_stack + 0.4)
+        y_limit <- c(ylimt0, n_stack + 0.4)
     }
     color_breaks <- c(-.05, seq(.1, .9, length.out=9), 1.05)
     colors <- c(

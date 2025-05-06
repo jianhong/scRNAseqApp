@@ -7,8 +7,9 @@ updateDimRedSelInput <-
             choices = conf[conf$dimred == TRUE]$UI,
             selected = selected)
     }
+#' @importFrom utils adist
 updateDimRedSelInputPair <-
-    function(session, dataSource) {
+    function(session, input, dataSource) {
         updateDimRedSelInput(
             session,
             "GeneExprdrX",
@@ -23,6 +24,20 @@ updateDimRedSelInputPair <-
             dataSource()$sc1conf,
             dataSource()$sc1def$dimred[2]
         )
+        observeEvent(input$GeneExprdrX, {
+            try({
+                conf <- dataSource()$sc1conf
+                choices <- conf[conf$dimred == TRUE]$UI
+                choices <- choices[choices!=input$GeneExprdrX]
+                dist <- adist(input$GeneExprdrX, choices)
+                updateDimRedSelInput(
+                    session, 
+                    "GeneExprdrY",
+                    "Y-axis:",
+                    dataSource()$sc1conf,
+                    choices[which.min(dist)])
+            })
+        })
     }
 getGroupUI <- function(dataSource) {
     dataSource()$sc1conf[dataSource()$sc1conf$grp == TRUE]$UI
@@ -546,6 +561,12 @@ updateCellInfoPlot <-
                     .globals$datafolder,
                     dataSource()$dataset,
                     .globals$filenames[["slingshot"]]
+                ),
+                inpShowEdge = input[[paste0("CellInfoedge", postfix)]],
+                edgeFilename = file.path(
+                    .globals$datafolder,
+                    dataSource()$dataset,
+                    .globals$filenames[["sc1edge"]]
                 ),
                 editorStatus = ifelse(
                     length(input[[paste0('editorStatus', postfix)]]),
@@ -1255,6 +1276,8 @@ filterCells <- function(
         }
         for(skey in subsetCellKey){
             sid <- inpConf[inpConf$UI == skey]$ID
+            if(length(sid)==0) next
+            if(length(colnames(ggData))) next
             if(!sid %in% colnames(ggData)) next
             if (length(subsetCellVal[[skey]]) != nlevels(ggData[[sid]])) {
                 keep <- keep & ggData[[sid]] %in% subsetCellVal[[skey]]

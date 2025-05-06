@@ -78,7 +78,7 @@ subsetGeneExprServer <- function(id, dataSource, optCrt) {
             })
         ## input column 1
         ### Dimension Reduction
-        updateDimRedSelInputPair(session, dataSource)
+        updateDimRedSelInputPair(session, input, dataSource)
         ### Information to show
         #### gene name to plot
         selectedGene <- dataSource()$sc1def$gene1

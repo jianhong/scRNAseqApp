@@ -90,7 +90,7 @@ plotPieDimServer <- function(id, dataSource, optCrt) {
     moduleServer(id, function(input, output, session) {
         ## input column 1
         ### Dimension Reduction
-        updateDimRedSelInputPair(session, dataSource)
+        updateDimRedSelInputPair(session, input, dataSource)
         ## input column 2
         updateSubsetCellUI(id, input, output, session, dataSource)
         updateFilterCellUI(id, optCrt, input, output, session, dataSource)

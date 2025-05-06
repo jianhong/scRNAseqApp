@@ -196,7 +196,10 @@ cellInfoPlotControlUI <- function(
                 "Hide filtered cells", value = FALSE),
             checkboxInput(
                 NS0(id, "CellInfoslingshot", postfix),
-                "Show lineages", value = TRUE)
+                "Show lineages", value = TRUE),
+            checkboxInput(
+                NS0(id, "CellInfoedge", postfix),
+                "Show cell edges", value = TRUE)
         ),
         div(style = "visibility:hidden;",
             id = paste0(NS0(id, "CellInfodup", postfix), 'container'),
@@ -590,6 +593,9 @@ contextMenuCellInfoUI <- function(
                 checkboxInput(
                     NS0(id, "CellInfoslingshot", postfix),
                     "Show lineages", value = TRUE),
+                checkboxInput(
+                    NS0(id, "CellInfoedge", postfix),
+                    "Show cell edges", value = TRUE),
                 checkboxInput(
                     NS0(id, "CellInfohid", postfix),
                     "Hide filtered cells", value = FALSE)

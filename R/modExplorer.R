@@ -138,7 +138,7 @@ subsetPlotsServer <- function(id, dataSource, optCrt) {
             })
         ## input column 1
         ### Dimension Reduction
-        updateDimRedSelInputPair(session, dataSource)
+        updateDimRedSelInputPair(session, input, dataSource)
         ### Information to show
         
         ## input column 2

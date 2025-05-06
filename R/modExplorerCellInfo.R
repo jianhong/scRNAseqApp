@@ -83,6 +83,12 @@ scInfoServer <- function(
                     dataSource()$dataset,
                     .globals$filenames[["slingshot"]]
                 ),
+                inpShowEdge = input[[paste0("CellInfoedge", postfix)]],
+                edgeFilename = file.path(
+                    .globals$datafolder,
+                    dataSource()$dataset,
+                    .globals$filenames[["sc1edge"]]
+                ),
                 interactive = interactive
             )
         })

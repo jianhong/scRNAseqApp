@@ -81,13 +81,13 @@ scRNAseqApp <- function(
     if(!tableExists(.globals$geneSymbolTableName)){
         touchGeneTable()
     }
-    datasets <- listDatasets(named=TRUE)
-    avdb <- sort(checkAvailableDataSets(privilege = NULL))
+    datasets <- listDatasets(privilege='all', named=TRUE)
+    avdb <- sort(checkAvailableDataSets(privilege = 'all'))
     if(!identical(avdb, sort(unname(datasets)))){
         updateConfigTable()
         touchGeneTable(updateDB=TRUE)
-        datasets <- listDatasets(named=TRUE)
     }
+    datasets <- listDatasets(named=TRUE)
     defaultDataset <- getDefaultDataset(
         defaultDataset = defaultDataset,
         datasets = datasets)

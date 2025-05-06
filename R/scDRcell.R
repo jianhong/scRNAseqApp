@@ -33,6 +33,8 @@ scDRcell <- function(
         hideFilterCell=FALSE,
         inpSlingshot,
         slingshotFilename,
+        inpShowEdge,
+        edgeFilename,
         editorStatus,
         ...) {
     subFilterColname <- 'subValue'
@@ -90,6 +92,31 @@ scDRcell <- function(
     }
     bgCells <- sum(!keep) > 0
     
+    if(inpShowEdge){
+        if (file.exists(edgeFilename)) {
+            edges <- readRDS(edgeFilename)
+            # edgeFilename must be a RDS filename. The RDS file must be a list of 
+            # edges. The names of the list is the reductions name, such as umap
+            if(!is.list(edges)){
+                inpShowEdge <- FALSE
+            }
+            dimRed_prefix <- sub('.$', '', dimRedX)
+            if(dimRed_prefix!=sub('.$', '', dimRedY)){
+                inpShowEdge <- FALSE
+            }
+            if(!dimRed_prefix %in% names(edges)){
+                inpShowEdge <- FALSE
+            }else{
+                edges <- edges[[dimRed_prefix]]
+            }
+            if(inpShowEdge){
+                ggData$idx <- seq.int(nrow(ggData))
+            }
+        }else{
+            inpShowEdge <- FALSE
+        }
+    }
+    
     if (bgCells) {
         ggData2 <- ggData[!keep]
         ggData <- ggData[keep]
@@ -132,6 +159,31 @@ scDRcell <- function(
             shape = 16,
             hide = hideFilterCell)
     }
+    
+    if (inpShowEdge) {
+        keep <- edges[, 1] %in% ggData$idx & edges[, 2] %in% ggData$idx
+        if(sum(keep)){
+            edgeDf <- cbind(ggData[match(edges[keep, 1], ggData$idx), c('X', 'Y')],
+                            ggData[match(edges[keep, 2], ggData$idx), c('X', 'Y')])
+            colnames(edgeDf) <- c('x', 'y', 'xend', 'yend')
+            ggOut <- ggOut +
+                geom_segment(
+                    data = edgeDf,
+                    aes(
+                        x = .data[["x"]],
+                        y = .data[["y"]],
+                        xend = .data[["xend"]],
+                        yend = .data[["yend"]]
+                    ),
+                    inherit.aes = FALSE,
+                    linewidth = 0.5,
+                    colour = '#CCCCCC',
+                    alpha = 0.5
+                )
+        }
+        
+    }
+    
     ggOut <- pointPlot(
         ggOut = ggOut,
         pointSize = pointSize,

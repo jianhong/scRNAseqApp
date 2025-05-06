@@ -15,6 +15,7 @@
     sc1peak = 'sc1peak.rds',
     sc1link = 'sc1link.rds',
     sc1anno = 'sc1anno.rds',
+    sc1edge = 'sc1edge.rds',
     coor_revmap = 'coorrevmap.rds',
     bwspath = 'bws',
     token = "token",

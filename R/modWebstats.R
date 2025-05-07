@@ -8,9 +8,11 @@ webstatsUI <- function (id) {
             ns('description'),
             label = 'Homepage description',
             value = paste(readLines(file.path(
-                .globals$app_path, "doc.txt")), collapse = "\n")
+                .globals$app_path, "doc.txt")), collapse = "\n"),
+            width="100%"
         ),
         actionButton(ns('update'), "update web description"),
+        actionButton(ns('restart'), 'force restart the App'),
         fluidRow(column(width = 3, DTOutput(ns(
             "summary"
         ))),
@@ -23,7 +25,8 @@ webstatsUI <- function (id) {
 #' @importFrom DT renderDT JS
 #' @importFrom S4Vectors SimpleList DataFrame
 #' @importFrom jsonlite parse_json
-#' @importFrom data.table as.data.table melt .SD
+#' @importFrom data.table as.data.table .SD
+#' @importFrom reshape2 melt
 #' @importFrom ggplot2 geom_bar position_dodge geom_text aes labs theme_minimal
 webstatsServer <- function(id) {
     moduleServer(id, function(input, output, session) {
@@ -32,6 +35,17 @@ webstatsServer <- function(id) {
             writeLines(
                 input$description,
                 file.path(.globals$app_path, "doc.txt"))
+        })
+        
+        ## force restart App
+        observeEvent(input$restart, {
+            writeLines(
+                date(),
+                file.path(.globals$app_path, "restart.txt")
+            )
+            adminMsg("reloading the session now!", type = "error")
+            Sys.sleep(2)
+            session$reload()
         })
         
         ## stats
@@ -123,11 +137,11 @@ webstatsServer <- function(id) {
                         total = length(.SD$ip),
                         uniqueIP = length(unique(.SD$ip)))
                 }, by = 'month']
-                dat <- melt(dat, id = "month")
+                dat <- reshape2::melt(dat, id.vars = "month")
             }else{
                 dat = listVisitors(summary = TRUE)
                 colnames(dat) <- c('month', 'total', 'uniqueIP')
-                dat <- melt(dat, id = "month")
+                dat <- reshape2::melt(dat, id.vars = "month")
             }
         })
         output$distPlot <- renderPlot({

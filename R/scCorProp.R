@@ -1,7 +1,8 @@
 # Plot heatmap for proportion
 #' @importFrom ggplot2 ggplot aes .data scale_color_gradientn ylab xlab geom_tile geom_text
 #' scale_fill_manual theme
-#' @importFrom data.table data.table melt
+#' @importFrom data.table data.table
+#' @importFrom reshape2 melt
 #' @importFrom stats prcomp
 scCorProp <- function(
         proportions,
@@ -33,7 +34,7 @@ scCorProp <- function(
                     },
                     heatmap={
                         cor <- cor(proportions, method = method)
-                        cor <- melt(data.table(cor, keep.rownames = TRUE),
+                        cor <- reshape2::melt(data.table(cor, keep.rownames = TRUE),
                                     id.vars = c("rn"))
                         colnames(cor) <- c('Var1', 'Var2', 'value')
                         cor$Var1 <- factor(as.character(cor$Var1),

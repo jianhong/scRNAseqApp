@@ -38,6 +38,10 @@ plotVioBoxUI <- function(id) {
                     NS(id, "plotpts"), "Show data points",
                     value = FALSE),
                 checkboxInput(
+                    NS(id, 'addnoise'),
+                    "Add noise", value = TRUE
+                ),
+                checkboxInput(
                     NS(id, "plotord"),
                     "Reorder the contents", value = FALSE
                 ),
@@ -126,7 +130,8 @@ plotVioBoxServer <- function(id, dataSource, optCrt) {
                 orderX = input$cellinfoXorder,
                 splitBy=input$CellInfoY,
                 sreorder = input$plotsord,
-                orderS = input$cellinfoSorder
+                orderS = input$cellinfoSorder,
+                addnoise = input$addnoise
             )
         })
         updateGeneExprDotPlotUI(

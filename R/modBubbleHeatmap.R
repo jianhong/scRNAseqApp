@@ -84,6 +84,10 @@ plotBubbleHeatmapUI <- function(id) {
                     checkboxInput(
                         NS(id, "plotpts"), "Show data points",
                         value = FALSE),
+                    checkboxInput(
+                        NS(id, "addnoise"), "Add noise",
+                        value = TRUE
+                    )
                 ),
                 conditionalPanel(
                     condition = "input.plottyp != 'Heatmap'",
@@ -356,7 +360,8 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt) {
                 orderX = input$cellinfoXorder,
                 splitBy=input$CellInfoY,
                 sreorder = input$plotsord,
-                orderS = input$cellinfoSorder
+                orderS = input$cellinfoSorder,
+                addnoise = input$addnoise
             )
         })
         observeEvent(

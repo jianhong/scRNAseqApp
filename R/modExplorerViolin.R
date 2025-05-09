@@ -98,7 +98,8 @@ scVlnServer <- function(
                 labelsFontsize = p_input$GeneExprfsz,
                 labelsFontFamily=p_input$GeneExprfml,
                 reorder = input$plotord,
-                orderX = input$cellinfoXorder
+                orderX = input$cellinfoXorder,
+                addnoise = input$addnoise
             )
         })
         updateSubModulePlotUI(

@@ -1,4 +1,9 @@
-CHANGES IN VERSION 1.9.5
+CHANGES IN VERSION 1.9.7
+-------------------------
+
+    o Allow single gene heatmap plot.
+    
+CHANGES IN VERSION 1.9.6
 -------------------------
 
     o Add progress bar for atac signal plot.

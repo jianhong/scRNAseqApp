@@ -43,7 +43,8 @@ scBubbHeat <- function(
         orderX,
         splitBy,
         sreorder=FALSE,
-        orderS) {
+        orderS,
+        addnoise=TRUE) {
     # Identify genes that are in our dataset
     if (missing(inpGrp1c))
         inpGrp1c <- 0
@@ -57,9 +58,31 @@ scBubbHeat <- function(
         paste("More than", .globals$maxHeatmapGene,
               "genes to plot! Please reduce the gene list!")
     ))
+    if(missing(splitBy)){
+        splitBy <- ""
+    }else{
+        if(is.na(splitBy)||splitBy=='N/A'){
+            splitBy <- ""
+        }
+    }
+    if(plotAllCells){
+        shiny::validate(
+            need(splitBy=="",
+                 'Plotting all cells data does not support splitBy.')
+        )
+    }
+    if(nrow(geneList)==1){
+        shiny::validate(need(
+            splitBy!="",
+            "single gene ask setting of split by!"
+        ))
+        singleGene <- TRUE
+    }else{
+        singleGene <- FALSE
+    }
     shiny::validate(need(
-        nrow(geneList) > 1,
-        "Please input at least 2 genes to plot!"))
+        nrow(geneList) > 0,
+        "Please input at least 1 genes to plot!"))
     if(nrow(geneList)>.globals$maxNumGene){
         showNotification(
             paste('Plotting expression data for too many genes.',
@@ -83,22 +106,12 @@ scBubbHeat <- function(
         with = FALSE]
     tmp$grpBy <- inpMeta[[inpConf[inpConf$UI == inpGrp]$ID]]
     # Load splitBy
-    if(!missing(splitBy)){
-        if(splitBy!=""){
-            if(splitBy %in% inpConf$UI){
-                if(plotAllCells){
-                    showNotification(
-                        'Plotting all cells data does not support splitBy.',
-                        duration = 5,
-                        type = 'warning'
-                    )
-                }else{
-                    tmp$splitBy <- inpMeta[[inpConf[inpConf$UI == splitBy]$ID]]
-                    if(sreorder){
-                        tmp$splitBy <- factor(as.character(tmp$splitBy),
-                                              levels=orderS)
-                    }
-                }
+    if(splitBy!=""){
+        if(splitBy %in% inpConf$UI){
+            tmp$splitBy <- inpMeta[[inpConf[inpConf$UI == splitBy]$ID]]
+            if(sreorder){
+                tmp$splitBy <- factor(as.character(tmp$splitBy),
+                                      levels=orderS)
             }
         }
     }
@@ -115,6 +128,11 @@ scBubbHeat <- function(
             ggData$grpBy <- factor(ggData$grpBy, levels=orderX)
         }
         showLegend <- FALSE
+        if(addnoise){
+            tmpNoise <-
+                rnorm(length(ggData$val)) * diff(range(ggData$val)) / 1000
+            ggData$val <- ggData$val + tmpNoise
+        }
         if('splitBy' %in% colnames(ggData)){
             showLegend <- TRUE
             ggCol <- relevelCol(inpConf, splitBy, ggData, "splitBy")
@@ -263,14 +281,24 @@ scBubbHeat <- function(
     }
     
     reshapeMat <- function(value.var) {
-        ggMatrix <- dcast.data.table(
-            ggData,
-            as.formula(ifelse('splitBy' %in% colnames(ggData),
-                              "geneName~grpBy+splitBy", "geneName~grpBy")),
-            value.var = value.var,
-            fun.aggregate = mean,
-            sep = '___')
-        tmp <- ggMatrix$geneName
+        if(singleGene){
+            ggMatrix <- dcast.data.table(
+                ggData,
+                as.formula("splitBy ~ grpBy"),
+                value.var = value.var,
+                fun.aggregate = mean
+            )
+            tmp <- ggMatrix$splitBy
+        }else{
+            ggMatrix <- dcast.data.table(
+                ggData,
+                as.formula(ifelse('splitBy' %in% colnames(ggData),
+                                  "geneName~grpBy+splitBy", "geneName~grpBy")),
+                value.var = value.var,
+                fun.aggregate = mean,
+                sep = '___')
+            tmp <- ggMatrix$geneName
+        }
         ggMatrix <- as.matrix(ggMatrix[, -1])
         ggMatrix[is.na(ggMatrix)] <- 0
         ggMatrix[is.infinite(ggMatrix)] <-
@@ -282,18 +310,28 @@ scBubbHeat <- function(
     if(!plotAllCells) ggProp <- reshapeMat(value.var = 'prop')
     
     if(reorder&&length(orderX)>0&&all(orderX %in% colnames(ggMat))){
-        ggMat <- ggMat[geneList$gene[geneList$gene %in% rownames(ggMat)],
-                       orderX, drop=FALSE]
-        if(!plotAllCells) ggProp <- 
-                ggProp[geneList$gene[geneList$gene %in% rownames(ggProp)],
-                       orderX, drop=FALSE]
+        if(singleGene){
+            ggMat[, orderX, drop=FALSE]
+            if(!plotAllCells) ggProp <- ggProp[, orderX, drop=FALSE]
+        }else{
+            ggMat <- ggMat[geneList$gene[geneList$gene %in% rownames(ggMat)],
+                           orderX, drop=FALSE]
+            if(!plotAllCells) ggProp <- 
+                    ggProp[geneList$gene[geneList$gene %in% rownames(ggProp)],
+                           orderX, drop=FALSE]
+        }
     }else{
-        ggMatSplit <- sub('^.*___', '', colnames(ggMat))
-        ggMat <- ggMat[geneList$gene[geneList$gene %in% rownames(ggMat)],
+        if(singleGene){
+            ggMat[, colnames(ggMat), drop=FALSE]
+            if(!plotAllCells) ggProp <- ggProp[, colnames(ggProp), drop=FALSE]
+        }else{
+            ggMatSplit <- sub('^.*___', '', colnames(ggMat))
+            ggMat <- ggMat[geneList$gene[geneList$gene %in% rownames(ggMat)],
+                           order(ggMatSplit), drop=FALSE]
+            if(!plotAllCells) ggProp <- 
+                ggProp[geneList$gene[geneList$gene %in% rownames(ggProp)],
                        order(ggMatSplit), drop=FALSE]
-        if(!plotAllCells) ggProp <- 
-            ggProp[geneList$gene[geneList$gene %in% rownames(ggProp)],
-                   order(ggMatSplit), drop=FALSE]
+        }
     }
     
     ggMatSplit <- sub('^.*___', '', colnames(ggMat))
@@ -390,7 +428,7 @@ scBubbHeat <- function(
     }
     if (flipXY) {
         ggMat <- t(ggMat)
-        ggProp <- t(ggProp)
+        if(!plotAllCells) ggProp <- t(ggProp)
         
         if (plotAllCells) {
             group <- ggData[[inpGrp]][match(rownames(ggMat), ggData$grpBy)]

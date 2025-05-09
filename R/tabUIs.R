@@ -778,6 +778,10 @@ contextMenuViolinUI <- function(id, postfix=1, group = FALSE){
                     "Show data points",
                     value = FALSE),
                 checkboxInput(
+                    NS(id, 'addnoise'),
+                    "Add noise", value = TRUE
+                ),
+                checkboxInput(
                     NS(id, "plotord"),
                     "Reorder the contents", value = FALSE
                 ),

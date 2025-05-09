@@ -22,7 +22,8 @@ scVioBox <- function(
         orderX,
         splitBy,
         sreorder=FALSE,
-        orderS) {
+        orderS,
+        addnoise=TRUE) {
     # Prepare ggData
     ggData <- inpMeta[, c(
         inpConf[inpConf$UI == infoX]$ID,
@@ -35,9 +36,11 @@ scVioBox <- function(
     } else {
         ggData$val <- read_exprs(dataset, inpGene[infoY], valueOnly = TRUE)
         ggData[ggData$val < 0]$val <- 0
-        tmpNoise <-
-            rnorm(length(ggData$val)) * diff(range(ggData$val)) / 1000
-        ggData$val <- ggData$val + tmpNoise
+        if(addnoise){
+            tmpNoise <-
+                rnorm(length(ggData$val)) * diff(range(ggData$val)) / 1000
+            ggData$val <- ggData$val + tmpNoise
+        }
     }
     # Load splitBy
     if(!missing(splitBy)){

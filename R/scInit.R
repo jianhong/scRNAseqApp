@@ -53,6 +53,8 @@ scInit <- function(
         paste('<p>', app_description, '</p>')
     ),
     file.path(app_path, "doc.txt"))
+    # Write the restart.txt
+    writeLines(date(), file.path(app_path, 'restart.txt'))
     
     dir.create(file.path(app_path, 'app_cache'))
     

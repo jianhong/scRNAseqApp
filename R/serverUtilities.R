@@ -205,26 +205,69 @@ updateFilterCellUI <-
                     dataSource()$dataset,
                     dataSource()$sc1gene[input$filterCell],
                     valueOnly = TRUE)
+                val2 <- c()
             } else{
                 val <- dataSource()$sc1meta[[
                     dataSource()$sc1conf[
                         dataSource()$sc1conf$UI == input$filterCell]$ID]]
+                if(grepl('[12]$', input$filterCell) &&
+                   sum(grepl(paste0('^', sub('.$', '',
+                                             input$filterCell)),
+                             dataSource()$sc1conf$UI))==2){
+                    filterCellKey2 <- ifelse(
+                        grepl('1$', input$filterCell),
+                        sub('.$', '2', input$filterCell),
+                        sub('.$', '1', input$filterCell)
+                    )
+                    val2 <- dataSource()$sc1meta[[
+                        dataSource()$sc1conf[
+                            dataSource()$sc1conf$UI == filterCellKey2]$ID]]
+                }else{
+                    val2 <- c()
+                }
             }
             minv <- floor(min(val, na.rm = TRUE))
-            val <- max(val, na.rm = TRUE)
-            if (val <= 1)
-                maxv <- round(val, digits = 3)
-            if (val > 1 && val <= 10)
-                maxv <- round(val, digits = 1)
-            if (val > 10)
-                maxv <- ceiling(val)
-            sliderInput(
-                NS(id, "filterCellVal"),
-                "Filter the cells by value",
-                min = minv,
-                max = maxv,
-                value = c(minv, maxv)
-            )
+            getM <- function(val){
+                val <- max(val, na.rm = TRUE)
+                if (val <= 1)
+                    maxv <- round(val, digits = 3)
+                if (val > 1 && val <= 10)
+                    maxv <- round(val, digits = 1)
+                if (val > 10)
+                    maxv <- ceiling(val)
+                return(maxv)
+            }
+            maxv <- getM(val)
+            if(length(val2)>1){
+                minv2 <- floor(min(val2, na.rm = TRUE))
+                maxv2 <- getM(val2)
+                tagList(
+                    sliderInput(
+                        NS(id, "filterCellVal"),
+                        paste("Filter the cells by", input$filterCell),
+                        min = minv,
+                        max = maxv,
+                        value = c(minv, maxv)
+                    ),
+                    sliderInput(
+                        NS(id, "filterCellVal2"),
+                        paste("Filter the cells by", filterCellKey2),
+                        min = minv2,
+                        max = maxv2,
+                        value = c(minv2, maxv2)
+                    )
+                )
+            }else{
+                tagList(
+                    sliderInput(
+                        NS(id, "filterCellVal"),
+                        "Filter the cells by value",
+                        min = minv,
+                        max = maxv,
+                        value = c(minv, maxv)
+                    )
+                )
+            }
         })
     }
 
@@ -1200,7 +1243,8 @@ cbindFilterValues <-
         geneIdMap,
         dataset,
         valueFilterKey,
-        valueFilterCutoff) {
+        valueFilterCutoff,
+        valueFilterCutoff2) {
         if (!missing(valueFilterKey) && !missing(valueFilterCutoff)) {
             if (valueFilterKey %in% config$UI) {
                 ggData <-
@@ -1211,6 +1255,19 @@ cbindFilterValues <-
                                 config$UI == valueFilterKey]$ID,
                                 with = FALSE])
                 colnames(ggData)[ncol(ggData)] <- coln
+                if(!missing(valueFilterCutoff2)){
+                    valueFilterKey2 <- ifelse(grepl('1$', valueFilterKey),
+                                              sub('1$', '2', valueFilterKey),
+                                              sub('2$', '1', valueFilterKey))
+                    ggData <-
+                        cbind(
+                            ggData,
+                            subValue =
+                                meta[, config[
+                                    config$UI == valueFilterKey2]$ID,
+                                    with = FALSE])
+                    colnames(ggData)[ncol(ggData)] <- paste0(coln, '2')
+                }
             } else if (valueFilterKey %in% names(geneIdMap)) {
                 subValue <- read_exprs(
                     dataset,
@@ -1264,6 +1321,7 @@ filterCells <- function(
         subsetCellVal,
         valueFilterKey,
         valueFilterCutoff,
+        valueFilterCutoff2,
         inpConf) {
     keep <- rep(TRUE, nrow(ggData))
     if (!missing(subsetCellKey) && !missing(subsetCellVal)) {
@@ -1291,6 +1349,15 @@ filterCells <- function(
             keep <- keep & ggData[[valueFilterKey]] >= valueFilterCutoff[1]
             if(length(valueFilterCutoff)>1){
                 keep <- keep & ggData[[valueFilterKey]] <= valueFilterCutoff[2]
+            }
+        }
+        if (!missing(valueFilterCutoff2)) {
+            if(length(valueFilterCutoff2)>0){
+                valueFilterKey2 <- paste0(valueFilterKey, '2')
+                keep <- keep & ggData[[valueFilterKey2]] >= valueFilterCutoff2[1]
+                if(length(valueFilterCutoff2)>1){
+                    keep <- keep & ggData[[valueFilterKey2]] <= valueFilterCutoff2[2]
+                }
             }
         }
     }

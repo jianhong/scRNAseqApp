@@ -76,6 +76,7 @@ scInfoServer <- function(
                 geneIdMap = dataSource()$sc1gene,
                 valueFilterKey = p_input$filterCell,
                 valueFilterCutoff = p_input$filterCellVal,
+                valueFilterCutoff2 = p_input$filterCellVal2,
                 hideFilterCell=input[[paste0("CellInfolab", postfix)]],
                 inpSlingshot = input[[paste0("CellInfoslingshot", postfix)]],
                 slingshotFilename = file.path(

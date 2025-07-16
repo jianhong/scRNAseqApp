@@ -142,6 +142,7 @@ subsetGeneExprServer <- function(id, dataSource, optCrt) {
                 inpColRange = TRUE,
                 valueFilterKey = input$filterCell,
                 valueFilterCutoff = input$filterCellVal,
+                valueFilterCutoff2 = input$filterCellVal2,
                 hideFilterCell = input$GeneExprhid1
             )
         })

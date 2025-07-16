@@ -32,6 +32,7 @@ scDRcoex <- function(
         keepXYlables,
         valueFilterKey,
         valueFilterCutoff,
+        valueFilterCutoff2,
         hideFilterCell = FALSE) {
     if (is.null(gene1) || is.null(gene2) || gene1 == "" || gene2 == "") {
         return(NULL)
@@ -64,7 +65,8 @@ scDRcoex <- function(
             geneIdMap,
             dataset,
             valueFilterKey,
-            valueFilterCutoff
+            valueFilterCutoff,
+            valueFilterCutoff2
         )
     rat <- getRatio(ggData)
     
@@ -75,6 +77,7 @@ scDRcoex <- function(
         subsetCellVal,
         subFilterColname,
         valueFilterCutoff,
+        valueFilterCutoff2,
         inpConf)
     
     colnames(ggData)[3] <- subGrpColname ## make the first subsetCellKey as sub

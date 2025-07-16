@@ -25,6 +25,7 @@ scDRgene <- function(
         inpColRange = 0,
         valueFilterKey,
         valueFilterCutoff,
+        valueFilterCutoff2,
         hideFilterCell = FALSE,
         geneType = c('gene', 'coor'),
         ...) {
@@ -62,7 +63,8 @@ scDRgene <- function(
             geneIdMap,
             dataset,
             valueFilterKey,
-            valueFilterCutoff
+            valueFilterCutoff,
+            valueFilterCutoff2
         )
     
     if(geneType=='gene'){
@@ -97,6 +99,7 @@ scDRgene <- function(
         subsetCellVal,
         subFilterColname,
         valueFilterCutoff,
+        valueFilterCutoff2,
         inpConf=inpConf
     )
     

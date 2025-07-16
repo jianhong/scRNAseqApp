@@ -15,6 +15,7 @@ scPieDim <- function(
         subsetCellVal,
         valueFilterKey,
         valueFilterCutoff,
+        valueFilterCutoff2,
         CoExpred,
         pointSize,
         lableCircle,
@@ -61,7 +62,8 @@ scPieDim <- function(
             geneIdMap,
             dataset,
             valueFilterKey,
-            valueFilterCutoff
+            valueFilterCutoff,
+            valueFilterCutoff2
         )
     rat <- getRatio(ggData)
     expr <-
@@ -81,6 +83,7 @@ scPieDim <- function(
         subsetCellVal,
         subFilterColname,
         valueFilterCutoff,
+        valueFilterCutoff2,
         inpConf=inpConf)
     
     if(cnid>3) colnames(ggData)[cnid] <- subGrpColname

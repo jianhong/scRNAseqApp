@@ -90,6 +90,7 @@ scPropServer <- function(
                 geneIdMap = dataSource()$sc1gene,
                 valueFilterKey = p_input$filterCell,
                 valueFilterCutoff = p_input$filterCellVal,
+                valueFilterCutoff2 = p_input$filterCellVal2,
                 reorder = input$plotord,
                 orderX = input$cellinfoXorder,
                 orderY = input$cellinfoYorder

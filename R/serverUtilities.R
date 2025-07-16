@@ -210,19 +210,20 @@ updateFilterCellUI <-
                     dataSource()$sc1conf[
                         dataSource()$sc1conf$UI == input$filterCell]$ID]]
             }
+            minv <- floor(min(val, na.rm = TRUE))
             val <- max(val, na.rm = TRUE)
             if (val <= 1)
                 maxv <- round(val, digits = 3)
             if (val > 1 && val <= 10)
                 maxv <- round(val, digits = 1)
             if (val > 10)
-                maxv <- round(val, digits = 0)
+                maxv <- ceiling(val)
             sliderInput(
                 NS(id, "filterCellVal"),
                 "Filter the cells by value",
-                min = 0,
+                min = minv,
                 max = maxv,
-                value = 0
+                value = c(minv, maxv)
             )
         })
     }
@@ -1288,6 +1289,9 @@ filterCells <- function(
     if (!missing(valueFilterKey) && !missing(valueFilterCutoff)) {
         if (length(valueFilterCutoff) != 0) {
             keep <- keep & ggData[[valueFilterKey]] >= valueFilterCutoff[1]
+            if(length(valueFilterCutoff)>1){
+                keep <- keep & ggData[[valueFilterKey]] <= valueFilterCutoff[2]
+            }
         }
     }
     return(keep)

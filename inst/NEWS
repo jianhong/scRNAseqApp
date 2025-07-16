@@ -1,6 +1,11 @@
 CHANGES IN VERSION 1.9.7
 -------------------------
 
+    o Filter cells by a range of value.
+
+CHANGES IN VERSION 1.9.7
+-------------------------
+
     o Allow single gene heatmap plot.
     
 CHANGES IN VERSION 1.9.6

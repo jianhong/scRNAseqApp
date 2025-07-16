@@ -59,12 +59,18 @@ scVioBox <- function(
         ggData$filter <- inpMeta[[inpConf[inpConf$UI == filterKey]$ID]]
         if (length(filterVal)) {
             ggData <- ggData[ggData$filter >= filterVal[1], , drop = FALSE]
+            if(length(filterVal)>1){
+                ggData <- ggData[ggData$filter <= filterVal[2], , drop = FALSE]
+            }
         }
     } else {
         ggData$filter <-
             read_exprs(dataset, inpGene[filterKey], valueOnly = TRUE)
         if (length(filterVal)) {
             ggData <- ggData[ggData$filter >= filterVal[1], , drop = FALSE]
+            if(length(filterVal)>1){
+                ggData <- ggData[ggData$filter <= filterVal[2], , drop = FALSE]
+            }
         }
     }
     

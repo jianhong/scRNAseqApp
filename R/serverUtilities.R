@@ -967,6 +967,7 @@ updateSubsetGeneExprPlot <-
                     },
                 valueFilterKey = input$filterCell,
                 valueFilterCutoff = input$filterCellVal,
+                valueFilterCutoff2 = input$filterCellVal2,
                 hideFilterCell = input[[paste0("GeneExprhid", postfix)]]
             )
         })
@@ -1234,6 +1235,9 @@ getCoexpVal <- function(ggData, dataset, geneIdMap, gene1, gene2) {
     ggData[ggData$val2 < 0]$val2 <- 0
     return(ggData)
 }
+getFilterKey2 <- function(coln){
+    paste0(coln, '2')
+}
 cbindFilterValues <-
     function(
         ggData,
@@ -1266,7 +1270,7 @@ cbindFilterValues <-
                                 meta[, config[
                                     config$UI == valueFilterKey2]$ID,
                                     with = FALSE])
-                    colnames(ggData)[ncol(ggData)] <- paste0(coln, '2')
+                    colnames(ggData)[ncol(ggData)] <- getFilterKey2(coln)
                 }
             } else if (valueFilterKey %in% names(geneIdMap)) {
                 subValue <- read_exprs(
@@ -1353,7 +1357,7 @@ filterCells <- function(
         }
         if (!missing(valueFilterCutoff2)) {
             if(length(valueFilterCutoff2)>0){
-                valueFilterKey2 <- paste0(valueFilterKey, '2')
+                valueFilterKey2 <- getFilterKey2(valueFilterKey)
                 keep <- keep & ggData[[valueFilterKey2]] >= valueFilterCutoff2[1]
                 if(length(valueFilterCutoff2)>1){
                     keep <- keep & ggData[[valueFilterKey2]] <= valueFilterCutoff2[2]

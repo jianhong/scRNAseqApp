@@ -3,11 +3,11 @@ scDRnum <- function(
         inpConf,
         inpMeta,
         inpCellInfo,
-        inpGeneName,
+        gene,
         inpsubName,
         inpsubValue,
         dataset,
-        inpGene,
+        geneIdMap,
         inpsplt) {
     if (length(inpCellInfo) > 1) {
         inpCellInfoSubGroup <- inpCellInfo[-1]
@@ -31,7 +31,7 @@ scDRnum <- function(
     }
     colnames(ggData) <- c("group", "sub")
     ggData$val2 <-
-        read_exprs(dataset, inpGene[inpGeneName], valueOnly = TRUE)
+        read_exprs(dataset, geneIdMap[gene], valueOnly = TRUE)
     ggData[ggData$val2 < 0]$val2 <- 0
     if (length(inpsubValue) != 0 &
         length(inpsubValue) != nlevels(ggData$sub)) {
@@ -68,6 +68,6 @@ scDRnum <- function(
     ggData$pctExpress <- 100 * ggData$nExpress / ggData$nCells
     ggData <- ggData[order(ggData$group)]
     colnames(ggData)[3] <-
-        paste0(colnames(ggData)[3], "_", inpGeneName)
+        paste0(colnames(ggData)[3], "_", gene)
     return(ggData)
 }

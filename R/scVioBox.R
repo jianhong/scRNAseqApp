@@ -9,10 +9,11 @@ scVioBox <- function(
         infoY,
         subsetCellKey,
         subsetCellVal,
-        filterKey,
-        filterVal,
+        valueFilterKey,
+        valueFilterCutoff,
+        valueFilterCutoff2,
         dataset,
-        inpGene,
+        geneIdMap,
         inptyp,
         inppts,
         pointSize,
@@ -34,7 +35,7 @@ scVioBox <- function(
     if (infoY %in% inpConf$UI) {
         ggData$val <- inpMeta[[inpConf[inpConf$UI == infoY]$ID]]
     } else {
-        ggData$val <- read_exprs(dataset, inpGene[infoY], valueOnly = TRUE)
+        ggData$val <- read_exprs(dataset, geneIdMap[infoY], valueOnly = TRUE)
         ggData[ggData$val < 0]$val <- 0
         if(addnoise){
             tmpNoise <-
@@ -55,28 +56,30 @@ scVioBox <- function(
         }
     }
     # filter the cell
-    if (filterKey %in% inpConf$UI) {
-        ggData$filter <- inpMeta[[inpConf[inpConf$UI == filterKey]$ID]]
-        if (length(filterVal)) {
-            ggData <- ggData[ggData$filter >= filterVal[1], , drop = FALSE]
-            if(length(filterVal)>1){
-                ggData <- ggData[ggData$filter <= filterVal[2], , drop = FALSE]
-            }
-        }
-    } else {
-        ggData$filter <-
-            read_exprs(dataset, inpGene[filterKey], valueOnly = TRUE)
-        if (length(filterVal)) {
-            ggData <- ggData[ggData$filter >= filterVal[1], , drop = FALSE]
-            if(length(filterVal)>1){
-                ggData <- ggData[ggData$filter <= filterVal[2], , drop = FALSE]
-            }
-        }
-    }
-    
+    subFilterColname <- 'filter'
+    ggData <-
+        cbindFilterValues(
+            ggData,
+            inpConf,
+            inpMeta,
+            subFilterColname,
+            geneIdMap,
+            dataset,
+            valueFilterKey,
+            valueFilterCutoff,
+            valueFilterCutoff2
+        )
     subsetCellKey <- subsetCellKey[subsetCellKey!="N/A"]
     subsetCellVal <- namedSubsetCellVals(subsetCellKey, subsetCellVal)
-    ggData <- subGrp(ggData, subsetCellKey, subsetCellVal, inpConf)
+    keep <- filterCells(
+        ggData,
+        subsetCellKey,
+        subsetCellVal,
+        subFilterColname,
+        valueFilterCutoff,
+        valueFilterCutoff2,
+        inpConf)
+    ggData <- ggData[keep]
     
     # Do factoring
     if(reorder){

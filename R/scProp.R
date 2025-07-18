@@ -17,6 +17,7 @@ scProp <- function(
         geneIdMap,
         valueFilterKey,
         valueFilterCutoff,
+        valueFilterCutoff2,#not use
         reorder=FALSE,
         orderX,
         orderY) {

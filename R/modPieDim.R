@@ -122,6 +122,7 @@ plotPieDimServer <- function(id, dataSource, optCrt) {
                 subsetCellVal = getSubsetCellVal(input),
                 valueFilterKey = input$filterCell,
                 valueFilterCutoff = input$filterCellVal,
+                valueFilterCutoff2 = input$filterCellVal2,
                 CoExpred = input$CoExpred,
                 pointSize = input$GeneExprsiz,
                 lableCircle = input$CoExprCircle,

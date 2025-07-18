@@ -102,6 +102,7 @@ scCoexpServer <- function(
                 keepXYlables=p_input$GeneExprtxt,
                 valueFilterKey = p_input$filterCell,
                 valueFilterCutoff = p_input$filterCellVal,
+                valueFilterCutoff2 = p_input$filterCellVal2,
                 hideFilterCell = input$CoExprhid1
             )
         })

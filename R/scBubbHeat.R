@@ -20,7 +20,7 @@ scBubbHeat <- function(
         inpGrp1c,
         inpPlt,
         dataset,
-        inpGene,
+        geneIdMap,
         inpScl,
         inpRow,
         row_dend_side = "left",
@@ -51,7 +51,7 @@ scBubbHeat <- function(
     if (inpPlt != "Heatmap") {
         plotAllCells <- FALSE
     }
-    geneList <- scGeneList(inp, inpGene)
+    geneList <- scGeneList(inp, geneIdMap)
     geneList <- geneList[geneList$present == TRUE]
     shiny::validate(need(
         nrow(geneList) <= .globals$maxHeatmapGene,
@@ -98,7 +98,7 @@ scBubbHeat <- function(
         .globals$datafolder,
         dataset,
         .globals$filenames$sc1gexpr
-    ), .globals$h5fGrp, index=list(inpGene[geneList$gene], NULL))
+    ), .globals$h5fGrp, index=list(geneIdMap[geneList$gene], NULL))
     rownames(vals) <- geneList$gene
     tmp <- inpMeta[, c(
         "sampleID",

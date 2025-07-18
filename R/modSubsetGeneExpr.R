@@ -142,6 +142,7 @@ subsetGeneExprServer <- function(id, dataSource, optCrt) {
                 inpColRange = TRUE,
                 valueFilterKey = input$filterCell,
                 valueFilterCutoff = input$filterCellVal,
+                valueFilterCutoff2 = input$filterCellVal2,
                 hideFilterCell = input$GeneExprhid1
             )
         })
@@ -185,19 +186,19 @@ subsetGeneExprServer <- function(id, dataSource, optCrt) {
         updateGeneExprDT <- function() {
             output$GeneExpr.dt1 <- renderDT({
                 ggData <- scDRnum(
-                    dataSource()$sc1conf,
-                    dataSource()$sc1meta,
-                    c(
+                    inpConf=dataSource()$sc1conf,
+                    inpMeta=dataSource()$sc1meta,
+                    inpCellInfo=c(
                         input$CellInfo,
                         input$GeneExprsub1b,
                         input$GeneExprsub2b
                     ),
-                    input$GeneName,
-                    input$subsetCell,
-                    getSubsetCellVal(input),
-                    dataSource()$dataset,
-                    dataSource()$sc1gene,
-                    input$GeneExprsplt1
+                    gene=input$GeneName,
+                    inpsubName=input$subsetCell,
+                    inpsubValue=getSubsetCellVal(input),
+                    dataset=dataSource()$dataset,
+                    geneIdMap=dataSource()$sc1gene,
+                    inpsplt=input$GeneExprsplt1
                 )
                 datatable(
                     ggData,

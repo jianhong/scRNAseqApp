@@ -75,15 +75,15 @@ cellInfoGeneExprServer <- function(id, dataSource, optCrt) {
         ### expression stats table
         output$GeneExpr.dt1 <- renderDT({
             ggData <- scDRnum(
-                dataSource()$sc1conf,
-                dataSource()$sc1meta,
-                input$CellInfo1,
-                input$GeneName2,
-                input$subsetCell,
-                getSubsetCellVal(input),
-                dataSource()$dataset,
-                dataSource()$sc1gene,
-                input$GeneExprsplt1
+                inpConf=dataSource()$sc1conf,
+                inpMeta=dataSource()$sc1meta,
+                inpCellInfo=input$CellInfo1,
+                gene=input$GeneName2,
+                inpsubName=input$subsetCell,
+                inpsubValue=getSubsetCellVal(input),
+                dataset=dataSource()$dataset,
+                geneIdMap=dataSource()$sc1gene,
+                inpsplt=input$GeneExprsplt1
             )
             datatable(
                 ggData,

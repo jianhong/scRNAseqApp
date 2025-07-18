@@ -30,6 +30,7 @@ scDRcell <- function(
         geneIdMap,
         valueFilterKey,
         valueFilterCutoff,
+        valueFilterCutoff2,
         hideFilterCell=FALSE,
         inpSlingshot,
         slingshotFilename,
@@ -67,7 +68,8 @@ scDRcell <- function(
             geneIdMap,
             dataset,
             valueFilterKey,
-            valueFilterCutoff
+            valueFilterCutoff,
+            valueFilterCutoff2
         )
     rat <- getRatio(ggData)
     keep <- filterCells(
@@ -76,6 +78,7 @@ scDRcell <- function(
         subsetCellVal,
         subFilterColname,
         valueFilterCutoff,
+        valueFilterCutoff2,
         inpConf)
     
     if(length(subsetCellKey)==0){

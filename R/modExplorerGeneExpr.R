@@ -92,6 +92,7 @@ scExprServer <- function(
                         input[[paste0("GeneExprrg", postfix)]],
                 valueFilterKey = p_input$filterCell,
                 valueFilterCutoff = p_input$filterCellVal,
+                valueFilterCutoff2 = p_input$filterCellVal2,
                 hideFilterCell = input[[paste0("GeneExprhid", postfix)]]
             )
         })

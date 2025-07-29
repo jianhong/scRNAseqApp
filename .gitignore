@@ -5,3 +5,4 @@
 **.DS_Store
 *.Rproj
 scRNAseqAppFiles
+tests/testthat/_snaps

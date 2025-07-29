@@ -1,6 +1,6 @@
 Package: scRNAseqApp
 Title: A single-cell RNAseq Shiny app-package
-Version: 1.9.8
+Version: 1.9.9
 Authors@R:
     c(person(given = "Jianhong",
              family = "Ou",
@@ -73,7 +73,7 @@ Imports:
     xfun,
     xml2,
     utils
-Suggests: rmarkdown, knitr, testthat, BiocStyle
+Suggests: rmarkdown, knitr, testthat, BiocStyle, shinytest2
 Enhances:
     celldex,
     future,

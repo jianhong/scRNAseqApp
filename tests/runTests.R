@@ -1,4 +1,5 @@
 require("scRNAseqApp") || stop("unable to load Package:scRNAseqApp")
 require("Seurat") || stop("unable to load Package::Seurat")
 require("testthat") || stop("unable to load testthat")
+require('shinytest2') || stop("unable to load shinytest2")
 test_check("scRNAseqApp")

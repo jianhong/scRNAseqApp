@@ -90,12 +90,21 @@ heatmapDownloadHandler <-
         )
     }
 #' @importFrom plotly event_data
+#' @importFrom shiny getDefaultReactiveDomain
 #' @importFrom utils write.csv
-click_event_data <- function(...) {
-    event_data(event = "plotly_click", ...)
+click_event_data <- function(session = shiny::getDefaultReactiveDomain(), ...) {
+    if('plotly_click' %in% session$userData$plotlyShinyEventIDs){
+        event_data(event = "plotly_click", ...)
+    }else{
+        return(NULL)
+    }
 }
-lasso_select_data <- function(...) {
-    event_data(event = "plotly_selected", ...)
+lasso_select_data <- function(session = shiny::getDefaultReactiveDomain(), ...) {
+    if('plotly_click' %in% session$userData$plotlyShinyEventIDs){
+        event_data(event = "plotly_selected", ...)
+    }else{
+        return(NULL)
+    }
 }
 exprDownloadHandler <- function(geneIdMap, dataset, meta) {
     downloadHandler(

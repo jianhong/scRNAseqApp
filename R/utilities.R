@@ -108,6 +108,7 @@ getLogToken <- function(session){
     }
 }
 # update search results
+#' @importFrom utils combn
 updateSearch <- function(
         key_words, datasets,
         auth, global, page=1,
@@ -156,6 +157,15 @@ updateSearch <- function(
     }else{
         key_words <- strsplit(key_words, "\\s+")[[1]]
         key_words <- gsub("[^a-zA-Z0-9._'\"*-]+", "", key_words)
+        key_words <- unique(key_words)
+        if(length(key_words)>1){
+            key_words <- lapply(seq.int(length(key_words)), function(m){
+                cmb <- combn(key_words, m, simplify = FALSE)
+                lapply(cmb, paste, collapse = " ")
+            })
+            key_words <- unlist(key_words)
+        }
+        
         res_data <- lapply(getAppConf(privilege = auth$privilege), function(.ele){
             x <- paste(as.character(.ele), collapse = " ")
             m <- vapply(key_words, grepl, logical(1L), x = x, ignore.case=TRUE)

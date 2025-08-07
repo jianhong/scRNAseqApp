@@ -37,7 +37,10 @@ summaryBox <- function(
         width = 4,
         icon = "fas fa-chart-bar",
         style = "info",
-        border = "left") {
+        border = "left",
+        info = '',
+        details = '',
+        id = NULL) {
     div(
         class = c(paste0("col-md-", width), "about-left-border"),
         div(
@@ -60,7 +63,12 @@ summaryBox <- function(
                         ),
                         div(
                             class = "h5 mb-0 font-weight-bold text-gray-800",
-                            value
+                            if(!is.null(id)){
+                                textOutput(NS(id, id=paste0('stats', title)),
+                                       inline = TRUE)
+                            }else{
+                                value
+                            }
                         )
                     ),
                     div(
@@ -69,7 +77,9 @@ summaryBox <- function(
                     )
                 )
             )
-        )
+        ),
+        info = info,
+        details = details
     )
 }
 

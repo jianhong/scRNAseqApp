@@ -47,6 +47,20 @@
             }, 1000);
         }
     });
+    $('#about-privateDatasets').hide();
+    $('div.about-left-border').on('click', function(e){
+        // Append the new div to the container
+        $('#informationBox>h4').text($(this).attr('info'));
+        $('#informationBox>div#infolist').html($(this).attr('details'));
+
+        // Optional: Add animation for a smoother expansion
+        if($(this).attr('info')!='Public dataset list:'){
+            $('#about-privateDatasets').hide();
+        }else{
+            $('#about-privateDatasets').show();
+        }
+        $('#informationBox').hide().slideDown('slow');
+    });
     // Get mouse coordinates
     var mouseX, mouseY;
     $(document).mousemove(function(e){

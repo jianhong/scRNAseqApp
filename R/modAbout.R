@@ -38,15 +38,16 @@ aboutUI <- function(
         }
         refs <- listReferences()
         species <- listSpecies()
+        dbs <- listDatasets(
+            key = datasets,
+            privilege='all',
+            named = TRUE)
         tabPanel(
             title = div(
                 selectInput(
                     'selectedDatasets',
                     label = NULL,
-                    choices = listDatasets(
-                        key = datasets,
-                        privilege='all',
-                        named = TRUE),
+                    choices = dbs,
                     selected = defaultDataset,
                     width = "90vw"
                 )
@@ -113,11 +114,20 @@ aboutUI <- function(
                 class = "about-container",
                 summaryBox(
                     "DATASETS",
-                    length(listDatasets()), #textOutput(ns('dataset_counts')),
+                    length(dbs), #textOutput(ns('dataset_counts')),
                     width = 3,
                     icon = "database",
                     style = "success",
-                    border = "bottom"
+                    border = "bottom",
+                    info = 'Public dataset list:',
+                    details = paste("<ol>\n",
+                                    paste(paste("<li><p><a href='?data=",
+                                                dbs,
+                                                "'>",
+                                                names(dbs),
+                                                "</a></p></li>"), collapse = "\n"),
+                                    "\n</ol>"),
+                    id = id
                 ),
                 summaryBox(
                     "REFERENCES",
@@ -125,7 +135,13 @@ aboutUI <- function(
                     width = 3,
                     icon = "book-open",
                     style = "danger",
-                    border = "bottom"
+                    border = "bottom",
+                    info = 'Full reference list:',
+                    details = paste("<ol>\n",
+                                    paste(paste("<li>",
+                                                refs,
+                                                "</li>"), collapse = "\n"),
+                                    "\n</ol>")
                 ),
                 summaryBox(
                     "VISITORS",
@@ -133,32 +149,38 @@ aboutUI <- function(
                     width = 3,
                     icon = "eye",
                     style = "primary",
-                    border = "bottom"
+                    border = "bottom",
+                    info = 'Vistor counts:',
+                    details = ''
                 ),
                 summaryBox(
-                    tags$a("SPECIES",
-                           'data-toggle'='tooltip',
-                           'data-html'="true",
-                           title=paste(species,
-                                       collapse = ',<br/>')),
+                    "SPECIES",
                     tags$a(length(species),
                            'data-toggle'='tooltip',
                            'data-html'="true",
                            title=paste(species,
-                                       collapse = ',<br/>')), #textOutput(ns('species_count')),
+                                       collapse = ',\u{000A}')), #textOutput(ns('species_count')),
                     width = 3,
                     icon = "fish",
                     style = "warning",
-                    border = "bottom"
+                    border = "bottom",
+                    info = 'Full species list:',
+                    details = paste(species,
+                                    collapse = ',<br/>')
                 )
             ),
             hr(),
-            h4("Full reference list:"),
-            HTML(paste("<ol>\n",
-                       paste(paste("<li>",
-                                   refs,
-                                   "</li>"), collapse = "\n"),
-                       "\n</ol>")),
+            div(
+                id = 'informationBox',
+                uiOutput(ns('privateDatasets')),
+                h4("Full reference list:"),
+                div(id='infolist',
+                    HTML(paste("<ol>\n",
+                           paste(paste("<li>",
+                                       refs,
+                                       "</li>"), collapse = "\n"),
+                           "\n</ol>")))
+            ),
             if(!showHelpVideo){
                 p(
                     imageOutput('total_visitor', width = "50%", height = "150px")
@@ -225,12 +247,45 @@ aboutServer <- function(id, dataSource, optCrt) {
             }else{
                 h5('No reference for current data.')
             })
+        output$statsDATASETS <- 
+            renderText({length(dataSource()$available_datasets)})
         observeEvent(dataSource()$available_datasets, {
             updateSelectInput(inputId = 'selectedDatasets',
                     label = NULL,
                     choices = dataSource()$available_datasets,
                     selected = dataSource()$dataset
             )
+            output$statsDATASETS <- 
+                renderText({length(dataSource()$available_datasets)})
+            ## private datasets
+            publicDbs <- checkAvailableDataSets(privilege = NULL)
+            privateDbs <- setdiff(dataSource()$available_datasets, publicDbs)
+            if(length(privateDbs)){
+                output$privateDatasets <- renderUI({
+                    tagList(
+                        h5('Private dataset list:'),
+                        tags$ul(
+                            lapply(privateDbs, function(.ele){
+                                # add token if logged
+                                token <- getLogToken(session = session)
+                                if(!is.null(token)){
+                                    token <- paste0('&token=', token)
+                                }
+                                return(tags$li(
+                                    tags$a(
+                                        href=paste0('?data=', .ele, token),
+                                        .ele,
+                                        onclick = 
+                                            paste0('event.preventDefault();',
+                                                   'Shiny.onInputChange(',
+                                                   '\"search_results_select_button\",  \"',
+                                                   .ele,'\");window.scrollTo(0, 0);'))
+                                ))
+                            })
+                        ) 
+                    )
+                })
+            }
         })
         observeEvent(input$sbtn, {
             if (input$search != '' && input$search != "Type key words here") {

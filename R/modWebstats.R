@@ -19,6 +19,7 @@ webstatsUI <- function (id) {
         column(
             width = 9, plotOutput(ns("distPlot"), height = "300px")
         )),
+        DTOutput(ns("issues")),
         DTOutput(ns("counter"))
     ))
 }
@@ -199,5 +200,71 @@ webstatsServer <- function(id) {
             lengthMenu = list(c(10, 25, 50, -1), c(10, 25, 50, "All")),
             buttons = c('pageLength', 'copy', 'csv', 'excel', 'pdf', 'print')
         ))
+        updateCommentsTable <- function(){
+            output$issues <- renderDT({
+                data_to_display <- 
+                    listComments(page_size=.globals$totalComments,
+                                 full=TRUE, all=TRUE)
+                if(nrow(data_to_display)<1){
+                    data_to_display
+                }else{
+                    # Add a column for delete buttons
+                    # The inputId of each button will be "delete_button_ROWID"
+                    delete_buttons <- paste0(
+                        '<button id="delete_button_', data_to_display$id, '" ',
+                        'type="button" class="btn btn-danger btn-sm delete-btn" ',
+                        'onclick="Shiny.onInputChange(\'', NS(id, "delete_clicked"),
+                        '\', this.id)"',
+                        '>Delete</button>'
+                    )
+                    # Add the delete buttons as a new column to the data
+                    cbind(data_to_display, Actions = delete_buttons)
+                }
+            },
+            editable = list(target='cell', disable=list(columns = c(1, 10))), # 10 is the delete button
+            escape = FALSE, # IMPORTANT: Allow HTML rendering for buttons
+            extensions = 'Buttons',
+            options = list(
+                dom = 'Brtip',
+                lengthMenu = list(c(10, 25, 50, -1), c(10, 25, 50, "All")),
+                buttons = c('pageLength', 'copy', 'csv', 'excel', 'pdf', 'print')
+            ))
+        }
+        updateCommentsTable()
+        observeEvent(input$issues_cell_edit, {
+            row_idx  <- input$issues_cell_edit$row
+            col_idx <- input$issues_cell_edit$col
+            new_value <- input$issues_cell_edit$value
+            original_data <- listComments(page_size=.globals$totalComments,
+                                          full=TRUE, all=TRUE)
+            id_to_update <- original_data[row_idx, "id"]
+            col_name_to_update <- colnames(original_data)[col_idx]
+            updateComments(id=id_to_update,
+                           coln=col_name_to_update,
+                           val=new_value)
+        })
+        # Observe delete button clicks
+        observeEvent(input$delete_clicked, {
+            showModal(
+                modalDialog(
+                    title = "Confirm deletion",
+                    "Are you sure you want to delete this data?",
+                    footer = tagList(
+                        actionButton(NS(id, "confirmDelBtn"), "Confirm"), # This is the "Yes" button
+                        modalButton("Cancel") # This is the "No" button
+                    )
+                )
+            )
+        })
+        observeEvent(input$confirmDelBtn, {
+            removeModal()
+            # Extract the row ID from the button's inputId
+            # The inputId is "delete_button_ROWID"
+            button_id <- input$delete_clicked
+            id_to_delete <- as.numeric(gsub("delete_button_", "", button_id))
+            deleteComments(id=id_to_delete)
+            # refresh table
+            updateCommentsTable()
+        })
     })
 }

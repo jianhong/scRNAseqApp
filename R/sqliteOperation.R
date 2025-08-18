@@ -1,6 +1,7 @@
 # sqlite operation
 #' @importFrom DBI dbConnect dbDisconnect dbWriteTable
 #'  dbGetQuery dbSendQuery dbListTables dbClearResult
+#'  sqlInterpolate
 #' @importFrom RSQLite SQLite
 getDBconn <- function(){
     dbConnect(SQLite(),
@@ -355,6 +356,74 @@ listVisitors <- function(summary=FALSE, ipCounter=FALSE){
     counter <- connectDB(dbGetQuery, query)
 }
 
+## comments table
+touchCommentTable <- function(){
+    if(!tableExists(.globals$commentsTableName)){
+        sql <- paste('CREATE TABLE IF NOT EXISTS', .globals$commentsTableName, 
+                     '(id INTEGER PRIMARY KEY,',
+                     'uid TEXT NOT NULL,',
+                     'email TEXT NOT NULL,',
+                     'title TEXT NOT NULL,',
+                     'comment TEXT NOT NULL,',
+                     'dataset TEXT,',
+                     'open INTEGER NOT NULL DEFAULT 1,',
+                     "created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%S', 'now', 'localtime')),",
+                     "updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%S', 'now', 'localtime')))")
+        sendNoreplyQueryToDB(statement=sql)
+    }
+}
+countComments <- function(){
+    sql <- paste('SELECT COUNT(*) FROM', .globals$commentsTableName)
+    connectDB(dbGetQuery, sql)[[1]]
+}
+distinctCommentsTitles <- function(){
+    touchCommentTable()
+    sql <- paste("SELECT DISTINCT title FROM",
+                 .globals$commentsTableName,
+                 "ORDER BY updated_at DESC")
+    connectDB(dbGetQuery, sql)$title
+}
+listComments <- function(page_size, full=FALSE, all=FALSE){
+    touchCommentTable()
+    col <- ifelse(full,
+                  '*',
+                  'uid, title, comment')
+    where <- ifelse(all, 
+                    "", " WHERE open=1")
+    query <- paste0("SELECT ", col, " FROM ", .globals$commentsTableName,
+                    where,
+                    " ORDER BY updated_at DESC LIMIT ", page_size)
+    connectDB(dbGetQuery, query)
+}
+updateComments<- function(id, coln, val){
+    sql <- paste0('UPDATE ', .globals$commentsTableName,
+                  " SET `", coln, "` = '", val, "',",
+                  " updated_at = strftime('%Y-%m-%d %H:%M:%S', 'now', 'localtime')",
+                  " WHERE id='", id, "'")
+    sendNoreplyQueryToDB(statement=sql)
+}
+insertComments <- function(uid, email, title, comment, dataset){
+    con <- getDBconn()
+    on.exit(dbDisconnect(con))
+    sql <- paste0('INSERT INTO ', .globals$commentsTableName,
+                  ' (`uid`, `email`, `title`, `comment`, `dataset`) ',
+                  'VALUES (?uid, ?email, ?title, ?comment, ?dataset)')
+    query <- sqlInterpolate(
+        conn = con, sql,
+        uid = uid,
+        email = email,
+        title = title,
+        comment = comment,
+        dataset = dataset
+    )
+    res <- dbSendQuery(conn = con, statement = query)
+    dbClearResult(res)
+}
+deleteComments <- function(id){
+    sql <- paste0("DELETE FROM ", .globals$commentsTableName,
+                  " WHERE id ='", id, "'")
+    sendNoreplyQueryToDB(statement=sql)
+}
 ## gene table
 ## gene name, expressed datasets
 touchGeneTable <- function(updateDB=FALSE){

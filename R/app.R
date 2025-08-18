@@ -171,6 +171,8 @@ scRNAseqApp <- function(
                 subsetPlotsUI('explorer'),
                 ### Tab: downloader
                 downloaderUI('downloader'),
+                ### Tab: comments
+                issueUI('issues'),
                 ### Tab: Login form
                 #tabLogin(),
                 loginUI(loginNavbarTitle, defaultDataset)
@@ -605,6 +607,11 @@ scRNAseqApp <- function(
                 }
             }
         }
+        ## comments server
+        issueServer('issues',
+                    reactive({
+                        dataSource
+                    }))
         ## download server
         downloaderServer("downloader")
         ## observe event for editor

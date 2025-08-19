@@ -1,3 +1,8 @@
+CHANGES IN VERSION 1.9.12
+-------------------------
+
+    o Fix the bug if the script.js does not update.
+    
 CHANGES IN VERSION 1.9.11
 -------------------------
 

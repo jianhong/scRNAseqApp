@@ -1,7 +1,10 @@
 #' @importFrom htmltools htmlDependency
+#' @importFrom utils packageVersion
+#' @importFrom methods getPackageName
 visitorDependencies <- function(){
     htmlDependency(
-        name = "scRNAseqApp-assets", version = "0.0.1",
+        name = "scRNAseqApp-assets",
+        version = packageVersion(getPackageName()),
         package = "scRNAseqApp",
         src = "assets",
         script = c("js/script.js"),

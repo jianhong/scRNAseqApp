@@ -403,6 +403,7 @@ updateComments<- function(id, coln, val){
     sendNoreplyQueryToDB(statement=sql)
 }
 insertComments <- function(uid, email, title, comment, dataset){
+    touchCommentTable()
     con <- getDBconn()
     on.exit(dbDisconnect(con))
     sql <- paste0('INSERT INTO ', .globals$commentsTableName,

@@ -1,3 +1,8 @@
+CHANGES IN VERSION 1.9.14
+-------------------------
+
+    o Fix the test when there is old files in the tmpfolder.
+    
 CHANGES IN VERSION 1.9.13
 -------------------------
 

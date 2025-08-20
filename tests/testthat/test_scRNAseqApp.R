@@ -1,5 +1,7 @@
 test_that("utilities works not correct", {
-  app_path=tempdir()
+  app_path <- file.path(tempdir(), 'test_scRNAseqApp')
+  dir.create(app_path, recursive = TRUE)
+  on.exit(unlink(app_path, recursive = TRUE))
   scInit(app_path=app_path)
   expect_true(file.exists(file.path(app_path, 'doc.txt')))
   expect_true(file.exists(file.path(app_path, .globals$credential_path)))

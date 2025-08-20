@@ -1,7 +1,7 @@
 # sqlite operation
 #' @importFrom DBI dbConnect dbDisconnect dbWriteTable
 #'  dbGetQuery dbSendQuery dbListTables dbClearResult
-#'  sqlInterpolate
+#'  sqlInterpolate dbListFields dbAppendTable
 #' @importFrom RSQLite SQLite
 getDBconn <- function(){
     dbConnect(SQLite(),
@@ -362,11 +362,12 @@ listVisitors <- function(summary=FALSE, ipCounter=FALSE){
 
 ## comments table
 touchCommentTable <- function(){
-    if(!tableExists(.globals$commentsTableName)){
+    createCommentTable <- function(){
         sql <- paste('CREATE TABLE IF NOT EXISTS', .globals$commentsTableName, 
                      '(id INTEGER PRIMARY KEY,',
                      'uid TEXT NOT NULL,',
                      'email TEXT NOT NULL,',
+                     'pid INTEGER DEFAULT 0,',
                      'title TEXT NOT NULL,',
                      'comment TEXT NOT NULL,',
                      'dataset TEXT,',
@@ -374,6 +375,28 @@ touchCommentTable <- function(){
                      "created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%S', 'now', 'localtime')),",
                      "updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%S', 'now', 'localtime')))")
         sendNoreplyQueryToDB(statement=sql)
+    }
+    if(!tableExists(.globals$commentsTableName)){
+        createCommentTable()
+    }else{
+        column_names <- connectDB(dbListFields, name=.globals$commentsTableName)
+        if(!all(c('id', 'uid', 'email', 'pid', 'title',
+                  'comment', 'dataset', 'open', 'created_at', 'updated_at') %in%
+                column_names)){
+            availableComments <- listComments(page_size = .globals$totalComments,
+                                              full = TRUE, all=TRUE,
+                                              touch = FALSE)
+            sendNoreplyQueryToDB(paste0("DROP TABLE IF EXISTS ",
+                                        .globals$commentsTableName))
+            createCommentTable()
+            if(nrow(availableComments)>0){
+                if(!'pid' %in% colnames(availableComments)){
+                    availableComments$pid <- availableComments$id
+                }
+                connectDB(dbAppendTable, name=.globals$commentsTableName,
+                          value=availableComments)
+            }
+        }
     }
 }
 countComments <- function(){
@@ -387,16 +410,29 @@ distinctCommentsTitles <- function(){
                  "ORDER BY updated_at DESC")
     connectDB(dbGetQuery, sql)$title
 }
-listComments <- function(page_size, full=FALSE, all=FALSE){
-    touchCommentTable()
+listComments <- function(page_size, full=FALSE, all=FALSE, touch=TRUE){
+    if(touch) touchCommentTable()
     col <- ifelse(full,
                   '*',
-                  'uid, title, comment')
+                  'id, uid, title, comment, created_at, updated_at, pid')
     where <- ifelse(all, 
                     "", " WHERE open=1")
     query <- paste0("SELECT ", col, " FROM ", .globals$commentsTableName,
                     where,
                     " ORDER BY updated_at DESC LIMIT ", page_size)
+    res <- connectDB(dbGetQuery, query)
+    if(any(is.na(res$pid))){
+        res$pid[is.na(res$pid)] <- res$id[is.na(res$pid)]
+    }
+    if(any(res$pid==0)){
+        res$pid[res$pid==0] <- res$id[res$pid==0]
+    }
+    res
+}
+getCommentsById <- function(id){
+    query <- paste0("SELECT * FROM ",
+                    .globals$commentsTableName,
+                    " WHERE id='", id,"'")
     connectDB(dbGetQuery, query)
 }
 updateComments<- function(id, coln, val){
@@ -406,20 +442,24 @@ updateComments<- function(id, coln, val){
                   " WHERE id='", id, "'")
     sendNoreplyQueryToDB(statement=sql)
 }
-insertComments <- function(uid, email, title, comment, dataset){
+insertComments <- function(uid, email, title, comment, dataset, pid){
     touchCommentTable()
     con <- getDBconn()
     on.exit(dbDisconnect(con))
+    if(missing(pid)){
+        pid <- 0
+    }
     sql <- paste0('INSERT INTO ', .globals$commentsTableName,
-                  ' (`uid`, `email`, `title`, `comment`, `dataset`) ',
-                  'VALUES (?uid, ?email, ?title, ?comment, ?dataset)')
+                  ' (`uid`, `email`, `title`, `comment`, `dataset`, `pid`) ',
+                  'VALUES (?uid, ?email, ?title, ?comment, ?dataset, ?pid)')
     query <- sqlInterpolate(
         conn = con, sql,
         uid = uid,
         email = email,
         title = title,
         comment = comment,
-        dataset = dataset
+        dataset = dataset,
+        pid = pid
     )
     res <- dbSendQuery(conn = con, statement = query)
     dbClearResult(res)

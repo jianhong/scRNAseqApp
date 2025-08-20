@@ -61,15 +61,19 @@ createConfigTable <- function(appconf){
           ref_abstract=replaceNULL(.ele$ref$entry$abstract))
     })
     appData <- do.call(rbind, appData)
-    colnames(appData) <- c('title', 'id', 'species', 'type', 'markers',
-                           'keywords', 'groupCol', 'ref_bib', 'ref_doi',
-                           'ref_pmid', 'ref_title', 'ref_author',
-                           'ref_year', 'ref_journal', 'ref_abstract')
-    appData <- as.data.frame(appData)
-    appData$locker <- vapply(appData$id, FUN = checkLocker,
-                             FUN.VALUE = logical(1L))
-    connectDB(dbWriteTable, name = .globals$configTableName,
-              value = appData, overwrite = TRUE)
+    if(length(dim(appData))==2){
+        colnames(appData) <- c('title', 'id', 'species', 'type', 'markers',
+                               'keywords', 'groupCol', 'ref_bib', 'ref_doi',
+                               'ref_pmid', 'ref_title', 'ref_author',
+                               'ref_year', 'ref_journal', 'ref_abstract')
+        appData <- as.data.frame(appData)
+        appData$locker <- vapply(appData$id, FUN = checkLocker,
+                                 FUN.VALUE = logical(1L))
+        connectDB(dbWriteTable, name = .globals$configTableName,
+                  value = appData, overwrite = TRUE)
+    }else{
+        stop('No data available.')
+    }
 }
 
 updateConfigTable <- function(appconf){
@@ -403,6 +407,7 @@ updateComments<- function(id, coln, val){
     sendNoreplyQueryToDB(statement=sql)
 }
 insertComments <- function(uid, email, title, comment, dataset){
+    touchCommentTable()
     con <- getDBconn()
     on.exit(dbDisconnect(con))
     sql <- paste0('INSERT INTO ', .globals$commentsTableName,

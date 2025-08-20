@@ -44,11 +44,15 @@ getNamedDataSets <- function(privilege=NULL) {
 
 # check if all the required files are available
 checkFiles <- function(folder, privilege, token, tokenList) {
+    stopifnot(length(folder)==1)
     if(checkLocker(folder)){
         if(!checkPrivilege(privilege=privilege, datasetname = folder) &&
            !checkToken(tokenList=tokenList, token = token, dataset = folder)){
             return(FALSE)
         }
+    }
+    if(!checkAccessibility(folder, bool=TRUE)){
+        return(FALSE)
     }
     all(
         c(
@@ -63,6 +67,7 @@ checkFiles <- function(folder, privilege, token, tokenList) {
                 file.path(.globals$datafolder, folder),
                 full.names = FALSE)
     )
+    
 }
 
 getDefaultDataset <- function(
@@ -195,7 +200,26 @@ get_full_ref_list <- function(appconf, returnLen = FALSE) {
     ref <- paste("<ol>\n", paste(ref, collapse = "\n"), "\n</ol>")
     HTML(ref)
 }
-
+checkAccessibility <- function(f, bool=FALSE){
+    fa <- file.access(f, mode = 4) == -1 # file not readable
+    if(bool) return(fa)
+    if(any(fa)){
+        showNotification('Some file not accessable.', type='error')
+        error_message <- paste("File'", 
+                               paste(f[fa], collapse = "','"),
+                                "'is not readable. Please check permissions.")
+        warning(error_message)
+        datasets <- paste(basename(dirname(f[fa])),
+                          collapse = ', ')
+        insertComments(uid='system',
+                       email='system@sys.account',
+                       title='file not accessible',
+                       comment=paste('File not readable for', datasets),
+                       dataset=datasets)
+        f <- f[!fa]
+    }
+    return(f)
+}
 getTokenList <- function() {
     token <- dir(
         .globals$datafolder,
@@ -203,6 +227,7 @@ getTokenList <- function() {
         recursive = TRUE,
         full.names = TRUE
     )
+    token <- checkAccessibility(token)
     token_n <- lapply(token, readLines)
     token <- rep(basename(dirname(token)), lengths(token_n))
     names(token) <- unlist(token_n)

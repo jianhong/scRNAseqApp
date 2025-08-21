@@ -50,16 +50,28 @@ issueUI <- function(id) {
                               rows = 6)
             ), # comment
             fluidRow(
-                column(8, div(
+                column(10, div(
                     style = "visibility:hidden;",
                     textInput(NS(id, 'token'),
                               label = NULL,
                               value = as.numeric(Sys.time()))
                 )),
-                column(4, actionButton(NS(id, 'submit'),
+                column(2, div(
+                    class='',
+                    actionButton(NS(id, 'submit'),
                                        label = 'submit',
-                                       class = "align-action-button"))
-            )
+                                       class = "align-action-button")))
+            ),
+           fluidRow(
+               div(class='shiny-input-textarea form-group shiny-input-container',
+                   style="width:95vh",
+                   h5("comment preview"),
+                   div(
+                       style='min-height:24px;',
+                       class="form-control shiny-bound-input",
+                       uiOutput(NS(id, 'previewbox')))
+               )
+           )
         ),
         hr(),
         
@@ -76,6 +88,9 @@ issueUI <- function(id) {
 #' @importFrom shiny markdown
 issueServer <- function(id, dataSource, optCrt) {
     moduleServer(id, function(input, output, session) {
+        observeEvent(input$comment, {
+            output$previewbox <- renderUI(markdown(input$comment))
+        })
         updateCommentList <- function(){
             output$issues <- renderDT({
                 data_to_display <- 

@@ -208,6 +208,9 @@ webstatsServer <- function(id) {
                 if(nrow(data_to_display)<1){
                     data_to_display
                 }else{
+                    data_to_display$comment <- vapply(data_to_display$comment,
+                                                      FUN = markdown,
+                                                      FUN.VALUE = character(1L))
                     # Add a column for delete buttons
                     # The inputId of each button will be "delete_button_ROWID"
                     delete_buttons <- paste0(

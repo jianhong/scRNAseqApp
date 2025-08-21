@@ -73,6 +73,7 @@ issueUI <- function(id) {
 }
 #' @importFrom DT renderDT
 #' @importFrom magrittr %>%
+#' @importFrom shiny markdown
 issueServer <- function(id, dataSource, optCrt) {
     moduleServer(id, function(input, output, session) {
         updateCommentList <- function(){
@@ -101,6 +102,10 @@ issueServer <- function(id, dataSource, optCrt) {
                     )
                     # Add the delete buttons as a new column to the data
                     data_to_display <- cbind(data_to_display[, -1], Actions = edit_buttons)
+                    # change newline to <br>
+                    data_to_display$comment <- vapply(data_to_display$comment,
+                                                      FUN = markdown,
+                                                      FUN.VALUE = character(1L))
                     # reorder the data (data.frame)
                     data_to_display <- split(data_to_display, data_to_display$pid)
                     data_to_display_updated_at <- unlist(lapply(data_to_display, function(.ele){
@@ -179,7 +184,7 @@ issueServer <- function(id, dataSource, optCrt) {
                         p("Are you sure you want to submit this data?"),
                         p("username: ", input$uid), p('email: ', input$email),
                         h5(input$title),
-                        p(input$comment),
+                        markdown(input$comment),
                         footer = tagList(
                             actionButton(NS(id, "confirmSubmitBtn"), "Confirm"), # This is the "Yes" button
                             modalButton("Cancel") # This is the "No" button

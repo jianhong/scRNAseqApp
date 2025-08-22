@@ -1,6 +1,7 @@
 #' @importFrom DT DTOutput
 #' @importFrom magrittr %>%
 issueUI <- function(id) {
+    ns <- NS(id)
     tabPanel(
         value = id,
         HTML("Issues"),
@@ -13,50 +14,112 @@ issueUI <- function(id) {
                 "--Henry Louis Mencken"
             )
         ),
-        h5('New issue'),
         fluidRow(
             ## new comments here
-            fluidRow(
-                column(4, textInput(NS(id, 'uid'),
-                                    label = 'name')), # id
-                column(4, textInput(NS(id, 'email'),
-                                    label = 'email')), # contact info, email
-                column(4)
-            ),
-            fluidRow(
-                textInput(NS(id, 'title'),
-                          label = 'title',
-                          width = '95vw')
-            ),# title
-            fluidRow(
-                textAreaInput(NS(id, 'comment'),
-                              label = 'comment',
-                              width = '95vw',
-                              rows = 6)
-            ), # comment
-            fluidRow(
-                column(10, div(
-                    style = "visibility:hidden;",
-                    textInput(NS(id, 'token'),
+            div(class = "newcomment-form-container",
+                # Header
+                div(class = "newcomment-form-header",
+                    h3(class = "newcomment-form-title",
+                       tags$i(class = "fas fa-comment-alt",
+                              style = "color: #5f6368;"),
+                       "Add New Comment"
+                    )
+                ),
+                
+                # User info row
+                div(class = "newcomment-form-row",
+                    div(class = "newcomment-form-group-modern has-icon",
+                        tags$i(class = "newcomment-input-icon fas fa-user"),
+                        tags$label("for" = ns('uid'),
+                                   class = "required-field", "Your Name"),
+                        div(class = "newcomment-form-control-wrapper",
+                            textInput(ns('uid'), 
+                                      label = NULL,
+                                      placeholder = "Enter your name")
+                        ),
+                        div(class = "newcomment-form-info",
+                            tags$i(class = "fas fa-info-circle"),
+                            "We'll email you only if clarification is needed.")
+                    ),
+                    div(class = "newcomment-form-group-modern has-icon",
+                        tags$i(class = "newcomment-input-icon fas fa-envelope"),
+                        tags$label("for" = ns('email'),
+                                   class = "required-field", 
+                                   "Email Address"),
+                        div(class = "newcomment-form-control-wrapper",
+                            textInput(ns('email'), 
+                                      label = NULL,
+                                      placeholder = "your.email@example.com")
+                        ),
+                        div(class = "newcomment-form-info",
+                            tags$i(class = "fas fa-info-circle"),
+                            "Email acts as edit password.")
+                    )
+                ),
+                
+                # Title input
+                div(class = "newcomment-title-input-container",
+                    div(class = "newcomment-form-group-modern",
+                        tags$label("for" = ns('title'),
+                                   class = "required-field",
+                                   "Comment Title"),
+                        div(class = "newcomment-form-control-wrapper",
+                            textInput(ns('title'), 
+                                      label = NULL,
+                                      placeholder = "What's this comment about?",
+                                      width = "100%")
+                        )
+                    )
+                ),
+                
+                # Comment textarea
+                div(class = "newcomment-input-container",
+                    tags$label("for" = ns('comment'),
+                               class = "required-field",
+                               "Your Comment"),
+                    div(class = "form-control-wrapper",
+                        textAreaInput(ns('comment'),
+                                      label = NULL,
+                                      placeholder = "Share your thoughts, ask questions, or provide feedback...",
+                                      rows = 6,
+                                      width = "100%")
+                    )
+                ),
+                
+                # Hidden token field
+                div(style = "display: none;",
+                    textInput(ns('token'), 
                               label = NULL,
                               value = as.numeric(Sys.time()))
-                )),
-                column(2, div(
-                    class='',
-                    actionButton(NS(id, 'submit'),
-                                       label = 'submit',
-                                       class = "align-action-button")))
-            ),
-           fluidRow(
-               div(class='shiny-input-textarea form-group shiny-input-container',
-                   style="width:95vw",
-                   h5("comment preview"),
-                   div(
-                       style='min-height:24px;',
-                       class="form-control shiny-bound-input",
-                       uiOutput(NS(id, 'previewbox')))
-               )
-           )
+                ),
+                
+                # Form actions
+                div(class = "newcomment-form-actions",
+                    div(class = "newcomment-form-info",
+                        tags$i(class = "fas fa-info-circle"),
+                        "Markdown is supported in comments.",
+                        span(style = "margin-left: 16px;",
+                             tags$i(class = "fas fa-lock"),
+                             "  We'll never share your email."
+                        )
+                    ),
+                    actionButton(ns('submit'),
+                                 "Post Comment",
+                                 class = "newcomment-submit-btn",
+                                 icon = icon("paper-plane"))
+                ),
+                
+                # Preview section
+                div(class = "newcomment-preview-container",
+                    div(class = "newcomment-preview-header",
+                        tags$i(class = "fas fa-eye"),
+                        "Markdown Comment Preview"
+                    ),
+                    div(class = "newcomment-preview-content",
+                        uiOutput(ns('previewbox'))
+                    )
+                )
+            )
         ),
         hr(),
         
@@ -76,6 +139,12 @@ issueServer <- function(id, dataSource, optCrt) {
         observeEvent(input$comment, {
             output$previewbox <- renderUI(markdown(input$comment))
         })
+        observeEvent(input$reply_comment, {
+            output$reply_previewbox <- renderUI(markdown(input$reply_comment))
+        })
+        observeEvent(input$edit_comment, {
+            output$edit_previewbox <- renderUI(markdown(input$edit_comment))
+        })
         createCommentHTML <- function(comment, parent_comment){
             comment <- unlist(comment)
             actionBtn <- paste0(
@@ -87,12 +156,12 @@ issueServer <- function(id, dataSource, optCrt) {
                 '    <button id="edit_button_', comment["id"], '" ',
                 'class="action-btn" ',
                 'onclick="Shiny.onInputChange(\'', NS(id, "edit_clicked"),
-                '\', this.id)"',
+                '\', Math.random()+\'_\'+this.id)"',
                 '><i class="fas fa-edit"></i> Edit</button>',
                 '<button id="reply_button_', comment["id"], '" ',
                 'class="action-btn" ',
                 'onclick="Shiny.onInputChange(\'', NS(id, "reply_clicked"),
-                '\', this.id)"',
+                '\', Math.random()+\'_\'+this.id)"',
                 '><i class="fas fa-reply"></i> Reply</button>'
             )
             if(missing(parent_comment)){
@@ -162,8 +231,9 @@ issueServer <- function(id, dataSource, optCrt) {
                 names(main_comment) <- colnames(comments_df)
                 # Add main comment
                 if(addMain){
-                    threaded_html <- 
-                        c(threaded_html, createCommentHTML(main_comment))
+                    this_html <- createCommentHTML(main_comment)
+                }else{
+                    this_html <- c()
                 }
                 # Add replies to this main comment
                 comment_replies <- 
@@ -175,21 +245,23 @@ issueServer <- function(id, dataSource, optCrt) {
                     for (j in seq.int(nrow(comment_replies))) {
                         reply <- comment_replies[j, , drop=TRUE]
                         names(reply) <- colnames(comments_df)
-                        threaded_html <-
-                            c(threaded_html,
+                        this_html <-
+                            c(this_html,
                               createCommentHTML(reply, main_comment))
                         reply_reply <-
                             comments_df[comments_df$pid == reply$id, ,
                                         drop=FALSE]
                         if(nrow(reply_reply)>0){
-                            threaded_html <-
-                                c(threaded_html,
+                            this_html <-
+                                c(this_html,
                                   createThreadedComments(
                                       comments_df,
                                       comment_replies[j, , drop=FALSE]))
                         }
                     }
                 }
+                threaded_html <- c(threaded_html,
+                                   paste(this_html, collapse = ' '))
             }
             return(threaded_html)
         }
@@ -228,7 +300,9 @@ issueServer <- function(id, dataSource, optCrt) {
                 },# IMPORTANT: Allow HTML rendering for buttons
                 escape = FALSE, # IMPORTANT: Allow HTML rendering for buttons
                 options = list(
-                    ordering = FALSE
+                    ordering = FALSE,
+                    lengthMenu = c(5, 10, 25, 50, 100),
+                    pageLength = 10 
                 ),
                 rownames = FALSE,
                 colnames = ""
@@ -274,10 +348,26 @@ issueServer <- function(id, dataSource, optCrt) {
                 showModal(
                     modalDialog(
                         title = "Confirm Submission",
+                        size = 'l',
+                        # Original comment preview
+                        div(class = "original-comment-preview",
+                            div(class = "original-comment-header",
+                                div(class = "original-comment-title",
+                                    input$title),
+                                div(class="comment-author",
+                                    paste("by", input$uid)),
+                                div('with email'),
+                                div(class='comment-email',
+                                    input$email)
+                            ),
+                            tags$i(
+                                class = "fas fa-quote-left",
+                                style = "color: #667eea; font-size: 14px;"),
+                            div(class = "original-comment-content",
+                                markdown(input$comment)
+                            )
+                        ),
                         p("Are you sure you want to submit this data?"),
-                        p("username: ", input$uid), p('email: ', input$email),
-                        h5(input$title),
-                        markdown(input$comment),
                         footer = tagList(
                             actionButton(NS(id, "confirmSubmitBtn"), "Confirm"), # This is the "Yes" button
                             modalButton("Cancel") # This is the "No" button
@@ -323,18 +413,87 @@ issueServer <- function(id, dataSource, optCrt) {
         })
         ## edit comments
         observeEvent(input$edit_clicked, {
-            id_to_edit <- as.numeric(gsub("edit_button_", "", input$edit_clicked))
+            id_to_edit <- as.numeric(gsub("^.*?edit_button_", "", input$edit_clicked))
             if(is.numeric(id_to_edit)){
                 info <- getCommentsById(id_to_edit)
+                ns <- NS(id)
                 showModal(
                     modalDialog(
                         title = paste("Edit issue: ", info$id),
-                        div(style='visibility:hidden;height:0px;width:0px;', 
-                            numericInput(NS(id, 'edit_id'), label = NULL, value = info$id)),
-                        textInput(NS(id, 'edit_uid'), "name", value = info$uid),
-                        textInput(NS(id, 'edit_email'), "email", value = NULL),
-                        textInput(NS(id, 'edit_title'), "title", value = info$title),
-                        textAreaInput(NS(id, 'edit_comment'), 'comment', value = info$comment),
+                        size = 'l',
+                        div(
+                            # Edit form section
+                            div(class = "newcomment-form-container",
+                                # Hidden fields
+                                div(style='display: none;', 
+                                    numericInput(ns('edit_id'),
+                                                 label = NULL,
+                                                 value = info$id)),
+                                # User info row
+                                div(class = "newcomment-form-row",
+                                    div(class = "newcomment-form-group-modern has-icon",
+                                        tags$i(class = "newcomment-input-icon fas fa-user"),
+                                        tags$label("for" = ns('edit_uid'),
+                                                   class = "required-field", "Your Name"),
+                                        div(class = "newcomment-form-control-wrapper",
+                                            textInput(ns('edit_uid'), 
+                                                      label = NULL,
+                                                      value = info$uid)
+                                        )
+                                    ),
+                                    div(class = "newcomment-form-group-modern has-icon",
+                                        tags$i(class = "newcomment-input-icon fas fa-envelope"),
+                                        tags$label("for" = ns('edit_email'),
+                                                   class = "required-field", 
+                                                   "Email Address"),
+                                        div(class = "newcomment-form-control-wrapper",
+                                            textInput(ns('edit_email'), 
+                                                      label = NULL,
+                                                      placeholder = "used as password")
+                                        )
+                                    )
+                                ),
+                                # Comment title
+                                div(class = "newcomment-title-input-container",
+                                    div(class = "newcomment-form-group-modern",
+                                        tags$label("for" = ns('edit_title'),
+                                                   class = "required-field",
+                                                   "Comment Title"),
+                                        div(class = "newcomment-form-control-wrapper",
+                                            textInput(ns('edit_title'), 
+                                                      label = NULL,
+                                                      value = info$title,
+                                                      width = "100%")
+                                        )
+                                    )
+                                ),
+                                # Comment field
+                                div(class = "newcomment-input-container",
+                                    tags$label("for" = ns('edit_comment'),
+                                               class = "required-field",
+                                               "Your Reply"),
+                                    div(class = "form-control-wrapper",
+                                        textAreaInput(ns('edit_comment'),
+                                                      label = NULL,
+                                                      value = info$comment,
+                                                      rows = 5,
+                                                      width = "100%")
+                                    )
+                                )
+                            )
+                        ),
+                        
+                        # Preview section
+                        div(class = "newcomment-preview-container",
+                            div(class = "newcomment-preview-header",
+                                tags$i(class = "fas fa-eye"),
+                                "Markdown Comment Preview"
+                            ),
+                            div(class = "newcomment-preview-content",
+                                uiOutput(ns('edit_previewbox'))
+                            )
+                        ),
+                        
                         footer = tagList(
                             actionButton(NS(id, "submitEditBtn"), "Submit"), # This is the "Yes" button
                             modalButton("Cancel") # This is the "No" button
@@ -368,28 +527,161 @@ issueServer <- function(id, dataSource, optCrt) {
         })
         ## reply comments
         observeEvent(input$reply_clicked, {
-            id_to_reply <- as.numeric(gsub("reply_button_", "", input$reply_clicked))
+            ns <- NS(id)
+            id_to_reply <- as.numeric(gsub("^.*?reply_button_", "", input$reply_clicked))
             if(is.numeric(id_to_reply)){
                 info <- getCommentsById(id_to_reply)
                 if(nrow(info)){
                     showModal(
                         modalDialog(
-                            title = paste("Reply issue: ", info$title),
-                            div(style='visibility:hidden;height:0px;width:0px;', 
-                                numericInput(NS(id, 'reply_id'), label = NULL, value = info$id),
-                                textInput(NS(id, 'reply_title'), label = NULL, value = info$title),
-                                textInput(NS(id, 'reply_dataset'), label=NULL, value = info$dataset)),
-                            textInput(NS(id, 'reply_uid'), "name", value = NULL),
-                            textInput(NS(id, 'reply_email'), "email", value = NULL),
-                            textAreaInput(NS(id, 'reply_comment'), 'comment', value = NULL),
-                            footer = tagList(
-                                actionButton(NS(id, "submitReplyBtn"), "Submit"), # This is the "Yes" button
-                                modalButton("Cancel") # This is the "No" button
-                            )
+                            title = NULL,  # We'll create a custom header
+                            size = "xl",
+                            
+                            # Custom modal content
+                            div(
+                                # Modal header
+                                div(class = "reply-header-content",
+                                    div(class = "reply-title",
+                                        tags$i(class = "fas fa-reply",
+                                               style = "font-size: 20px;"),
+                                        "Reply to Comment"
+                                    ),
+                                    div(class = "reply-subtitle",
+                                        paste("Responding to:",
+                                              substr(info$uid, 1, 60),
+                                              if(nchar(info$uid) > 60){
+                                                  "..." } else {""})
+                                    )
+                                )
+                            ),
+                            
+                            # Modal body
+                            div(
+                                # Original comment preview
+                                div(class = "original-comment-preview",
+                                    div(class = "original-comment-header",
+                                        tags$i(
+                                            class = "fas fa-quote-left",
+                                            style = "color: #667eea; font-size: 14px;"),
+                                        div(class = "original-comment-title",
+                                            info$title)
+                                    ),
+                                    div(class = "original-comment-content",
+                                        markdown(info$comment)
+                                    )
+                                ),
+                                
+                                # Reply form section
+                                div(class = "newcomment-form-container",
+                                    div(class = "newcomment-form-header",
+                                        tags$i(class = "fas fa-pen",
+                                               style = "color: #667eea;"),
+                                        h4(class = "form-section-title",
+                                           "Your Reply")
+                                    ),
+                                    
+                                    # Hidden fields
+                                    div(style = "display: none;",
+                                        numericInput(ns('reply_id'),
+                                                     label = NULL,
+                                                     value = info$id),
+                                        textInput(ns('reply_title'),
+                                                  label = NULL,
+                                                  value = info$title),
+                                        textInput(ns('reply_dataset'),
+                                                  label = NULL, 
+                                                  value = info$dataset)
+                                    ),
+                                    
+                                    # User info row
+                                    div(class = "newcomment-form-row",
+                                        div(class = "newcomment-form-group-modern has-icon",
+                                            tags$i(class = "newcomment-input-icon fas fa-user"),
+                                            tags$label("for" = ns('reply_uid'),
+                                                       class = "required-field", "Your Name"),
+                                            div(class = "newcomment-form-control-wrapper",
+                                                textInput(ns('reply_uid'), 
+                                                          label = NULL,
+                                                          placeholder = "Enter your name")
+                                            ),
+                                            div(class = "newcomment-form-info",
+                                                tags$i(class = "fas fa-info-circle"),
+                                                "We'll email you only if clarification is needed.")
+                                        ),
+                                        div(class = "newcomment-form-group-modern has-icon",
+                                            tags$i(class = "newcomment-input-icon fas fa-envelope"),
+                                            tags$label("for" = ns('reply_email'),
+                                                       class = "required-field", 
+                                                       "Email Address"),
+                                            div(class = "newcomment-form-control-wrapper",
+                                                textInput(ns('reply_email'), 
+                                                          label = NULL,
+                                                          placeholder = "your.email@example.com")
+                                            ),
+                                            div(class = "newcomment-form-info",
+                                                tags$i(class = "fas fa-info-circle"),
+                                                "Email acts as edit password.")
+                                        )
+                                    ),
+                                    
+                                    # Comment field
+                                    div(class = "newcomment-input-container",
+                                        tags$label("for" = ns('reply_comment'),
+                                                   class = "required-field",
+                                                   "Your Reply"),
+                                        div(class = "form-control-wrapper",
+                                            textAreaInput(ns('reply_comment'),
+                                                          label = NULL,
+                                                          placeholder = "Share your thoughts, provide additional information, or ask follow-up questions...",
+                                                          rows = 5,
+                                                          width = "100%")
+                                        )
+                                    )
+                                )
+                            ),
+                            
+                            # Preview section
+                            div(class = "newcomment-preview-container",
+                                div(class = "newcomment-preview-header",
+                                    tags$i(class = "fas fa-eye"),
+                                    "Markdown Comment Preview"
+                                ),
+                                div(class = "newcomment-preview-content",
+                                    uiOutput(ns('reply_previewbox'))
+                                )
+                            ),
+                            
+                            # Custom footer
+                            footer = div(class = "reply-actions",
+                                         div(class = "newcomment-form-info",
+                                             tags$i(class = "fas fa-info-circle"),
+                                             "Your reply will be posted publicly"
+                                         ),
+                                         div(style = "display: flex; gap: 12px;",
+                                             actionButton(
+                                                 ns('cancelReplyBtn'),
+                                                 class = "btn-reply-cancel",
+                                                 "Cancel"
+                                             ),
+                                             actionButton(ns("submitReplyBtn"), 
+                                                          tagList(
+                                                              tags$i(class = "fas fa-paper-plane"),
+                                                              "Post Reply"
+                                                          ),
+                                                          class = "btn-reply-submit")
+                                         )
+                            ),
+                            
+                            # Add modal class for styling
+                            div(class = "reply-modal", style = "display: none;")
+                            
                         )
                     )
                 }
             }
+        })
+        observeEvent(input$cancelReplyBtn, {
+            removeModal()
         })
         observeEvent(input$submitReplyBtn, {
             id_to_reply <- as.numeric(input$reply_id)

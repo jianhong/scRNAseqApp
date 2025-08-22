@@ -371,6 +371,7 @@ touchCommentTable <- function(){
                      'title TEXT NOT NULL,',
                      'comment TEXT NOT NULL,',
                      'dataset TEXT,',
+                     'vote INTEGER NOT NULL DEFAULT 0,',
                      'open INTEGER NOT NULL DEFAULT 1,',
                      "created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%S', 'now', 'localtime')),",
                      "updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%S', 'now', 'localtime')))")
@@ -381,7 +382,8 @@ touchCommentTable <- function(){
     }else{
         column_names <- connectDB(dbListFields, name=.globals$commentsTableName)
         if(!all(c('id', 'uid', 'email', 'pid', 'title',
-                  'comment', 'dataset', 'open', 'created_at', 'updated_at') %in%
+                  'comment', 'dataset', 'vote', 'open',
+                  'created_at', 'updated_at') %in%
                 column_names)){
             availableComments <- listComments(page_size = .globals$totalComments,
                                               full = TRUE, all=TRUE,
@@ -392,6 +394,9 @@ touchCommentTable <- function(){
             if(nrow(availableComments)>0){
                 if(!'pid' %in% colnames(availableComments)){
                     availableComments$pid <- availableComments$id
+                }
+                if(!'vote' %in% colnames(availableComments)){
+                    availableComments$vote <- 0
                 }
                 connectDB(dbAppendTable, name=.globals$commentsTableName,
                           value=availableComments)
@@ -414,7 +419,7 @@ listComments <- function(page_size, full=FALSE, all=FALSE, touch=TRUE){
     if(touch) touchCommentTable()
     col <- ifelse(full,
                   '*',
-                  'id, uid, title, comment, created_at, updated_at, pid')
+                  'id, uid, title, comment, created_at, updated_at, pid, vote')
     where <- ifelse(all, 
                     "", " WHERE open=1")
     query <- paste0("SELECT ", col, " FROM ", .globals$commentsTableName,
@@ -439,6 +444,12 @@ updateComments<- function(id, coln, val){
     sql <- paste0('UPDATE ', .globals$commentsTableName,
                   " SET `", coln, "` = '", val, "',",
                   " updated_at = strftime('%Y-%m-%d %H:%M:%S', 'now', 'localtime')",
+                  " WHERE id='", id, "'")
+    sendNoreplyQueryToDB(statement=sql)
+}
+updateCommentsVote <- function(id){
+    sql <- paste0('UPDATE ', .globals$commentsTableName,
+                  " SET `vote` = `vote` + 1",
                   " WHERE id='", id, "'")
     sendNoreplyQueryToDB(statement=sql)
 }

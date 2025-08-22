@@ -87,3 +87,24 @@ div.about-right>div{font-size:24px!important;magin:10px 0!important;font-weight:
 .submodule-content {padding: 10px;}
 .submodule-contextmenu{position: relative;}
 .submodule-contextmenu > div {width:260px; padding:5px; border: 2px solid #EFEFEF; z-index: 1001; position: absolute; right: 0; background: rgba(255,255,255,0.8); backdrop-filter:saturate(180%) blur(10px)}
+/*issues*/
+.comment-main{border:1px solid #e1e5e9;border-radius:8px;margin:10px 0;background:white;box-shadow:0 1px 3px rgba(0,0,0,0.1);overflow:hidden;}
+.comment-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#f8f9fa;border-bottom:1px solid #e1e5e9;}
+.comment-title{font-size:16px;font-weight:bold;color:#158cba;margin-right:12px;}
+.comment-author{font-size:14px;color:#5f6368;font-weight:500;}
+.comment-meta{font-size:12px;color:#70757a;display:flex;align-items:center;gap:8px;}
+.comment-content{padding:16px;line-height:1.5;color:#202124;font-size:14px;}
+.comment-actions{padding:8px 16px;background:#f8f9fa;border-top:1px solid #e1e5e9;display:flex;gap:12px;font-size:12px;}
+.vote-count{display:flex;align-items:center;gap:4px;color:#5f6368;}
+.comment-reply{border-left:3px solid #158cba;margin:5px 0 5px 40px;background:#f8f9fb;border-radius:0 6px 6px 0;}
+.reply-header{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(26,115,232,0.05);}
+.reply-author{font-size:13px;color:#158cba;font-weight:600;}
+.reply-content{padding:12px 14px;line-height:1.4;color:#202124;font-size:13px;}
+.reply-actions{padding:6px 14px;background:rgba(26,115,232,0.02);display:flex;gap:10px;font-size:11px;}
+.comment-nested{border-left:3px solid #34a853;margin:5px 0 5px 60px;background:#f6fdf7;border-radius:0 6px 6px 0;}
+.nested-header{background:rgba(52,168,83,0.05);}
+.nested-author{color:#34a853;}
+.action-btn{background:none;border:none;color:#5f6368;cursor:pointer;padding:4px 8px;border-radius:4px;font-size:11px;}
+.action-btn:hover{background:#e8eaed;}
+.upvote{color:#158cba;}
+.timestamp{color:#70757a;}

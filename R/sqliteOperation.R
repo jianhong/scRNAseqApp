@@ -441,13 +441,20 @@ getCommentsById <- function(id){
     connectDB(dbGetQuery, query)
 }
 updateComments<- function(id, coln, val){
+    con <- getDBconn()
+    on.exit(dbDisconnect(con))
     sql <- paste0('UPDATE ', .globals$commentsTableName,
-                  " SET `", coln, "` = '", val, "',",
+                  " SET ?coln = ?val,",
                   " updated_at = strftime('%Y-%m-%d %H:%M:%S', 'now', 'localtime')",
-                  " WHERE id='", id, "'")
-    sendNoreplyQueryToDB(statement=sql)
+                  " WHERE id=?id")
+    query <- sqlInterpolate(
+        conn = con, sql,
+        coln=coln, val=val, id=id
+    )
+    sendNoreplyQueryToDB(statement=query)
 }
 updateCommentsVote <- function(id){
+    stopifnot(is.numeric(id))
     sql <- paste0('UPDATE ', .globals$commentsTableName,
                   " SET `vote` = `vote` + 1",
                   " WHERE id='", id, "'")

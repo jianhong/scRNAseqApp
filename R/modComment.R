@@ -21,32 +21,17 @@ issueUI <- function(id) {
                                     label = 'name')), # id
                 column(4, textInput(NS(id, 'email'),
                                     label = 'email')), # contact info, email
-                column(4, tagList(# recaptcha
-                    # htmlDependencies('recaptcha',
-                    #                  src=c(href='https://www.google.com/recaptcha'),
-                    #                  script='api.js?render=reCAPTCHA_site_key'),
-      #               tags$script(
-      #                   " function onClick(e) {
-      #   e.preventDefault();
-      #   grecaptcha.ready(function() {
-      #     grecaptcha.execute('reCAPTCHA_site_key', {action: 'submit'}).then(function(token) {
-      #         // Add your logic to submit to your backend server here.
-      #         Shiny.setInputValue(id+'-recaptcha_response', token);
-      #     });
-      #   });
-      # }"
-      #               )
-                ))
+                column(4)
             ),
             fluidRow(
                 textInput(NS(id, 'title'),
                           label = 'title',
-                          width = '95vh')
+                          width = '95vw')
             ),# title
             fluidRow(
                 textAreaInput(NS(id, 'comment'),
                               label = 'comment',
-                              width = '95vh',
+                              width = '95vw',
                               rows = 6)
             ), # comment
             fluidRow(
@@ -64,7 +49,7 @@ issueUI <- function(id) {
             ),
            fluidRow(
                div(class='shiny-input-textarea form-group shiny-input-container',
-                   style="width:95vh",
+                   style="width:95vw",
                    h5("comment preview"),
                    div(
                        style='min-height:24px;',
@@ -91,6 +76,123 @@ issueServer <- function(id, dataSource, optCrt) {
         observeEvent(input$comment, {
             output$previewbox <- renderUI(markdown(input$comment))
         })
+        createCommentHTML <- function(comment, parent_comment){
+            comment <- unlist(comment)
+            actionBtn <- paste0(
+                '    <button id="upvote_button_', comment["id"], '" ',
+                'class="action-btn upvote" ',
+                'onclick="Shiny.onInputChange(\'', NS(id, "upvote_clicked"),
+                '\', this.id)"',
+                '><i class="fas fa-thumbs-up"></i> Upvote</button>',
+                '    <button id="edit_button_', comment["id"], '" ',
+                'class="action-btn" ',
+                'onclick="Shiny.onInputChange(\'', NS(id, "edit_clicked"),
+                '\', this.id)"',
+                '><i class="fas fa-edit"></i> Edit</button>',
+                '<button id="reply_button_', comment["id"], '" ',
+                'class="action-btn" ',
+                'onclick="Shiny.onInputChange(\'', NS(id, "reply_clicked"),
+                '\', this.id)"',
+                '><i class="fas fa-reply"></i> Reply</button>'
+            )
+            if(missing(parent_comment)){
+                # Main comment layout
+                paste0(
+                    '<div class="comment-main">',
+                    '  <div class="comment-header">',
+                    '    <div style="display: flex; align-items: center;">',
+                    '      <div class="comment-title">', comment["title"], '</div>',
+                    '      <div class="comment-author">by ', comment["uid"], '</div>',
+                    '    </div>',
+                    '    <div class="comment-meta">',
+                    '      <span class="timestamp">', comment["updated_at"], '</span>',
+                    '      <span class="vote"><i class="fas fa-thumbs-up"></i> ', comment["vote"], '</span>',
+                    '    </div>',
+                    '  </div>',
+                    '  <div class="comment-content">',
+                    '    ', markdown(comment["comment"]),
+                    '  </div>',
+                    '  <div class="comment-actions">', actionBtn , '  </div>',
+                    '</div>'
+                )
+            }else{
+                # Check if this is a nested reply (reply to a reply)
+                parent_comment <- unlist(parent_comment)
+                is_nested <- parent_comment['pid'] != parent_comment['id']
+                
+                css_class <- if (is_nested) "comment-nested" else "comment-reply"
+                header_class <- if (is_nested) "nested-header" else "reply-header"
+                author_class <- if (is_nested) "nested-author" else "reply-author"
+                
+                # Reply comment layout
+                paste0(
+                    '<div class="', css_class, '">',
+                    '  <div class="reply-header ', header_class, '">',
+                    '    <div class="', author_class, '">by ', comment["uid"], '</div>',
+                    '    <div class="comment-meta">',
+                    '      <span class="timestamp">', comment["updated_at"], '</span>',
+                    '      <span class="vote"><i class="fas fa-thumbs-up"></i> ', comment["vote"], '</span>',
+                    '    </div>',
+                    '  </div>',
+                    '  <div class="reply-content">',
+                    '    ', markdown(comment["comment"]),
+                    '  </div>',
+                    '  <div class="reply-actions">', actionBtn , '  </div>',
+                    '</div>'
+                )
+            }
+        }
+        createThreadedComments <- function(comments_df, main_comments) {
+            if(nrow(comments_df)==0){
+                return(c())
+            }
+            threaded_html <- c()
+            if(missing(main_comments)){
+                m <- comments_df$pid == comments_df$id
+                main_comments <- comments_df[m, , drop=FALSE]
+                addMain <- TRUE
+            }else{
+                addMain <- FALSE
+            }
+            if(nrow(main_comments)<1){
+                return(c())
+            }
+            for (i in seq.int(nrow(main_comments))) {
+                main_comment <- main_comments[i, , drop=TRUE]
+                names(main_comment) <- colnames(comments_df)
+                # Add main comment
+                if(addMain){
+                    threaded_html <- 
+                        c(threaded_html, createCommentHTML(main_comment))
+                }
+                # Add replies to this main comment
+                comment_replies <- 
+                    comments_df[comments_df$pid == main_comment$id, , drop=FALSE]
+                comment_replies <- 
+                    comment_replies[comment_replies$pid != comment_replies$id, 
+                                    , drop=FALSE] ## remove self
+                if (nrow(comment_replies) > 0) {
+                    for (j in seq.int(nrow(comment_replies))) {
+                        reply <- comment_replies[j, , drop=TRUE]
+                        names(reply) <- colnames(comments_df)
+                        threaded_html <-
+                            c(threaded_html,
+                              createCommentHTML(reply, main_comment))
+                        reply_reply <-
+                            comments_df[comments_df$pid == reply$id, ,
+                                        drop=FALSE]
+                        if(nrow(reply_reply)>0){
+                            threaded_html <-
+                                c(threaded_html,
+                                  createThreadedComments(
+                                      comments_df,
+                                      comment_replies[j, , drop=FALSE]))
+                        }
+                    }
+                }
+            }
+            return(threaded_html)
+        }
         updateCommentList <- function(){
             output$issues <- renderDT({
                 data_to_display <- 
@@ -101,27 +203,7 @@ issueServer <- function(id, dataSource, optCrt) {
                                'Comment'=character(0L),
                                'Actions'=character(0L))
                 }else{
-                    # Add a column for delete buttons
-                    # The inputId of each button will be "delete_button_ROWID"
-                    edit_buttons <- paste0(
-                        '<button id="edit_button_', data_to_display$id, '" ',
-                        'type="button" class="btn btn-primary btn-sm edit-btn" ',
-                        'onclick="Shiny.onInputChange(\'', NS(id, "edit_clicked"),
-                        '\', this.id)"',
-                        '>Edit</button>&nbsp;',
-                        '<button id="reply_button_', data_to_display$id, '" ',
-                        'type="button" class="btn btn-info btn-sm reply-btn" ',
-                        'onclick="Shiny.onInputChange(\'', NS(id, "reply_clicked"),
-                        '\', this.id)"',
-                        '>Reply</button>'
-                    )
-                    # Add the delete buttons as a new column to the data
-                    data_to_display <- cbind(data_to_display[, -1], Actions = edit_buttons)
-                    # change newline to <br>
-                    data_to_display$comment <- vapply(data_to_display$comment,
-                                                      FUN = markdown,
-                                                      FUN.VALUE = character(1L))
-                    # reorder the data (data.frame)
+                    # # Sort by timestamp and organize by parent-child relationships
                     data_to_display <- split(data_to_display, data_to_display$pid)
                     data_to_display_updated_at <- unlist(lapply(data_to_display, function(.ele){
                         time <- as.POSIXct(.ele$updated_at, format = "%Y-%m-%d %H:%M:%S")
@@ -135,25 +217,21 @@ issueServer <- function(id, dataSource, optCrt) {
                                                       format = "%Y-%m-%d %H:%M:%S")
                                    .ele <-.ele[order(time), ,
                                                drop=FALSE]
-                                   if(nrow(.ele)>1){
-                                       .ele$title[-1] <- 
-                                           paste('|_ ', .ele$title[-1])
-                                   }
                                    .ele
                                    })
                     data_to_display <- do.call(rbind, data_to_display)
-                    data_to_display <- 
-                        data_to_display[, 
-                                        c('title', 'uid',
-                                          'comment', 'Actions'),
-                                        drop=FALSE]
-                    colnames(data_to_display) <- 
-                        c('Title', 'Name', 'Comment', 'Actions')
-                    rownames(data_to_display) <- NULL
-                    data_to_display
+                    data.frame(
+                        CommentThread = createThreadedComments(data_to_display),
+                        stringsAsFactors = FALSE
+                    )
                 }
-                },
-                escape = FALSE # IMPORTANT: Allow HTML rendering for buttons
+                },# IMPORTANT: Allow HTML rendering for buttons
+                escape = FALSE, # IMPORTANT: Allow HTML rendering for buttons
+                options = list(
+                    ordering = FALSE
+                ),
+                rownames = FALSE,
+                colnames = ""
             )
         }
         # Render the paginated comments
@@ -235,6 +313,14 @@ issueServer <- function(id, dataSource, optCrt) {
             updateTextInput(session, 'token', label=NULL,
                             value=as.numeric(Sys.time()))
         })
+        ## upvote comments
+        observeEvent(input$upvote_clicked, {
+            id_to_upvote <- as.numeric(gsub("upvote_button_", "", input$upvote_clicked))
+            if(is.numeric(id_to_upvote)){
+                updateCommentsVote(id_to_upvote)
+                updateCommentList()
+            }
+        })
         ## edit comments
         observeEvent(input$edit_clicked, {
             id_to_edit <- as.numeric(gsub("edit_button_", "", input$edit_clicked))
@@ -286,14 +372,11 @@ issueServer <- function(id, dataSource, optCrt) {
             if(is.numeric(id_to_reply)){
                 info <- getCommentsById(id_to_reply)
                 if(nrow(info)){
-                    if(info$pid==0){
-                        info$pid <- info$id
-                    }
                     showModal(
                         modalDialog(
                             title = paste("Reply issue: ", info$title),
                             div(style='visibility:hidden;height:0px;width:0px;', 
-                                numericInput(NS(id, 'reply_id'), label = NULL, value = info$pid),
+                                numericInput(NS(id, 'reply_id'), label = NULL, value = info$id),
                                 textInput(NS(id, 'reply_title'), label = NULL, value = info$title),
                                 textInput(NS(id, 'reply_dataset'), label=NULL, value = info$dataset)),
                             textInput(NS(id, 'reply_uid'), "name", value = NULL),

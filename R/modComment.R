@@ -152,18 +152,38 @@ issueServer <- function(id, dataSource, optCrt) {
                 'class="action-btn upvote" ',
                 'onclick="Shiny.onInputChange(\'', NS(id, "upvote_clicked"),
                 '\', this.id)"',
-                '><i class="fas fa-thumbs-up"></i> Upvote</button>',
+                '><i class="far fa-thumbs-up"></i> Upvote</button>',
                 '    <button id="edit_button_', comment["id"], '" ',
                 'class="action-btn" ',
                 'onclick="Shiny.onInputChange(\'', NS(id, "edit_clicked"),
                 '\', Math.random()+\'_\'+this.id)"',
                 '><i class="fas fa-edit"></i> Edit</button>',
+                '<button id="close_button_', comment["id"], '" ',
+                'class="action-btn" ',
+                'onclick="Shiny.onInputChange(\'', NS(id, "close_clicked"),
+                '\', Math.random()+\'_\'+this.id)"',
+                '><i class="far fa-check-circle"></i> ',
+                if(isTRUE(dataSource()$auth$privilege=='all')){
+                    ifelse(comment["open"]=="1", 'Close', 'Open')
+                }else{'Close'},
+                '</button>',
                 '<button id="reply_button_', comment["id"], '" ',
                 'class="action-btn" ',
                 'onclick="Shiny.onInputChange(\'', NS(id, "reply_clicked"),
                 '\', Math.random()+\'_\'+this.id)"',
                 '><i class="fas fa-reply"></i> Reply</button>'
             )
+            
+            if(isTRUE(dataSource()$auth$privilege=='all')){
+                actionBtn <- paste0(
+                    actionBtn,
+                    '<button id="delete_button_', comment["id"], '" ',
+                    'class="action-btn" ',
+                    'onclick="Shiny.onInputChange(\'', NS(id, "delete_clicked"),
+                    '\', Math.random()+\'_\'+this.id)"',
+                    '><i class="far fa-trash-alt" style="color:red"></i> Delete</button>'
+                )
+            }
             if(missing(parent_comment)){
                 # Main comment layout
                 paste0(
@@ -175,7 +195,7 @@ issueServer <- function(id, dataSource, optCrt) {
                     '    </div>',
                     '    <div class="comment-meta">',
                     '      <span class="timestamp">', comment["updated_at"], '</span>',
-                    '      <span class="vote"><i class="fas fa-thumbs-up"></i> ', comment["vote"], '</span>',
+                    '      <span class="vote"><i class="far fa-thumbs-up"></i> ', comment["vote"], '</span>',
                     '    </div>',
                     '  </div>',
                     '  <div class="comment-content">',
@@ -200,7 +220,7 @@ issueServer <- function(id, dataSource, optCrt) {
                     '    <div class="', author_class, '">by ', comment["uid"], '</div>',
                     '    <div class="comment-meta">',
                     '      <span class="timestamp">', comment["updated_at"], '</span>',
-                    '      <span class="vote"><i class="fas fa-thumbs-up"></i> ', comment["vote"], '</span>',
+                    '      <span class="vote"><i class="far fa-thumbs-up"></i> ', comment["vote"], '</span>',
                     '    </div>',
                     '  </div>',
                     '  <div class="reply-content">',
@@ -267,8 +287,14 @@ issueServer <- function(id, dataSource, optCrt) {
         }
         updateCommentList <- function(){
             output$issues <- renderDT({
-                data_to_display <- 
-                    listComments(page_size=1000)
+                if(isTRUE(dataSource()$auth$privilege=='all')){
+                    data_to_display <- 
+                        listComments(page_size=.globals$totalComments,
+                                     full=TRUE, all=TRUE)
+                }else{
+                    data_to_display <- 
+                        listComments(page_size=1000)
+                }
                 if(nrow(data_to_display)<1){
                     data.frame('Title'=character(0L),
                                'Name'=character(0L),
@@ -316,14 +342,22 @@ issueServer <- function(id, dataSource, optCrt) {
             if(nchar(n)>m) return(TRUE)
             return(FALSE)
         }
-        checkForm <- function(prefix=''){
-            res <- TRUE
-            if(!grepl('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$',
-                      input[[paste0(prefix, "email")]])){
+        checkEmail <- function(prefix=''){
+            if(is.null(input[[paste0(prefix, "email")]])){
                 showNotification("Please input correct email address!",
                                  type = 'error')
-                res <- FALSE
+                return(FALSE)
             }
+            if(isTRUE(!grepl('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$',
+                      input[[paste0(prefix, "email")]]))){
+                showNotification("Please input correct email address!",
+                                 type = 'error')
+                return(FALSE)
+            }
+            return(TRUE)
+        }
+        checkForm <- function(prefix=''){
+            res <- checkEmail(prefix)
             if(checkLen(input[[paste0(prefix, "uid")]], 3, 50)){
                 showNotification("Please input your name ([3, 50] letters).",
                                  type = 'error')
@@ -340,6 +374,17 @@ issueServer <- function(id, dataSource, optCrt) {
                 res <- FALSE
             }
             return(res)
+        }
+        checkInterval <- function(){
+            ans <- TRUE
+            if(as.numeric(Sys.time()) - as.numeric(input$token) < .globals$commentsIntervals){
+                showNotification('System busy! Please try to submit it 10s later.',
+                                 type = 'error')
+                ans <- FALSE
+            }
+            updateTextInput(session, 'token', label=NULL,
+                            value=as.numeric(Sys.time()))
+            return(ans)
         }
         # insert new
         observeEvent(input$submit, {
@@ -367,7 +412,7 @@ issueServer <- function(id, dataSource, optCrt) {
                                 markdown(input$comment)
                             )
                         ),
-                        p("Are you sure you want to submit this data?"),
+                        p("Are you sure you want to submit this issue?"),
                         footer = tagList(
                             actionButton(NS(id, "confirmSubmitBtn"), "Confirm"), # This is the "Yes" button
                             modalButton("Cancel") # This is the "No" button
@@ -381,11 +426,7 @@ issueServer <- function(id, dataSource, optCrt) {
             ## new issue
             new <- checkForm()
             ## check the intervals
-            if(as.numeric(Sys.time()) - as.numeric(input$token) < 10){
-                showNotification('System busy! Please try to submit issue again.',
-                                 type = 'error')
-                new <- FALSE
-            }
+            new <- new & checkInterval()
             ## check the total record in database
             if(countComments()>.globals$totalComments){
                 showNotification('Out of storage! Please notify the admin about this issue.',
@@ -400,8 +441,6 @@ issueServer <- function(id, dataSource, optCrt) {
                                dataset=dataSource()$dataset)
                 updateCommentList()
             }
-            updateTextInput(session, 'token', label=NULL,
-                            value=as.numeric(Sys.time()))
         })
         ## upvote comments
         observeEvent(input$upvote_clicked, {
@@ -409,6 +448,112 @@ issueServer <- function(id, dataSource, optCrt) {
             if(is.numeric(id_to_upvote)){
                 updateCommentsVote(id_to_upvote)
                 updateCommentList()
+            }
+        })
+        ## close comments
+        observeEvent(input$close_clicked, {
+            id_to_close <- as.numeric(gsub("^.*?close_button_", "", input$close_clicked))
+            if(is.numeric(id_to_close)){
+                info <- getCommentsById(id_to_close)
+                ns <- NS(id)
+                keyword <- ifelse(as.logical(info$open), 'Close', 'Open')
+                showModal(
+                    modalDialog(
+                        title = paste("Confirm", keyword),
+                        size = 'l',
+                        # Original comment preview
+                        div(class = "original-comment-preview",
+                            div(class = "original-comment-header",
+                                div(class = "original-comment-title",
+                                    info$title),
+                                div(class="comment-author",
+                                    paste("by", info$uid)),
+                                div('with email'),
+                                div(class='comment-email',
+                                    textInput(ns('close_email'), 
+                                              label = NULL,
+                                              placeholder = "used as password"))
+                            ),
+                            tags$i(
+                                class = "fas fa-quote-left",
+                                style = "color: #667eea; font-size: 14px;"),
+                            div(class = "original-comment-content",
+                                markdown(info$comment)
+                            )
+                        ),
+                        p(paste("Are you sure you want to", keyword, "this comment?")),
+                        footer = tagList(
+                            actionButton(NS(id, "confirmCloseBtn"), keyword), # This is the "Yes" button
+                            modalButton("Cancel") # This is the "No" button
+                        )
+                        
+                    )
+                )
+            }
+        })
+        observeEvent(input$confirmCloseBtn, {
+            if(checkEmail('close_')){
+                id_to_close <- as.numeric(gsub("^.*?close_button_", "",
+                                               input$close_clicked))
+                if(is.numeric(id_to_close)){
+                    info <- getCommentsById(id_to_close)
+                    if(isTRUE(dataSource()$auth$privilege=='all')){
+                        updateComments(id_to_close, 'open', 1-info$open)
+                        removeModal()
+                        updateCommentList()
+                    }else{
+                        if(info$email == input$close_email & checkInterval()){
+                            updateComments(id_to_close, 'open', 0)
+                            removeModal()
+                            updateCommentList()
+                        }
+                    }
+                }
+            }
+        })
+        ## delete comments
+        observeEvent(input$delete_clicked, {
+            id_to_delete <- as.numeric(gsub("^.*?delete_button_", "", input$delete_clicked))
+            if(is.numeric(id_to_delete)){
+                info <- getCommentsById(id_to_delete)
+                ns <- NS(id)
+                showModal(
+                    modalDialog(
+                        title = "Confirm delete",
+                        size = 'l',
+                        # Original comment preview
+                        div(class = "original-comment-preview",
+                            div(class = "original-comment-header",
+                                div(class = "original-comment-title",
+                                    info$title),
+                                div(class="comment-author",
+                                    paste("by", info$uid))
+                            ),
+                            tags$i(
+                                class = "fas fa-quote-left",
+                                style = "color: #667eea; font-size: 14px;"),
+                            div(class = "original-comment-content",
+                                markdown(info$comment)
+                            )
+                        ),
+                        p("Are you sure you want to delete this comment?"),
+                        footer = tagList(
+                            actionButton(NS(id, "confirmDeleteBtn"), "Delete"), # This is the "Yes" button
+                            modalButton("Cancel") # This is the "No" button
+                        )
+                        
+                    )
+                )
+            }
+        })
+        observeEvent(input$confirmDeleteBtn, {
+            id_to_delete <- as.numeric(gsub("^.*?delete_button_", "", input$delete_clicked))
+            if(is.numeric(id_to_delete)){
+                if(isTRUE(dataSource()$auth$privilege=='all') & checkInterval()){
+                    deleteComments(id_to_delete)
+                    removeModal()
+                    updateCommentList()
+                }
             }
         })
         ## edit comments
@@ -506,6 +651,7 @@ issueServer <- function(id, dataSource, optCrt) {
             id_to_edit <- as.numeric(input$edit_id)
             if(is.numeric(id_to_edit)){
                 edit <- checkForm(prefix = 'edit_')
+                edit <- edit & checkInterval()
                 if(edit){
                     info <- getCommentsById(id_to_edit)
                     if(info$email==input$edit_email){
@@ -687,6 +833,7 @@ issueServer <- function(id, dataSource, optCrt) {
             id_to_reply <- as.numeric(input$reply_id)
             if(is.numeric(id_to_reply)){
                 reply <- checkForm(prefix = 'reply_')
+                reply <- reply & checkInterval()
                 if(reply){
                     removeModal()
                     insertComments(uid=input$reply_uid,

@@ -44,6 +44,7 @@
 .globals$gn2symTableName <- 'gn2sym'
 .globals$commentsTableName <- 'issues'
 .globals$totalComments <- 2500
+.globals$commentsIntervals <- 10
 # for home search page, the groupColPattern
 .globals$groupColPattern <- 'celltype'
 # Colour palette

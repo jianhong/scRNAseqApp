@@ -290,4 +290,23 @@ test_that("utilities works not correct", {
                             "\"customdata\":\"GTCATACTTCGCCT\"}]"), 
                  allow_no_input_binding_ = TRUE, priority_ = "event")
   # app$expect_screenshot()
+  ## check issues
+  .globals$commentsIntervals <- 0
+  app$set_inputs(topnav = "issues")
+  app$set_inputs(`issues-issues_state` = 
+                     c(1755988380399, 0, 10, "", TRUE, FALSE, TRUE,
+                       c(TRUE, "", TRUE, FALSE, TRUE),
+                       c(TRUE, "", TRUE, FALSE, TRUE),
+                       c(TRUE, "", TRUE, FALSE, TRUE),
+                       c(TRUE, "", TRUE, FALSE, TRUE)),
+                 allow_no_input_binding_ = TRUE)
+  # Update output value
+  app$set_inputs(`issues-uid` = "insert")
+  app$set_inputs(`issues-email` = "insert@email.com")
+  app$set_inputs(`issues-title` = "test ")
+  app$set_inputs(`issues-comment` = "test comment")
+  # Update output value
+  app$click("issues-submit")
+  app$click("issues-confirmSubmitBtn")
+  # app$expect_screenshot()
 })

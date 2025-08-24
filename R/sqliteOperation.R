@@ -484,7 +484,7 @@ insertComments <- function(uid, email, title, comment, dataset, pid){
 }
 deleteComments <- function(id){
     sql <- paste0("DELETE FROM ", .globals$commentsTableName,
-                  " WHERE id ='", id, "'")
+                  " WHERE id ='", id, "' OR pid = '", id, "'")
     sendNoreplyQueryToDB(statement=sql)
 }
 ## gene table

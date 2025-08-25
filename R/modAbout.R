@@ -49,7 +49,7 @@ aboutUI <- function(
                     label = NULL,
                     choices = dbs,
                     selected = defaultDataset,
-                    width = "90vw"
+                    width = "100%"
                 )
             ),
             value = 'about',

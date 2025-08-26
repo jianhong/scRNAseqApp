@@ -45,6 +45,7 @@
 .globals$commentsTableName <- 'issues'
 .globals$totalComments <- 2500
 .globals$commentsIntervals <- 10
+.globals$searchTableName <- 'searchlog'
 # for home search page, the groupColPattern
 .globals$groupColPattern <- 'celltype'
 # Colour palette

@@ -20,7 +20,8 @@ webstatsUI <- function (id) {
             width = 9, plotOutput(ns("distPlot"), height = "300px")
         )),
         DTOutput(ns("issues")),
-        DTOutput(ns("counter"))
+        DTOutput(ns("counter")),
+        DTOutput(ns("search"))
     ))
 }
 #' @importFrom DT renderDT JS
@@ -269,5 +270,8 @@ webstatsServer <- function(id) {
             # refresh table
             updateCommentsTable()
         })
+        
+        ## search keys
+        output$search <- renderDT(listSearchTable())
     })
 }

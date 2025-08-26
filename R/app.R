@@ -60,6 +60,8 @@ scRNAseqApp <- function(
     .globals$app_path <- app_path
     .globals$counterFilename <- file.path(
         app_path, "www/counter.tsv")
+    ## config file
+    .globals <- loadConfigFile(.globals, app_path)
     if(!is_abs_path(datafolder)){
         .globals$datafolder <- file.path(app_path, datafolder)
     }else{

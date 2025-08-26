@@ -150,6 +150,7 @@ updateSearch <- function(
         )
         return(invisible())
     }
+    updateSearchTable(key_words)##record the search key
     if( isGene(
         key_words,
         datasets,
@@ -590,4 +591,43 @@ extAssayData <- function(object, slot, ...){
     }else{
         GetAssayData(object=object, layer = slot, ...)
     }
+}
+
+# load config file
+loadConfigFile <- function(.globals, app_path){
+    configFile <- file.path(app_path, 'www/config.dcf')
+    if(file.exists(configFile)){
+        configs <- read.dcf(configFile)
+        cn <- intersect(colnames(configs), names(.globals))
+        for(i in cn){
+            if(i=='theme'){
+                theme <- eval(paste0("bs_theme(", configs[1, i], ")"))
+                .globals$theme <- theme
+            }else{
+                if(!is.list(.globals[[i]])){
+                    param <- strsplit(configs[1, i], ",\\s*")[[1]]
+                    mode(param) <- mode(.globals[[i]])
+                    .globals[[i]] <- param
+                }
+            }
+        }
+    }else{
+        configFile <- file.path(app_path, 'www/config.rds')
+        ## no safety check here, need to reconsider.
+        if(file.exists(configFile)){
+            configs <- readRDS(configFile)
+            cn <- intersect(names(configs), names(.globals))
+            for(i in cn){
+                if(is.list(.globals[[i]])){
+                    cn2 <- intersect(names(.globals[[i]]), names(configs[[i]]))
+                    for(j in cn2){
+                        .globals[[i]][[j]] <- configs[[i]][[j]]
+                    }
+                }else{
+                    .globals[[i]] <- configs[[i]]
+                }
+            }
+        }
+    }
+    return(.globals)
 }

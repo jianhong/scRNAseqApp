@@ -483,9 +483,16 @@ insertComments <- function(uid, email, title, comment, dataset, pid){
     dbClearResult(res)
 }
 deleteComments <- function(id){
-    sql <- paste0("DELETE FROM ", .globals$commentsTableName,
-                  " WHERE id ='", id, "' OR pid = '", id, "'")
-    sendNoreplyQueryToDB(statement=sql)
+    sql <- paste("WITH RECURSIVE to_delete(id) AS (",
+    "SELECT id FROM", .globals$commentsTableName, "WHERE id=", id,
+    "UNION ALL SELECT t.id FROM", .globals$commentsTableName,
+    "t INNER JOIN to_delete d ON t.pid = d.id)",
+    "DELETE FROM", .globals$commentsTableName,
+    "WHERE id IN (SELECT id FROM to_delete)")
+    sendNoreplyQueryToDB(sql)
+    # sql <- paste0("DELETE FROM ", .globals$commentsTableName,
+    #               " WHERE id IN '", id, "' OR pid = '", id, "'")
+    # sendNoreplyQueryToDB(statement=sql)
 }
 ## gene table
 ## gene name, expressed datasets
@@ -590,4 +597,40 @@ mapGeneSymbols <- function(genes){
     query <- paste0('SELECT `gene` FROM ', .globals$gn2symTableName,
                     ' WHERE ', where)
     rs <- connectDB(dbGetQuery, statement = query)
+}
+
+## search key
+touchSearchTable <- function(){
+    createSearchTable <- function(){
+        sql <- paste('CREATE TABLE IF NOT EXISTS', .globals$searchTableName, 
+                     '(word TEXT PRIMARY KEY,',
+                     'count INTEGER DEFAULT 0)')
+        sendNoreplyQueryToDB(statement=sql)
+    }
+    if(!tableExists(.globals$searchTableName)){
+        createSearchTable()
+    }
+}
+updateSearchTable <- function(words){
+    if(isTRUE(words!="")){
+        touchSearchTable()
+        con <- getDBconn()
+        on.exit(dbDisconnect(con))
+        
+        sql <- paste0("INSERT INTO ", .globals$searchTableName,
+                      " (word, count) VALUES (?word, 1)",
+                      " ON CONFLICT(word) DO UPDATE SET count = count + 1")
+        query <- sqlInterpolate(
+            conn = con, sql,
+            word = words
+        )
+        res <- dbSendQuery(conn = con, statement = query)
+        dbClearResult(res) 
+    }
+}
+listSearchTable <- function(limit=100){
+    touchSearchTable()
+    query <- paste0("SELECT * FROM ", .globals$searchTableName,
+                    " ORDER BY count DESC LIMIT ", limit)
+    connectDB(dbGetQuery, query)
 }

@@ -473,7 +473,6 @@ updateGeneExprDotPlotUI <-
                     adminMsg('Something wrong!',
                              "error")
                 }
-                removeModal()
             })
             observeEvent(input[[paste0("GeneExproup.dbl", postfix)]],{
                 evt <- input[[paste0("GeneExproup.dbl", postfix)]]

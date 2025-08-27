@@ -601,7 +601,7 @@ loadConfigFile <- function(.globals, app_path){
         cn <- intersect(colnames(configs), names(.globals))
         for(i in cn){
             if(i=='theme'){
-                theme <- eval(paste0("bs_theme(", configs[1, i], ")"))
+                theme <- eval(parse(text=paste0("bs_theme(", configs[1, i], ")")))
                 .globals$theme <- theme
             }else{
                 if(!is.list(.globals[[i]])){
@@ -630,4 +630,40 @@ loadConfigFile <- function(.globals, app_path){
         }
     }
     return(.globals)
+}
+
+#' @importFrom grDevices col2rgb
+#' @importFrom ggplot2 theme
+is_dark <- function(color) {
+    rgb <- col2rgb(color)
+    luminance <- 0.299 * rgb[1] + 0.587 * rgb[2] + 0.114 * rgb[3]
+    return(luminance < 128)
+}
+#' @importFrom bslib bs_get_variables bs_current_theme
+darkTheme <- function(p, returnBG=FALSE, bg_color){
+    # Extract the background color
+    if(missing(bg_color)||is.null(bg_color)){
+        bg_color <- bslib::bs_get_variables(bs_current_theme(), "body-bg")
+    }
+    if(returnBG) return(bg_color)
+    if(isTRUE(is_dark(bg_color))&&is(p, 'ggplot')){
+        p <- p + 
+            theme(
+                plot.background = element_rect(fill = bg_color, color = NA),
+                panel.background = element_rect(fill = "gray20", color = NA),
+                panel.border = element_blank(),
+                panel.grid = element_line(color = "gray30"),
+                axis.text = element_text(color = "white"),
+                axis.title = element_text(color = "white"),
+                plot.title = element_text(color = "white"),
+                plot.subtitle = element_text(color = "white"),
+                legend.background = element_rect(fill = bg_color, color = NA),
+                legend.text = element_text(color = "white"),
+                legend.title = element_text(color = "white"),
+                legend.key = element_rect(fill = bg_color, color = NA),
+                strip.background = element_rect(fill = "gray20", color = NA),
+                strip.text = element_text(color = "white")
+            )
+    }
+    return(p)
 }

@@ -21,7 +21,7 @@ plotsDownloadHandler <- function(input, postfix, plot, ...) {
                     height = input[[paste0("GeneExproup.h", postfix)]],
                     width = input[[paste0("GeneExproup.w", postfix)]],
                     useDingbats = FALSE,
-                    plot = plot()
+                    plot = darkTheme(plot())
                 )
             } else if(input[[paste0("GeneExproup.fmt", postfix)]] == "CSV"){
                 plot <- plot()
@@ -33,7 +33,7 @@ plotsDownloadHandler <- function(input, postfix, plot, ...) {
                         tolower(input[[paste0("GeneExproup.fmt", postfix)]]),
                     height = input[[paste0("GeneExproup.h", postfix)]],
                     width = input[[paste0("GeneExproup.w", postfix)]],
-                    plot = plot()
+                    plot = darkTheme(plot())
                 )
             }
         }

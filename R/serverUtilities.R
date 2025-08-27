@@ -286,8 +286,8 @@ updateGeneExprDotPlotUI <-
         isInfoPlot = FALSE,
         dataSource = NULL) {
         output[[paste0("GeneExproup", postfix)]] <- renderPlot({
-            plotX()
-        })
+            darkTheme(plotX())
+        }, background=darkTheme(returnBG=TRUE))
         output[[paste0("GeneExproup.ui", postfix)]] <- renderUI({
             plotOutput(
                 NS0(id, "GeneExproup", postfix),

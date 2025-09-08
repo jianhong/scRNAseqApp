@@ -201,7 +201,7 @@ get_full_ref_list <- function(appconf, returnLen = FALSE) {
     HTML(ref)
 }
 checkAccessibility <- function(f, bool=FALSE){
-    fa <- file.access(f, mode = 4) == -1 # file not readable
+    fa <- file.access(file.path(.globals$datafolder, f), mode = 4) != -1 # file not readable
     if(bool) return(fa)
     if(any(fa)){
         showNotification('Some file not accessable.', type='error')

@@ -1,3 +1,8 @@
+CHANGES IN VERSION 1.9.23
+-------------------------
+
+    o Fix a bug for file accessibility check.
+    
 CHANGES IN VERSION 1.9.22
 -------------------------
 

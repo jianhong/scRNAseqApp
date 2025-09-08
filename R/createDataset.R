@@ -21,6 +21,7 @@
 #' @param atacSlot layer in single-cell atac assay to plot.
 #' Default is to use the "data" layer
 #' @param default.symbol character(1L) specifying the default rownames to be used. If use default, the gene symbols will be the row names of the assay. If one column name of the meta.feature of the assay is supplied, the function will try to extract the symbols from the meta.feature slot of the assay. 
+#' @param theme color theme. default is "Paired" from ColorBrewer palettes.
 #' @param binSize number of bps for each bin for ATAC fragment coverage. Used
 #' to reduce the file size of bigwig.
 #' @param fragmentNameMapList list of named character vector. 
@@ -57,6 +58,7 @@ createDataSet <- function(
         LOCKER = FALSE,
         datafolder = "data",
         default.symbol = 'rownames',
+        theme = "Paired",
         binSize = 1,
         fragmentNameMapList) {
     stopifnot(file.exists(datafolder))
@@ -64,7 +66,7 @@ createDataSet <- function(
     stopifnot(is(appconf, "APPconf"))
     gexSlot <- match.arg(gexSlot)
     if (missing(config)) {
-        config <- createConfig(seu)
+        config <- createConfig(seu, theme=theme)
     }
     pf <- file.path(datafolder, appconf$id)
     if(!file.exists(pf)){

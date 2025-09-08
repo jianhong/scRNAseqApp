@@ -79,7 +79,7 @@ NS0 <- function(namespace, id, postfix){
 }
 geneAccPlotControlUI <- function(
         id, postfix=1,
-        colorNames=names(.globals$cList)){
+        colorNames=availableThemes("sequence")){
     tagList(
         actionButton(
             NS0(id, "GeneExprtog", postfix), "Toggle plot controls"),
@@ -88,6 +88,7 @@ geneAccPlotControlUI <- function(
             ns=NS(id),
             radioButtons(
                 NS0(id, "GeneExprcol", postfix), "Colour:",
+                inline = TRUE,
                 choices = colorNames,
                 selected = colorNames[1]),
             sliderInput(#region selector
@@ -107,7 +108,7 @@ geneAccPlotControlUI <- function(
 }
 geneExprPlotControlUI <- function(
         id, postfix=1,
-        colorNames=names(.globals$cList)){
+        colorNames=availableThemes("sequence")){
     tagList(
         actionButton(
             NS0(id, "GeneExprtog", postfix), "Toggle plot controls"),
@@ -124,6 +125,7 @@ geneExprPlotControlUI <- function(
                 ns=NS(id),
                 radioButtons(
                     NS0(id, "GeneExprcol", postfix), "Colour:",
+                    inline = TRUE,
                     choices = colorNames,
                     selected = colorNames[1]),
                 radioButtons(
@@ -167,7 +169,7 @@ geneExprPlotControlUI <- function(
 }
 cellInfoPlotControlUI <- function(
         id, postfix=1,
-        colorNames=names(.globals$cList)){
+        colorNames=availableThemes("sequence")){
     tagList(
         actionButton(
             NS0(id, "CellInfotog", postfix), "Toggle plot controls"),
@@ -176,6 +178,7 @@ cellInfoPlotControlUI <- function(
                 "input.CellInfotog", postfix, " % 2 == 1"), ns=NS(id),
             radioButtons(
                 NS0(id, "CellInfocol", postfix), "Colour (Continuous data):",
+                inline = TRUE,
                 choices = colorNames,
                 selected = colorNames[1]),
             radioButtons(
@@ -218,7 +221,7 @@ cellInfoPlotControlUI <- function(
 geneCoExprPlotControlUI <- function(id, postfix=1, plotly=FALSE){
     choices <- .globals$coExpColor
     if(plotly){
-        choices <- c("Default", names(.globals$cList))
+        choices <- c("Default", availableThemes("sequence"))
     }
     tagList(
         actionButton(NS0(id, "CoExprtog", postfix), "Toggle plot controls"),
@@ -227,6 +230,7 @@ geneCoExprPlotControlUI <- function(id, postfix=1, plotly=FALSE){
                 "input.CoExprtog", postfix, " % 2 == 1"), ns=NS(id),
             radioButtons(
                 NS0(id, "CoExprcol", postfix), "Colour:",
+                inline = TRUE,
                 choices = choices,
                 selected = choices[1]),
             radioButtons(
@@ -243,7 +247,7 @@ geneCoExprPlotControlUI <- function(id, postfix=1, plotly=FALSE){
 boxPlotControlUI <- function(
         id, withPoints=TRUE, withColor=FALSE,
         withFontSize=TRUE,
-        colorNames=names(.globals$cList)){
+        colorNames=availableThemes("sequence")){
     tagList(
         actionButton(
             NS(id, "plottog"), "Toggle graphics controls"),
@@ -260,6 +264,7 @@ boxPlotControlUI <- function(
             if(withColor){
                 radioButtons(
                     NS(id, "plotcols"), "Colour scheme:",
+                    inline = TRUE,
                     choices = colorNames,
                     selected = colorNames[2])
             }else{
@@ -560,7 +565,7 @@ subsetGrpRadioButton <- function(id, label, selected, inline=TRUE){
 
 contextMenuCellInfoUI <- function(
         id, postfix=1,
-        colorNames=names(.globals$cList),
+        colorNames=availableThemes("sequence"),
         group=FALSE){
     tagList(
         actionButton(
@@ -580,6 +585,7 @@ contextMenuCellInfoUI <- function(
                 radioButtons(
                     NS0(id, "CellInfocol", postfix),
                     "Colour (Continuous data):",
+                    inline = TRUE,
                     choices = colorNames,
                     selected = colorNames[1]),
                 radioButtons(
@@ -605,7 +611,7 @@ contextMenuCellInfoUI <- function(
 }
 contextMenuGeneExprUI <- function(
         id, postfix=1,
-        colorNames=names(.globals$cList),
+        colorNames=availableThemes("sequence"),
         group = FALSE){
     tagList(
         actionButton(
@@ -633,6 +639,7 @@ contextMenuGeneExprUI <- function(
                     ns=NS(id),
                     radioButtons(
                         NS0(id, "GeneExprcol", postfix), "Colour:",
+                        inline = TRUE,
                         choices = colorNames,
                         selected = colorNames[1]),
                     radioButtons(
@@ -680,12 +687,12 @@ contextMenuGeneExprUI <- function(
 }
 contextMenuCoExprUI <- function(
         id, postfix=1,
-        colorNames=names(.globals$cList),
+        colorNames=availableThemes("sequence"),
         plotly = FALSE,
         group = FALSE){
     choices <- .globals$coExpColor
     if(plotly){
-        choices <- c("Default", names(.globals$cList))
+        choices <- c("Default", availableThemes("sequence"))
     }
     tagList(
         actionButton(

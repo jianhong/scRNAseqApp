@@ -14,7 +14,7 @@ scWafflePlot <- function(
         gradientCol = rev(hcl.colors(20, "RdYlGn")),
         xyMaxRatio = 5) {
     if (length(gradientCol) == 1) {
-        gradientCol <- .globals$cList[[gradientCol]]
+        gradientCol <- availableThemes(gradientCol)
     }
     if (groupCol[1] %in% colnames(expr)) {
         if (!all(

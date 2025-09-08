@@ -2,6 +2,7 @@
 #' This function was simplified from shinycell for package submission
 #' @noRd
 #' @param obj input single-cell object for Seurat (v3+)
+#' @param theme color theme. default is "Paired" from ColorBrewer palettes.
 #' @param meta.to.include columns to include from the single-cell metadata.
 #'   Default is \code{NA}, which is to use all columns. Users can specify
 #'   the columns to include, which must match one of the following:
@@ -21,6 +22,7 @@
 #' @importFrom RColorBrewer brewer.pal
 createConfig <- function(
         obj,
+        theme="Paired",
         meta.to.include = NA,
         legendCols = 4,
         maxLevels = 50) {
@@ -41,7 +43,9 @@ createConfig <- function(
             "       e.g. umap / tsne. Has any analysis been performed?"
         )
     }
-    
+    if(!theme %in% availableThemes("name")){
+        stop('theme must be one of ', availableThemes("namestring"))
+    }
     # Checks and get list of metadata to include
     if (is.na(meta.to.include[1])) {
         meta.to.include <- colnames(objMeta)
@@ -80,7 +84,7 @@ createConfig <- function(
                 tmpConf$fUI <- tmpConf$fID
                 tmpConf$fCL <-
                     paste0(
-                        colorRampPalette(brewer.pal(12, "Paired"))(nLevels),
+                        scColorRampPalette(nLevels, theme),
                         collapse = "|")
                 tmpConf$fRow <- ceiling(nLevels / legendCols)
                 tmpConf$grp <- TRUE
@@ -114,3 +118,4 @@ createConfig <- function(
     
     return(scConf)
 }
+

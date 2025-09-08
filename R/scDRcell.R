@@ -292,7 +292,7 @@ scDRcell <- function(
     # label
     if (is.na(inpConf[inpConf$UI == cellinfoID]$fCL)) {
         ggOut <- ggOut +
-            scale_color_gradientn("", colours = .globals$cList[[gradientCol]]) +
+            scale_color_gradientn("", colours = availableThemes(gradientCol)) +
             guides(color = guide_colorbar(barwidth = 15))
     } else {
         ggOut <- ggOut + scale_color_manual(

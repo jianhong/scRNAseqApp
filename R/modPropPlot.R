@@ -93,8 +93,8 @@ plotProportionUI <- function(id) {
                     ),
                     radioButtons(
                         NS(id, "plotcols"), "Colour scheme:",
-                        choices = names(.globals$cList),
-                        selected = names(.globals$cList)[2]),
+                        choices = availableThemes("sequence"),
+                        selected = availableThemes("sequence")[2]),
                     geneExprDotPlotUI(id, postfix=2)
                 )
             )

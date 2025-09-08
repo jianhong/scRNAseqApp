@@ -137,7 +137,7 @@ scDRcoex <- function(
                 colors = if (GeneExprDotCol == "Default")
                     ggCol
                 else
-                    .globals$cList[[GeneExprDotCol]],
+                    availableThemes(GeneExprDotCol),
                 text = paste0(
                     gene1, ": ", ggData$val1, "\n",
                     gene2, ": ", ggData$val2),

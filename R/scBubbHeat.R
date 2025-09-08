@@ -243,28 +243,28 @@ scBubbHeat <- function(
         ggData$val[ggData$val < colorBreaks[1]] <- colorBreaks[1]
         ggData$val[ggData$val > colorBreaks[2]] <- colorBreaks[2]
         if (colorBreaks[1] == colorBreaks[2]) {
-            col_fun <- .globals$cList[[inpcols]][1]
+            col_fun <- availableThemes(inpcols)[1]
         } else{
             col_fun <- colorRamp2(
                 breaks = seq(
                     colorBreaks[1],
                     colorBreaks[2],
-                    length.out = length(.globals$cList[[inpcols]])
+                    length.out = length(availableThemes(inpcols))
                 ),
-                colors = .globals$cList[[inpcols]]
+                colors = availableThemes(inpcols)
             )
         }
     } else{
         if (colRange[1] == colRange[2]) {
-            col_fun <- .globals$cList[[inpcols]][1]
+            col_fun <- availableThemes(inpcols)[1]
         } else{
             col_fun <- colorRamp2(
                 breaks = seq(
                     colRange[1],
                     colRange[2],
-                    length.out = length(.globals$cList[[inpcols]])
+                    length.out = length(availableThemes(inpcols))
                 ),
-                colors = .globals$cList[[inpcols]]
+                colors = availableThemes(inpcols)
             )
         }
     }

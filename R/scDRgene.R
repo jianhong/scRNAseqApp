@@ -153,13 +153,13 @@ scDRgene <- function(
             ggOut <- ggOut +
                 scale_color_gradientn(
                     gene1,
-                    colours = .globals$cList[[gradientCol]],
+                    colours = availableThemes(gradientCol),
                     limits = inpColRange)
         } else{
             ggOut <- ggOut +
                 scale_color_gradientn(
                     gene1,
-                    colours = .globals$cList[[gradientCol]])
+                    colours = availableThemes(gradientCol))
         }
         ggOut <- fixCoord(ggOut, plotAspectRatio, rat)
     } else{

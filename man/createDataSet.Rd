@@ -19,6 +19,7 @@ createDataSet(
   LOCKER = FALSE,
   datafolder = "data",
   default.symbol = "rownames",
+  theme = "Paired",
   binSize = 1,
   fragmentNameMapList
 )
@@ -53,6 +54,8 @@ Default is to use the "data" layer}
 \item{datafolder}{app data folder}
 
 \item{default.symbol}{character(1L) specifying the default rownames to be used. If use default, the gene symbols will be the row names of the assay. If one column name of the meta.feature of the assay is supplied, the function will try to extract the symbols from the meta.feature slot of the assay.}
+
+\item{theme}{color theme. default is "Paired" from ColorBrewer palettes.}
 
 \item{binSize}{number of bps for each bin for ATAC fragment coverage. Used
 to reduce the file size of bigwig.}

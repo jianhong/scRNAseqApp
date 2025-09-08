@@ -53,7 +53,7 @@ scCorProp <- function(
                             scale_fill_gradientn(
                                 "",
                                 limits = c(ifelse(any(cor$value<0), -1, 0), 1),
-                                colours = .globals$cList[[inpcols]]) +
+                                colours = availableThemes(inpcols)) +
                             theme(legend.position = "right")
                     })
     return(ggOut)

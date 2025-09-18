@@ -403,7 +403,10 @@ geneExprDotPlotUI <- function(id, postfix=1, editor=FALSE){
                 uiOutput(NS0(id, 'GeneExproup.info', postfix))
             )
         }else{
-            div()
+            div(style = "visibility:hidden;",
+                textInput(NS0(id, 'GeneExpext.info', postfix),
+                          label='', value = '')
+            )
         }
     )
 }

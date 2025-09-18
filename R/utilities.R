@@ -667,3 +667,57 @@ darkTheme <- function(p, returnBG=FALSE, bg_color){
     }
     return(p)
 }
+
+#' @importFrom ggplot2 xlim ylim ggplot_build ggplot_gtable layer_scales
+#' @importFrom grid convertWidth
+addLimits <- function(p, x=NULL, y=NULL, coord=NULL, id, postfix, input){
+    notify <- FALSE
+    if(is(p, 'ggplot')){
+        if(!is.null(coord)){
+            ## ATAC plot
+            if(!is.null(x)){
+                try({
+                    gr0 <- GRanges(coord)
+                    gr <- c(start(gr0), end(gr0))
+                    infoLabel <- paste0('GeneExpext.info', postfix)
+                    savedCoord <- isolate({
+                        input[[infoLabel]]
+                    })
+                    if(savedCoord!=''){
+                        gr <- as.numeric(strsplit(savedCoord, '-')[[1]])
+                    }
+                    gt <- ggplot_gtable(ggplot_build(p[[1]]))
+                    w <- convertWidth(gt$widths, 'npc', valueOnly=TRUE)
+                    ## the plot region is in grid 7
+                    left <- sum(w[seq.int(6)])
+                    right <- sum(w[-seq.int(7)])
+                    ## remove all the left and right part from the xlim
+                    x <- (x-left)/(1-right-left)
+                    x[x<0] <- 0
+                    x[x>1] <- 1
+                    x <- x*(gr[2]-gr[1]) + gr[1]
+                    x <- round(x)
+                    p[[1]] <- p[[1]] + xlim(x) ## tracks
+                    p[[2]] <- p[[2]] + xlim(x) ## annotations
+                    updateTextInput(inputId = infoLabel,
+                                    value = paste(x, collapse = '-'))
+                    notify <- TRUE
+                })
+            }
+        }else{
+            if(!is.null(x) && is(layer_scales(p)$x, 'ScaleContinuousPosition')){
+                p <- p + xlim(x)
+                notify <- TRUE
+            }
+            if(!is.null(y) && is(layer_scales(p)$y, 'ScaleContinuousPosition')){
+                p <- p + ylim(y)
+                notify <- TRUE
+            }
+        }
+    }
+    if(notify){
+        showNotification("Double click to cancel zoom in.",
+                         type = 'message')
+    }
+    return(p)
+}

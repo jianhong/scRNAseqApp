@@ -285,9 +285,14 @@ updateGeneExprDotPlotUI <-
         handlerFUN = plotsDownloadHandler,
         isInfoPlot = FALSE,
         dataSource = NULL) {
+        # Reactive values to store zoom ranges
+        ranges <- reactiveValues(x = NULL, y = NULL)
         output[[paste0("GeneExproup", postfix)]] <- renderPlot({
-            darkTheme(plotX())
+            addLimits(darkTheme(plotX()), x=ranges$x, y=ranges$y,
+                      coord=input[[paste0('coord', postfix)]],
+                      id=id, postfix=postfix, input=input)
         }, background=darkTheme(returnBG=TRUE))
+        
         output[[paste0("GeneExproup.ui", postfix)]] <- renderUI({
             plotOutput(
                 NS0(id, "GeneExproup", postfix),
@@ -300,7 +305,17 @@ updateGeneExprDotPlotUI <-
                         .globals$figHeight, height,
                     input[[paste0("GeneExproup.h", postfix)]]*72),
                 dblclick = NS0(id, 'GeneExproup.dbl', postfix),
-                click = NS0(id, 'GeneExproup.clk', postfix))
+                click = NS0(id, 'GeneExproup.clk', postfix),
+                brush = brushOpts(NS0(id, 'GeneExproup.brush', postfix),
+                                  resetOnNew = TRUE))
+        })
+        # Handle brush (drag selection) for zooming
+        observeEvent(input[[paste0("GeneExproup.brush", postfix)]], {
+            brush <- input[[paste0("GeneExproup.brush", postfix)]]
+            if (!is.null(brush)) {
+                ranges$x <- c(brush$xmin, brush$xmax)
+                ranges$y <- c(brush$ymin, brush$ymax)
+            }
         })
         nearest_element <- function(e){
             if(is.null(e)) return("undefined", 'undefined')
@@ -541,6 +556,22 @@ updateGeneExprDotPlotUI <-
                     }
                     output[[paste0("GeneExproup.info", postfix)]] <- 
                         renderUI({div()})
+                }
+            })
+        }else{## not info
+            ## zoom in for ATAC
+            ## zoom in for gene expression
+            # observeEvent(input[[paste0("GeneExproup.clk", postfix)]],{
+            #     ranges$x <- NULL
+            #     ranges$y <- NULL
+            # })
+            observeEvent(input[[paste0("GeneExproup.dbl", postfix)]],{
+                ranges$x <- NULL
+                ranges$y <- NULL
+                if(!is.null(input[[paste0('GeneExpext.info', postfix)]])){
+                    updateTextInput(
+                        inputId = paste0('GeneExpext.info', postfix),
+                        value = '')
                 }
             })
         }

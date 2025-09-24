@@ -65,9 +65,17 @@ plotPieDimUI <- function(id) {
                         radioButtons(
                             NS(id, "CoExprType"),
                             "Plot type",
-                            choices = c("sunburst", "pie", 'donut', "bar"),
+                            choices = c("sunburst", "pie", 'donut', "bar", "sum", "max", "mean"),
                             selected = "sunburst"
                         ),
+                        conditionalPanel(
+                            condition = "['sum', 'max', 'mean'].includes(input.CoExprType)",
+                            ns=NS(id),
+                            radioButtons(
+                                NS(id, "CoExprCol"), "Colour:",
+                                inline = TRUE,
+                                choices = availableThemes("sequence"),
+                                selected = availableThemes("sequence")[1])),
                         sliderInput(
                             NS(id, "CoExprAlpha"),
                             "Transparency",
@@ -129,6 +137,7 @@ plotPieDimServer <- function(id, dataSource, optCrt) {
                 plotCellBg = input$CoExprBg,
                 markGrp = input$CoExprMarkGrp,
                 alpha = input$CoExprAlpha,
+                gradientCol= input$CoExprCol,
                 plotType = input$CoExprType,
                 labelsFontsize = input$GeneExprfsz,
                 labelsFontFamily=input$GeneExprfml,

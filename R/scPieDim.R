@@ -22,6 +22,7 @@ scPieDim <- function(
         plotCellBg,
         markGrp,
         alpha,
+        gradientCol="White-Red",
         plotType,
         labelsFontsize = 24,
         labelsFontFamily = 'Helvetica',
@@ -185,34 +186,85 @@ scPieDim <- function(
                     position = "identity",
                     alpha = alpha,
                     color = NA
-                )
-        ) +
-        guides(
-            fill = guide_legend(title = 'genename'),
-            alpha = "none")
-    
-    if (lableCircle) {
-        if (plotType != "bar") {
-            ggOut <- ggOut +
-                geom_circle(
-                    aes(color = .data$sub, r = size),
-                    fill = NA,
-                    lwd = .5) +
-                guides(color = guide_legend(title = subsetCellKey))
-        } else{
-            ggOut <- ggOut +
-                geom_rect(
+                ),
+            sum = {
+                dt_sum <- expr[, {list(val_sum=sum(.SD$val, na.rm = TRUE))},
+                               by = c("sampleID", "X", "Y")]
+                geom_point(
                     aes(
-                        xmin = .data$X - .025 * size,
-                        ymin = .data$Y - .05,
-                        xmax = .data$X + (nrow(geneList) + .05) * size / 2,
-                        ymax = .data$Y + size * 1.05,
-                        color = .data$sub
+                        x = .data$X, y = .data$Y,
+                        color = .data$val_sum
                     ),
-                    fill = NA,
-                    linewidth = .5
-                ) +
-                guides(color = guide_legend(title = subsetCellKey))
+                    data = dt_sum,
+                    size = pointSize,
+                    shape = 16,
+                    alpha = alpha,
+                    inherit.aes = FALSE
+                )
+            },
+            max = {
+                dt_max <- expr[, {list(val_max=max(.SD$val, na.rm = TRUE))},
+                               by = c("sampleID", "X", "Y")]
+                geom_point(
+                    aes(
+                        x = .data$X, y = .data$Y,
+                        color = .data$val_max
+                    ),
+                    data = dt_max,
+                    size = pointSize,
+                    shape = 16,
+                    alpha = alpha,
+                    inherit.aes = FALSE
+                )
+            },
+            mean = {
+                dt_mean <- expr[, {list(val_mean=mean(.SD$val, na.rm = TRUE))},
+                               by = c("sampleID", "X", "Y")]
+                geom_point(
+                    aes(
+                        x = .data$X, y = .data$Y,
+                        color = .data$val_mean
+                    ),
+                    data = dt_mean,
+                    size = pointSize,
+                    shape = 16,
+                    alpha = alpha,
+                    inherit.aes = FALSE
+                )
+            }
+        )
+    
+    if(plotType %in% c("sum", "max", "mean")){
+        ggOut <- ggOut + scale_color_gradientn(
+            colours = availableThemes(gradientCol))
+    }else{
+        ggOut <- ggOut +
+            guides(
+                fill = guide_legend(title = 'genename'),
+                alpha = "none")
+        if (lableCircle) {
+            if (plotType != "bar") {
+                ggOut <- ggOut +
+                    geom_circle(
+                        aes(color = .data$sub, r = size),
+                        fill = NA,
+                        lwd = .5) +
+                    guides(color = guide_legend(title = subsetCellKey))
+            } else{
+                ggOut <- ggOut +
+                    geom_rect(
+                        aes(
+                            xmin = .data$X - .025 * size,
+                            ymin = .data$Y - .05,
+                            xmax = .data$X + (nrow(geneList) + .05) * size / 2,
+                            ymax = .data$Y + size * 1.05,
+                            color = .data$sub
+                        ),
+                        fill = NA,
+                        linewidth = .5
+                    ) +
+                    guides(color = guide_legend(title = subsetCellKey))
+            }
         }
     }
     ggOut <- ggOut +

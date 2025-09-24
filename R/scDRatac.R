@@ -65,7 +65,7 @@ scDRatac <- function(
     }
     atac_sig <- lapply(subsetCellVal, function(.ele){
         sample <- .ele
-        f <- file.path(pf, paste0(.ele, ".bigwig"))
+        f <- file.path(pf, paste0(path_sanitize(.ele), ".bigwig"))
         if(file.exists(f)){
             sig <- import(f, format="BigWig", which=gr, as="GRanges")
         }else{

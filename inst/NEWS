@@ -1,3 +1,8 @@
+CHANGES IN VERSION 1.9.26
+-------------------------
+
+    o Fix the bug by sanitize the file names when load ATAC track.
+    
 CHANGES IN VERSION 1.9.25
 -------------------------
 

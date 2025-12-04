@@ -59,6 +59,12 @@ scDRcell <- function(
     if (ncol(ggData) < 3)
         return(ggplot())
     colnames(ggData)[c(1,2)] <- c("X", "Y")
+    dots <- list(...)
+    if('interactive' %in% names(dots)){
+        if(isTRUE(dots$interactive)){
+            ggData$sampleID <- inpMeta$sampleID
+        }
+    }
     ggData <-
         cbindFilterValues(
             ggData,

@@ -305,7 +305,8 @@ updateGeneExprDotPlotUI <-
                         .globals$figHeight, height,
                     input[[paste0("GeneExproup.h", postfix)]]*72),
                 dblclick = NS0(id, 'GeneExproup.dbl', postfix),
-                click = NS0(id, 'GeneExproup.clk', postfix),
+                click = clickOpts(NS0(id, 'GeneExproup.clk', postfix),
+                                  clip = FALSE),
                 brush = brushOpts(NS0(id, 'GeneExproup.brush', postfix),
                                   resetOnNew = TRUE))
         })
@@ -561,10 +562,6 @@ updateGeneExprDotPlotUI <-
         }else{## not info
             ## zoom in for ATAC
             ## zoom in for gene expression
-            # observeEvent(input[[paste0("GeneExproup.clk", postfix)]],{
-            #     ranges$x <- NULL
-            #     ranges$y <- NULL
-            # })
             observeEvent(input[[paste0("GeneExproup.dbl", postfix)]],{
                 ranges$x <- NULL
                 ranges$y <- NULL
@@ -573,6 +570,10 @@ updateGeneExprDotPlotUI <-
                         inputId = paste0('GeneExpext.info', postfix),
                         value = '')
                 }
+            })
+            observeEvent(input[[paste0("GeneExproup.clk", postfix)]],{
+                # print(input[[paste0("GeneExproup.clk", postfix)]])
+                
             })
         }
         
@@ -1025,6 +1026,7 @@ updateSubsetGeneExprPlot <-
     }
 
 # sub module related
+#' @importFrom plotly toWebGL ggplotly renderPlotly event_register plotlyOutput
 updateSubModulePlotUI <-
     function(
         postfix = 1,
@@ -1040,13 +1042,19 @@ updateSubModulePlotUI <-
         if (isTRUE(interactive)) {
             output[[paste0("GeneExproup", postfix)]] <-
                 renderPlotly({
-                    ggplotly(plotX()) %>% event_register("plotly_click")
+                    ggplotly(plotX()) %>% toWebGL() %>% event_register("plotly_click")
                 })
             output[[paste0("GeneExproup.ui", postfix)]] <- renderUI({
                 plotlyOutput(
                     NS0(NS(pid, id), "GeneExproup", postfix),
                     height = height)
             })
+            ## update the download form
+            updateSelectInput(session=session,
+                              inputId = paste0("GeneExproup.fmt",postfix),
+                              choices = 'CSV', selected = 'CSV')
+            output[[paste0("GeneExproup.dwn", postfix)]] <- 
+                exprDownloadHandler(dataset=pid, lasso=TRUE, plot=plotX)
         } else{
             output[[paste0("GeneExproup", postfix)]] <- renderPlot({
                 plotX()

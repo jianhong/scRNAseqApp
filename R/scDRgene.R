@@ -54,6 +54,13 @@ scDRgene <- function(
         inpConf[inpConf$UI %in% subsetCellKey]$ID),
         with = FALSE]
     cnid <- if(ncol(ggData)>2) 3 else 0
+    
+    dots <- list(...)
+    if('interactive' %in% names(dots)){
+        if(isTRUE(dots$interactive)){
+            ggData$sampleID <- inpMeta$sampleID
+        }
+    }
     ggData <-
         cbindFilterValues(
             ggData,

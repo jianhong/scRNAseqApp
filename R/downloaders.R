@@ -100,33 +100,40 @@ click_event_data <- function(session = shiny::getDefaultReactiveDomain(), ...) {
     }
 }
 lasso_select_data <- function(session = shiny::getDefaultReactiveDomain(), ...) {
-    if('plotly_click' %in% session$userData$plotlyShinyEventIDs){
-        event_data(event = "plotly_selected", ...)
-    }else{
-        return(NULL)
-    }
+     event_data(event = "plotly_selected", ...)
 }
-exprDownloadHandler <- function(geneIdMap, dataset, meta) {
+exprDownloadHandler <- function(geneIdMap, dataset, meta, lasso=FALSE, plot) {
     downloadHandler(
         filename = function() {
             paste0('exprdata-', dataset, '.csv')
         },
         content = function(file) {
-            d <- click_event_data()
-            expr <- NULL
-            if (!is.null(d)) {
-                cell <- which(meta$sampleID == d$customdata)
-                if (!is.null(cell)) {
-                    expr <- read_exprs(
-                        h5f = dataset,
-                        valueOnly = TRUE,
-                        cell = cell)
-                    names(expr) <- names(geneIdMap[order(geneIdMap)])
-                    expr <- t(t(expr))
-                    colnames(expr) <- d$customdata
+            if(lasso){
+                tryCatch({
+                    d <- lasso_select_data()
+                    raw <- plot()$data
+                    d <- cbind(d, raw[d$pointNumber+1, , drop=FALSE])
+                    write.csv(d, file)
+                }, error=function(e){
+                    adminMsg(e, type='error', duration=3)
+                })
+            }else{
+                d <- click_event_data()
+                expr <- NULL
+                if (!is.null(d)) {
+                    cell <- which(meta$sampleID == d$customdata)
+                    if (!is.null(cell)) {
+                        expr <- read_exprs(
+                            h5f = dataset,
+                            valueOnly = TRUE,
+                            cell = cell)
+                        names(expr) <- names(geneIdMap[order(geneIdMap)])
+                        expr <- t(t(expr))
+                        colnames(expr) <- d$customdata
+                    }
                 }
+                write.csv(expr, file)
             }
-            write.csv(expr, file)
         }
     )
 }

@@ -1,4 +1,4 @@
-scPropUI <- function(id, postfix = 1, subgrp=.globals$subsetgroup[1]) {
+scPropUI <- function(id, postfix = 1, subgrp=.globals$subsetgroup[1], ...) {
     subModuleContainerUI(
         id,
         mainSelectUI = tagList(

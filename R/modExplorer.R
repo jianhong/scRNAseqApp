@@ -14,7 +14,8 @@ subsetPlotsUI <- function(id) {
         fluidRow(
             column(
                 3,
-                dimensionReductionUI(id)),
+                dimensionReductionUI(id, ABcolumn=.globals$subsetgroup[1]),
+                dimensionReductionUI(id, ABcolumn=.globals$subsetgroup[2])),
             column(
                 5,
                 subsetCellByInfoUI(id, ABcolumn=.globals$subsetgroup[1]),
@@ -138,7 +139,10 @@ subsetPlotsServer <- function(id, dataSource, optCrt) {
             })
         ## input column 1
         ### Dimension Reduction
-        updateDimRedSelInputPair(session, input, dataSource)
+        updateDimRedSelInputPair(session, input, dataSource,
+                                 ABcolumn=.globals$subsetgroup[1])
+        updateDimRedSelInputPair(session, input, dataSource,
+                                 ABcolumn=.globals$subsetgroup[2])
         ### Information to show
         
         ## input column 2
@@ -157,14 +161,18 @@ subsetPlotsServer <- function(id, dataSource, optCrt) {
             containerWidth = list(),
             containerServers = list(),
             containerSubsetGrp = c(),
+            containerCoorGrp = c(),
             Idpointer = 0
         )
         if (is.null(session$userData$defaults))
             session$userData$defaults <- list()
         if (is.null(session$userData$defaults[[dataSource()$dataset]]))
             session$userData$defaults[[dataSource()$dataset]] <- list()
-        uiGrid <- function(ns0, subgrp, uiFUN, width) {
-            column(width = width, uiFUN(NS(id, ns0), subgrp=subgrp))
+        uiGrid <- function(ns0, subgrp, coorgrp, uiFUN, width) {
+            column(width = width, 
+                   uiFUN(NS(id, ns0),
+                         subgrp=subgrp,
+                         coorgrp=coorgrp))
         }
         getRown <- function(w) {
             base <- 0
@@ -198,6 +206,7 @@ subsetPlotsServer <- function(id, dataSource, optCrt) {
             uis <- mapply(
                 globals$containerIds,
                 globals$containerSubsetGrp[globals$containerIds],
+                globals$containerCoorGrp[globals$containerIds],
                 globals$containerUIsFUN[globals$containerIds],
                 coln,
                 FUN = uiGrid,
@@ -248,6 +257,7 @@ subsetPlotsServer <- function(id, dataSource, optCrt) {
                     isolate(input$interactive == 'Yes')
                 globals$containerWidth[[ns0]] <- isolate(input$moduleWidth)
                 globals$containerSubsetGrp[ns0] <- .globals$subsetgroup[1]
+                globals$containerCoorGrp[ns0] <- .globals$subsetgroup[1]
                 globals$containerUIsFUN[[ns0]] <- switch(
                     input$moduleName,
                     "cell info" = scInfoUI,
@@ -283,14 +293,18 @@ subsetPlotsServer <- function(id, dataSource, optCrt) {
             globals$containerUIs <- list()
             globals$containerWidth <- list()
             globals$containerServers <- list()
+            globals$containerSubsetGrp <- c()
+            globals$containerCoorGrp <- c()
+            globals$Idpointer <- 0
             updatePlotModules()
         })
         observeEvent(input$removePlotModule, {
             if (input$removePlotModule != "") {
+                k <- globals$containerIds != input$removePlotModule
                 globals$containerIds <-
-                    globals$containerIds[
-                        globals$containerIds !=
-                            input$removePlotModule]
+                    globals$containerIds[k]
+                globals$containerSubsetGrp <- globals$containerSubsetGrp[k]
+                globals$containerCoorGrp <- globals$containerCoorGrp[k]
                 globals$containerInteractive[[input$removePlotModule]] <-
                     NULL
                 globals$containerWidth[[input$removePlotModule]] <- NULL
@@ -341,6 +355,9 @@ subsetPlotsServer <- function(id, dataSource, optCrt) {
         observeEvent(input$changeSubsetContext, {
             if (input$changeSubsetContext != "") {
                 globals$containerSubsetGrp[[
+                    sub('___.*$', '', input$changeSubsetContext)
+                ]] <- sub('^.*___', '', input$changeSubsetContext)
+                globals$containerCoorGrp[[
                     sub('___.*$', '', input$changeSubsetContext)
                 ]] <- sub('^.*___', '', input$changeSubsetContext)
             }

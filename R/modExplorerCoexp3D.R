@@ -1,4 +1,6 @@
-scCoexp3dUI <- function(id, postfix = 1, subgrp=.globals$subsetgroup[1]) {
+scCoexp3dUI <- function(id, postfix = 1,
+                        subgrp=.globals$subsetgroup[1],
+                        coorgrp=.globals$subsetgroup[1], ...) {
     subModuleContainerUI(
         id,
         mainSelectUI = tagList(
@@ -15,7 +17,8 @@ scCoexp3dUI <- function(id, postfix = 1, subgrp=.globals$subsetgroup[1]) {
                 width = "100px"
             )
         ),
-        menuUI = contextMenuCoExprUI(id, plotly = TRUE, group = subgrp),
+        menuUI = contextMenuCoExprUI(id, plotly = TRUE,
+                                     group = subgrp, coorgrp=coorgrp),
         contentUI = tagList(
             uiOutput(NS0(id, "GeneExpr3Doup.ui", 1)),
             downloadButton(
@@ -85,8 +88,10 @@ scCoexp3dServer <- function(
             scDRcoex(
                 inpConf=dataSource()$sc1conf,
                 inpMeta=dataSource()$sc1meta,
-                dimRedX=p_input$GeneExprdrX,
-                dimRedY=p_input$GeneExprdrY,
+                dimRedX=p_input[[paste0("GeneExprdrX",
+                                        input[["CellInfoCoor1"]])]],
+                dimRedY=p_input[[paste0("GeneExprdrY",
+                                        input[["CellInfoCoor1"]])]],
                 gene1=input$GeneName1,
                 gene2=input$GeneName2,
                 subsetCellKey=p_input[[paste0("subsetCell",

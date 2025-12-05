@@ -1,11 +1,14 @@
-scInfoUI <- function(id, postfix = 1, subgrp=.globals$subsetgroup[1]) {
+scInfoUI <- function(id, postfix = 1,
+                     subgrp=.globals$subsetgroup[1],
+                     coorgrp=.globals$subsetgroup[1]) {
     subModuleContainerUI(
         id,
         mainSelectUI = selectInput(
             NS0(id, "CellInfo", postfix),
             "Cell info:",
             choices = NULL),
-        menuUI = contextMenuCellInfoUI(id, postfix, group=subgrp),
+        menuUI = contextMenuCellInfoUI(id, postfix,
+                                       group=subgrp, coorgrp=coorgrp),
         contentUI = geneExprDotPlotUI(id, postfix)
     )
 }
@@ -54,8 +57,12 @@ scInfoServer <- function(
             scDRcell(
                 inpConf=dataSource()$sc1conf,
                 inpMeta=dataSource()$sc1meta,
-                dimRedX=p_input$GeneExprdrX,
-                dimRedY=p_input$GeneExprdrY,
+                dimRedX=p_input[[paste0("GeneExprdrX",
+                                         input[[paste0("CellInfoCoor",
+                                                       postfix)]])]],
+                dimRedY=p_input[[paste0("GeneExprdrY",
+                                               input[[paste0("CellInfoCoor",
+                                                             postfix)]])]],
                 cellinfoID=input[[cellInfoLabel]],
                 subsetCellKey=p_input[[paste0("subsetCell",
                                               input[[paste0("CellInfosubgrp",

@@ -9,30 +9,32 @@ updateDimRedSelInput <-
     }
 #' @importFrom utils adist
 updateDimRedSelInputPair <-
-    function(session, input, dataSource) {
+    function(session, input, dataSource, ABcolumn='') {
+        idx <- paste0("GeneExprdrX", ABcolumn)
+        idy <- paste0("GeneExprdrY", ABcolumn)
         updateDimRedSelInput(
             session,
-            "GeneExprdrX",
+            idx,
             "X-axis:",
             dataSource()$sc1conf,
             dataSource()$sc1def$dimred[1]
         )
         updateDimRedSelInput(
             session,
-            "GeneExprdrY",
+            idy,
             "Y-axis:",
             dataSource()$sc1conf,
             dataSource()$sc1def$dimred[2]
         )
-        observeEvent(input$GeneExprdrX, {
+        observeEvent(input[[idx]], {
             try({
                 conf <- dataSource()$sc1conf
                 choices <- conf[conf$dimred == TRUE]$UI
-                choices <- choices[choices!=input$GeneExprdrX]
-                dist <- adist(input$GeneExprdrX, choices)
+                choices <- choices[choices!=input[[idx]]]
+                dist <- adist(input[[idx]], choices)
                 updateDimRedSelInput(
                     session, 
-                    "GeneExprdrY",
+                    idy,
                     "Y-axis:",
                     dataSource()$sc1conf,
                     choices[which.min(dist)])

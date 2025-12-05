@@ -283,22 +283,54 @@ boxPlotControlUI <- function(
     )
 }
 
-dimensionReductionUI <- function(id){
-    tagList(
-        h4("Dimension Reduction"),
-        fluidRow(
-            column(
-                12,
-                selectInput(
-                    NS(id, "GeneExprdrX"),
-                    "X-axis:",
-                    choices = NULL),
-                selectInput(
-                    NS(id, "GeneExprdrY"),
-                    "Y-axis:",
-                    choices = NULL))
+dimensionReductionUI <- function(id, ABcolumn){
+    idx <- "GeneExprdrX"
+    idy <- "GeneExprdrY"
+    title <- "Dimension Reduction"
+    if(!missing(ABcolumn)){
+        idx <- paste0(idx, ABcolumn)
+        idy <- paste0(idy, ABcolumn)
+        title <- paste(title, ABcolumn)
+        tagList(
+            actionButton(NS0(id, "reductionTogT", ABcolumn),
+                         title),
+            conditionalPanel(
+                condition = paste0("input.reductionTogT", ABcolumn,
+                                   " % 2 == ",
+                                   ifelse(ABcolumn==.globals$subsetgroup[1],
+                                          0, 1)),
+                ns = NS(id),
+                fluidRow(
+                    column(
+                        12,
+                        selectInput(
+                            NS(id, idx),
+                            "X-axis:",
+                            choices = NULL),
+                        selectInput(
+                            NS(id, idy),
+                            "Y-axis:",
+                            choices = NULL))
+                )
+            )
         )
-    )
+    }else{
+        tagList(
+            h4(title),
+            fluidRow(
+                column(
+                    12,
+                    selectInput(
+                        NS(id, idx),
+                        "X-axis:",
+                        choices = NULL),
+                    selectInput(
+                        NS(id, idy),
+                        "Y-axis:",
+                        choices = NULL))
+            )
+        )
+    }
 }
 #' @importFrom magrittr %>%
 subsetCellByInfoUI <- function(id, mini=FALSE, multiple=TRUE, ABcolumn){
@@ -569,7 +601,8 @@ subsetGrpRadioButton <- function(id, label, selected, inline=TRUE){
 contextMenuCellInfoUI <- function(
         id, postfix=1,
         colorNames=availableThemes("sequence"),
-        group=FALSE){
+        group=.globals$subsetgroup[1],
+        coorgrp=.globals$subsetgroup[1]){
     tagList(
         actionButton(
             NS0(id, "CellInfotog", postfix), "",
@@ -580,6 +613,11 @@ contextMenuCellInfoUI <- function(
             conditionalPanel(
                 condition = paste0("input.CellInfotog", postfix, " % 2 == 1"),
                 ns=NS(id),
+                subsetGrpRadioButton(
+                    id = NS0(id, 'CellInfoCoor', postfix),
+                    label = "Reduction group:",
+                    selected = coorgrp,
+                    inline=TRUE),
                 subsetGrpRadioButton(
                     id = NS0(id, 'CellInfosubgrp', postfix),
                     label = "Subset setting group:",
@@ -615,7 +653,8 @@ contextMenuCellInfoUI <- function(
 contextMenuGeneExprUI <- function(
         id, postfix=1,
         colorNames=availableThemes("sequence"),
-        group = FALSE){
+        group=.globals$subsetgroup[1],
+        coorgrp=.globals$subsetgroup[1]){
     tagList(
         actionButton(
             NS0(id, "GeneExprtog", postfix), "",
@@ -626,6 +665,11 @@ contextMenuGeneExprUI <- function(
             conditionalPanel(
                 condition = paste0("input.GeneExprtog", postfix, " % 2 == 1"),
                 ns=NS(id),
+                subsetGrpRadioButton(
+                    id = NS0(id, 'CellInfoCoor', postfix),
+                    label = "Reduction group:",
+                    selected = coorgrp,
+                    inline=TRUE),
                 subsetGrpRadioButton(
                     id = NS0(id, 'CellInfosubgrp', postfix),
                     label = "Subset setting group:",
@@ -692,7 +736,8 @@ contextMenuCoExprUI <- function(
         id, postfix=1,
         colorNames=availableThemes("sequence"),
         plotly = FALSE,
-        group = FALSE){
+        group=.globals$subsetgroup[1],
+        coorgrp=.globals$subsetgroup[1]){
     choices <- .globals$coExpColor
     if(plotly){
         choices <- c("Default", availableThemes("sequence"))
@@ -707,6 +752,11 @@ contextMenuCoExprUI <- function(
             conditionalPanel(
                 condition = paste0("input.CoExprtog", postfix, " % 2 == 1"),
                 ns=NS(id),
+                subsetGrpRadioButton(
+                    id = NS0(id, 'CellInfoCoor', postfix),
+                    label = "Reduction group:",
+                    selected = coorgrp,
+                    inline=TRUE),
                 subsetGrpRadioButton(
                     id = NS0(id, 'CellInfosubgrp', postfix),
                     label = "Subset setting group:",

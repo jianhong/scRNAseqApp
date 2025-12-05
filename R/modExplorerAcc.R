@@ -1,4 +1,5 @@
-scAccUI <- function(id, postfix = 1, subgrp=.globals$subsetgroup[1]) {
+scAccUI <- function(id, postfix = 1, subgrp=.globals$subsetgroup[1],
+                    coorgrp=.globals$subsetgroup[1], ...) {
     subModuleContainerUI(
         id,
         mainSelectUI = tagList(
@@ -11,7 +12,8 @@ scAccUI <- function(id, postfix = 1, subgrp=.globals$subsetgroup[1]) {
                 "Linked gene name:",
                 choices = NULL)
         ),
-        menuUI = contextMenuGeneExprUI(id, postfix, group = subgrp),
+        menuUI = contextMenuGeneExprUI(id, postfix,
+                                       group = subgrp, coorgrp=coorgrp),
         contentUI = geneExprDotPlotUI(id, postfix)
     )
 }
@@ -214,8 +216,12 @@ scAccServer <- function(
             scDRgene(
                 inpConf=dataSource()$sc1conf,
                 inpMeta=dataSource()$sc1meta,
-                dimRedX=p_input$GeneExprdrX,
-                dimRedY=p_input$GeneExprdrY,
+                dimRedX=p_input[[paste0("GeneExprdrX",
+                                        input[[paste0("CellInfoCoor",
+                                                      postfix)]])]],
+                dimRedY=p_input[[paste0("GeneExprdrY",
+                                               input[[paste0("CellInfoCoor",
+                                                             postfix)]])]],
                 gene1=input[[CoordLabel]],
                 subsetCellKey=p_input[[paste0("subsetCell",
                                               input[[paste0("CellInfosubgrp",

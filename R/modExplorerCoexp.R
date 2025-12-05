@@ -1,4 +1,6 @@
-scCoexpUI <- function(id, postfix = 1, subgrp=.globals$subsetgroup[1]) {
+scCoexpUI <- function(id, postfix = 1,
+                      subgrp=.globals$subsetgroup[1],
+                      coorgrp=.globals$subsetgroup[1], ...) {
     subModuleContainerUI(
         id,
         mainSelectUI = tagList(
@@ -15,7 +17,7 @@ scCoexpUI <- function(id, postfix = 1, subgrp=.globals$subsetgroup[1]) {
                 width = "100px"
             )
         ),
-        menuUI = contextMenuCoExprUI(id, group=subgrp),
+        menuUI = contextMenuCoExprUI(id, group=subgrp, coorgrp=coorgrp),
         contentUI = geneExprDotPlotUI(id, postfix = postfix)
     )
 }
@@ -79,8 +81,12 @@ scCoexpServer <- function(
             scDRcoex(
                 inpConf=dataSource()$sc1conf,
                 inpMeta=dataSource()$sc1meta,
-                dimRedX=p_input$GeneExprdrX,
-                dimRedY=p_input$GeneExprdrY,
+                dimRedX=p_input[[paste0("GeneExprdrX",
+                                        input[[paste0("CellInfoCoor",
+                                                      postfix)]])]],
+                dimRedY=p_input[[paste0("GeneExprdrY",
+                                        input[[paste0("CellInfoCoor",
+                                                      postfix)]])]],
                 gene1=input$GeneName1,
                 gene2=input$GeneName2,
                 subsetCellKey=p_input[[paste0("subsetCell",

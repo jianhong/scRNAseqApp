@@ -75,7 +75,7 @@ scVlnServer <- function(
             input, output, dataSource, "CellInfoX", "plotXord",
             NS(NS(pid, id), "cellinfoXorder"))
         ## plot
-        plot1 <- reactive({
+        plotX <- reactive({
             scVioBox(
                 inpConf = dataSource()$sc1conf,
                 inpMeta = dataSource()$sc1meta,
@@ -100,19 +100,22 @@ scVlnServer <- function(
                 labelsFontFamily=p_input$GeneExprfml,
                 reorder = input$plotord,
                 orderX = input$cellinfoXorder,
-                addnoise = input$addnoise
+                addnoise = input$addnoise,
+                selectedCellIDs = p_session$userData$selectedCellIDs
             )
         })
         updateSubModulePlotUI(
-            postfix,
-            pid,
-            id,
-            input,
-            output,
-            session,
-            interactive,
-            plot1,
-            .globals$pList1[p_input$GeneExprpsz],
+            postfix = postfix,
+            pid = pid,
+            id = id,
+            input = input,
+            output = output,
+            session = session,
+            p_session = p_session,
+            interactive = interactive,
+            plotX = plotX,
+            height = .globals$pList1[p_input$GeneExprpsz],
+            lasso = FALSE,
             dataSource()$dataset,
             input$plottyp,
             input$CellInfoX

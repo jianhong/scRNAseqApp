@@ -20,7 +20,8 @@ scProp <- function(
         valueFilterCutoff2,#not use
         reorder=FALSE,
         orderX,
-        orderY) {
+        orderY,
+        ...) {
     # Prepare ggData
     subsetCellKey <- subsetCellKey[subsetCellKey!="N/A"]
     subsetCellVal <- namedSubsetCellVals(subsetCellKey, subsetCellVal)
@@ -35,6 +36,16 @@ scProp <- function(
             inpConf[inpConf$UI == infoY]$ID)
     }
     ggData <- inpMeta[, colN, with = FALSE]
+    
+    dots <- list(...)
+    if('selectedCellIDs' %in% names(dots)){
+        if(length(dots$selectedCellIDs)){
+            if(all(dots$selectedCellIDs %in% inpMeta$sampleID)){
+                ggData <- ggData[inpMeta$sampleID %in% dots$selectedCellIDs, ]
+            }
+        }
+    }
+    
     ggData <- subGrp(ggData, subsetCellKey, subsetCellVal, inpConf)
     subFilterColname <- 'subValue'
     ggData <-

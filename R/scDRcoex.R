@@ -33,7 +33,8 @@ scDRcoex <- function(
         valueFilterKey,
         valueFilterCutoff,
         valueFilterCutoff2,
-        hideFilterCell = FALSE) {
+        hideFilterCell = FALSE,
+        ...) {
     if (is.null(gene1) || is.null(gene2) || gene1 == "" || gene2 == "") {
         return(NULL)
     }
@@ -70,6 +71,16 @@ scDRcoex <- function(
         )
     rat <- getRatio(ggData)
     
+    dots <- list(...)
+    lassoSelected <- rep(TRUE, nrow(ggData))
+    if('selectedCellIDs' %in% names(dots)){
+        if(length(dots$selectedCellIDs)){
+            if(all(dots$selectedCellIDs %in% inpMeta$sampleID)){
+                lassoSelected <- inpMeta$sampleID %in% dots$selectedCellIDs
+            }
+        }
+    }
+    
     ggData <- getCoexpVal(ggData, dataset, geneIdMap, gene1, gene2)
     keep <- filterCells(
         ggData,
@@ -78,7 +89,8 @@ scDRcoex <- function(
         subFilterColname,
         valueFilterCutoff,
         valueFilterCutoff2,
-        inpConf)
+        inpConf,
+        lassoSelected=lassoSelected)
     
     colnames(ggData)[3] <- subGrpColname ## make the first subsetCellKey as sub
     bgCells <- sum(!keep) > 0

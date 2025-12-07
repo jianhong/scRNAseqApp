@@ -24,7 +24,8 @@ scVioBox <- function(
         splitBy,
         sreorder=FALSE,
         orderS,
-        addnoise=TRUE) {
+        addnoise=TRUE,
+        ...) {
     # Prepare ggData
     ggData <- inpMeta[, c(
         inpConf[inpConf$UI == infoX]$ID,
@@ -55,6 +56,15 @@ scVioBox <- function(
             }
         }
     }
+    dots <- list(...)
+    lassoSelected <- rep(TRUE, nrow(ggData))
+    if('selectedCellIDs' %in% names(dots)){
+        if(length(dots$selectedCellIDs)){
+            if(all(dots$selectedCellIDs %in% inpMeta$sampleID)){
+                lassoSelected <- inpMeta$sampleID %in% dots$selectedCellIDs
+            }
+        }
+    }
     # filter the cell
     subFilterColname <- 'filter'
     ggData <-
@@ -78,7 +88,8 @@ scVioBox <- function(
         subFilterColname,
         valueFilterCutoff,
         valueFilterCutoff2,
-        inpConf)
+        inpConf,
+        lassoSelected=lassoSelected)
     ggData <- ggData[keep]
     
     # Do factoring

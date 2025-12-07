@@ -112,7 +112,8 @@ scCoexp3dServer <- function(
                 valueFilterKey = p_input$filterCell,
                 valueFilterCutoff = p_input$filterCellVal,
                 valueFilterCutoff2 = p_input$filterCellVal2,
-                hideFilterCell = input$CoExprhid1
+                hideFilterCell = input$CoExprhid1,
+                selectedCellIDs = p_session$userData$selectedCellIDs
             )
         })
         source <- NS0(NS(pid, id), "GeneExpr3Doup", 1)

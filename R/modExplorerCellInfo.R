@@ -84,7 +84,7 @@ scInfoServer <- function(
                 valueFilterKey = p_input$filterCell,
                 valueFilterCutoff = p_input$filterCellVal,
                 valueFilterCutoff2 = p_input$filterCellVal2,
-                hideFilterCell=input[[paste0("CellInfolab", postfix)]],
+                hideFilterCell=input[[paste0("CellInfohid", postfix)]],
                 inpSlingshot = input[[paste0("CellInfoslingshot", postfix)]],
                 slingshotFilename = file.path(
                     .globals$datafolder,
@@ -97,19 +97,22 @@ scInfoServer <- function(
                     dataSource()$dataset,
                     .globals$filenames[["sc1edge"]]
                 ),
-                interactive = interactive
+                interactive = interactive,
+                selectedCellIDs = p_session$userData$selectedCellIDs
             )
         })
         updateSubModulePlotUI(
-            postfix,
-            pid,
-            id,
-            input,
-            output,
-            session,
-            interactive,
-            plotX,
-            .globals$pList1[p_input$GeneExprpsz],
+            postfix = postfix,
+            pid = pid,
+            id = id,
+            input = input,
+            output = output,
+            session = session,
+            p_session = p_session,
+            interactive = interactive,
+            plotX = plotX,
+            height = .globals$pList1[p_input$GeneExprpsz],
+            lasso = TRUE,
             dataSource()$dataset,
             p_input$GeneExprdrX,
             p_input$GeneExprdrY,

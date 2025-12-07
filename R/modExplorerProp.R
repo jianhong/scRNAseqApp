@@ -69,7 +69,7 @@ scPropServer <- function(
         
         ## plot region
         ### plots
-        plot1 <- reactive({
+        plotX <- reactive({
             scProp(
                 inpConf = dataSource()$sc1conf,
                 inpMeta = dataSource()$sc1meta,
@@ -93,20 +93,23 @@ scPropServer <- function(
                 valueFilterCutoff2 = p_input$filterCellVal2,
                 reorder = input$plotord,
                 orderX = input$cellinfoXorder,
-                orderY = input$cellinfoYorder
+                orderY = input$cellinfoYorder,
+                selectedCellIDs = p_session$userData$selectedCellIDs
             )
         })
         
         updateSubModulePlotUI(
-            postfix,
-            pid,
-            id,
-            input,
-            output,
-            session,
-            interactive,
-            plot1,
-            .globals$pList1[p_input$GeneExprpsz],
+            postfix = postfix,
+            pid = pid,
+            id = id,
+            input = input,
+            output = output,
+            session = session,
+            p_session = p_session,
+            interactive = interactive,
+            plotX = plotX,
+            height = .globals$pList1[p_input$GeneExprpsz],
+            lasso = FALSE,
             dataSource()$dataset,
             input$plottyp,
             input$CellInfoX,

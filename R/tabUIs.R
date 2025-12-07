@@ -419,17 +419,34 @@ geneExprDotPlotUI <- function(id, postfix=1, editor=FALSE){
                 "Format:", width = "75px",
                 choices = .globals$figFormats,
                 selected = .globals$figFormats[1])),
+        div(style="display:none",
+            checkboxInput(NS0(id, 'GeneExproupDimT', postfix),
+                     label = NULL, width = 0, value=TRUE)),
         div(style="display:inline-block",
-            numericInput(
-                NS0(id, "GeneExproup.h", postfix),
-                "height:", width = "60px",
-                min = 2, max = 20, value = .globals$figHeight, step = 0.5)),
-        div(style="display:inline-block",
-            numericInput(
-                NS0(id, "GeneExproup.w", postfix),
-                "width:", width = "60px",
-                min = 2, max = 20, value = .globals$figWidth, step = 0.5)),
+        conditionalPanel(
+            condition = paste0('input.GeneExproupDimT', postfix, " == true"),
+            ns = NS(id),
+            div(style="display:inline-block",
+                numericInput(
+                    NS0(id, "GeneExproup.h", postfix),
+                    "height:", width = "60px",
+                    min = 2, max = 20, value = .globals$figHeight, step = 0.5)),
+            div(style="display:inline-block",
+                numericInput(
+                    NS0(id, "GeneExproup.w", postfix),
+                    "width:", width = "60px",
+                    min = 2, max = 20, value = .globals$figWidth, step = 0.5))
+        )),
         downloadButton(NS0(id, "GeneExproup.dwn", postfix), "download"),
+        div(style="display:inline-block",
+            conditionalPanel(
+                condition = paste0('input.GeneExproupDimT', postfix, " == false"),
+                ns = NS(id),
+                div(style="display:inline-block",
+                    actionButton(NS0(id, 'GeneExproupSelIDs', postfix),
+                                 label = 'Set lasso selection',
+                                 disabled = FALSE))
+            )),
         if(editor){
             tagList(
                 uiOutput(NS0(id, 'GeneExproup.info', postfix))

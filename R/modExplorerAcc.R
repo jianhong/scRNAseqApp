@@ -253,19 +253,23 @@ scAccServer <- function(
                 valueFilterCutoff = p_input$filterCellVal,
                 valueFilterCutoff2 = p_input$filterCellVal2,
                 hideFilterCell = input[[paste0("GeneExprhid", postfix)]],
-                geneType = 'coor'
+                geneType = 'coor',
+                selectedCellIDs = p_session$userData$selectedCellIDs
             )
         })
+        
         updateSubModulePlotUI(
-            postfix,
-            pid,
-            id,
-            input,
-            output,
-            session,
-            interactive,
-            plotX,
-            .globals$pList1[p_input$GeneExprpsz],
+            postfix = postfix,
+            pid = pid,
+            id = id,
+            input = input,
+            output = output,
+            session = session,
+            p_session = p_session,
+            interactive = interactive,
+            plotX = plotX,
+            height = .globals$pList1[p_input$GeneExprpsz],
+            lasso = FALSE,
             dataSource()$dataset,
             p_input$GeneExprdrX,
             p_input$GeneExprdrY,

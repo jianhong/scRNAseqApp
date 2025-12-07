@@ -102,21 +102,26 @@ click_event_data <- function(session = shiny::getDefaultReactiveDomain(), ...) {
 lasso_select_data <- function(session = shiny::getDefaultReactiveDomain(), ...) {
      event_data(event = "plotly_selected", ...)
 }
-exprDownloadHandler <- function(geneIdMap, dataset, meta, lasso=FALSE, plot) {
+get_lasso_selected_ids <- function(session, plot){
+    tryCatch({
+        d <- lasso_select_data(session = session)
+        raw <- plot()$data
+        d <- merge(d, raw, by.x=c('x', 'y'), by.y=c('X', 'Y'))
+        return(d)
+    }, error=function(e){
+        adminMsg(e, type='error', duration=3)
+        return(NULL)
+    })
+}
+exprDownloadHandler <- function(geneIdMap, dataset, meta, lasso=FALSE, plot, session) {
     downloadHandler(
         filename = function() {
             paste0('exprdata-', dataset, '.csv')
         },
         content = function(file) {
             if(lasso){
-                tryCatch({
-                    d <- lasso_select_data()
-                    raw <- plot()$data
-                    d <- cbind(d, raw[d$pointNumber+1, , drop=FALSE])
-                    write.csv(d, file)
-                }, error=function(e){
-                    adminMsg(e, type='error', duration=3)
-                })
+                d <- get_lasso_selected_ids(session, plot)
+                write.csv(d, file)
             }else{
                 d <- click_event_data()
                 expr <- NULL

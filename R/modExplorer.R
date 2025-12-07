@@ -24,7 +24,15 @@ subsetPlotsUI <- function(id) {
             column(
                 4,
                 graphicsControlUI(id),
-                subsetCellByFilterUI(id))
+                hr(),
+                subsetCellByFilterUI(id),
+                hr(),
+                actionButton(NS(id, 'filterCellIDs'),
+                             label = 'Apply lasso selection',
+                             disabled = TRUE),
+                actionButton(NS(id, 'resetfilterCellIDs'),
+                             label = 'Remove lasso selection',
+                             disabled = FALSE))
         ),
         fluidRow(
             column(
@@ -116,6 +124,14 @@ subsetPlotsUI <- function(id) {
                             '',
                             value = '',
                             width = 0
+                        )),
+                    div(
+                        style = 'display: none;',
+                        textInput(
+                            ns("changeCoorContext"),
+                            '',
+                            value = '',
+                            width = 0
                         ))
                 ))
         ),
@@ -137,6 +153,8 @@ subsetPlotsServer <- function(id, dataSource, optCrt) {
                     "on dimension reduction"
                 ))
             })
+        ## reset the session$userData$selectedCellIDs
+        session$userData$selectedCellIDs <- NULL
         ## input column 1
         ### Dimension Reduction
         updateDimRedSelInputPair(session, input, dataSource,
@@ -296,6 +314,7 @@ subsetPlotsServer <- function(id, dataSource, optCrt) {
             globals$containerSubsetGrp <- c()
             globals$containerCoorGrp <- c()
             globals$Idpointer <- 0
+            session$userData$selectedCellIDs <- NULL
             updatePlotModules()
         })
         observeEvent(input$removePlotModule, {
@@ -357,10 +376,23 @@ subsetPlotsServer <- function(id, dataSource, optCrt) {
                 globals$containerSubsetGrp[[
                     sub('___.*$', '', input$changeSubsetContext)
                 ]] <- sub('^.*___', '', input$changeSubsetContext)
-                globals$containerCoorGrp[[
-                    sub('___.*$', '', input$changeSubsetContext)
-                ]] <- sub('^.*___', '', input$changeSubsetContext)
             }
+        })
+        observeEvent(input$changeCoorContext, {
+            if (input$changeCoorContext != "") {
+                globals$containerCoorGrp[[
+                    sub('___.*$', '', input$changeCoorContext)
+                ]] <- sub('^.*___', '', input$changeCoorContext)
+            }
+        })
+        observeEvent(input$filterCellIDs, {
+            if(!is.null(session$userData$selectedCellIDs)){
+                updatePlotModules()
+            }
+        })
+        observeEvent(input$resetfilterCellIDs, {
+            session$userData$selectedCellIDs <- NULL
+            updatePlotModules()
         })
     })
 }

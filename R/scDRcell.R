@@ -65,6 +65,14 @@ scDRcell <- function(
             ggData$sampleID <- inpMeta$sampleID
         }
     }
+    lassoSelected <- rep(TRUE, nrow(ggData))
+    if('selectedCellIDs' %in% names(dots)){
+        if(length(dots$selectedCellIDs)){
+            if(all(dots$selectedCellIDs %in% inpMeta$sampleID)){
+                lassoSelected <- inpMeta$sampleID %in% dots$selectedCellIDs
+            }
+        }
+    }
     ggData <-
         cbindFilterValues(
             ggData,
@@ -85,7 +93,8 @@ scDRcell <- function(
         subFilterColname,
         valueFilterCutoff,
         valueFilterCutoff2,
-        inpConf)
+        inpConf, 
+        lassoSelected)
     
     if(length(subsetCellKey)==0){
         return(ggplot())

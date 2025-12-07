@@ -61,6 +61,14 @@ scDRgene <- function(
             ggData$sampleID <- inpMeta$sampleID
         }
     }
+    lassoSelected <- rep(TRUE, nrow(ggData))
+    if('selectedCellIDs' %in% names(dots)){
+        if(length(dots$selectedCellIDs)){
+            if(all(dots$selectedCellIDs %in% inpMeta$sampleID)){
+                lassoSelected <- inpMeta$sampleID %in% dots$selectedCellIDs
+            }
+        }
+    }
     ggData <-
         cbindFilterValues(
             ggData,
@@ -107,7 +115,8 @@ scDRgene <- function(
         subFilterColname,
         valueFilterCutoff,
         valueFilterCutoff2,
-        inpConf=inpConf
+        inpConf=inpConf,
+        lassoSelected=lassoSelected
     )
     
     ## make the first subsetCellKey as sub

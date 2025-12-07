@@ -77,7 +77,7 @@ scCoexpServer <- function(
             c("GeneName1", "GeneName2", "CoExprcol1", "CoExprord1")
         )
         ## plot
-        plot1 <- reactive({
+        plotX <- reactive({
             scDRcoex(
                 inpConf=dataSource()$sc1conf,
                 inpMeta=dataSource()$sc1meta,
@@ -109,19 +109,22 @@ scCoexpServer <- function(
                 valueFilterKey = p_input$filterCell,
                 valueFilterCutoff = p_input$filterCellVal,
                 valueFilterCutoff2 = p_input$filterCellVal2,
-                hideFilterCell = input$CoExprhid1
+                hideFilterCell = input$CoExprhid1,
+                selectedCellIDs = p_session$userData$selectedCellIDs
             )
         })
         updateSubModulePlotUI(
-            postfix,
-            pid,
-            id,
-            input,
-            output,
-            session,
-            interactive,
-            plot1,
-            .globals$pList1[p_input$GeneExprpsz],
+            postfix = postfix,
+            pid = pid,
+            id = id,
+            input = input,
+            output = output,
+            session = session,
+            p_session = p_session,
+            interactive = interactive,
+            plotX = plotX,
+            height = .globals$pList1[p_input$GeneExprpsz],
+            lasso = FALSE,
             dataSource()$dataset,
             p_input$GeneExprdrX,
             p_input$GeneExprdrY,

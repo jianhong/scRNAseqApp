@@ -1037,9 +1037,11 @@ updateSubModulePlotUI <-
         input,
         output,
         session,
+        p_session,
         interactive,
         plotX,
         height,
+        lasso=FALSE,
         ...) {
         if (isTRUE(interactive)) {
             output[[paste0("GeneExproup", postfix)]] <-
@@ -1051,12 +1053,32 @@ updateSubModulePlotUI <-
                     NS0(NS(pid, id), "GeneExproup", postfix),
                     height = height)
             })
-            ## update the download form
-            updateSelectInput(session=session,
-                              inputId = paste0("GeneExproup.fmt",postfix),
-                              choices = 'CSV', selected = 'CSV')
-            output[[paste0("GeneExproup.dwn", postfix)]] <- 
-                exprDownloadHandler(dataset=pid, lasso=TRUE, plot=plotX)
+            if(isTRUE(lasso)){
+                ## update the download form
+                updateSelectInput(session=session,
+                                  inputId = paste0("GeneExproup.fmt",postfix),
+                                  choices = 'CSV', selected = 'CSV')
+                updateCheckboxInput(session = session,
+                                    inputId = paste0('GeneExproupDimT', postfix),
+                                    value = FALSE)
+                output[[paste0("GeneExproup.dwn", postfix)]] <- 
+                    exprDownloadHandler(dataset=pid, lasso=TRUE,
+                                        plot=plotX, session=session)
+                observeEvent(input[[paste0('GeneExproupSelIDs', postfix)]], {
+                    d <- get_lasso_selected_ids(session=session, plot=plotX)
+                    if(length(d)){
+                        if(all(!is.na(d$sampleID))){
+                            p_session$userData$selectedCellIDs <- 
+                                as.character(d$sampleID)
+                            adminMsg('Succeed setting lasso selection',
+                                     type='message')
+                        }
+                    }
+                    updateActionButton(session = p_session,
+                                       inputId = 'filterCellIDs',
+                                       disabled = FALSE)
+                }, ignoreInit = TRUE)
+            }
         } else{
             output[[paste0("GeneExproup", postfix)]] <- renderPlot({
                 plotX()
@@ -1099,6 +1121,10 @@ subModuleMenuObservor <- function(
     })
     observeEvent(input$resize, {
         updateTextInput(p_session, "resizePlotModule", value = id)
+    })
+    observeEvent(input$CellInfoCoor1, {
+        updateTextInput(p_session, "changeCoorContext",
+                        value = paste(id, input$CellInfoCoor1, sep='___'))
     })
     observeEvent(input$CellInfosubgrp1, {
         updateTextInput(p_session, "changeSubsetContext",
@@ -1373,8 +1399,13 @@ filterCells <- function(
         valueFilterKey,
         valueFilterCutoff,
         valueFilterCutoff2,
-        inpConf) {
-    keep <- rep(TRUE, nrow(ggData))
+        inpConf,
+        lassoSelected) {
+    if(missing(lassoSelected)){
+        keep <- rep(TRUE, nrow(ggData))
+    }else{
+        keep <- lassoSelected
+    }
     if (!missing(subsetCellKey) && !missing(subsetCellVal)) {
         if(length(subsetCellKey)==1){
             if(!is.list(subsetCellVal)){

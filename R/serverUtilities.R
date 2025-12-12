@@ -624,6 +624,7 @@ updateCellInfoPlot <-
                 cellinfoName=input[[cellInfoName]],
                 subsetCellKey=input$subsetCell,
                 subsetCellVal=getSubsetCellVal(input),
+                subsetCellPct=input[[paste0("subsetCellPct", postfix)]],
                 pointSize=input$GeneExprsiz,
                 gradientCol=input[[paste0("CellInfocol", postfix)]],
                 GeneExprDotOrd=input[[paste0("CellInfoord", postfix)]],
@@ -1051,7 +1052,10 @@ updateSubModulePlotUI <-
             output[[paste0("GeneExproup.ui", postfix)]] <- renderUI({
                 plotlyOutput(
                     NS0(NS(pid, id), "GeneExproup", postfix),
-                    height = height)
+                    height = ifelse(
+                        input[[paste0("GeneExproup.h", postfix)]]==
+                            .globals$figHeight, height,
+                        input[[paste0("GeneExproup.h", postfix)]]*72))
             })
             if(isTRUE(lasso)){
                 ## update the download form
@@ -1203,7 +1207,7 @@ extractGrpColor <- function(config, ui_key) {
 }
 relevelCol <- function(inpConf, ui_key, ggData, coln) {
     ggCol <- NULL
-    if (!is.na(inpConf[inpConf$UI == ui_key[1]]$fCL)) {
+    if (isTRUE(!is.na(inpConf[inpConf$UI == ui_key[1]]$fCL))) {
         ggCol <- extractGrpColor(inpConf, ui_key)
         ggCol <- ggCol[levels(ggData[[coln]])]
     }
@@ -1400,6 +1404,7 @@ filterCells <- function(
         valueFilterCutoff,
         valueFilterCutoff2,
         inpConf,
+        subsetCellPct=100,
         lassoSelected) {
     if(missing(lassoSelected)){
         keep <- rep(TRUE, nrow(ggData))
@@ -1442,6 +1447,29 @@ filterCells <- function(
                 }
             }
         }
+    }
+    if(isTRUE(subsetCellPct!=100)){
+        subsetCellPct <- subsetCellPct[1]/100
+        ## subset cells by each factors
+        factor_columns <- ggData[, vapply(.SD, is.factor, logical(1L))]
+        factor_columns <- colnames(ggData)[factor_columns]
+        ggData$pre_filter_keep <- keep
+        set.seed(42) ## keep the seed to make sure always same output
+        sel <- ggData[, {
+            idx <- rep(FALSE, .N)
+            ok <- which(get('pre_filter_keep'))
+            n <- length(ok)
+            if(n>0){
+                choose <- ok[sample(n, round(n*subsetCellPct))]
+                idx[choose] <- TRUE
+            }
+            list(sel = idx)
+        }, by=factor_columns]
+        adminMsg(paste0('cell number after/before percentage filter is ',
+                        sum(keep),'/',sum(sel$sel), ' (',
+                       round(100*sum(sel$sel)/sum(keep), digits = 2), '%)'),
+                 type = 'message')
+        keep <- sel$sel
     }
     return(keep)
 }

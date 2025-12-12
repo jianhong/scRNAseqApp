@@ -1466,7 +1466,7 @@ filterCells <- function(
             list(sel = idx)
         }, by=factor_columns]
         adminMsg(paste0('cell number after/before percentage filter is ',
-                        sum(keep),'/',sum(sel$sel), ' (',
+                        sum(sel$sel),'/', sum(keep), ' (',
                        round(100*sum(sel$sel)/sum(keep), digits = 2), '%)'),
                  type = 'message')
         keep <- sel$sel

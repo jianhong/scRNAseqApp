@@ -18,6 +18,7 @@ scDRcell <- function(
         cellinfoName=cellinfoID,
         subsetCellKey,
         subsetCellVal,
+        subsetCellPct=100,
         pointSize,
         gradientCol,
         GeneExprDotOrd,
@@ -94,6 +95,7 @@ scDRcell <- function(
         valueFilterCutoff,
         valueFilterCutoff2,
         inpConf, 
+        subsetCellPct,
         lassoSelected)
     
     if(length(subsetCellKey)==0){

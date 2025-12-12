@@ -1,3 +1,9 @@
+CHANGES IN VERSION 1.11.4
+-------------------------
+
+    o Keep the height controler for interactive plot in explorer.
+    o Add perentage filter for cell info plot.
+    
 CHANGES IN VERSION 1.11.3
 -------------------------
 

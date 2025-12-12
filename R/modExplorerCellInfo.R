@@ -71,6 +71,7 @@ scInfoServer <- function(
                     getSubsetCellVal(p_input,
                                      group=input[[paste0("CellInfosubgrp",
                                                          postfix)]]),
+                subsetCellPct = input[[paste0("subsetCellPct", postfix)]],
                 pointSize=p_input$GeneExprsiz,
                 gradientCol=input[[paste0("CellInfocol", postfix)]],
                 GeneExprDotOrd=input[[paste0("CellInfoord", postfix)]],

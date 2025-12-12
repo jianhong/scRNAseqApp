@@ -176,6 +176,27 @@ cellInfoPlotControlUI <- function(
         conditionalPanel(
             condition = paste0(
                 "input.CellInfotog", postfix, " % 2 == 1"), ns=NS(id),
+            numericInput(inputId = NS0(id, "subsetCellPct", postfix),
+                         label = 'percent:',
+                         value = 100,
+                         min = 1,
+                         max = 100,
+                         step = 0.1,
+                         width = 100) %>%
+                shinyhelper::helper(
+                    type = "inline",
+                    size = "m",
+                    fade = TRUE,
+                    title = "Subset cell by percentage:",
+                    content = c(
+                        paste(
+                            "Set the percentage ",
+                            "to sebset cells"),
+                        "- Default 100 will show all cells.",
+                        "- 50 will show half of the cells.",
+                        "- 30 will show 30% of the cells."
+                    )
+                ),
             radioButtons(
                 NS0(id, "CellInfocol", postfix), "Colour (Continuous data):",
                 inline = TRUE,
@@ -423,14 +444,14 @@ geneExprDotPlotUI <- function(id, postfix=1, editor=FALSE){
             checkboxInput(NS0(id, 'GeneExproupDimT', postfix),
                      label = NULL, width = 0, value=TRUE)),
         div(style="display:inline-block",
+            numericInput(
+                NS0(id, "GeneExproup.h", postfix),
+                "height:", width = "60px",
+                min = 2, max = 20, value = .globals$figHeight, step = 0.5)),
+        div(style="display:inline-block",
         conditionalPanel(
             condition = paste0('input.GeneExproupDimT', postfix, " == true"),
             ns = NS(id),
-            div(style="display:inline-block",
-                numericInput(
-                    NS0(id, "GeneExproup.h", postfix),
-                    "height:", width = "60px",
-                    min = 2, max = 20, value = .globals$figHeight, step = 0.5)),
             div(style="display:inline-block",
                 numericInput(
                     NS0(id, "GeneExproup.w", postfix),
@@ -634,12 +655,55 @@ contextMenuCellInfoUI <- function(
                     id = NS0(id, 'CellInfoCoor', postfix),
                     label = "Reduction group:",
                     selected = coorgrp,
-                    inline=TRUE),
+                    inline=TRUE) %>%
+                    shinyhelper::helper(
+                        type = "inline",
+                        size = "m",
+                        fade = TRUE,
+                        title = "Set the reduction group:",
+                        content = c(
+                            "Group A or GroupB in above",
+                            "- A: using dimension reduction A",
+                            "- B: using dimension reduction B"
+                        )
+                    ),
                 subsetGrpRadioButton(
                     id = NS0(id, 'CellInfosubgrp', postfix),
                     label = "Subset setting group:",
                     selected = group,
-                    inline=TRUE),
+                    inline=TRUE) %>%
+                    shinyhelper::helper(
+                        type = "inline",
+                        size = "m",
+                        fade = TRUE,
+                        title = "Set the subset group:",
+                        content = c(
+                            "Group A or GroupB in above",
+                            "- A: using subset cells setting A",
+                            "- B: using subset cells setting B"
+                        )
+                    ),
+                numericInput(inputId = NS0(id, "subsetCellPct", postfix),
+                             label = 'percent:',
+                             value = 100,
+                             min = 1,
+                             max = 100,
+                             step = 0.1,
+                             width = 100) %>%
+                    shinyhelper::helper(
+                        type = "inline",
+                        size = "m",
+                        fade = TRUE,
+                        title = "Subset cell by percentage:",
+                        content = c(
+                            paste(
+                                "Set the percentage ",
+                                "to sebset cells"),
+                            "- Default 100 will show all cells.",
+                            "- 50 will show half of the cells.",
+                            "- 30 will show 30% of the cells."
+                        )
+                    ),
                 radioButtons(
                     NS0(id, "CellInfocol", postfix),
                     "Colour (Continuous data):",

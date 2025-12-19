@@ -28,6 +28,7 @@ scDRgene <- function(
         valueFilterCutoff2,
         hideFilterCell = FALSE,
         geneType = c('gene', 'coor'),
+        xlim=NULL,ylim=NULL,
         ...) {
     if (gene1[1] == "") {
         return(ggplot())
@@ -177,7 +178,7 @@ scDRgene <- function(
                     gene1,
                     colours = availableThemes(gradientCol))
         }
-        ggOut <- fixCoord(ggOut, plotAspectRatio, rat)
+        ggOut <- fixCoord(ggOut, plotAspectRatio, rat, xlim, ylim)
     } else{
         ## ridgePlot
         ggData[[subGrpColname]] <- factor(

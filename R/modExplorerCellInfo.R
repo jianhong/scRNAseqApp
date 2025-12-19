@@ -39,6 +39,8 @@ scInfoServer <- function(
             choices = dataSource()$sc1conf$UI,
             selected = defaults[[cellInfoLabel]]
         )
+        output[[paste0('subsetCellNum', postfix)]] <- 
+            renderText(paste('% of', nrow(dataSource()$sc1meta), 'cells'))
         subModuleMenuObservor(
             id,
             input,

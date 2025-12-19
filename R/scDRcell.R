@@ -38,6 +38,7 @@ scDRcell <- function(
         inpShowEdge,
         edgeFilename,
         editorStatus,
+        xlim=NULL,ylim=NULL,
         ...) {
     subFilterColname <- 'subValue'
     subGrpColname <- 'sub'
@@ -354,6 +355,6 @@ scDRcell <- function(
                 )
         }
     }
-    ggOut <- fixCoord(ggOut, plotAspectRatio, rat)
+    ggOut <- fixCoord(ggOut, plotAspectRatio, rat, xlim, ylim)
     return(ggOut)
 }

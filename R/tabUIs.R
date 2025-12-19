@@ -146,7 +146,24 @@ geneExprPlotControlUI <- function(
                     ns=NS(id),
                     numericInput(
                         NS0(id, "GeneExprrg", postfix), "Max value:",
-                        value = 100))
+                        value = 100)),
+                actionButton(
+                    NS0(id, "GeneExprxylimTog", postfix),
+                    "Manually set x/y axis", inline = TRUE),
+                conditionalPanel(
+                    condition = paste0(
+                        "input.GeneExprxylimTog", postfix, " % 2 ==1"),
+                    ns=NS(id),
+                    sliderInput(
+                        NS0(id, "GeneExprxlim", postfix), "Xlim range:",
+                        min = -10, max = 100,
+                        value = c(-1.5, 10),
+                        step = 0.1),
+                    sliderInput(
+                        NS0(id, "GeneExprylim", postfix), "Ylim range:",
+                        min = -10, max = 100,
+                        value = c(-1.5, 10),
+                        step = 0.1))
             ),
             conditionalPanel(
                 condition = paste0(
@@ -176,13 +193,14 @@ cellInfoPlotControlUI <- function(
         conditionalPanel(
             condition = paste0(
                 "input.CellInfotog", postfix, " % 2 == 1"), ns=NS(id),
-            numericInput(inputId = NS0(id, "subsetCellPct", postfix),
-                         label = 'percent:',
-                         value = 100,
-                         min = 1,
-                         max = 100,
-                         step = 0.1,
-                         width = 100) %>%
+            div(style="display:inline-block",
+                numericInput(inputId = NS0(id, "subsetCellPct", postfix),
+                             label = 'percent:',
+                             value = 100,
+                             min = 1,
+                             max = 100,
+                             step = 0.1,
+                             width = 100) %>%
                 shinyhelper::helper(
                     type = "inline",
                     size = "m",
@@ -196,7 +214,8 @@ cellInfoPlotControlUI <- function(
                         "- 50 will show half of the cells.",
                         "- 30 will show 30% of the cells."
                     )
-                ),
+                )),
+            textOutput(NS0(id, "subsetCellNum", postfix), inline=TRUE),
             radioButtons(
                 NS0(id, "CellInfocol", postfix), "Colour (Continuous data):",
                 inline = TRUE,
@@ -223,7 +242,24 @@ cellInfoPlotControlUI <- function(
                 "Show lineages", value = TRUE),
             checkboxInput(
                 NS0(id, "CellInfoedge", postfix),
-                "Show cell edges", value = TRUE)
+                "Show cell edges", value = TRUE),
+            actionButton(
+                NS0(id, "CellInfoxylimTog", postfix),
+                "Manually set x/y axis", inline = TRUE),
+            conditionalPanel(
+                condition = paste0(
+                    "input.CellInfoxylimTog", postfix, " % 2 ==1"),
+                ns=NS(id),
+                sliderInput(
+                    NS0(id, "CellInfoxlim", postfix), "Xlim range:",
+                    min = -10, max = 100,
+                    value = c(-1.5, 10),
+                    step = 0.1),
+                sliderInput(
+                    NS0(id, "CellInfoylim", postfix), "Ylim range:",
+                    min = -10, max = 100,
+                    value = c(-1.5, 10),
+                    step = 0.1))
         ),
         div(style = "visibility:hidden;",
             id = paste0(NS0(id, "CellInfodup", postfix), 'container'),
@@ -683,6 +719,7 @@ contextMenuCellInfoUI <- function(
                             "- B: using subset cells setting B"
                         )
                     ),
+                div(style="display:inline-block",
                 numericInput(inputId = NS0(id, "subsetCellPct", postfix),
                              label = 'percent:',
                              value = 100,
@@ -703,7 +740,8 @@ contextMenuCellInfoUI <- function(
                             "- 50 will show half of the cells.",
                             "- 30 will show 30% of the cells."
                         )
-                    ),
+                    )),
+                textOutput(NS0(id, "subsetCellNum", postfix), inline=TRUE),
                 radioButtons(
                     NS0(id, "CellInfocol", postfix),
                     "Colour (Continuous data):",

@@ -619,6 +619,20 @@ updateCellInfoPlot <-
         )
         output[[paste0('subsetCellNum', postfix)]] <- 
             renderText(paste('% of', nrow(dataSource()$sc1meta), 'cells'))
+        observeEvent({getSubsetCellVal(input)},{
+            output[[paste0('subsetCellNum', postfix)]] <- 
+                renderText(paste('% of', getFilteredCellNum(
+                    inpConf=dataSource()$sc1conf,
+                    inpMeta=dataSource()$sc1meta,
+                    dimRedX=input$GeneExprdrX,
+                    dimRedY=input$GeneExprdrY,
+                    cellinfoID=input[[cellInfoLabel]],
+                    cellinfoName=input[[cellInfoName]],
+                    subsetCellKey=input$subsetCell,
+                    subsetCellVal=getSubsetCellVal(input),
+                    subsetCellPct=100
+                ), 'cells'))
+        })
         observeEvent(input[[cellInfoXYlimTog]],{
             val <- dataSource()$sc1meta[[
                 dataSource()$sc1conf[
@@ -1526,6 +1540,7 @@ namedSubsetCellVals <- function(subsetCellKey, subsetCellVal){
     subsetCellVal[unique(subsetCellKey)]
 }
 
+#' @importFrom data.table .I
 filterCells <- function(
         ggData,
         subsetCellKey,
@@ -1593,15 +1608,98 @@ filterCells <- function(
                 choose <- ok[sample(n, round(n*subsetCellPct))]
                 idx[choose] <- TRUE
             }
-            list(sel = idx)
+            list(sel = idx, orig_order = .I)
         }, by=factor_columns]
         adminMsg(paste0('cell number after/before percentage filter is ',
                         sum(sel$sel),'/', sum(keep), ' (',
                        round(100*sum(sel$sel)/sum(keep), digits = 2), '%)'),
                  type = 'message')
+        orig_order <- sel$orig_order
+        sel <- sel[order(orig_order)]
+        sel$orig_order <- NULL
+        for(coln in colnames(sel)){
+            if(coln!='sel'){
+                stopifnot(identical(ggData[[coln]], sel[[coln]]))
+            }
+        }
         keep <- sel$sel
     }
     return(keep)
+}
+
+getFilteredCellNum <- function(
+        inpConf,
+        inpMeta,
+        dimRedX,
+        dimRedY,
+        cellinfoID,
+        cellinfoName=cellinfoID,
+        subsetCellKey,
+        subsetCellVal,
+        subsetCellPct=100,
+        dataset,
+        geneIdMap,
+        valueFilterKey,
+        valueFilterCutoff,
+        valueFilterCutoff2,
+        ...) {
+    subFilterColname <- 'subValue'
+    subsetCellKey <- subsetCellKey[subsetCellKey!="N/A"]
+    subsetCellVal <- namedSubsetCellVals(subsetCellKey, subsetCellVal)
+    if(cellinfoName!=cellinfoID){
+        if(is.na(cellinfoName)||cellinfoName==""){
+            cellinfoName <- cellinfoID
+        }
+    }
+    # Prepare ggData
+    ggData <- inpMeta[, unique(c(
+        inpConf[inpConf$UI == dimRedX]$ID,
+        inpConf[inpConf$UI == dimRedY]$ID,
+        inpConf[inpConf$UI == cellinfoID]$ID,
+        inpConf[inpConf$UI %in% subsetCellKey]$ID,
+        inpConf[inpConf$UI == cellinfoName]$ID)),
+        with = FALSE]
+    if (ncol(ggData) < 3)
+        return(0)
+    colnames(ggData)[c(1,2)] <- c("X", "Y")
+    dots <- list(...)
+    if('interactive' %in% names(dots)){
+        if(isTRUE(dots$interactive)){
+            ggData$sampleID <- inpMeta$sampleID
+        }
+    }
+    lassoSelected <- rep(TRUE, nrow(ggData))
+    if('selectedCellIDs' %in% names(dots)){
+        if(length(dots$selectedCellIDs)){
+            if(all(dots$selectedCellIDs %in% inpMeta$sampleID)){
+                lassoSelected <- inpMeta$sampleID %in% dots$selectedCellIDs
+            }
+        }
+    }
+    ggData <-
+        cbindFilterValues(
+            ggData,
+            inpConf,
+            inpMeta,
+            subFilterColname,
+            geneIdMap,
+            dataset,
+            valueFilterKey,
+            valueFilterCutoff,
+            valueFilterCutoff2
+        )
+    rat <- getRatio(ggData)
+    keep <- filterCells(
+        ggData,
+        subsetCellKey,
+        subsetCellVal,
+        subFilterColname,
+        valueFilterCutoff,
+        valueFilterCutoff2,
+        inpConf, 
+        subsetCellPct,
+        lassoSelected)
+    return(sum(keep))
 }
 
 updateRankList <- function(input, output, dataSource, uid, pid, input_id){

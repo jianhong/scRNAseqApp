@@ -41,6 +41,40 @@ scInfoServer <- function(
         )
         output[[paste0('subsetCellNum', postfix)]] <- 
             renderText(paste('% of', nrow(dataSource()$sc1meta), 'cells'))
+        observeEvent({
+            getSubsetCellVal(p_input,
+                             group=input[[paste0("CellInfosubgrp",
+                                                 postfix)]])
+            },{
+            output[[paste0('subsetCellNum', postfix)]] <- 
+                renderText(paste('% of', getFilteredCellNum(
+                    inpConf=dataSource()$sc1conf,
+                    inpMeta=dataSource()$sc1meta,
+                    dimRedX=p_input[[paste0("GeneExprdrX",
+                                            input[[paste0("CellInfoCoor",
+                                                          postfix)]])]],
+                    dimRedY=p_input[[paste0("GeneExprdrY",
+                                            input[[paste0("CellInfoCoor",
+                                                          postfix)]])]],
+                    cellinfoID=input[[cellInfoLabel]],
+                    subsetCellKey=
+                        p_input[[paste0("subsetCell",
+                                        input[[paste0("CellInfosubgrp",
+                                                      postfix)]])]],,
+                    subsetCellVal=
+                        getSubsetCellVal(p_input,
+                                         group=input[[paste0("CellInfosubgrp",
+                                                             postfix)]]),
+                    subsetCellPct=100,
+                    dataset = dataSource()$dataset,
+                    geneIdMap = dataSource()$sc1gene,
+                    valueFilterKey = p_input$filterCell,
+                    valueFilterCutoff = p_input$filterCellVal,
+                    valueFilterCutoff2 = p_input$filterCellVal2,
+                    interactive = interactive,
+                    selectedCellIDs = p_session$userData$selectedCellIDs
+                ), 'cells'))
+        })
         subModuleMenuObservor(
             id,
             input,

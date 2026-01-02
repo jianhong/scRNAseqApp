@@ -1,3 +1,8 @@
+CHANGES IN VERSION 1.11.7
+-------------------------
+
+    o fix the bug when subset the cells by percentage.
+    
 CHANGES IN VERSION 1.11.6
 -------------------------
 

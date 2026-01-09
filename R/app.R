@@ -267,7 +267,7 @@ scRNAseqApp <- function(
         
         ### check available data
         compareAvailableDatasets <- reactivePoll(
-            1000,session,
+            5000,session,
             checkFunc = function(){
                 sort(checkAvailableDataSets(
                     privilege = dataSource$auth$privilege))
@@ -281,7 +281,7 @@ scRNAseqApp <- function(
             ignoreInit = TRUE,
             {
                 updateConfigTable()
-                touchGeneTable(updateDB=TRUE)
+                touchGeneTable()
                 ad <- listDatasets(privilege = dataSource$auth$privilege,
                                    named=TRUE)
                 if (!all(

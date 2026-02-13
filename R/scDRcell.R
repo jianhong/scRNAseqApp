@@ -70,7 +70,39 @@ scDRcell <- function(
         }
     }
     if(isTRUE(inpCellBorder)){
-        ggData$sampleID <- inpMeta$sampleID
+        if (file.exists(cellborderFilename)) {
+            cellborder <- readRDS(cellborderFilename)
+            # cellborderFilename must be a RDS filename.
+            # The RDS file must be a list of cell borders.
+            # The names of the list is the reductions name, such as umap
+            if(is.list(cellborder)){
+                dimRed_prefix <- sub('.$', '', dimRedX)
+                if(dimRed_prefix==sub('.$', '', dimRedY)){
+                    if(dimRed_prefix %in% names(cellborder)){
+                        cellborder <- cellborder[[dimRed_prefix]]
+                        if(!all(c('x', 'y', 'idx', 'sampleID') %in%
+                                colnames(cellborder))){
+                            showNotification(
+                                "The cell border should be a table with
+                                x, y, idx, sampleID",
+                                type = 'error',
+                                duration = 5)
+                            inpCellBorder <- FALSE
+                        }else{
+                            ggData$sampleID <- inpMeta$sampleID
+                        }
+                    }else{
+                        inpCellBorder <- FALSE
+                    }
+                }else{
+                    inpCellBorder <- FALSE
+                }
+            }else{
+                inpCellBorder <- FALSE
+            }
+        }else{
+            inpCellBorder <- FALSE
+        }
     }
     lassoSelected <- rep(TRUE, nrow(ggData))
     if('selectedCellIDs' %in% names(dots)){
@@ -219,7 +251,7 @@ scDRcell <- function(
         dimRedY = dimRedY,
         keepXYlables = keepXYlables,
         inpCellBorder = inpCellBorder,
-        cellborderFilename = cellborderFilename)
+        cellborder = cellborder)
     # slingshot
     if (inpSlingshot) {
         if (file.exists(slingshotFilename)) {
@@ -318,15 +350,21 @@ scDRcell <- function(
     if (is.na(inpConf[inpConf$UI == cellinfoID]$fCL)) {
         ggOut <- ggOut +
             scale_color_gradientn("", colours = availableThemes(gradientCol))+
-            scale_fill_gradientn("", colours = availableThemes(gradientCol)) +
             guides(color = guide_colorbar(barwidth = 15))
+        if(isTRUE(inpCellBorder)){
+            ggOut <- ggOut +
+                scale_fill_gradientn("", colours = availableThemes(gradientCol)) 
+        }
     } else {
         ggOut <- ggOut + scale_color_manual(
-            "", values = ggCol, labels=cellinfoName) + 
-            scale_fill_manual(
-                "", values = ggCol, labels=cellinfoName) +
+            "", values = ggCol, labels=cellinfoName) +
             theme(legend.text = element_text(size = labelsFontsize,
                                              family = labelsFontFamily))
+        if(isTRUE(inpCellBorder)){
+            ggOut <- ggOut + 
+                scale_fill_manual(
+                    "", values = ggCol, labels=cellinfoName) 
+        }
         if(length(ggCol)>50){
             ggOut <- ggOut +
                 guides(color = "none")

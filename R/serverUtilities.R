@@ -1396,50 +1396,28 @@ pointPlot <- function(
         keepXYlables,
         shape = 16,
         inpCellBorder = FALSE,
-        cellborderFilename = 'not_a_file') {
+        cellborder = NULL) {
     ggOut <- ggOut + geom_point(size = pointSize, shape = 16) +
         xlab(dimRedX) + ylab(dimRedY) +
         sctheme(base_size = fontSize,
                 family = labelsFontFamily,
                 XYval = keepXYlables)
-    if (inpCellBorder) {
-        if (file.exists(cellborderFilename)) {
-            cellborder <- readRDS(cellborderFilename)
-            # cellborderFilename must be a RDS filename.
-            # The RDS file must be a list of cell borders.
-            # The names of the list is the reductions name, such as umap
-            if(is.list(cellborder)){
-                dimRed_prefix <- sub('.$', '', dimRedX)
-                if(dimRed_prefix==sub('.$', '', dimRedY)){
-                    if(dimRed_prefix %in% names(cellborder)){
-                        cellborder <- cellborder[[dimRed_prefix]]
-                        if(!all(c('x', 'y', 'idx', 'sampleID') %in%
-                                colnames(cellborder))){
-                            showNotification(
-              "The cell border should be a table with x, y, idx, sampleID",
-                                type = 'error',
-                                duration = 5)
-                        }else{
-                            cellborder <- merge(cellborder, ggOut$data,
-                                                by='sampleID')
-                            sampleID <- factor(cellborder$sampleID,
-                                               levels=ggOut$data$sampleID)
-                            cellborder <- cellborder[order(sampleID, 
-                                                           cellborder$idx),]
-                            ggOut <- ggOut +
-                                geom_polygon(aes(x=.data[["x"]],
-                                                 y=.data[["y"]],
-                                                 group=.data[["sampleID"]],
-                                                 fill=.data[["val"]]),
-                                             color = NA,
-                                             inherit.aes = FALSE,
-                                             data = cellborder,
-                                             show.legend = FALSE)
-                        }
-                    }
-                }
-            }
-        }
+    if (isTRUE(inpCellBorder)) {
+        cellborder <- merge(cellborder, ggOut$data,
+                            by='sampleID')
+        sampleID <- factor(cellborder$sampleID,
+                           levels=ggOut$data$sampleID)
+        cellborder <- cellborder[order(sampleID, 
+                                       cellborder$idx),]
+        ggOut <- ggOut +
+            geom_polygon(aes(x=.data[["x"]],
+                             y=.data[["y"]],
+                             group=.data[["sampleID"]],
+                             fill=.data[["val"]]),
+                         color = NA,
+                         inherit.aes = FALSE,
+                         data = cellborder,
+                         show.legend = FALSE)
     }
     ggOut
 }

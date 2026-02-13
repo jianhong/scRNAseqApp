@@ -281,7 +281,7 @@ scRNAseqApp <- function(
             ignoreInit = TRUE,
             {
                 updateConfigTable()
-                touchGeneTable()
+                touchGeneTable(updateDB=isTRUE(dataSource$auth$privilege=='all'))
                 ad <- listDatasets(privilege = dataSource$auth$privilege,
                                    named=TRUE)
                 if (!all(

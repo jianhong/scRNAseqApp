@@ -243,6 +243,9 @@ cellInfoPlotControlUI <- function(
             checkboxInput(
                 NS0(id, "CellInfoedge", postfix),
                 "Show cell edges", value = TRUE),
+            checkboxInput(
+                NS0(id, 'CellInfoSegmentation', postfix),
+                "Show cell segmentation", value = FALSE),
             actionButton(
                 NS0(id, "CellInfoxylimTog", postfix),
                 "Manually set x/y axis", inline = TRUE),
@@ -759,6 +762,10 @@ contextMenuCellInfoUI <- function(
                 checkboxInput(
                     NS0(id, "CellInfoslingshot", postfix),
                     "Show lineages", value = TRUE),
+                div(style="display:none",
+                checkboxInput(
+                    NS0(id, 'CellInfoSegmentation', postfix),
+                    "Show cell segmentation", value = FALSE)),
                 checkboxInput(
                     NS0(id, "CellInfoedge", postfix),
                     "Show cell edges", value = TRUE),

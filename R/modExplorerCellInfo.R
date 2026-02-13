@@ -134,6 +134,11 @@ scInfoServer <- function(
                     dataSource()$dataset,
                     .globals$filenames[["sc1edge"]]
                 ),
+                inpCellBorder=input[[paste0('CellInfoSegmentation', postfix)]],
+                cellborderFilename=file.path(
+                    .globals$datafolder,
+                    dataSource()$dataset,
+                    .globals$filenames[["cellborder"]]),
                 interactive = interactive,
                 selectedCellIDs = p_session$userData$selectedCellIDs
             )

@@ -22,7 +22,8 @@
     locker = "LOCKER",
     cellchat = "cellchat.rds",
     monocle = "monocle3_pseudotime.rds",
-    slingshot = "slingshot.rds"
+    slingshot = "slingshot.rds",
+    cellborder = 'cell_border.rds'
 )
 .globals$tokenMinLen <- 8 # minimal token length
 .globals$h5fGrpPrefix <- 'grp' #gene expression table prefix

@@ -35,10 +35,12 @@ scDRcell <- function(
         hideFilterCell=FALSE,
         inpSlingshot,
         slingshotFilename,
-        inpShowEdge,
+        inpShowEdge,#spring links, cell-cell graph edges
         edgeFilename,
         editorStatus,
         xlim=NULL,ylim=NULL,
+        inpCellBorder=FALSE,# stereo-seq cell borders
+        cellborderFilename='',
         ...) {
     subFilterColname <- 'subValue'
     subGrpColname <- 'sub'
@@ -66,6 +68,9 @@ scDRcell <- function(
         if(isTRUE(dots$interactive)){
             ggData$sampleID <- inpMeta$sampleID
         }
+    }
+    if(isTRUE(inpCellBorder)){
+        ggData$sampleID <- inpMeta$sampleID
     }
     lassoSelected <- rep(TRUE, nrow(ggData))
     if('selectedCellIDs' %in% names(dots)){
@@ -212,7 +217,9 @@ scDRcell <- function(
         labelsFontFamily = labelsFontFamily,
         dimRedX = dimRedX,
         dimRedY = dimRedY,
-        keepXYlables = keepXYlables)
+        keepXYlables = keepXYlables,
+        inpCellBorder = inpCellBorder,
+        cellborderFilename = cellborderFilename)
     # slingshot
     if (inpSlingshot) {
         if (file.exists(slingshotFilename)) {
@@ -310,11 +317,14 @@ scDRcell <- function(
     # label
     if (is.na(inpConf[inpConf$UI == cellinfoID]$fCL)) {
         ggOut <- ggOut +
-            scale_color_gradientn("", colours = availableThemes(gradientCol)) +
+            scale_color_gradientn("", colours = availableThemes(gradientCol))+
+            scale_fill_gradientn("", colours = availableThemes(gradientCol)) +
             guides(color = guide_colorbar(barwidth = 15))
     } else {
         ggOut <- ggOut + scale_color_manual(
-            "", values = ggCol, labels=cellinfoName) +
+            "", values = ggCol, labels=cellinfoName) + 
+            scale_fill_manual(
+                "", values = ggCol, labels=cellinfoName) +
             theme(legend.text = element_text(size = labelsFontsize,
                                              family = labelsFontFamily))
         if(length(ggCol)>50){

@@ -139,6 +139,12 @@ scInfoServer <- function(
                     .globals$datafolder,
                     dataSource()$dataset,
                     .globals$filenames[["cellborder"]]),
+                cellSegAlpha = input[[paste0('CellInfoSegAlpha', postfix)]],
+                inpBgImg=input[[paste0('CellInfoBgImg', postfix)]],
+                backgroundImage=file.path(
+                    .globals$datafolder,
+                    dataSource()$dataset,
+                    .globals$filenames[["backgroundImage"]]),
                 interactive = interactive,
                 selectedCellIDs = p_session$userData$selectedCellIDs
             )

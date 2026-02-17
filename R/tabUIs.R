@@ -246,6 +246,13 @@ cellInfoPlotControlUI <- function(
             checkboxInput(
                 NS0(id, 'CellInfoSegmentation', postfix),
                 "Show cell segmentation", value = FALSE),
+            sliderInput(
+                NS0(id, 'CellInfoSegAlpha', postfix),
+                "Cell segmentation alpha", value=1, 
+                min = 0, max=1, step=0.01),
+            checkboxInput(
+                NS0(id, 'CellInfoBgImg', postfix),
+                "Show spatial image", value = FALSE),
             actionButton(
                 NS0(id, "CellInfoxylimTog", postfix),
                 "Manually set x/y axis", inline = TRUE),
@@ -765,7 +772,14 @@ contextMenuCellInfoUI <- function(
                 div(style="display:none",
                 checkboxInput(
                     NS0(id, 'CellInfoSegmentation', postfix),
-                    "Show cell segmentation", value = FALSE)),
+                    "Show cell segmentation", value = FALSE),
+                sliderInput(
+                    NS0(id, 'CellInfoSegAlpha', postfix),
+                    "Cell segmentation alpha", value=1, 
+                    min = 0, max=1, step=0.01)),
+                checkboxInput(
+                    NS0(id, 'CellInfoBgImg', postfix),
+                    "Show spatial image", value = FALSE),
                 checkboxInput(
                     NS0(id, "CellInfoedge", postfix),
                     "Show cell edges", value = TRUE),

@@ -709,7 +709,13 @@ updateCellInfoPlot <-
                 cellborderFilename=file.path(
                     .globals$datafolder,
                     dataSource()$dataset,
-                    .globals$filenames[["cellborder"]])
+                    .globals$filenames[["cellborder"]]),
+                cellSegAlpha = input[[paste0('CellInfoSegAlpha', postfix)]],
+                inpBgImg=input[[paste0('CellInfoBgImg', postfix)]],
+                backgroundImage=file.path(
+                    .globals$datafolder,
+                    dataSource()$dataset,
+                    .globals$filenames[["backgroundImage"]])
             )
         })
         updateGeneExprDotPlotUI(
@@ -1396,7 +1402,8 @@ pointPlot <- function(
         keepXYlables,
         shape = 16,
         inpCellBorder = FALSE,
-        cellborder = NULL) {
+        cellborder = NULL,
+        cellSegAlpha = 1) {
     ggOut <- ggOut + geom_point(size = pointSize, shape = 16) +
         xlab(dimRedX) + ylab(dimRedY) +
         sctheme(base_size = fontSize,
@@ -1415,17 +1422,32 @@ pointPlot <- function(
                              group=.data[["sampleID"]],
                              fill=.data[["val"]]),
                          color = NA,
+                         alpha = cellSegAlpha,
                          inherit.aes = FALSE,
                          data = cellborder,
                          show.legend = FALSE)
     }
     ggOut
 }
-ggXYplot <- function(ggData) {
-    ggplot(ggData, aes(
+#' @importFrom ggplot2 geom_raster
+#' @importFrom ggnewscale new_scale_fill
+ggXYplot <- function(ggData, backgroundImageData) {
+    p <- ggplot(ggData, aes(
         .data[["X"]], .data[["Y"]],
         color = .data[["val"]] #,customdata = data[["sampleID"]]
-        ))
+    ))
+    if(!missing(backgroundImageData)){
+        if(all(c('x','y','value') %in% colnames(backgroundImageData))){
+            p <- p +
+                geom_raster(data = backgroundImageData,
+                            aes(x = .data[["x"]], y = .data[["y"]],
+                                fill = .data[["value"]]),
+                            inherit.aes = FALSE,
+                            show.legend = FALSE) +
+                ggnewscale::new_scale_fill()
+        }
+    }
+    return(p)
 }
 getTotalNumber <- function(nGrid = 16, nPad = 2) {
     return(nGrid + nPad * 2)

@@ -41,6 +41,9 @@ scDRcell <- function(
         xlim=NULL,ylim=NULL,
         inpCellBorder=FALSE,# stereo-seq cell borders
         cellborderFilename='',
+        cellSegAlpha=1,
+        inpBgImg=FALSE,
+        backgroundImage='',
         ...) {
     subFilterColname <- 'subValue'
     subGrpColname <- 'sub'
@@ -102,6 +105,44 @@ scDRcell <- function(
             }
         }else{
             inpCellBorder <- FALSE
+        }
+    }
+    if(isTRUE(inpBgImg)){
+        if(file.exists(backgroundImage)){
+            backgroundImage <- readRDS(backgroundImage)
+            if(is.list(backgroundImage)){
+                dimRed_prefix <- sub('.$', '', dimRedX)
+                if(dimRed_prefix==sub('.$', '', dimRedY)){
+                    if(dimRed_prefix %in% names(backgroundImage)){
+                        backgroundImage <- backgroundImage[[dimRed_prefix]]
+                        backgroundAlignFun <- 
+                            backgroundImage$FUN
+                        if(is.null(backgroundAlignFun)){
+                            backgroundAlignFun <- transformImage
+                        }
+                        backgroundAlignArgs <-
+                            backgroundImage$args
+                        backgroundImage <- backgroundImage$raster_df
+                        if(!all(c('x', 'y', 'value') %in% 
+                                colnames(backgroundImage))){
+                            showNotification(
+                                "The background should be a table with
+                                x, y, value",
+                                type = 'error',
+                                duration = 5)
+                            inpBgImg <- FALSE
+                        }
+                    }else{
+                        inpBgImg <- FALSE
+                    }
+                }else{
+                    inpBgImg <- FALSE
+                }
+            }else{
+                inpBgImg <- FALSE
+            }
+        }else{
+            inpBgImg <- FALSE
         }
     }
     lassoSelected <- rep(TRUE, nrow(ggData))
@@ -207,7 +248,17 @@ scDRcell <- function(
     }
     
     # Actual ggplot
-    ggOut <- ggXYplot(ggData)
+    if(isTRUE(inpBgImg)){
+        backgroundAlignArgs$plot_data <- ggData
+        ggData <- do.call(backgroundAlignFun, backgroundAlignArgs)
+        if(inpCellBorder){
+            backgroundAlignArgs$plot_data <- cellborder
+            cellborder <- do.call(backgroundAlignFun, backgroundAlignArgs)
+        }
+        ggOut <- ggXYplot(ggData, backgroundImage)
+    }else{
+        ggOut <- ggXYplot(ggData) 
+    }
     if (bgCells) {
         ggOut <- labelBackgroundCells(
             ggOut,
@@ -224,6 +275,12 @@ scDRcell <- function(
             edgeDf <- cbind(ggData[match(edges[keep, 1], ggData$idx), c('X', 'Y')],
                             ggData[match(edges[keep, 2], ggData$idx), c('X', 'Y')])
             colnames(edgeDf) <- c('x', 'y', 'xend', 'yend')
+            if(isTRUE(inpBgImg)){
+                backgroundAlignArgs$plot_data <- edgeDf
+                edgeDf <- do.call(backgroundAlignFun,
+                                  backgroundAlignArgs)
+            }
+            
             ggOut <- ggOut +
                 geom_segment(
                     data = edgeDf,
@@ -251,7 +308,8 @@ scDRcell <- function(
         dimRedY = dimRedY,
         keepXYlables = keepXYlables,
         inpCellBorder = inpCellBorder,
-        cellborder = cellborder)
+        cellborder = cellborder,
+        cellSegAlpha = cellSegAlpha)
     # slingshot
     if (inpSlingshot) {
         if (file.exists(slingshotFilename)) {
@@ -318,6 +376,14 @@ scDRcell <- function(
                                 pts[linC$end.clus[linC$end.given],
                                     "color"] <- "red2"
                             }
+                        }
+                        if(isTRUE(inpBgImg)){
+                            backgroundAlignArgs$plot_data <- lineDf
+                            lineDf <- do.call(backgroundAlignFun,
+                                              backgroundAlignArgs)
+                            backgroundAlignArgs$plot_data <- pts
+                            pts <- do.call(backgroundAlignFun,
+                                           backgroundAlignArgs)
                         }
                         ggOut <- ggOut +
                             geom_segment(

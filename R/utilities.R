@@ -721,3 +721,55 @@ addLimits <- function(p, x=NULL, y=NULL, coord=NULL, id, postfix, input){
     }
     return(p)
 }
+
+# rotate, scale and shift the cell borders to fit the image
+transformImage <- function(
+        plot_data,
+        scaleX, scaleY,
+        offsetX, offsetY,
+        Rotation, img_height, ...){
+    if(missing(scaleX) || 
+       missing(scaleY) ||
+       missing(offsetX) ||
+       missing(offsetY) ||
+       missing(Rotation) ||
+       missing(img_height)){
+        return(plot_data)
+    }
+    if(!is.numeric(scaleX) ||
+       !is.numeric(scaleY) ||
+       !is.numeric(offsetX) ||
+       !is.numeric(offsetY) ||
+       !is.numeric(Rotation) ||
+       !is.numeric(img_height) ){
+        return(plot_data)
+    }
+    
+    if(all(c('X', 'Y') %in% toupper(colnames(plot_data)))){
+        x <- colnames(plot_data)[toupper(colnames(plot_data))=='X']
+        y <- colnames(plot_data)[toupper(colnames(plot_data))=='Y']
+    }else{
+        return(plot_data)
+    }
+    theta <- Rotation * pi / 180
+
+    plot_data[[x]] <- (plot_data[[x]]-offsetX)*scaleY
+    plot_data[[y]] <- (plot_data[[y]]-offsetY)*scaleX
+    rot_X <- 0
+    rot_Y <- img_height
+    plot_data[[x]] <- (plot_data[[x]]-rot_X) * cos(theta) - 
+        (plot_data[[y]]-rot_Y) * sin(theta) + rot_X
+    plot_data[[y]] <- (plot_data[[x]]-rot_X) * sin(theta) + 
+        (plot_data[[y]]-rot_Y) * cos(theta) + rot_Y
+    if(all(c('xend', 'yend') %in% tolower(colnames(plot_data)))){
+        xend <- colnames(plot_data)[tolower(colnames(plot_data))=='xend']
+        yend <- colnames(plot_data)[tolower(colnames(plot_data))=='yend']
+        plot_data[[xend]] <- (plot_data[[xend]]-offsetX)*scaleY
+        plot_data[[yend]] <- (plot_data[[yend]]-offsetY)*scaleX
+        plot_data[[xend]] <- (plot_data[[xend]]-rot_X) * cos(theta) - 
+            (plot_data[[yend]]-rot_Y) * sin(theta) + rot_X
+        plot_data[[yend]] <- (plot_data[[xend]]-rot_X) * sin(theta) + 
+            (plot_data[[yend]]-rot_Y) * cos(theta) + rot_Y
+    }
+    return(plot_data)
+}

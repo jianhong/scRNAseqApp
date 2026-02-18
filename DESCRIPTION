@@ -1,6 +1,6 @@
 Package: scRNAseqApp
 Title: A single-cell RNAseq Shiny app-package
-Version: 1.11.10
+Version: 1.11.11
 Authors@R:
     c(person(given = "Jianhong",
              family = "Ou",
@@ -80,6 +80,7 @@ Enhances:
     future,
     SingleR,
     SummarizedExperiment,
-    tricycle
+    tricycle,
+    terra
 URL: https://github.com/jianhong/scRNAseqApp
 BugReports: https://github.com/jianhong/scRNAseqApp/issues

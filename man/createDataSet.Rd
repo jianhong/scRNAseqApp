@@ -25,7 +25,7 @@ createDataSet(
 )
 }
 \arguments{
-\item{appconf}{a list object represent the information about the dataset}
+\item{appconf}{a APPconf object represent the information about the dataset}
 
 \item{seu}{a Seurat object}
 

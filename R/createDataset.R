@@ -3,7 +3,7 @@
 #' the markers in the Misc data named as 'markers'.
 #' The misc data should be output of function `FindAllMarkers`.
 #' @param datafolder app data folder
-#' @param appconf a list object represent the information about the dataset
+#' @param appconf a APPconf object represent the information about the dataset
 #' @param seu a Seurat object
 #' @param config config file for makeShinyFiles
 #' @param contrast The contrast group
@@ -547,4 +547,159 @@ addTricycle <- function(exp, gname.type, species, meta) {
     return(list(
         tricyclePosition = tricyclePosition,
         CCStage = CCStage))
+}
+
+#' Add background image to the dataset
+#' DO NOT export in current stage, until there is enough test data
+#' @noRd
+#' @param tiff The TIFF file name or a data.frame with column names of 'x', 'y',
+#' and 'value'.
+#' @param fact positive integer. The sub-sample factor. If it set to 10,
+#' the tiff will subsample to 1/10 of the original pixels.
+#' @param reduction The reduction name such as 'coor' which should match with
+#' the coordinates used in the target reductions.
+#' @param alignmentFUN The alignment function to convert the reduction 
+#' coordinates to the image coordinates. The name of the first parameter of the
+#' function must be plot_data. If it is NULL, the system will use private
+#' function 'transformImage' which is designed to convert the coordinates
+#' to Stereo-seq tiff image.
+#' @param alignmentArgs The arguments of the alignment function.
+#' @param datafolder app data folder
+#' @param appconf a APPconf object represent the information about the dataset
+addBackgroundImage <- function(
+        tiff, fact=10, reduction, alignmentFUN, alignmentArgs,
+        datafolder='data', appconf){
+    stopifnot(file.exists(datafolder))
+    stopifnot(is(appconf, "APPconf"))
+    if(!missing(alignmentFUN)){
+        stopifnot(is.function(alignmentFUN))
+        argNames <- methods::formalArgs(alignmentFUN)
+        if(!'plot_data' %in% argNames){
+            stop("'plot_data' must be an argument in the alignmentFUN")
+        }
+    }else{
+        alignmentFUN=transformImage
+        argNames <- methods::formalArgs(alignmentFUN)
+    }
+    stopifnot(is.list(alignmentArgs))
+    if(!all(names(alignmentArgs) %in% argNames)){
+        warning('Not all aligmentArgs are arguments in alignmentFUN.')
+    }
+    if(is.data.frame(tiff)){
+        stopifnot(all(c('x', 'y', 'value') %in% colnames(tiff)))
+    }else{
+        stopifnot(is.integer(fact))
+        raster_data <- terra::rast(tiff)
+        r_small <- terra::aggregate(raster_data, fact = fact, fun = mean)
+        tiff <- as.data.frame(r_small, xy = TRUE)
+        colnames(tiff)[3] <- 'value'
+    }
+    backgroundImage <- list()
+    scfile <- file.path(datafolder, appconf$id,
+                        .globals$filenames$backgroundImage)
+    if(file.exists(scfile)){
+        backgroundImage <- readRDS(scfile)
+    }
+    
+    backgroundImage[[reduction[1]]] <- list(raster_df=tiff,
+                                            FUN=alignmentFUN,
+                                            args=alignmentArgs)
+    saveRDS(backgroundImage, scfile)
+    return(invisible(backgroundImage))
+}
+
+#' Add cell borders to the dataset
+#' DO NOT export in current stage, until there is enough test data
+#' @noRd
+#' @param borders The cell border csv file name or 
+#' a data.frame with column names of 'x', 'y', 'idx', 'sampleID'.
+#' The 'idx' is the order of the points. The sampleID is the cell barcodes.
+#' @param cell_coor If the borders is a csv file name, which saved the relative
+#' coordinates to the cell center, 'cell_coor' must be provided.
+#' The cell_coor should be a csv file name or a data.frame with column names of
+#' 'x', 'y'
+#' @param reduction The reduction name such as 'coor' which should match with
+#' the coordinates used in the target reductions.
+#' @param datafolder app data folder
+#' @param appconf a APPconf object represent the information about the dataset
+#' @param row.names,... The row.names and other parameter used in read.csv.
+#' The rownames of the cell border should be the barcodes of the cells.
+addCellBorders <- function(
+        borders, cell_coor, reduction, datafolder='data', appconf,
+        row.names=1, ...){
+    stopifnot(file.exists(datafolder))
+    stopifnot(is(appconf, "APPconf"))
+    if(is.data.frame(borders)){
+        stopifnot(all(c('x', 'y', 'idx', 'sampleID') %in% colnames(borders)))
+        stopifnot(length(rownames(borders))==nrow(borders))
+    }else{
+        if(file.exists(borders)){
+            borders <- read.csv(borders, row.names = row.names, ...)
+            cell_coor <- read.csv(cell_coor, row.names = row.names, ...)
+            stopifnot(nrow(borders)==nrow(cell_coor))
+            stopifnot(ncol(cell_coor)==2) ## must be 2 columns with x, y pairs
+            data <- cbind(cell_coor, borders)
+            borders <- apply(data, 1, function(vals){
+                vals <- vals[vals >= 32767] # Remove sentinels 2^15-1
+                vals <- matrix(vals, nrow=2, byrow=FALSE)
+                t(vals[, -1] + vals[, 1])
+            }, simplify = FALSE)
+            l <- unlist(lapply(borders, nrow))
+            borders <- do.call(rbind, borders)
+            borders <- as.data.frame(borders)
+            borders$idx <- unlist(lapply(l, seq.int))
+            borders$cell <- rownames(data)
+            colnames(borders) <- c('x', 'y', 'idx', 'sampleID')
+        }else{
+            stop('Only data.frame or csv file name are acceptable for borders.')
+        }
+    }
+    out <- list()
+    scfile <- file.path(datafolder, appconf$id,
+                        .globals$filenames$cellborder)
+    if(file.exists(scfile)){
+        out <- readRDS(scfile)
+    }
+    
+    out[[reduction[1]]] <- borders
+    saveRDS(out, scfile)
+    return(invisible(out))
+}
+
+#' Add SPRING links to the dataset
+#' DO NOT export in current stage, until there is enough test data
+#' @noRd
+#' @param links The graph data json file name or 
+#' a data.frame with column names of 'source', 'target'.
+#' @param reduction The reduction name such as 'SPRING' which should match with
+#' the coordinates used in the target reductions.
+#' @param datafolder app data folder
+#' @param appconf a APPconf object represent the information about the dataset
+#' @importFrom jsonlite fromJSON
+addCellLinks <- function(
+        links, reduction, datafolder='data', appconf){
+    stopifnot(file.exists(datafolder))
+    stopifnot(is(appconf, "APPconf"))
+    if(is.data.frame(links)){
+        stopifnot(all(c('source', 'target') %in% colnames(links)))
+    }else{
+        graph_data <- readLines(links)
+        graph_data <- fromJSON(paste(graph_data, collapse=''))
+        links <- do.call(rbind, graph_data$links)
+        if(!all(links$distance==0)){ # TRUE
+            warning('Expect all links distance is 0.')
+        }
+        links <- links[, c('source', 'target')]
+        links <- links + 1 ## index change to from 1
+    }
+    out <- list()
+    scfile <- file.path(datafolder, appconf$id,
+                        .globals$filenames$sc1edge)
+    if(file.exists(scfile)){
+        out <- readRDS(scfile)
+    }
+    
+    out[[reduction[1]]] <- links
+    saveRDS(out, scfile)
+    return(invisible(out))
 }

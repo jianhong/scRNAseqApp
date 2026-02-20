@@ -31,7 +31,8 @@ the metadata for a dataset.
 \item{\code{ref}}{Reference information in a list with element bib, doi, pmid
 and entry. Entry must be an object of \link[utils]{bibentry}}
 
-\item{\code{type}}{character(1). Type of the data, scRNAseq or scATACseq.}
+\item{\code{type}}{character(1). Type of the data, scRNAseq, scATACseq, scMultiome or
+spatial.}
 
 \item{\code{markers}}{list. A list of data.frame represents cell
 markers.}

@@ -140,6 +140,10 @@ scInfoServer <- function(
                     dataSource()$dataset,
                     .globals$filenames[["cellborder"]]),
                 cellSegAlpha = input[[paste0('CellInfoSegAlpha', postfix)]],
+                cellSegColor = ifelse(
+                    input[[paste0('CellInfoSegBorderColor', postfix)]],
+                    input[[paste0('CellInfoSegColor', postfix)]],
+                    NA),
                 inpBgImg=input[[paste0('CellInfoBgImg', postfix)]],
                 backgroundImage=file.path(
                     .globals$datafolder,

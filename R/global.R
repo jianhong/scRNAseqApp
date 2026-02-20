@@ -114,6 +114,11 @@
         GeneExpr = "GeneExpr",
         coexpression = "coexpression",
         expression = "expression"
+    ),
+    spatial = c(
+        GeneExpr = "GeneExpr",
+        coexpression = "coexpression",
+        expression = "expression"
     )
 )
 # number of gene by search

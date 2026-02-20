@@ -10,7 +10,8 @@ setClassUnion("character_OR_NULL", c("character", "NULL"))
 #' @slot species character(1). species
 #' @slot ref Reference information in a list with element bib, doi, pmid
 #' and entry. Entry must be an object of \link[utils]{bibentry}
-#' @slot type character(1). Type of the data, scRNAseq or scATACseq.
+#' @slot type character(1). Type of the data, scRNAseq, scATACseq, scMultiome or
+#' spatial.
 #' @slot markers list. A list of data.frame represents cell
 #'  markers.
 #' @slot keywords character. A vector of characters represents the
@@ -56,8 +57,8 @@ setClass(
         if (make.names(object@id) != object@id) {
             return("id must be a safe name.")
         }
-        if (!object@type %in% c("scRNAseq", "scATACseq", "scMultiome")) {
-            return("type must be scRNAseq, scATACseq or scMultiome")
+        if (!object@type %in% c("scRNAseq", "scATACseq", "scMultiome", "spatial")) {
+            return("type must be scRNAseq, scATACseq, scMultiome, spatial")
         }
         if (length(object@ref$entry)) {
             if (!is(object@ref$entry, "bibentry")) {

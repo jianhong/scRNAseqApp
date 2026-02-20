@@ -35,3 +35,9 @@ The data were created by `cell_cycle_gene_list.R` at the date Dec 23, 2022.
 
 The `pbmc_samll` is the toy data to demo the APP. It was created by the script
 `pbmc_small.R`.
+
+## sample data: xenium_small
+
+The `xenium_small` is the toy data to demo the APP for cell borders. See
+`xenium_small.R`.
+

@@ -21,7 +21,9 @@ createDataSet(
   default.symbol = "rownames",
   theme = "Paired",
   binSize = 1,
-  fragmentNameMapList
+  fragmentNameMapList,
+  fov = NULL,
+  boundaries = NULL
 )
 }
 \arguments{
@@ -66,6 +68,10 @@ For each element of the list,
 the names of the vector are the name of the fragment and
 the vector contains the cell names (column names of the assay).
 You can try \link{extractFragmentNameMapList}.}
+
+\item{fov}{Name of FOV (field of view).}
+
+\item{boundaries}{The container name of segmentation coordinates.}
 }
 \value{
 The updated Seurat object.

@@ -1,3 +1,8 @@
+CHANGES IN VERSION 1.11.13
+-------------------------
+
+    o fix a bug for double click events in the user mode.
+    
 CHANGES IN VERSION 1.11.12
 -------------------------
 

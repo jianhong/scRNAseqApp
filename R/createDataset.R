@@ -665,7 +665,7 @@ addCellBorders <- function(
             stopifnot(ncol(cell_coor)==2) ## must be 2 columns with x, y pairs
             data <- cbind(cell_coor, borders)
             borders <- apply(data, 1, function(vals){
-                vals <- vals[vals >= 32767] # Remove sentinels 2^15-1
+                vals <- vals[vals != 32767] # Remove sentinels 2^15-1
                 vals <- matrix(vals, nrow=2, byrow=FALSE)
                 t(vals[, -1] + vals[, 1])
             }, simplify = FALSE)
@@ -673,7 +673,7 @@ addCellBorders <- function(
             borders <- do.call(rbind, borders)
             borders <- as.data.frame(borders)
             borders$idx <- unlist(lapply(l, seq.int))
-            borders$cell <- rownames(data)
+            borders$cell <- rep(rownames(data), l)
             colnames(borders) <- c('x', 'y', 'idx', 'sampleID')
         }else{
             stop('Only data.frame or csv file name are acceptable for borders.')

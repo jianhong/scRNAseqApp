@@ -581,6 +581,10 @@ addTricycle <- function(exp, gname.type, species, meta) {
 #' and 'value'.
 #' @param fact positive integer. The sub-sample factor. If it set to 10,
 #' the tiff will subsample to 1/10 of the original pixels.
+#' @param flip switch x, y coordinates for the tiff or not.
+#' @param CCR_90 Counter Clockwise Rotation.
+#' @param image_width The width of the image.
+#' @param clip clip the tiff file by x, y coordinates.
 #' @param reduction The reduction name such as 'coor' which should match with
 #' the coordinates used in the target reductions.
 #' @param alignmentFUN The alignment function to convert the reduction 
@@ -592,7 +596,12 @@ addTricycle <- function(exp, gname.type, species, meta) {
 #' @param datafolder app data folder
 #' @param appconf a APPconf object represent the information about the dataset
 addBackgroundImage <- function(
-        tiff, fact=10, reduction, alignmentFUN, alignmentArgs,
+        tiff, fact=10,
+        flip = TRUE, CCR_90 = TRUE,
+        image_width,
+        clip = list(x=NULL, y=NULL),
+        reduction,
+        alignmentFUN, alignmentArgs,
         datafolder='data', appconf){
     stopifnot(file.exists(datafolder))
     stopifnot(is(appconf, "APPconf"))
@@ -618,6 +627,21 @@ addBackgroundImage <- function(
         r_small <- terra::aggregate(raster_data, fact = fact, fun = mean)
         tiff <- as.data.frame(r_small, xy = TRUE)
         colnames(tiff)[3] <- 'value'
+    }
+    if(isTRUE(flip)){
+        if(isTRUE(CCR_90)){
+            tmp <- tiff$y
+            tiff$x <- tiff$y
+            tiff$y <- tiff$x
+        }else{
+            tiff$x <- image_width - tiff$x
+        }
+    }
+    if(length(clip$x)==2){
+        tiff <- tiff[tiff$x>=clip$x[1] & tiff$x<=clip$x[2], , drop=FALSE]
+    }
+    if(length(clip$y)==2){
+        tiff <- tiff[tiff$y>=clip$y[1] & tiff$y<=clip$y[2], , drop=FALSE]
     }
     backgroundImage <- list()
     scfile <- file.path(datafolder, appconf$id,

@@ -246,10 +246,30 @@ cellInfoPlotControlUI <- function(
             checkboxInput(
                 NS0(id, 'CellInfoSegmentation', postfix),
                 "Show cell segmentation", value = FALSE),
-            sliderInput(
-                NS0(id, 'CellInfoSegAlpha', postfix),
-                "Cell segmentation alpha", value=1, 
-                min = 0, max=1, step=0.01),
+            conditionalPanel(
+                condition = paste0(
+                    "input.CellInfoSegmentation", postfix, " == true"),
+                ns=NS(id),
+                sliderInput(
+                    NS0(id, 'CellInfoSegAlpha', postfix),
+                    "Cell segmentation alpha", value=1, 
+                    min = 0, max=1, step=0.01),
+                checkboxInput(
+                    NS0(id, 'CellInfoSegBorderColor', postfix),
+                    "Show cell segmentation border",
+                    value = FALSE
+                ),
+                conditionalPanel(
+                    condition = paste0(
+                        "input.CellInfoSegBorderColor", postfix, " == true"),
+                    ns=NS(id),
+                    colourInput(
+                        NS0(id, 'CellInfoSegColor', postfix),
+                        "Cell segmentation border color",
+                        value = '#EEEEEE'
+                    )
+                )
+            ),
             checkboxInput(
                 NS0(id, 'CellInfoBgImg', postfix),
                 "Show spatial image", value = FALSE),
@@ -773,10 +793,30 @@ contextMenuCellInfoUI <- function(
                 checkboxInput(
                     NS0(id, 'CellInfoSegmentation', postfix),
                     "Show cell segmentation", value = FALSE),
-                sliderInput(
-                    NS0(id, 'CellInfoSegAlpha', postfix),
-                    "Cell segmentation alpha", value=1, 
-                    min = 0, max=1, step=0.01)),
+                conditionalPanel(
+                    condition = paste0(
+                        "input.CellInfoSegmentation", postfix, " == true"),
+                    ns=NS(id),
+                    sliderInput(
+                        NS0(id, 'CellInfoSegAlpha', postfix),
+                        "Cell segmentation alpha", value=1, 
+                        min = 0, max=1, step=0.01)),
+                    checkboxInput(
+                        NS0(id, 'CellInfoSegBorderColor', postfix),
+                        "Show cell segmentation border",
+                        value = FALSE
+                    ),
+                    conditionalPanel(
+                        condition = paste0(
+                            "input.CellInfoSegBorderColor", postfix, " == true"),
+                        ns=NS(id),
+                        colourInput(
+                            NS0(id, 'CellInfoSegColor', postfix),
+                            "Cell segmentation border color",
+                            value = '#EEEEEE'
+                        )
+                    )
+                ),
                 checkboxInput(
                     NS0(id, 'CellInfoBgImg', postfix),
                     "Show spatial image", value = FALSE),

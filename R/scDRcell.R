@@ -42,6 +42,7 @@ scDRcell <- function(
         inpCellBorder=FALSE,# stereo-seq cell borders
         cellborderFilename='',
         cellSegAlpha=1,
+        cellSegColor=NA,
         inpBgImg=FALSE,
         backgroundImage='',
         ...) {
@@ -309,6 +310,7 @@ scDRcell <- function(
         keepXYlables = keepXYlables,
         inpCellBorder = inpCellBorder,
         cellborder = cellborder,
+        cellSegColor = cellSegColor,
         cellSegAlpha = cellSegAlpha)
     # slingshot
     if (inpSlingshot) {

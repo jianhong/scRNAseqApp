@@ -711,6 +711,10 @@ updateCellInfoPlot <-
                     dataSource()$dataset,
                     .globals$filenames[["cellborder"]]),
                 cellSegAlpha = input[[paste0('CellInfoSegAlpha', postfix)]],
+                cellSegColor = ifelse(
+                    input[[paste0('CellInfoSegBorderColor', postfix)]],
+                    input[[paste0('CellInfoSegColor', postfix)]],
+                    NA),
                 inpBgImg=input[[paste0('CellInfoBgImg', postfix)]],
                 backgroundImage=file.path(
                     .globals$datafolder,
@@ -1403,6 +1407,7 @@ pointPlot <- function(
         shape = 16,
         inpCellBorder = FALSE,
         cellborder = NULL,
+        cellSegColor = NA,
         cellSegAlpha = 1) {
     ggOut <- ggOut + geom_point(size = pointSize, shape = 16) +
         xlab(dimRedX) + ylab(dimRedY) +
@@ -1421,7 +1426,7 @@ pointPlot <- function(
                              y=.data[["y"]],
                              group=.data[["sampleID"]],
                              fill=.data[["val"]]),
-                         color = NA,
+                         color = cellSegColor,
                          alpha = cellSegAlpha,
                          inherit.aes = FALSE,
                          data = cellborder,

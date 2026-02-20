@@ -11,7 +11,7 @@ createAppConfig(
   doi,
   pmid,
   bibentry,
-  datatype = c("scRNAseq", "scATACseq", "scMultiome"),
+  datatype = c("scRNAseq", "scATACseq", "scMultiome", "spatial"),
   markers,
   keywords,
   abstract
@@ -30,8 +30,8 @@ the root folder of the datasets. The data will be saved as
 
 \item{bibentry}{An object of bibentry}
 
-\item{datatype}{character(1). Type of the data, scRNAseq, scATACseq or
-scMultiome.}
+\item{datatype}{character(1). Type of the data, scRNAseq, scATACseq,
+scMultiome or spatial.}
 
 \item{markers}{A list of data.frame with gene symbols as rownames or
 a character vector.}

@@ -34,9 +34,12 @@
 #' the names of the vector are the name of the fragment and
 #' the vector contains the cell names (column names of the assay). 
 #' You can try \link{extractFragmentNameMapList}.
+#' @param fov Name of FOV (field of view).
+#' @param boundaries The container name of segmentation coordinates.
 #' @return data files required for shiny app
 #' @importFrom IRanges tile Views viewMeans ranges nearest
 #' @importFrom SeuratObject GetAssayData VariableFeatures Embeddings Reductions
+#' GetTissueCoordinates
 #' @importFrom data.table data.table as.data.table
 #' @importFrom rhdf5 h5createFile h5createGroup h5createDataset h5write
 #' @importFrom Rsamtools TabixFile seqnamesTabix scanTabix
@@ -61,14 +64,16 @@ makeShinyFiles <- function(
         default.symbol = 'rownames',
         chunkSize = 500,
         binSize = 1,
-        fragmentNameMapList) {
+        fragmentNameMapList,
+        fov = NULL,
+        boundaries = NULL) {
     stopifnot(is.numeric(binSize))
     ### Preprocessing and checks
     # Generate defaults for assayName / slot
     stopifnot(is(obj, "Seurat"))
     # Seurat Object
     if (missing(assayName)) {
-        assayName <- "RNA"
+        assayName <- DefaultAssay(obj)
     } else{
         assayName <- assayName[1]
     }
@@ -298,6 +303,69 @@ makeShinyFiles <- function(
         tmp$UI <- gsub("_", "", tmp$UI)
         sc1conf <- rbindlist(list(sc1conf, tmp))
     }
+    # Extract coordinates for spatial
+    cellborders <- list()
+    if(!is.null(fov) && !is.null(boundaries)){
+        coordinates <- mapply(FUN=function(.f, .b){
+            x <- obj[[.f]][[.b]]
+            if(is(x, 'Segmentation')){
+                coor <- GetTissueCoordinates(obj[[.f]])
+                if(all(c('x', 'y', 'cell')==colnames(coor))){
+                    colnames(coor)[3] <- 'sampleID'
+                    cellborder <- GetTissueCoordinates(x)
+                    # The cell border should be a table with
+                    # x, y, idx, sampleID
+                    if(all(c('x', 'y', 'cell')==colnames(cellborder))){
+                        colnames(cellborder)[3] <- 'sampleID'
+                        idx <- rle(cellborder$sampleID)
+                        idx <- lapply(idx$lengths, seq.int)
+                        cellborder$idx <- unlist(idx, use.names = FALSE)
+                        return(list(coor=coor, 
+                                    cellborder=cellborder))
+                    }else{
+                        warning('Unexpected happend! 
+            The Segmentation coordinates should be a data frame
+            with columns "x", "y", and "cell"')
+                    }
+                }else{
+                    warning('Unexpected happend! 
+        The Centroids coordinates should be a data frame
+        with columns "x", "y", and "cell"')
+                }
+            }
+            return(NULL)
+        }, fov, boundaries, SIMPLIFY = FALSE)
+        for(iCoor in seq_along(coordinates)){
+            if(!is.null(coordinates)){
+                coorMat <- coordinates[[iCoor]]$coor
+                coorMat <- coorMat[match(sc1meta$sampleID, coorMat$sampleID),
+                                   c("x", "y")]# Ensure ordering
+                colnames(coorMat) <- paste(names(coordinates)[iCoor],
+                                           c(1, 2), sep = '_')
+                coorMat <- as.data.table(coorMat)
+                sc1meta <- cbind(sc1meta, coorMat)
+                
+                # Update sc1conf accordingly
+                tmp <- data.table(
+                    ID = colnames(coorMat),
+                    UI = colnames(coorMat),
+                    fID = NA,
+                    fUI = NA,
+                    fCL = NA,
+                    fRow = NA,
+                    default = 0,
+                    grp = FALSE,
+                    dimred = TRUE
+                )
+                tmp$UI <- gsub("_", "", tmp$UI)
+                sc1conf <- rbindlist(list(sc1conf, tmp))
+                
+                # save the cell borders
+                cellborders[[names(coordinates)[iCoor]]] <- 
+                    coordinates[[iCoor]]$cellborder
+            }
+        }
+    }
     sc1conf$ID <- as.character(sc1conf$ID)     # Remove levels
     
     # Make XXXgexpr.h5
@@ -436,6 +504,10 @@ makeShinyFiles <- function(
     saveRDS(sc1meta, file = file.path(appDir, .globals$filenames$sc1meta))
     saveRDS(sc1gene, file = file.path(appDir, .globals$filenames$sc1gene))
     saveRDS(sc1def,  file = file.path(appDir, .globals$filenames$sc1def))
+    if(length(cellborders)){
+        saveRDS(cellborders, 
+                file = file.path(appDir, .globals$filenames$cellborder))
+    }
     
     ### save ATAC objects
     if (!missing(atacAssayName)) {

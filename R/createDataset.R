@@ -30,8 +30,11 @@
 #' the names of the vector are the name of the fragment and
 #' the vector contains the cell names (column names of the assay). 
 #' You can try \link{extractFragmentNameMapList}.
+#' @param fov Name of FOV (field of view).
+#' @param boundaries The container name of segmentation coordinates.
 #' @importFrom SeuratObject Reductions Idents Assays DefaultAssay GetAssayData
 #'  `DefaultAssay<-` VariableFeatures Misc `Misc<-` Embeddings `Idents<-`
+#'  DefaultFOV DefaultBoundary Images
 #' @importFrom Seurat FindAllMarkers FindVariableFeatures ScaleData
 #' @return The updated Seurat object.
 #' @export
@@ -60,7 +63,9 @@ createDataSet <- function(
         default.symbol = 'rownames',
         theme = "Paired",
         binSize = 1,
-        fragmentNameMapList) {
+        fragmentNameMapList,
+        fov = NULL,
+        boundaries = NULL) {
     stopifnot(file.exists(datafolder))
     stopifnot(is(seu, "Seurat"))
     stopifnot(is(appconf, "APPconf"))
@@ -73,6 +78,24 @@ createDataSet <- function(
         dir.create(pf, recursive = TRUE)
     }else{
         stop(pf, ' already exists')
+    }
+    if(appconf$type=='spatial'){
+        fov <- fov %||% DefaultFOV(seu)
+        ## check boundary 
+        fov <- Filter(f = function(x) {
+            return(x %in% Images(object = seu) &&
+                       inherits(x = seu[[x]], what = "FOV"))
+        }, x = fov)
+        if (!length(fov)) {
+            warning("No compatible spatial coordinates present")
+        }
+        boundaries <- boundaries %||% unlist(lapply(fov, function(x) {
+            return(DefaultBoundary(object = seu[[x]]))
+        }), use.names = TRUE)
+        null <- mapply(function(.fov, .b){
+            stopifnot("The 'boundaries' is not a Segmentation object"=
+                          inherits(seu[[.fov]][[.b]], 'Segmentation'))
+        }, fov, boundaries)
     }
     ## markers
     markers <- appconf$markers
@@ -212,7 +235,9 @@ createDataSet <- function(
         default.multigene = markers,
         default.symbol = default.symbol,
         binSize = binSize,
-        fragmentNameMapList = fragmentNameMapList
+        fragmentNameMapList = fragmentNameMapList,
+        fov = fov,
+        boundaries = boundaries
     )
     
     .globals$datafolder <- datafolder
@@ -239,8 +264,8 @@ createDataSet <- function(
 #' @param species The species of the dataset
 #' @param doi,pmid The DOI or PMID of the reference
 #' @param bibentry An object of bibentry
-#' @param datatype character(1). Type of the data, scRNAseq, scATACseq or
-#'  scMultiome.
+#' @param datatype character(1). Type of the data, scRNAseq, scATACseq,
+#'  scMultiome or spatial.
 #' @param markers A list of data.frame with gene symbols as rownames or
 #'  a character vector.
 #' @param keywords The keywords for the dataset.
@@ -268,7 +293,7 @@ createAppConfig <-
         doi,
         pmid,
         bibentry,
-        datatype = c("scRNAseq", "scATACseq", "scMultiome"),
+        datatype = c("scRNAseq", "scATACseq", "scMultiome", "spatial"),
         markers,
         keywords,
         abstract) {

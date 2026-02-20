@@ -493,47 +493,57 @@ updateGeneExprDotPlotUI <-
                 }
             })
             observeEvent(input[[paste0("GeneExproup.dbl", postfix)]],{
-                evt <- input[[paste0("GeneExproup.dbl", postfix)]]
-                if(!is.null(evt)){
-                    session$sendCustomMessage(
-                        type='placeGeneExproupInfoEditorBox',
-                        message = id)
-                    output[[paste0("GeneExproup.info", postfix)]] <- renderUI({
-                        val <- nearest_element(evt)
-                        fluidRow(
-                            column(4,
-                                   if(val[1]=='colour'){
-                                       colourInput(
-                                           NS0(id, "GeneExproup.upd",
-                                               postfix),
-                                           label = NULL,
-                                           value = val[2]
-                                       )
-                                   }else{
-                                       textInput(NS0(id, "GeneExproup.upd",
-                                                     postfix),
-                                                 label = NULL,
-                                                 value = val[2])
-                                   },
-                                   div(
-                                       style = "visibility:hidden;",
-                                       textInput(NS0(id, 'GeneExproup.vtp', 
-                                                     postfix),
-                                                 label = NULL,
-                                                 value = val[1]),
-                                       textInput(NS0(id, "GeneExproup.old",
-                                                     postfix),
-                                                 label = NULL,
-                                                 value = val[2]))),
-                            column(4, actionButton(NS0(id, "GeneExproup.submit",
-                                                       postfix),
-                                                   label = 'update')),
-                            column(4),
-                            style=paste0('position:absolute; left:',
-                                         input$current_mouseX,'px; top:',
-                                         input$current_mouseY, 'px;')
-                        )
-                    })
+                if(!is.null(ranges$x) || !is.null(ranges$y)){
+                    ranges$x <- NULL
+                    ranges$y <- NULL
+                    if(!is.null(input[[paste0('GeneExpext.info', postfix)]])){
+                        updateTextInput(
+                            inputId = paste0('GeneExpext.info', postfix),
+                            value = '')
+                    }
+                }else{
+                    evt <- input[[paste0("GeneExproup.dbl", postfix)]]
+                    if(!is.null(evt)){
+                        session$sendCustomMessage(
+                            type='placeGeneExproupInfoEditorBox',
+                            message = id)
+                        output[[paste0("GeneExproup.info", postfix)]] <- renderUI({
+                            val <- nearest_element(evt)
+                            fluidRow(
+                                column(4,
+                                       if(val[1]=='colour'){
+                                           colourInput(
+                                               NS0(id, "GeneExproup.upd",
+                                                   postfix),
+                                               label = NULL,
+                                               value = val[2]
+                                           )
+                                       }else{
+                                           textInput(NS0(id, "GeneExproup.upd",
+                                                         postfix),
+                                                     label = NULL,
+                                                     value = val[2])
+                                       },
+                                       div(
+                                           style = "visibility:hidden;",
+                                           textInput(NS0(id, 'GeneExproup.vtp', 
+                                                         postfix),
+                                                     label = NULL,
+                                                     value = val[1]),
+                                           textInput(NS0(id, "GeneExproup.old",
+                                                         postfix),
+                                                     label = NULL,
+                                                     value = val[2]))),
+                                column(4, actionButton(NS0(id, "GeneExproup.submit",
+                                                           postfix),
+                                                       label = 'update')),
+                                column(4),
+                                style=paste0('position:absolute; left:',
+                                             input$current_mouseX,'px; top:',
+                                             input$current_mouseY, 'px;')
+                            )
+                        })
+                    }
                 }
             })
             observeEvent(input[[paste0("GeneExproup.clk", postfix)]],{

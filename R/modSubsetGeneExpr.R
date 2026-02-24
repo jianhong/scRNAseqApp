@@ -34,28 +34,27 @@ subsetGeneExprUI <- function(id) {
                 cellInfoTblUI(id, 1))
         ),
         fluidRow(
-            column(
-                6,
-                style = "border-right: 2px solid black",
-                htmlOutput(NS0(id, "subPlotTitle", 1)),
-                fluidRow(column(6, uiOutput(
-                    NS0(id, "GeneExprgrp.ui", 1)
-                )),
-                column(
-                    6, geneExprPlotControlUI(id, postfix = 1)
-                )),
-                geneExprDotPlotUI(id, 1)
-            ),
-            column(
-                6,
-                htmlOutput(NS0(id, "subPlotTitle", 2)),
-                fluidRow(column(6, uiOutput(
-                    NS0(id, "GeneExprgrp.ui", 2)
-                )),
-                column(
-                    6, geneExprPlotControlUI(id, postfix = 2)
-                )),
-                geneExprDotPlotUI(id, 2)
+            resizablePlotContainer(
+                leftUI=tagList(
+                    htmlOutput(NS0(id, "subPlotTitle", 1)),
+                    fluidRow(column(6, uiOutput(
+                        NS0(id, "GeneExprgrp.ui", 1)
+                    )),
+                    column(
+                        6, geneExprPlotControlUI(id, postfix = 1)
+                    )),
+                    geneExprDotPlotUI(id, 1)
+                ),
+                rightUI=tagList(
+                    htmlOutput(NS0(id, "subPlotTitle", 2)),
+                    fluidRow(column(6, uiOutput(
+                        NS0(id, "GeneExprgrp.ui", 2)
+                    )),
+                    column(
+                        6, geneExprPlotControlUI(id, postfix = 2)
+                    )),
+                    geneExprDotPlotUI(id, 2)
+                )
             )
         )
     )
@@ -135,10 +134,10 @@ subsetGeneExprServer <- function(id, dataSource, optCrt) {
                 plotAspectRatio=input$GeneExprasp,
                 keepXYlables=input$GeneExprtxt,
                 inpPlt=input$GeneExprtype1,
-                inpXlim=if (input$GeneExprxlimb1 %% 2 == 0)
-                    0
-                else
-                    input$GeneExprxlim1,
+                inpXlim=if (input$GeneExprxylimTog1 %% 2 == 0)
+                            0
+                        else
+                            input$GeneExprxlim1,
                 inpColRange = TRUE,
                 valueFilterKey = input$filterCell,
                 valueFilterCutoff = input$filterCellVal,

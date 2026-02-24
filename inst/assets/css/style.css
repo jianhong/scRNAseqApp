@@ -7,6 +7,15 @@
 .consoleOutput>pre {max-height: 400px;}
 .align-action-button {margin-top: 31px!important;}
 .inline-float {display:inline-block; float: right;}
+/*resizable-divider*/
+.resizable-container{display:flex;width:100%;}
+.panel{min-width:300px;padding:20px;position:relative;}
+.panel-left{width:50%;}
+.panel-right{flex:1}
+.divider{width:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:col-resize;background:#d8d9dc;transition:background .15s}
+.divider:hover,.divider.dragging{background:#5a5c69}
+.divider::after{content:"⋮";font-size:14px;color:#858796;pointer-events:none}
+.divider:hover::after,.divider.dragging::after{color:#fff}
 /*About icon stats*/
 .about-container:after,.about-container:before,.about-clear:after,.about-clear:before{content:"";display:table;clear:both}
 .about-margin-bottom{margin-bottom:16px!important}

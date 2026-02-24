@@ -290,13 +290,14 @@ updateGeneExprDotPlotUI <-
         # Reactive values to store zoom ranges
         ranges <- reactiveValues(x = NULL, y = NULL)
         output[[paste0("GeneExproup", postfix)]] <- renderPlot({
-            addLimits(darkTheme(plotX()), x=ranges$x, y=ranges$y,
+            addLimits(darkTheme(plotX()),
+                      x=ranges$x, y=ranges$y,
                       coord=input[[paste0('coord', postfix)]],
                       id=id, postfix=postfix, input=input)
         }, background=darkTheme(returnBG=TRUE))
         
         output[[paste0("GeneExproup.ui", postfix)]] <- renderUI({
-            plotOutput(
+            plotUI <- plotOutput(
                 NS0(id, "GeneExproup", postfix),
                 width = ifelse(
                     input[[paste0("GeneExproup.w", postfix)]]==
@@ -311,13 +312,71 @@ updateGeneExprDotPlotUI <-
                                   clip = FALSE),
                 brush = brushOpts(NS0(id, 'GeneExproup.brush', postfix),
                                   resetOnNew = TRUE))
+            if(id %in% c('cellInfoGeneExpr', 'cellInfoCellInfo',
+                         'subsetGeneExpr', 'geneExprGeneExpr',
+                         'sunburst')){
+                div(
+                    #class = "wheel-zoomable-plot", # default close it
+                    id = NS0(id, 'GeneExproupDIV', postfix),
+                    plotUI
+                )
+            }else{
+                plotUI
+            }
+        })
+        # Handle pan switch
+        observeEvent(input[[paste0("usingPan", postfix)]], {
+            session$sendCustomMessage(
+                type='updatePanStatus',
+                message = list(id=id, postfix=postfix,
+                               value=input[[paste0("usingPan",
+                                                   postfix)]]))
         })
         # Handle brush (drag selection) for zooming
         observeEvent(input[[paste0("GeneExproup.brush", postfix)]], {
-            brush <- input[[paste0("GeneExproup.brush", postfix)]]
-            if (!is.null(brush)) {
-                ranges$x <- c(brush$xmin, brush$xmax)
-                ranges$y <- c(brush$ymin, brush$ymax)
+            if(!isTRUE(input[[paste0("GeneExproup.isPanning", postfix)]])){
+                brush <- input[[paste0("GeneExproup.brush", postfix)]]
+                if (!is.null(brush)) {
+                    ranges$x <- c(brush$xmin, brush$xmax)
+                    ranges$y <- c(brush$ymin, brush$ymax)
+                }
+            }
+        })
+        # handle wheel zoom in and out
+        setXYranges <- function(){
+            if(is.null(ranges$x) || is.null(ranges$y)){
+                p <- plotX()
+                ggp1 <- ggplot_build(p)
+                ranges$x <- ggp1$layout$panel_params[[1]]$x.range
+                ranges$y <- ggp1$layout$panel_params[[1]]$y.range
+            }
+        }
+        observeEvent(input[[paste0("GeneExproup.scroll", postfix)]], {
+            setXYranges()
+            dx <- diff(ranges$x)/10
+            dy <- diff(ranges$y)/10
+            if(input[[paste0("GeneExproup.scroll", postfix)]]>0){
+                ranges$x <- ranges$x + c(-dx, dx)
+                ranges$y <- ranges$y + c(-dy, dy)
+            }else{
+                ranges$x <- ranges$x + c(dx, -dx)
+                ranges$y <- ranges$y + c(dy, -dy)
+            }
+        })
+        # handle pan (drag)
+        observeEvent(input[[paste0("GeneExproup.pan", postfix)]], {
+            if(isTRUE(input[[paste0("GeneExproup.isPanning", postfix)]])){
+                setXYranges()
+                dx <- input[[paste0("GeneExproup.pan", postfix)]]$dx
+                dy <- input[[paste0("GeneExproup.pan", postfix)]]$dy
+                w  <- input[[paste0("GeneExproup.pan", postfix)]]$width
+                h  <- input[[paste0("GeneExproup.pan", postfix)]]$height
+                xr <- diff(ranges$x)
+                yr <- diff(ranges$y)
+                x_shift <- -dx/w * xr
+                y_shift <- dy/h * yr
+                ranges$x <- ranges$x + x_shift
+                ranges$y <- ranges$y + y_shift
             }
         })
         nearest_element <- function(e){
@@ -588,7 +647,6 @@ updateGeneExprDotPlotUI <-
                 
             })
         }
-        
         output[[paste0("GeneExproup.dwn", postfix)]] <-
             handlerFUN(
                 input = input,
@@ -1034,10 +1092,8 @@ updateGeneExprPlot <-
                 plotAspectRatio=input$GeneExprasp,
                 keepXYlables=input$GeneExprtxt,
                 inpPlt=input[[paste0("GeneExprtype", postfix)]],
-                inpXlim=if (input[[paste0("GeneExprxlimb", postfix)]] %% 2 == 0)
-                    0
-                else
-                    input[[paste0("GeneExprxlim", postfix)]],
+                inpXlim=if(input[[geneExprXYlimTog]] %% 2 == 1)
+                    input[[geneExprXlim]] else 0,
                 inpColRange =
                     if (input[[paste0("GeneExprrgb", postfix)]] %% 2 == 0)
                         0
@@ -1155,10 +1211,8 @@ updateSubsetGeneExprPlot <-
                 plotAspectRatio=input$GeneExprasp,
                 keepXYlables=input$GeneExprtxt,
                 inpPlt=input[[paste0("GeneExprtype", postfix)]],
-                inpXlim=if (input[[paste0("GeneExprxlimb", postfix)]] %% 2 == 0)
-                    0
-                else
-                    input[[paste0("GeneExprxlim", postfix)]],
+                inpXlim=if(input[[geneExprXYlimTog]] %% 2 == 1)
+                    input[[geneExprXlim]] else 0,
                 inpColRange = 
                     if (input[[paste0("GeneExprrgb", postfix)]] %% 2 == 0) {
                         inpColRange()

@@ -74,6 +74,17 @@ graphicsControlUI <- function(id, GeneExpraspSelect="Square"){
         )
     )
 }
+
+resizablePlotContainer <- function(leftUI, rightUI){
+    div(class = "resizable-container",
+        # Left panel
+        div(class = "panel panel-left", leftUI),
+        div(class = "divider"),
+        # Right panel
+        div(class = "panel panel-right", rightUI)
+    )
+}
+
 NS0 <- function(namespace, id, postfix){
     NS(namespace, id=paste0(id, postfix))
 }
@@ -136,6 +147,9 @@ geneExprPlotControlUI <- function(
                 checkboxInput(
                     NS0(id, "GeneExprhid", postfix),
                     "Hide filtered cells", value = FALSE),
+                checkboxInput(
+                    NS0(id, "usingPan", postfix),
+                    "Using wheel to zoom in/out", value = FALSE),
                 actionButton(
                     NS0(id, "GeneExprrgb", postfix),
                     "Manually set max color value",
@@ -146,40 +160,30 @@ geneExprPlotControlUI <- function(
                     ns=NS(id),
                     numericInput(
                         NS0(id, "GeneExprrg", postfix), "Max value:",
-                        value = 100)),
-                actionButton(
-                    NS0(id, "GeneExprxylimTog", postfix),
-                    "Manually set x/y axis", inline = TRUE),
+                        value = 100))
+            ),
+            actionButton(
+                NS0(id, "GeneExprxylimTog", postfix),
+                "Manually set x/y axis", inline = TRUE),
+            conditionalPanel(
+                condition = paste0(
+                    "input.GeneExprxylimTog", postfix, " % 2 ==1"),
+                ns=NS(id),
+                sliderInput(
+                    NS0(id, "GeneExprxlim", postfix), "Xlim range:",
+                    min = -10, max = 100,
+                    value = c(-1.5, 10),
+                    step = 0.1),
                 conditionalPanel(
                     condition = paste0(
-                        "input.GeneExprxylimTog", postfix, " % 2 ==1"),
+                        "input.GeneExprtype", postfix, " == 'Dotplot'"),
                     ns=NS(id),
-                    sliderInput(
-                        NS0(id, "GeneExprxlim", postfix), "Xlim range:",
-                        min = -10, max = 100,
-                        value = c(-1.5, 10),
-                        step = 0.1),
                     sliderInput(
                         NS0(id, "GeneExprylim", postfix), "Ylim range:",
                         min = -10, max = 100,
                         value = c(-1.5, 10),
-                        step = 0.1))
-            ),
-            conditionalPanel(
-                condition = paste0(
-                    "input.GeneExprtype", postfix, " == 'Ridgeplot'"),
-                ns=NS(id),
-                actionButton(
-                    NS0(id, "GeneExprxlimb", postfix),
-                    "Manually set x axis", inline = TRUE),
-                conditionalPanel(
-                    condition = paste0(
-                        "input.GeneExprxlimb", postfix, " % 2 ==1"),
-                    ns=NS(id),
-                    sliderInput(
-                        NS0(id, "GeneExprxlim", postfix), "Xlim range:",
-                        min = -10, max = 100, value = c(-1.5, 10),
-                        step = 0.1))
+                        step = 0.1)
+                )
             )
         )
     )
@@ -237,6 +241,9 @@ cellInfoPlotControlUI <- function(
             checkboxInput(
                 NS0(id, "CellInfohid", postfix),
                 "Hide filtered cells", value = FALSE),
+            checkboxInput(
+                NS0(id, "usingPan", postfix),
+                "Using wheel to zoom in/out", value = FALSE),
             checkboxInput(
                 NS0(id, "CellInfoslingshot", postfix),
                 "Show lineages", value = TRUE),
@@ -326,7 +333,10 @@ geneCoExprPlotControlUI <- function(id, postfix=1, plotly=FALSE){
                 selected = "Max-1st", inline = TRUE),
             checkboxInput(
                 NS0(id, "CoExprhid", postfix),
-                "Hide filtered cells", value = FALSE)
+                "Hide filtered cells", value = FALSE),
+            checkboxInput(
+                NS0(id, "usingPan", postfix),
+                "Using wheel to zoom in/out", value = FALSE)
         )
     )
 }
@@ -825,7 +835,11 @@ contextMenuCellInfoUI <- function(
                     "Show cell edges", value = TRUE),
                 checkboxInput(
                     NS0(id, "CellInfohid", postfix),
-                    "Hide filtered cells", value = FALSE)
+                    "Hide filtered cells", value = FALSE),
+                div(style="display:none",
+                        checkboxInput(
+                        NS0(id, "usingPan", postfix),
+                        "Using wheel to zoom in/out", value = FALSE))
             )
         )
     )
@@ -877,6 +891,10 @@ contextMenuGeneExprUI <- function(
                     checkboxInput(
                         NS0(id, "GeneExprhid", postfix),
                         "Hide filtered cells", value = FALSE),
+                    div(style="display:none",
+                        checkboxInput(
+                            NS0(id, "usingPan", postfix),
+                            "Using wheel to zoom in/out", value = FALSE)),
                     actionButton(
                         NS0(id, "GeneExprrgb", postfix),
                         "Manually set max color value",
@@ -896,11 +914,11 @@ contextMenuGeneExprUI <- function(
                         " == 'Ridgeplot'"),
                     ns=NS(id),
                     actionButton(
-                        NS0(id, "GeneExprxlimb", postfix),
+                        NS0(id, "GeneExprxylimTog", postfix),
                         "Manually set x axis", inline = TRUE),
                     conditionalPanel(
                         condition = paste0(
-                            "input.GeneExprxlimb",
+                            "input.GeneExprxylimTog",
                             postfix, " % 2 ==1"),
                         ns=NS(id),
                         sliderInput(
@@ -952,7 +970,11 @@ contextMenuCoExprUI <- function(
                     selected = "Max-1st", inline = TRUE),
                 checkboxInput(
                     NS0(id, "CoExprhid", postfix),
-                    "Hide filtered cells", value = FALSE)
+                    "Hide filtered cells", value = FALSE),
+                div(style="display:none",
+                    checkboxInput(
+                        NS0(id, "usingPan", postfix),
+                        "Using wheel to zoom in/out", value = FALSE))
             )
         )
     )

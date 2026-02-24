@@ -240,15 +240,16 @@ scAccServer <- function(
                 plotAspectRatio=p_input$GeneExprasp,
                 keepXYlables=p_input$GeneExprtxt,
                 inpPlt=input[[paste0("GeneExprtype", postfix)]],
-                inpXlim=if (input[[paste0("GeneExprxlimb", postfix)]] %% 2 == 0)
-                    0
-                else
-                    input[[paste0("GeneExprxlim", postfix)]],
+                inpXlim=
+                    if (input[[paste0("GeneExprxylimTog", postfix)]] %% 2 == 0)
+                        0
+                    else
+                        input[[paste0("GeneExprxlim", postfix)]],
                 inpColRange =
                     if (input[[paste0("GeneExprrgb", postfix)]] %% 2 == 0)
                         0
-                else
-                    input[[paste0("GeneExprrg", postfix)]],
+                    else
+                        input[[paste0("GeneExprrg", postfix)]],
                 valueFilterKey = p_input$filterCell,
                 valueFilterCutoff = p_input$filterCellVal,
                 valueFilterCutoff2 = p_input$filterCellVal2,

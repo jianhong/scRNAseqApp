@@ -16,22 +16,21 @@ geneExprGeneExprUI <- function(id) {
             column(4, graphicsControlUI(id))
         ),
         fluidRow(
-            column(
-                6,
-                style = "border-right: 2px solid black",
-                htmlOutput(NS0(id, "subPlotTitle", 1)),
-                fluidRow(
-                    column(6, geneExprUI(id, 1)),
-                    column(6, geneExprPlotControlUI(id, 1))),
-                geneExprDotPlotUI(id, 1)
-            ),
-            column(
-                6,
-                htmlOutput(NS0(id, "subPlotTitle", 2)),
-                fluidRow(
-                    column(6, geneExprUI(id, 2)),
-                    column(6, geneExprPlotControlUI(id, 2))),
-                geneExprDotPlotUI(id, 2)
+            resizablePlotContainer(
+                leftUI=tagList(
+                    htmlOutput(NS0(id, "subPlotTitle", 1)),
+                    fluidRow(
+                        column(6, geneExprUI(id, 1)),
+                        column(6, geneExprPlotControlUI(id, 1))),
+                    geneExprDotPlotUI(id, 1)
+                ),
+                rightUI=tagList(
+                    htmlOutput(NS0(id, "subPlotTitle", 2)),
+                    fluidRow(
+                        column(6, geneExprUI(id, 2)),
+                        column(6, geneExprPlotControlUI(id, 2))),
+                    geneExprDotPlotUI(id, 2)
+                )
             )
         )
     )

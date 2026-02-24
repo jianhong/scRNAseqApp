@@ -121,7 +121,7 @@ aboutUI <- function(
                     border = "bottom",
                     info = 'Public dataset list:',
                     details = paste("<ol>\n",
-                                    paste(paste("<li><p><a href='?data=",
+                                    paste(paste0("<li><p><a href='?data=",
                                                 dbs,
                                                 "'>",
                                                 names(dbs),

@@ -23,7 +23,8 @@ createDataSet(
   binSize = 1,
   fragmentNameMapList,
   fov = NULL,
-  boundaries = NULL
+  boundaries = NULL,
+  molecules = NULL
 )
 }
 \arguments{
@@ -72,6 +73,8 @@ You can try \link{extractFragmentNameMapList}.}
 \item{fov}{Name of FOV (field of view).}
 
 \item{boundaries}{The container name of segmentation coordinates.}
+
+\item{molecules}{The container name of molecules coordinates.}
 }
 \value{
 The updated Seurat object.

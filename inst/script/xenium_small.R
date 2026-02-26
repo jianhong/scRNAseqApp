@@ -24,7 +24,7 @@ appconf <- createAppConfig(
             species = "Homo sapiens",
             doi="10.1038/nbt.3192",
             datatype = "spatial",
-            markers =rownames(seu)[1:5])
-#unlink('~/Downloads/Xenium_V1/xenium_small', recursive = TRUE)
+            markers =rownames(xenium.obj)[1:5])
+unlink('~/Downloads/Xenium_V1/xenium_small', recursive = TRUE)
 createDataSet(appconf, seu = xenium.obj,
               datafolder = path, boundaries = 'segmentations')

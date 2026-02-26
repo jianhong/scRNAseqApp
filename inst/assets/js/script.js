@@ -164,7 +164,7 @@
         Shiny.setInputValue(id.id+'-editorStatus'+id.postfix, Date.now());
     })
     // explorer when subset group is selected
-    Shiny.addCustomMessageHandler("click_subset_btn", function(id){
+    Shiny.addCustomMessageHandler("click_btn", function(id){
         $("#"+id).trigger('click');
     })
     // show duplicated botton
@@ -215,6 +215,8 @@
           });
         }
     // Wait for Shiny to render panels
-     setTimeout(initResizable, 500);
+    $(document).on('shiny:idle', function(){
+        initResizable();
+    });
   });
 }())

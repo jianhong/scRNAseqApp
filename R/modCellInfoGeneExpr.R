@@ -21,7 +21,7 @@ cellInfoGeneExprUI <- function(id) {
                     h4("Cell information"),
                     fluidRow(
                         column(6, cellInfoUI(id, 1)),
-                        column(6, cellInfoPlotControlUI(id, 1))),
+                        column(6, cellInfoPlotControlUI(id, 1, linkXYlim = TRUE))),
                     geneExprDotPlotUI(id, 1, editor=TRUE),
                     br(),
                     cellInfoTblUI(id, 1)
@@ -30,7 +30,7 @@ cellInfoGeneExprUI <- function(id) {
                     htmlOutput(NS0(id, "subPlotTitle", 2)),
                     fluidRow(
                         column(6, geneExprUI(id, 2)),
-                        column(6, geneExprPlotControlUI(id, 2))),
+                        column(6, geneExprPlotControlUI(id, 2, linkXYlim=TRUE))),
                     geneExprDotPlotUI(id, 2)
                 )
             )

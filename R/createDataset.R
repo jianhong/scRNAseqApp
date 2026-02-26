@@ -32,9 +32,10 @@
 #' You can try \link{extractFragmentNameMapList}.
 #' @param fov Name of FOV (field of view).
 #' @param boundaries The container name of segmentation coordinates.
+#' @param molecules The container name of molecules coordinates.
 #' @importFrom SeuratObject Reductions Idents Assays DefaultAssay GetAssayData
 #'  `DefaultAssay<-` VariableFeatures Misc `Misc<-` Embeddings `Idents<-`
-#'  DefaultFOV DefaultBoundary Images
+#'  DefaultFOV DefaultBoundary Images Molecules
 #' @importFrom Seurat FindAllMarkers FindVariableFeatures ScaleData
 #' @return The updated Seurat object.
 #' @export
@@ -65,7 +66,8 @@ createDataSet <- function(
         binSize = 1,
         fragmentNameMapList,
         fov = NULL,
-        boundaries = NULL) {
+        boundaries = NULL,
+        molecules = NULL) {
     stopifnot(file.exists(datafolder))
     stopifnot(is(seu, "Seurat"))
     stopifnot(is(appconf, "APPconf"))
@@ -96,6 +98,13 @@ createDataSet <- function(
             stopifnot("The 'boundaries' is not a Segmentation object"=
                           inherits(seu[[.fov]][[.b]], 'Segmentation'))
         }, fov, boundaries)
+        molecules <- molecules %||% unlist(lapply(fov, function(x){
+            return(Molecules(object = seu[[x]])[1])
+        }))
+        null <- mapply(function(.fov, .m){
+            stopifnot("The 'molecules' is not a Molecules object"=
+                          inherits(seu[[.fov]][[.m]], 'Molecules'))
+        }, fov, molecules)
     }
     ## markers
     markers <- appconf$markers
@@ -237,7 +246,8 @@ createDataSet <- function(
         binSize = binSize,
         fragmentNameMapList = fragmentNameMapList,
         fov = fov,
-        boundaries = boundaries
+        boundaries = boundaries,
+        molecules = molecules
     )
     
     .globals$datafolder <- datafolder

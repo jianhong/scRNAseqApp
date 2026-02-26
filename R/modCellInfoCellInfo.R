@@ -18,14 +18,14 @@ cellInfoCellInfoUI <- function(id) {
                     h4("Cell information 1"),
                     fluidRow(
                         column(6, cellInfoUI(id, 1)),
-                        column(6, cellInfoPlotControlUI(id, 1))),
+                        column(6, cellInfoPlotControlUI(id, 1, linkXYlim = TRUE))),
                     geneExprDotPlotUI(id, 1, editor=TRUE)
                 ),
                 rightUI=tagList(
                     h4("Cell information 2"),
                     fluidRow(
                         column(6, cellInfoUI(id, 2)),
-                        column(6, cellInfoPlotControlUI(id, 2))),
+                        column(6, cellInfoPlotControlUI(id, 2, linkXYlim = TRUE))),
                     geneExprDotPlotUI(id, 2, editor=TRUE)
                 )
             )

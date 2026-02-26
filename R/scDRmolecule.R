@@ -38,7 +38,7 @@ scDRmolecule <- function(
         keepXYlables = keepXYlables) +
         scale_colour_discrete(
             name = 'molecues',
-            palette = availableThemes(gradientCol)) +
+            palette = gradientCol) +
         theme(legend.text = element_text(size = labelsFontsize,
                                          family = labelsFontFamily)) +
         guides(color = guide_legend(

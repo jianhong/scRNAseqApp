@@ -24,7 +24,8 @@
     monocle = "monocle3_pseudotime.rds",
     slingshot = "slingshot.rds",
     cellborder = 'cell_border.rds',
-    backgroundImage = 'backgroundImage.rds'
+    backgroundImage = 'backgroundImage.rds',
+    molecules = 'molecules.rds'
 )
 .globals$tokenMinLen <- 8 # minimal token length
 .globals$h5fGrpPrefix <- 'grp' #gene expression table prefix

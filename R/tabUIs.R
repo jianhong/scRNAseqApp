@@ -117,9 +117,34 @@ geneAccPlotControlUI <- function(
         )
     )
 }
+manuXYlimOriUI <- function(id, postfix){
+    div(style='display:none',
+        numericInput(
+            NS0(id, "manuXlimOriMin", postfix),
+            label = '',
+            value = NA
+        ),
+        numericInput(
+            NS0(id, "manuXlimOriMax", postfix),
+            label = '',
+            value = NA
+        ),
+        numericInput(
+            NS0(id, "manuYlimOriMin", postfix),
+            label = '',
+            value = NA
+        ),
+        numericInput(
+            NS0(id, "manuYlimOriMax", postfix),
+            label = '',
+            value = NA
+        ))
+}
+
 geneExprPlotControlUI <- function(
         id, postfix=1,
-        colorNames=availableThemes("sequence")){
+        colorNames=availableThemes("sequence"),
+        linkXYlim = FALSE){
     tagList(
         actionButton(
             NS0(id, "GeneExprtog", postfix), "Toggle plot controls"),
@@ -163,14 +188,14 @@ geneExprPlotControlUI <- function(
                         value = 100))
             ),
             actionButton(
-                NS0(id, "GeneExprxylimTog", postfix),
+                NS0(id, "manuXYlimTog", postfix),
                 "Manually set x/y axis", inline = TRUE),
             conditionalPanel(
                 condition = paste0(
-                    "input.GeneExprxylimTog", postfix, " % 2 ==1"),
+                    "input.manuXYlimTog", postfix, " % 2 ==1"),
                 ns=NS(id),
                 sliderInput(
-                    NS0(id, "GeneExprxlim", postfix), "Xlim range:",
+                    NS0(id, "manuXlim", postfix), "Xlim range:",
                     min = -10, max = 100,
                     value = c(-1.5, 10),
                     step = 0.1),
@@ -179,18 +204,32 @@ geneExprPlotControlUI <- function(
                         "input.GeneExprtype", postfix, " == 'Dotplot'"),
                     ns=NS(id),
                     sliderInput(
-                        NS0(id, "GeneExprylim", postfix), "Ylim range:",
+                        NS0(id, "manuYlim", postfix), "Ylim range:",
                         min = -10, max = 100,
                         value = c(-1.5, 10),
                         step = 0.1)
-                )
+                ),
+                manuXYlimOriUI(id, postfix),
+                if(linkXYlim){
+                    conditionalPanel(
+                        condition = paste0("input.manuXYlimTog",
+                                           ifelse(postfix==2, 1, 2),
+                                           " % 2 ==1"),
+                        ns=NS(id),
+                        checkboxInput(
+                            NS0(id, 'XYlimLinker', postfix),
+                            "Link X/Y Axis",
+                            value = TRUE)
+                    )
+                }
             )
         )
     )
 }
 cellInfoPlotControlUI <- function(
         id, postfix=1,
-        colorNames=availableThemes("sequence")){
+        colorNames=availableThemes("sequence"),
+        linkXYlim = FALSE){
     tagList(
         actionButton(
             NS0(id, "CellInfotog", postfix), "Toggle plot controls"),
@@ -249,7 +288,7 @@ cellInfoPlotControlUI <- function(
                 "Show lineages", value = TRUE),
             checkboxInput(
                 NS0(id, "CellInfoedge", postfix),
-                "Show cell edges", value = TRUE),
+                "Show cell-cell links", value = TRUE),
             checkboxInput(
                 NS0(id, 'CellInfoSegmentation', postfix),
                 "Show cell segmentation", value = FALSE),
@@ -281,22 +320,36 @@ cellInfoPlotControlUI <- function(
                 NS0(id, 'CellInfoBgImg', postfix),
                 "Show spatial image", value = FALSE),
             actionButton(
-                NS0(id, "CellInfoxylimTog", postfix),
+                NS0(id, "manuXYlimTog", postfix),
                 "Manually set x/y axis", inline = TRUE),
             conditionalPanel(
                 condition = paste0(
-                    "input.CellInfoxylimTog", postfix, " % 2 ==1"),
+                    "input.manuXYlimTog", postfix, " % 2 ==1"),
                 ns=NS(id),
                 sliderInput(
-                    NS0(id, "CellInfoxlim", postfix), "Xlim range:",
+                    NS0(id, "manuXlim", postfix), "Xlim range:",
                     min = -10, max = 100,
                     value = c(-1.5, 10),
                     step = 0.1),
                 sliderInput(
-                    NS0(id, "CellInfoylim", postfix), "Ylim range:",
+                    NS0(id, "manuYlim", postfix), "Ylim range:",
                     min = -10, max = 100,
                     value = c(-1.5, 10),
-                    step = 0.1))
+                    step = 0.1),
+                manuXYlimOriUI(id, postfix),
+                if(linkXYlim){
+                    conditionalPanel(
+                        condition = paste0("input.manuXYlimTog",
+                                           ifelse(postfix==2, 1, 2),
+                                           " % 2 ==1"),
+                        ns=NS(id),
+                        checkboxInput(
+                            NS0(id, 'XYlimLinker', postfix),
+                            "Link X/Y Axis",
+                            value = TRUE)
+                    )
+                }
+            )
         ),
         div(style = "visibility:hidden;",
             id = paste0(NS0(id, "CellInfodup", postfix), 'container'),
@@ -591,7 +644,7 @@ geneExprUI <- function(id, postfix=1){
     tagList(
         selectInput(
             NS0(id, "GeneName", postfix),
-            "Gene name:", choices=NULL) %>%
+            'Gene name:', choices=NULL) %>%
             helper1(category="geneName")
     )
 }
@@ -800,30 +853,32 @@ contextMenuCellInfoUI <- function(
                     NS0(id, "CellInfoslingshot", postfix),
                     "Show lineages", value = TRUE),
                 div(style="display:none",
-                checkboxInput(
-                    NS0(id, 'CellInfoSegmentation', postfix),
-                    "Show cell segmentation", value = FALSE),
-                conditionalPanel(
-                    condition = paste0(
-                        "input.CellInfoSegmentation", postfix, " == true"),
-                    ns=NS(id),
-                    sliderInput(
-                        NS0(id, 'CellInfoSegAlpha', postfix),
-                        "Cell segmentation alpha", value=1, 
-                        min = 0, max=1, step=0.01)),
                     checkboxInput(
-                        NS0(id, 'CellInfoSegBorderColor', postfix),
-                        "Show cell segmentation border",
-                        value = FALSE
-                    ),
+                        NS0(id, 'CellInfoSegmentation', postfix),
+                        "Show cell segmentation", value = FALSE),
                     conditionalPanel(
                         condition = paste0(
-                            "input.CellInfoSegBorderColor", postfix, " == true"),
+                            "input.CellInfoSegmentation", postfix, " == true"),
                         ns=NS(id),
-                        colourInput(
-                            NS0(id, 'CellInfoSegColor', postfix),
-                            "Cell segmentation border color",
-                            value = '#EEEEEE'
+                        sliderInput(
+                            NS0(id, 'CellInfoSegAlpha', postfix),
+                            "Cell segmentation alpha", value=1, 
+                            min = 0, max=1, step=0.01),
+                        checkboxInput(
+                            NS0(id, 'CellInfoSegBorderColor', postfix),
+                            "Show cell segmentation border",
+                            value = FALSE
+                        ),
+                        conditionalPanel(
+                            condition = paste0(
+                                "input.CellInfoSegBorderColor", postfix,
+                                " == true"),
+                            ns=NS(id),
+                            colourInput(
+                                NS0(id, 'CellInfoSegColor', postfix),
+                                "Cell segmentation border color",
+                                value = '#EEEEEE'
+                            )
                         )
                     )
                 ),
@@ -832,7 +887,7 @@ contextMenuCellInfoUI <- function(
                     "Show spatial image", value = FALSE),
                 checkboxInput(
                     NS0(id, "CellInfoedge", postfix),
-                    "Show cell edges", value = TRUE),
+                    "Show cell-cell links", value = TRUE),
                 checkboxInput(
                     NS0(id, "CellInfohid", postfix),
                     "Hide filtered cells", value = FALSE),
@@ -914,17 +969,19 @@ contextMenuGeneExprUI <- function(
                         " == 'Ridgeplot'"),
                     ns=NS(id),
                     actionButton(
-                        NS0(id, "GeneExprxylimTog", postfix),
+                        NS0(id, "manuXYlimTog", postfix),
                         "Manually set x axis", inline = TRUE),
                     conditionalPanel(
                         condition = paste0(
-                            "input.GeneExprxylimTog",
+                            "input.manuXYlimTog",
                             postfix, " % 2 ==1"),
                         ns=NS(id),
                         sliderInput(
-                            NS0(id, "GeneExprxlim", postfix), "Xlim range:",
+                            NS0(id, "manuXlim", postfix), "Xlim range:",
                             min = -10, max = 100, value = c(-1.5, 10),
-                            step = 0.1))
+                            step = 0.1),
+                        manuXYlimOriUI(id, postfix)
+                    )
                 )
             )
         )

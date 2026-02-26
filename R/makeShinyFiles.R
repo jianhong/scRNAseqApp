@@ -36,6 +36,7 @@
 #' You can try \link{extractFragmentNameMapList}.
 #' @param fov Name of FOV (field of view).
 #' @param boundaries The container name of segmentation coordinates.
+#' @param molecules The container name of molecules coordinates.
 #' @return data files required for shiny app
 #' @importFrom IRanges tile Views viewMeans ranges nearest
 #' @importFrom SeuratObject GetAssayData VariableFeatures Embeddings Reductions
@@ -66,7 +67,8 @@ makeShinyFiles <- function(
         binSize = 1,
         fragmentNameMapList,
         fov = NULL,
-        boundaries = NULL) {
+        boundaries = NULL,
+        molecules = NULL) {
     stopifnot(is.numeric(binSize))
     ### Preprocessing and checks
     # Generate defaults for assayName / slot
@@ -366,6 +368,25 @@ makeShinyFiles <- function(
             }
         }
     }
+    moleculesImages <- list()
+    if(!is.null(fov) && !is.null(molecules)){
+        moleculesImages <- mapply(FUN=function(.f, .m){
+            x <- obj[[.f]][[.m]]
+            if(is(x, 'Molecules')){
+                coor <- GetTissueCoordinates(object = x)
+                if(all(c('x', 'y', 'molecule')==colnames(coor))){
+                    return(coor)
+                }else{
+                    warning('Unexpected happend! 
+        The Molecules coordinates should be a data frame
+        with columns "x", "y", and "molecule"')
+                }
+            }
+            return(NULL)
+        }, fov, molecules, SIMPLIFY = FALSE)
+        moleculesImages <- moleculesImages[lengths(moleculesImages)>0]
+    }
+    
     sc1conf$ID <- as.character(sc1conf$ID)     # Remove levels
     
     # Make XXXgexpr.h5
@@ -507,6 +528,10 @@ makeShinyFiles <- function(
     if(length(cellborders)){
         saveRDS(cellborders, 
                 file = file.path(appDir, .globals$filenames$cellborder))
+    }
+    if(length(moleculesImages)){
+        saveRDS(moleculesImages, 
+                file = file.path(appDir, .globals$filenames$molecules))
     }
     
     ### save ATAC objects

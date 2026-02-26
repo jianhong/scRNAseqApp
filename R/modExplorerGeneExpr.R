@@ -55,7 +55,7 @@ scExprServer <- function(
                 paste0("GeneExprcol", postfix),
                 paste0("GeneExprord", postfix),
                 paste0("GeneExprtype", postfix),
-                paste0("GeneExprxlim", postfix),
+                paste0("manuXlim", postfix),
                 paste0("GeneExprrg", postfix)
             )
         )
@@ -89,10 +89,10 @@ scExprServer <- function(
                 keepXYlables=p_input$GeneExprtxt,
                 inpPlt=input[[paste0("GeneExprtype", postfix)]],
                 inpXlim=
-                    if (input[[paste0("GeneExprxylimTog", postfix)]] %% 2 == 0)
+                    if (input[[paste0("manuXYlimTog", postfix)]] %% 2 == 0)
                         0
                     else
-                        input[[paste0("GeneExprxlim", postfix)]],
+                        input[[paste0("manuXlim", postfix)]],
                 inpColRange =
                     if (input[[paste0("GeneExprrgb", postfix)]] %% 2 == 0)
                         0

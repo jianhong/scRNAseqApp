@@ -142,9 +142,7 @@ scRNAseqApp <- function(
                     ### Tab: cellInfo vs cellInfo on dimRed
                     cellInfoCellInfoUI("cellInfoCellInfo"),
                     ### Tab: subset gene expr
-                    subsetGeneExprUI("subsetGeneExpr"),
-                    ### Tab: ATAC vs Gene expr
-                    geneAccGeneExprUI("ATACvsExpr")
+                    subsetGeneExprUI("subsetGeneExpr")
                 ),
                 navbarMenu(
                     "Co-expression",
@@ -241,7 +239,6 @@ scRNAseqApp <- function(
             # toekn
             token = ""
         ) 
-        
         updateDataSource <- function(datasets, selected){
             if(missing(datasets)) datasets <- 
                     listDatasets(privilege = dataSource$auth$privilege,
@@ -468,6 +465,26 @@ scRNAseqApp <- function(
                     sep = "|"
                 ))
         })
+        # handle dynamic tabs
+        existing_tabs <- reactiveVal(character())
+        insertAdditionalTab <- function(id, UI){
+            if(!id %in% existing_tabs()){
+                insertTab(
+                    inputId = 'topnav',
+                    target = 'CellInfo/GeneExpr',
+                    position = 'after',
+                    tab = UI(id),
+                    session = session
+                )
+                existing_tabs(c(existing_tabs(), id))
+            }
+        }
+        removeAdditionalTab <- function(id){
+            if(id %in% existing_tabs()){
+                removeTab(inputId = 'topnav', target = id)
+                existing_tabs(existing_tabs()[existing_tabs()!=id])
+            }
+        }
         ## refresh data when change dataset
         refreshData <- function(input, output, session) {
             if (dataSource$dataset %in% names(dataSource$data_types)) {
@@ -508,13 +525,34 @@ scRNAseqApp <- function(
                 }),
                 optCrt)
             
-            ### ATAC vs Expr
-            geneAccGeneExprServer(
-                "ATACvsExpr",
-                reactive({
-                    dataSource
-                }),
-                optCrt)
+            if(dataSource$data_types[[dataSource$dataset]] %in% 
+               c("scMultiome", "scATACseq")){
+                ### ATAC vs Expr
+                insertAdditionalTab('ATACvsExpr', geneAccGeneExprUI)
+                removeAdditionalTab('cellInfoMolecule')
+                geneAccGeneExprServer(
+                    "ATACvsExpr",
+                    reactive({
+                        dataSource
+                    }),
+                    optCrt)
+            }else{
+                if(dataSource$data_types[[dataSource$dataset]] %in% "spatial"  &&
+                   file.exists(file.path(.globals$datafolder, dataSource$dataset, .globals$filenames$molecules))){
+                    ### cellinfo vs molecules
+                    insertAdditionalTab('cellInfoMolecule', cellInfoMolUI)
+                    removeAdditionalTab('ATACvsExpr')
+                    cellInfoMolServer(
+                        "cellInfoMolecule",
+                        reactive({
+                            dataSource
+                        }),
+                        optCrt)
+                }else{
+                    removeAdditionalTab('ATACvsExpr')
+                    removeAdditionalTab('cellInfoMolecule')
+                }
+            }
             
             ### Plots for tab co-expression
             coExprServer(

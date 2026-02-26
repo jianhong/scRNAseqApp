@@ -1,5 +1,6 @@
 subsetGeneExprUI <- function(id) {
     tabPanel(
+        id = id,
         value = id,
         htmlOutput(NS(id, 'GeneExpr')),
         tabsubTitleUI(
@@ -41,7 +42,7 @@ subsetGeneExprUI <- function(id) {
                         NS0(id, "GeneExprgrp.ui", 1)
                     )),
                     column(
-                        6, geneExprPlotControlUI(id, postfix = 1)
+                        6, geneExprPlotControlUI(id, postfix = 1, linkXYlim = TRUE)
                     )),
                     geneExprDotPlotUI(id, 1)
                 ),
@@ -51,7 +52,7 @@ subsetGeneExprUI <- function(id) {
                         NS0(id, "GeneExprgrp.ui", 2)
                     )),
                     column(
-                        6, geneExprPlotControlUI(id, postfix = 2)
+                        6, geneExprPlotControlUI(id, postfix = 2, linkXYlim = TRUE)
                     )),
                     geneExprDotPlotUI(id, 2)
                 )
@@ -134,10 +135,10 @@ subsetGeneExprServer <- function(id, dataSource, optCrt) {
                 plotAspectRatio=input$GeneExprasp,
                 keepXYlables=input$GeneExprtxt,
                 inpPlt=input$GeneExprtype1,
-                inpXlim=if (input$GeneExprxylimTog1 %% 2 == 0)
+                inpXlim=if (input$manuXYlimTog1 %% 2 == 0)
                             0
                         else
-                            input$GeneExprxlim1,
+                            input$manuXlim1,
                 inpColRange = TRUE,
                 valueFilterKey = input$filterCell,
                 valueFilterCutoff = input$filterCellVal,

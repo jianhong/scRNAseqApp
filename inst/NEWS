@@ -1,4 +1,4 @@
-CHANGES IN VERSION 1.11.18
+CHANGES IN VERSION 1.11.19
 -------------------------
 
     o Fix a bug in molecule plot for discrete_scale.

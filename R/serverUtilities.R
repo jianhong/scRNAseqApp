@@ -1657,17 +1657,12 @@ relevelCol <- function(inpConf, ui_key, ggData, coln) {
     }
     return(ggCol)
 }
+#' @importFrom ggplot2 coord_fixed
 fixCoord <- function(ggOut, aspectRatio, ratio, xlim=NULL, ylim=NULL) {
-    if(!is.null(xlim)){
-        ggOut <- ggOut + xlim(xlim)
-    }
-    if(!is.null(ylim)){
-        ggOut <- ggOut + ylim(ylim)
-    }
     if (aspectRatio == "Square") {
-        ggOut <- ggOut + coord_fixed(ratio = ratio)
+        ggOut <- ggOut + coord_fixed(ratio = ratio, xlim=xlim, ylim=ylim)
     } else if (aspectRatio == "Fixed") {
-        ggOut <- ggOut + coord_fixed()
+        ggOut <- ggOut + coord_fixed(xlim=xlim, ylim=ylim)
     }
     return(ggOut)
 }

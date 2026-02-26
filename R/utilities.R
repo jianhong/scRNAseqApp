@@ -669,6 +669,7 @@ darkTheme <- function(p, returnBG=FALSE, bg_color){
 }
 
 #' @importFrom ggplot2 xlim ylim ggplot_build ggplot_gtable layer_scales
+#' coord_cartesian
 #' @importFrom grid convertWidth
 addLimits <- function(p, x=NULL, y=NULL, coord=NULL, id, postfix, input){
     notify <- FALSE
@@ -705,19 +706,32 @@ addLimits <- function(p, x=NULL, y=NULL, coord=NULL, id, postfix, input){
                 })
             }
         }else{
-            if(!is.null(x) && is(layer_scales(p)$x, 'ScaleContinuousPosition')){
-                p <- p + xlim(x)
-                notify <- TRUE
-            }
-            if(!is.null(y) && is(layer_scales(p)$y, 'ScaleContinuousPosition')){
-                p <- p + ylim(y)
-                notify <- TRUE
+            if(!is.null(x) || !is.null(y)){
+                if(is.null(y)){
+                    if(is(layer_scales(p)$x, 'ScaleContinuousPosition')){
+                        p <- p + coord_cartesian(xlim = x)
+                        notify <- TRUE
+                    }
+                }else{
+                    if(is.null(x)){
+                        if(is(layer_scales(p)$y, 'ScaleContinuousPosition')){
+                            p <- p + coord_cartesian(ylim = y)
+                            notify <- TRUE
+                        }
+                    }else{
+                        if(is(layer_scales(p)$x, 'ScaleContinuousPosition') &&
+                           is(layer_scales(p)$y, 'ScaleContinuousPosition'))
+                            p <- p + coord_cartesian(xlim = x, ylim = y)
+                        notify <- TRUE
+                    }
+                }
             }
         }
     }
     if(notify){
+        removeNotification('cancelZoomIn') # avoid multiple notification
         showNotification("Double click to cancel zoom in.",
-                         type = 'message')
+                         type = 'message', id='cancelZoomIn')
     }
     return(p)
 }

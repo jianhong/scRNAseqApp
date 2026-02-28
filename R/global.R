@@ -1,6 +1,12 @@
 # global variables
 .globals <- new.env(parent = emptyenv())
 .globals$theme <- bs_theme(bootswatch = 'lumen')
+# contact email
+#' @importFrom desc desc desc_get_maintainer
+.globals$email <- regmatches(desc()$get_maintainer(),
+                             regexpr("(?<=<)[^>]+",
+                                     desc()$get_maintainer(),
+                                     perl = TRUE))
 # filenames
 .globals$app_path <- "."
 .globals$datafolder <- "data"

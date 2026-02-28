@@ -14,7 +14,8 @@ createAppConfig(
   datatype = c("scRNAseq", "scATACseq", "scMultiome", "spatial"),
   markers,
   keywords,
-  abstract
+  abstract,
+  email
 )
 }
 \arguments{
@@ -41,6 +42,8 @@ For example the condition, cell type, tissue information
 The keywords will be used for whole database search}
 
 \item{abstract}{The abstract of the reference.}
+
+\item{email}{The request e-mail address to retrieve the doi or pmid.}
 }
 \value{
 An object of \link{APPconf} object

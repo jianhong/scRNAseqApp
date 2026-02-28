@@ -27,18 +27,26 @@ scPieDim <- function(
         labelsFontsize = 24,
         labelsFontFamily = 'Helvetica',
         plotAspectRatio,
-        keepXYlables) {
+        keepXYlables,
+        sunburst_type='expr') {
     subFilterColname <- 'subValue'
     subGrpColname <- 'sub'
-    geneList <- scGeneList(genelist, geneIdMap)
-    geneList <- geneList[geneList$present == TRUE]
-    shiny::validate(need(
-        nrow(geneList) <= 10,
-        "More than 10 genes to plot! Please reduce the gene list!"
-    ))
-    shiny::validate(need(
-        nrow(geneList) > 1, 
-        "Please input at least 2 genes to plot!"))
+    if(sunburst_type=='expr'){
+        geneList <- scGeneList(genelist, geneIdMap)
+        geneList <- geneList[geneList$present == TRUE]
+        shiny::validate(need(
+            nrow(geneList) <= 10,
+            "More than 10 genes to plot! Please reduce the gene list!"
+        ))
+        shiny::validate(need(
+            nrow(geneList) > 1, 
+            "Please input at least 2 genes to plot!"))
+    }else{
+        geneList <- data.frame(type=genelist)
+        shiny::validate(need(
+            nrow(geneList) > 1, 
+            "Please input at least 2 cell information to plot!"))
+    }
     
     # Prepare ggData
     ggData <- inpMeta[, c(
@@ -67,17 +75,24 @@ scPieDim <- function(
             valueFilterCutoff2
         )
     rat <- getRatio(ggData)
-    expr <-
-        lapply(geneIdMap[geneList$gene][
-            seq.int(min(c(10, length(geneList$gene))))],
-            read_exprs,
-            h5f = dataset,
-            valueOnly = TRUE)
-    expr <- do.call(cbind, expr)
-    expr[expr < 0] <- 0
-    expr_keep <- rowSums(expr) > 0
-    if (CoExpred)
-        expr_keep <- expr_keep & rowSums(expr > 0) == ncol(expr)
+    if(sunburst_type=='expr'){
+        expr <-
+            lapply(geneIdMap[geneList$gene][
+                seq.int(min(c(10, length(geneList$gene))))],
+                read_exprs,
+                h5f = dataset,
+                valueOnly = TRUE)
+        expr <- do.call(cbind, expr)
+        expr[expr < 0] <- 0
+        expr_keep <- rowSums(expr) > 0
+        if (CoExpred)
+            expr_keep <- expr_keep & rowSums(expr > 0) == ncol(expr)
+    }else{
+        expr <- inpMeta[, inpConf[inpConf$UI %in% geneList$type]$ID, with = FALSE]
+        print(head(expr))
+        expr_keep <- rep(TRUE, nrow(expr))
+    }
+    
     keep <- filterCells(
         ggData,
         subsetCellKey,
@@ -88,13 +103,29 @@ scPieDim <- function(
         inpConf=inpConf)
     
     if(cnid>3) colnames(ggData)[cnid] <- subGrpColname
-    
-    if (sum(keep & expr_keep) * nrow(geneList) > 5000) {
-        ## filter the expression event, otherwise too slow
-        expr_keep <- rowSums(expr)
-        expr_keep <-
-            expr_keep >=
-            sort(expr_keep, decreasing = TRUE)[floor(1000 / nrow(geneList))]
+    if(sunburst_type=='expr'){
+        if (sum(keep & expr_keep) * nrow(geneList) > 5000) {
+            ## filter the expression event, otherwise too slow
+            df <- data.frame(keep=keep & expr_keep, expr_levels = rowSums(expr))
+            df$id <- seq.int(nrow(df))
+            df <- df[df$keep, , drop=FALSE]
+            df <- df[order(df$expr_levels, decreasing = TRUE), , drop=FALSE]
+            df <- df[seq.int(ceiling(5000/nrow(geneList))), , drop=FALSE]
+            expr_keep <- seq_along(expr_keep) %in% df$id
+        }
+    }else{
+        if (sum(keep & expr_keep) * nrow(geneList) > 5000) {
+            ## filter the cell, otherwise too slow
+            ## use the less cell information, if it contain more information
+            ## mean cell deconvolution does not work 
+            expr_keep <- apply(expr, 1, function(.ele) length(.ele>0.1))
+            df <- data.frame(keep=keep & expr_keep, expr_levels = expr_keep)
+            df$id <- seq.int(nrow(df))
+            df <- df[df$keep, , drop=FALSE]
+            df <- df[order(df$expr_levels, decreasing = FALSE), , drop=FALSE]
+            df <- df[seq.int(ceiling(5000/nrow(geneList))), , drop=FALSE]
+            expr_keep <- seq_along(expr_keep) %in% df$id
+        }
     }
     ggData_ <- ggData[keep & expr_keep]
     expr <- expr[keep & expr_keep, , drop = FALSE]

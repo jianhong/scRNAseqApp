@@ -1,14 +1,23 @@
-plotPieDimUI <- function(id) {
+plotPieDimUI <- function(id, type='expr') {
+    stopifnot(type %in% c('expr', 'cellinfo'))
     tabPanel(
         value = id,
-        HTML("Sunburst"),
-        h4("Gene expression scatter_pie plot"),
-        "In this tab, users can visualise the gene expression patterns of ",
-        "multiple genes grouped by categorical cell information ",
-        "(e.g. library / cluster). ",
-        "The expression of each gene will be re-scaled to 0-1. ",
+        HTML(ifelse(type=='expr', "Sunburst", "Cellinfo deconvolution")),
+        h4(ifelse(type=='expr', "Gene expression scatter_pie plot", 
+                  "Cell information deconvolution plot")),
+        "In this tab, users can visualise the ",
+        ifelse(type=='expr', "gene expression", "cell information"),
+        " patterns of multiple ",
+        ifelse(type=='expr', "genes", "cell information"),
+        if(type=='expr'){
+            paste(" grouped by categorical cell information ",
+            "(e.g. library / cluster). ",
+            "The expression of each gene will be re-scaled to 0-1. ")
+        }else{
+            '. It is best choice to explor the cell deconvolution information.'
+        },
         "It will only plot top 5000 events.",
-        br(),
+        br(),br(),
         fluidRow(
             column(3, dimensionReductionUI(id)),
             column(
@@ -22,32 +31,45 @@ plotPieDimUI <- function(id) {
             column(
                 3,
                 style = "border-right: 2px solid black",
-                textAreaInput(
-                    NS(id, "genelist"),
-                    HTML(
-                        "List of gene names <br />
-                        (Max 10 genes (over 5 will be busy), <br />
-                        separated by , or ; or newline):"
-                    ),
-                    height = "200px",
-                    value = NULL
-                ) %>%
-                    shinyhelper::helper(
-                        type = "inline",
-                        size = "m",
-                        fade = TRUE,
-                        title = "List of genes to plot on Sunburst",
-                        content = c(
-                            "Input genes to plot",
-                            "- Maximum 10 genes",
-                            "(due to plot space limitations)",
-                            "- Genes should be separated by comma,",
-                            "semicolon or newline"
-                        )
-                    ),
-                checkboxInput(
-                    NS(id, "CoExpred"),
-                    "Co-expressed (all>0)", value = TRUE),
+                div(style='display:none', 
+                    textInput(inputId=NS(id, 'sunburst_type'),
+                              label='', value=type)),
+                if(type=='expr'){
+                    tagList(
+                        textAreaInput(
+                            NS(id, "genelist"),
+                            HTML(
+                                "List of gene names <br />
+                            (Max 10 genes (over 5 will be busy), <br />
+                            separated by , or ; or newline):"
+                            ),
+                            height = "200px",
+                            value = NULL
+                        ) %>%
+                            shinyhelper::helper(
+                                type = "inline",
+                                size = "m",
+                                fade = TRUE,
+                                title = "List of genes to plot on Sunburst",
+                                content = c(
+                                    "Input genes to plot",
+                                    "- Maximum 10 genes",
+                                    "(due to plot space limitations)",
+                                    "- Genes should be separated by comma,",
+                                    "semicolon or newline"
+                                )
+                            ),
+                        checkboxInput(
+                            NS(id, "CoExpred"),
+                            "Co-expressed (all>0)", value = TRUE)
+                    )
+                }else{
+                    selectInput(
+                        NS(id, "genelist"), 
+                        label = "List of cell informations",
+                        choices = c(), selected = c(),
+                        multiple = TRUE)
+                },
                 tagList(
                     actionButton(NS(id, "CoExprtog"), "Toggle plot controls"),
                     conditionalPanel(
@@ -65,7 +87,12 @@ plotPieDimUI <- function(id) {
                         radioButtons(
                             NS(id, "CoExprType"),
                             "Plot type",
-                            choices = c("sunburst", "pie", 'donut', "bar", "sum", "max", "mean"),
+                            choices = if(type=='expr'){
+                                    c("sunburst", "pie", 'donut', "bar",
+                                      "sum", "max", "mean")
+                                }else{
+                                    c("sunburst", "pie", 'donut', "bar")
+                                },
                             selected = "sunburst"
                         ),
                         conditionalPanel(
@@ -103,19 +130,29 @@ plotPieDimServer <- function(id, dataSource, optCrt) {
         updateSubsetCellUI(id, input, output, session, dataSource)
         updateFilterCellUI(id, optCrt, input, output, session, dataSource)
         ## input column
-        genelist <- dataSource()$sc1def$genes
-        if (!is.null(dataSource()$genelist)) {
-            if (length(dataSource()$genelist) > 1) {
-                genelist <- dataSource()$genelist
-            } else{
-                genelist <- c(dataSource()$genelist, genelist)
+        if(input$sunburst_type=='expr'){
+            genelist <- dataSource()$sc1def$genes
+            if (!is.null(dataSource()$genelist)) {
+                if (length(dataSource()$genelist) > 1) {
+                    genelist <- dataSource()$genelist
+                } else{
+                    genelist <- c(dataSource()$genelist, genelist)
+                }
             }
+            updateTextAreaInput(
+                session, "genelist",
+                value = paste0(
+                    genelist[seq.int(min(4, length(genelist)))],
+                    collapse = ", "))
+        }else{
+            choices <- dataSource()$sc1conf[!dataSource()$sc1conf$grp]$UI
+            updateSelectizeInput(
+                session, "genelist",
+                choices = choices,
+                selected = c()
+            )
         }
-        updateTextAreaInput(
-            session, "genelist",
-            value = paste0(
-                genelist[seq.int(min(4, length(genelist)))],
-                collapse = ", "))
+        
         ### plots
         plot1 <- reactive({
             scPieDim(
@@ -131,7 +168,8 @@ plotPieDimServer <- function(id, dataSource, optCrt) {
                 valueFilterKey = input$filterCell,
                 valueFilterCutoff = input$filterCellVal,
                 valueFilterCutoff2 = input$filterCellVal2,
-                CoExpred = input$CoExpred,
+                CoExpred = ifelse(input$sunburst_type=='expr',
+                                  input$CoExpred, FALSE),
                 pointSize = input$GeneExprsiz,
                 lableCircle = input$CoExprCircle,
                 plotCellBg = input$CoExprBg,
@@ -142,7 +180,8 @@ plotPieDimServer <- function(id, dataSource, optCrt) {
                 labelsFontsize = input$GeneExprfsz,
                 labelsFontFamily=input$GeneExprfml,
                 plotAspectRatio = input$GeneExprasp,
-                keepXYlables = input$GeneExprtxt
+                keepXYlables = input$GeneExprtxt,
+                sunburst_type = input$sunburst_type
             )
         })
         updateGeneExprDotPlotUI(

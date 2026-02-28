@@ -142,7 +142,9 @@ scRNAseqApp <- function(
                     ### Tab: cellInfo vs cellInfo on dimRed
                     cellInfoCellInfoUI("cellInfoCellInfo"),
                     ### Tab: subset gene expr
-                    subsetGeneExprUI("subsetGeneExpr")
+                    subsetGeneExprUI("subsetGeneExpr"),
+                    ### Tab: sunburst plot for deconvolution
+                    plotPieDimUI('deconvolution', 'cellinfo')
                 ),
                 navbarMenu(
                     "Co-expression",
@@ -153,7 +155,7 @@ scRNAseqApp <- function(
                     ### Tab: 3d Gene coexpression plot
                     coExpr3dUI("coExpr3d"),
                     ### Tab: sunburst plot
-                    plotPieDimUI('sunburst')
+                    plotPieDimUI('sunburst', 'expr')
                 ),
                 navbarMenu(
                     "Stats",
@@ -520,6 +522,14 @@ scRNAseqApp <- function(
             ### Plots for tab gene expression vs gene expression
             geneExprGeneExprServer(
                 "geneExprGeneExpr",
+                reactive({
+                    dataSource
+                }),
+                optCrt)
+            
+            ### Plots for tab deconvolution
+            plotPieDimServer(
+                'deconvolution',
                 reactive({
                     dataSource
                 }),

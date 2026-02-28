@@ -105,12 +105,18 @@ redirectOutput <- function(
 #' @param id id to be convert
 #' @param type target id type
 #' @param url the service url
+#' @param email The email address asked by idconv
 idConverter <- function(
         id,
         type = c("doi", "pmid"),
-        url = 'https://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/') {
+        email,
+        url = 'https://pmc.ncbi.nlm.nih.gov/tools/idconv/api/v1/articles/') {
     type <- match.arg(type)
-    url0 <- paste0(url, "?format=xml&ids=", id)
+    if(missing(email)){
+        email <- .globals$email
+    }
+    url0 <- paste0(url, "?format=xml&email=", email,
+                   "&tool=scRNAseqApp&ids=", id)
     res <- tryCatch({
         read_xml(url0)
     }, error = function(e){

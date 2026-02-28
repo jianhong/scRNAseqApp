@@ -282,6 +282,7 @@ createDataSet <- function(
 #' For example the condition, cell type, tissue information
 #' The keywords will be used for whole database search
 #' @param abstract The abstract of the reference.
+#' @param email The request e-mail address to retrieve the doi or pmid.
 #' @return An object of \link{APPconf} object
 #' @importFrom RefManageR GetBibEntryWithDOI GetPubMedByID
 #' @export
@@ -306,7 +307,19 @@ createAppConfig <-
         datatype = c("scRNAseq", "scATACseq", "scMultiome", "spatial"),
         markers,
         keywords,
-        abstract) {
+        abstract,
+        email) {
+        is_valid <- function(email) {
+            grepl("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,5}$", email)
+        }
+        if(missing(email)){
+            email <- .globals$email
+        }
+        print(email)
+        if(!is_valid(email)){
+            stop('"email" is request to get the bibentry. ',
+                 'Please provide a valid e-mail address')
+        }
         ## markers is a list of dataframe, rownames is the gene symbols
         if (!missing(markers)) {
             if (is.character(markers)) {
@@ -346,7 +359,7 @@ createAppConfig <-
                 bibentry <- GetBibEntryWithDOI(doi)
             }
             if (missing(pmid)){
-                pmid <- idConverter(doi, type = "pmid")
+                pmid <- idConverter(doi, type = "pmid", email = email)
                 pmidNotFromDOI <- FALSE
             }
         }
@@ -356,7 +369,7 @@ createAppConfig <-
                 bibentry <- GetPubMedByID(pmid)
             }
             if (missing(doi))
-                doi <- idConverter(pmid, type = "doi")
+                doi <- idConverter(pmid, type = "doi", email = email)
         }
         if(missing(doi)){
             doi = ""

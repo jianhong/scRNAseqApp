@@ -47,19 +47,41 @@ names(annotations) <- rownames(annotations.df)
 xenium.obj$predicted.celltype <- annotations
 
 # SPOTLight
-genes <- !grepl(pattern = "^Rp[l|s]|Mt", x = rownames(allen.cortex.ref))
 Idents(allen.cortex.ref) <- 'subclass'
-markers <- FindAllMarkers(allen.cortex.ref)
+allen.cortex.ref <- NormalizeData(allen.cortex.ref, normalization.method = "LogNormalize", scale.factor = 10000)
+allen.cortex.ref <- FindVariableFeatures(allen.cortex.ref, selection.method = "vst", nfeatures = 2000)
+genes <- rownames(allen.cortex.ref)[!grepl(pattern = "^Rp[l|s]|Mt", x = rownames(allen.cortex.ref))]
+allen.cortex.ref <- ScaleData(allen.cortex.ref, features = genes)
+markers <- FindAllMarkers(allen.cortex.ref, logfc.threshold = 1, only.pos = TRUE, min.pct=0.3, return.thresh=0.05)
+markers <- markers[markers$p_val_adj<0.05&abs(markers$avg_log2FC)>1, ]
+dim(markers)
+table(markers$cluster)
+hvg <- VariableFeatures(allen.cortex.ref)
+
+DefaultAssay(xenium.obj) <- 'Xenium'
+xenium.obj <- NormalizeData(xenium.obj, normalization.method = "LogNormalize", scale.factor = 10000)
+
 res <- SPOTlight(
-    x = allen.cortex.ref,
-    y = xenium.obj,
+    x = GetAssayData(allen.cortex.ref, assay = 'RNA', layer = 'data'),
+    y = GetAssayData(xenium.obj, assay = 'Xenium', layer = 'data'),
     groups = as.character(allen.cortex.ref$subclass),
-    mgs = mgs_df,
+    mgs = markers,
     hvg = hvg,
-    weight_id = "mean.AUC",
+    weight_id = "avg_log2FC",
     group_id = "cluster",
     gene_id = "gene")
+head(res)
+mat <- res$mat
+colnames(mat) <- paste0('SPOTLight_', colnames(mat))
+identical(rownames(res$mat), colnames(xenium.obj))
+xenium.obj <- AddMetaData(xenium.obj, mat)
 
+head(xenium.obj)
+
+saveRDS(xenium.obj, '~/Downloads/Xenium_V1/tmp.rds')
+write.csv(markers, '~/Downloads/Xenium_V1/markers.csv')
+
+DefaultAssay(xenium.obj) <- 'SCT'
 appconf <- createAppConfig(
             title="xenium_small",
             destinationFolder = "xenium_small",
@@ -70,3 +92,4 @@ appconf <- createAppConfig(
 unlink('~/Downloads/Xenium_V1/xenium_small', recursive = TRUE)
 createDataSet(appconf, seu = xenium.obj,
               datafolder = path, boundaries = 'segmentations')
+

@@ -315,7 +315,6 @@ createAppConfig <-
         if(missing(email)){
             email <- .globals$email
         }
-        print(email)
         if(!is_valid(email)){
             stop('"email" is request to get the bibentry. ',
                  'Please provide a valid e-mail address')

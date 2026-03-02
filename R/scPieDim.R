@@ -89,7 +89,6 @@ scPieDim <- function(
             expr_keep <- expr_keep & rowSums(expr > 0) == ncol(expr)
     }else{
         expr <- inpMeta[, inpConf[inpConf$UI %in% geneList$type]$ID, with = FALSE]
-        print(head(expr))
         expr_keep <- rep(TRUE, nrow(expr))
     }
     

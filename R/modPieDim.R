@@ -88,10 +88,10 @@ plotPieDimUI <- function(id, type='expr') {
                             NS(id, "CoExprType"),
                             "Plot type",
                             choices = if(type=='expr'){
-                                    c("sunburst", "pie", 'donut', "bar",
+                                    c("sunburst", "pie", 'donut', "bar", "density",
                                       "sum", "max", "mean")
                                 }else{
-                                    c("sunburst", "pie", 'donut', "bar")
+                                    c("sunburst", "pie", 'donut', "bar", "density")
                                 },
                             selected = "sunburst"
                         ),

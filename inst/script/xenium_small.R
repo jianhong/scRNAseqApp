@@ -80,7 +80,38 @@ head(xenium.obj)
 
 saveRDS(xenium.obj, '~/Downloads/Xenium_V1/tmp.rds')
 write.csv(markers, '~/Downloads/Xenium_V1/markers.csv')
+markers <- markers[markers$p_val_adj<0.005&abs(markers$avg_log2FC)>2, ]
+markers <- split(markers$gene, markers$cluster)
+markers <- lapply(markers, head, n=100)
 
+qc <- function(mat) {
+    # Indices of mitochondrial genes
+    mito_idx <- grep("^MT-", rownames(mat))
+    
+    # Calculate QC metrics
+    res <- mat |>
+        scuttle::perCellQCMetrics(subsets = list("Mito" = mito_idx)) |>
+        scuttle::perCellQCFilters(sub.fields = "subsets_Mito_percent")
+    
+    # Remove low quality cells
+    mat[, !res$discard]
+}
+imputed_gex <- GetAssayData(xenium.obj, assay = "Xenium", layer = "counts") |>
+    qc() |>
+    scuttle::normalizeCounts() |>
+    Seqtometry::impute()
+future::plan("sequential")
+# Allot 1 GiB of memory for global variables
+options(future.globals.maxSize = 1024 ^ 3)
+scores <- markers |>
+    Seqtometry::score(imputed_gex, signatures = _)
+colnames(scores) <- paste0('SeqtometryScore_', colnames(scores))
+colnames(scores) <- make.names(colnames(scores), allow_ = TRUE)
+xenium.obj <- AddMetaData(xenium.obj, metadata = scores[, -1])
+markers <- lapply(markers, head, n=3)
+markers <- unlist(markers)
+markers <- unname(markers)
+markers <- unique(markers)
 DefaultAssay(xenium.obj) <- 'SCT'
 appconf <- createAppConfig(
             title="xenium_small",
@@ -88,7 +119,7 @@ appconf <- createAppConfig(
             species = "Homo sapiens",
             doi="10.1038/nbt.3192",
             datatype = "spatial",
-            markers =rownames(xenium.obj)[1:5])
+            markers =markers[markers %in% rownames(xenium.obj)])
 unlink('~/Downloads/Xenium_V1/xenium_small', recursive = TRUE)
 createDataSet(appconf, seu = xenium.obj,
               datafolder = path, boundaries = 'segmentations')

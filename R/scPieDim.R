@@ -2,7 +2,7 @@
 #' @importFrom data.table rbindlist
 #' @importFrom scales rescale
 #' @importFrom ggforce geom_arc_bar geom_circle geom_mark_hull
-#' @importFrom ggplot2 geom_rect .data
+#' @importFrom ggplot2 geom_rect .data geom_density_2d_filled
 scPieDim <- function(
         inpConf,
         inpMeta,
@@ -46,6 +46,12 @@ scPieDim <- function(
         shiny::validate(need(
             nrow(geneList) > 1, 
             "Please input at least 2 cell information to plot!"))
+    }
+    if(plotType=='density'){
+        shiny::validate(need(
+            nrow(geneList)==2,
+            "For density plot, please input 2 genes only!"
+        ))
     }
     
     # Prepare ggData
@@ -102,6 +108,15 @@ scPieDim <- function(
         inpConf=inpConf)
     
     if(cnid>3) colnames(ggData)[cnid] <- subGrpColname
+    
+    if(plotType=='density'){
+        # replace the reduction by the values of expression
+        ggData$X <- as.data.frame(expr)[[1]]
+        ggData$Y <- as.data.frame(expr)[[2]]
+        dimRedX <- colnames(expr)[1]
+        dimRedY <- colnames(expr)[2]
+    }
+    
     if(sunburst_type=='expr'){
         if (sum(keep & expr_keep) * nrow(geneList) > 5000) {
             ## filter the expression event, otherwise too slow
@@ -129,14 +144,15 @@ scPieDim <- function(
     ggData_ <- ggData[keep & expr_keep]
     expr <- expr[keep & expr_keep, , drop = FALSE]
     ggData <- ggData[keep]
-    size <- diff(range(ggData$X)) / 60 * pointSize
-    expr <- apply(expr, 2, rescale, to = c(size / 4, size))
+    size <- diff(range(ggData$X, na.rm = TRUE)) / 60 * pointSize
+    if(plotType %in% c("sunburst", "pie", "donut", "bar")){
+        expr <- apply(expr, 2, rescale, to = c(size / 4, size))
+    }
     expr <- as.list(as.data.frame(expr))
     expr <- mapply(function(d, n) {
         cbind(ggData_, geneName = n, "val" = d)
     }, expr, names(expr), SIMPLIFY = FALSE)
     expr <- rbindlist(expr)
-    
     expr$X0 <-
         expr$X + (as.numeric(factor(as.character(expr$geneName))) - 1) * size /
         2
@@ -180,6 +196,11 @@ scPieDim <- function(
                     color = NA,
                     alpha = alpha
                 ),
+            density = 
+                geom_density_2d_filled(
+                    aes(x=.data$X, y=.data$Y),
+                    inherit.aes = FALSE,
+                    alpha=alpha),
             pie =
                 geom_arc_bar(
                     aes(
@@ -264,7 +285,7 @@ scPieDim <- function(
             }
         )
     
-    if(plotType %in% c("sum", "max", "mean")){
+    if(plotType %in% c("sum", "max", "mean", "density")){
         ggOut <- ggOut + scale_color_gradientn(
             colours = availableThemes(gradientCol))
     }else{

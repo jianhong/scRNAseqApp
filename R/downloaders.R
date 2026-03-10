@@ -106,6 +106,21 @@ get_lasso_selected_ids <- function(session, plot){
     tryCatch({
         d <- lasso_select_data(session = session)
         raw <- plot()$data
+        cn <- c('X', 'Y', 'sampleID')
+        if(all(cn %in% colnames(raw))){
+            raw <- raw[, .SD, .SDcols=cn]
+            additional <- plot()$layers
+            additional <- lapply(additional, function(i) {
+                i <- i$data
+                if(all(cn %in% colnames(i))){
+                    i[, .SD, .SDcols=cn]
+                }else{
+                    NULL
+                }
+            })
+            additional <- do.call(rbind, additional)
+            raw <- rbind(raw, additional)
+        }
         d <- merge(d, raw, by.x=c('x', 'y'), by.y=c('X', 'Y'))
         return(d)
     }, error=function(e){

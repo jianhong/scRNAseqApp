@@ -1501,25 +1501,38 @@ updateSubModulePlotUI <-
                             .globals$figHeight, height,
                         input[[paste0("GeneExproup.h", postfix)]]*72))
             })
-            if(isTRUE(lasso)){
+            if(isTRUE(lasso)|| is.character(lasso)){# TRUE for logged user, 'public' for public user
                 ## update the download form
-                updateSelectInput(session=session,
-                                  inputId = paste0("GeneExproup.fmt",postfix),
-                                  choices = 'CSV', selected = 'CSV')
+                if(isTRUE(lasso)){## control the users, if not login do not show download 
+                    updateSelectInput(session=session,
+                                      inputId = paste0("GeneExproup.fmt",postfix),
+                                      choices = 'CSV', selected = 'CSV')
+                    output[[paste0("GeneExproup.dwn", postfix)]] <- 
+                        exprDownloadHandler(dataset=pid, lasso=TRUE,
+                                            plot=plotX, session=session)
+                }
                 updateCheckboxInput(session = session,
                                     inputId = paste0('GeneExproupDimT', postfix),
                                     value = FALSE)
-                output[[paste0("GeneExproup.dwn", postfix)]] <- 
-                    exprDownloadHandler(dataset=pid, lasso=TRUE,
-                                        plot=plotX, session=session)
                 observeEvent(input[[paste0('GeneExproupSelIDs', postfix)]], {
                     d <- get_lasso_selected_ids(session=session, plot=plotX)
                     if(length(d)){
                         if(all(!is.na(d$sampleID))){
-                            p_session$userData$selectedCellIDs <- 
-                                as.character(d$sampleID)
-                            adminMsg('Succeed setting lasso selection',
-                                     type='message')
+                            p_session$userData$selectedCellIDs <- switch(
+                                input[[paste0('GeneExproupSelMethod',
+                                              postfix)]],
+                                'new'=as.character(d$sampleID),
+                                'add'=unique(c(
+                                    p_session$userData$selectedCellIDs,
+                                    as.character(d$sampleID))),
+                                'del'= p_session$userData$selectedCellIDs[
+                                    !p_session$userData$selectedCellIDs %in%
+                                        as.character(d$sampleID) 
+                                ]
+                            )   
+                            showNotification('Succeed setting lasso selection',
+                                             id = 'setLasso',
+                                             type='message')
                         }
                     }
                     updateActionButton(session = p_session,

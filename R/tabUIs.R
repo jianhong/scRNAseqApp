@@ -593,6 +593,11 @@ geneExprDotPlotUI <- function(id, postfix=1, editor=FALSE){
                 condition = paste0('input.GeneExproupDimT', postfix, " == false"),
                 ns = NS(id),
                 div(style="display:inline-block",
+                    selectInput(NS0(id, 'GeneExproupSelMethod', postfix),
+                                label = 'Lasso:', width='75px',
+                                choices = c('new', 'add', 'del'),
+                                selected = 'new')),
+                div(style="display:inline-block",
                     actionButton(NS0(id, 'GeneExproupSelIDs', postfix),
                                  label = 'Set lasso selection',
                                  disabled = FALSE))

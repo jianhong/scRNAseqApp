@@ -2,7 +2,7 @@
 #' @importFrom data.table rbindlist
 #' @importFrom scales rescale
 #' @importFrom ggforce geom_arc_bar geom_circle geom_mark_hull
-#' @importFrom ggplot2 geom_rect .data geom_density_2d_filled
+#' @importFrom ggplot2 geom_rect .data geom_density_2d_filled geom_density_2d
 scPieDim <- function(
         inpConf,
         inpMeta,
@@ -284,6 +284,13 @@ scPieDim <- function(
                 )
             }
         )
+    if(plotType %in% c("density")){
+        ggOut <- ggOut + geom_density_2d(
+            aes(x=.data$X, y=.data$Y),
+            inherit.aes = FALSE,
+            alpha=alpha
+        )
+    }
     
     if(plotType %in% c("sum", "max", "mean", "density")){
         ggOut <- ggOut + scale_color_gradientn(

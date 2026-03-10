@@ -117,7 +117,9 @@ scExprServer <- function(
             interactive = interactive,
             plotX = plotX,
             height = .globals$pList1[p_input$GeneExprpsz],
-            lasso = TRUE,
+            lasso = if(
+                checkPrivilege(dataSource()$auth$privilege,
+                               dataSource()$dataset)) TRUE else 'public',
             dataSource()$dataset,
             p_input$GeneExprdrX,
             p_input$GeneExprdrY,

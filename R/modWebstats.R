@@ -272,6 +272,14 @@ webstatsServer <- function(id) {
         })
         
         ## search keys
-        output$search <- renderDT(listSearchTable())
+        output$search <- 
+            renderDT(
+                listSearchTable(),
+                extensions = 'Buttons',
+                options = list(
+                    dom = 'Brtip',
+                    lengthMenu = list(c(10, 25, 50, -1), c(10, 25, 50, "All")),
+                    buttons = c('pageLength', 'copy', 'csv', 'excel', 'pdf', 'print')
+                ))
     })
 }

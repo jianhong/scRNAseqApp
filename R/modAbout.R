@@ -165,8 +165,13 @@ aboutUI <- function(
                     style = "warning",
                     border = "bottom",
                     info = 'Full species list:',
-                    details = paste(species,
-                                    collapse = ',<br/>')
+                    details = paste("<ul>\n",
+                                    paste(paste0("<li><p><a href='https://www.google.com/search?q=",
+                                                 species,
+                                                 "' target='_blank'>",
+                                                 species,
+                                                 "</a></p></li>"), collapse = "\n"),
+                                    "\n</ul>")
                 )
             ),
             hr(),

@@ -135,3 +135,6 @@
 
 # subset cell setting group
 .globals$subsetgroup <- c('A', 'B')
+
+#' @importFrom utils globalVariables
+utils::globalVariables('count')

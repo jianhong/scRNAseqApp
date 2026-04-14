@@ -32,6 +32,12 @@ getCredential <- function(){
 tableExists <- function(tableName){
     tableName %in% connectDB(dbListTables)
 }
+fieldExists <- function(field, tableName){
+    res <- connectDB(dbGetQuery,
+                     statement=paste0('PRAGMA table_info("',
+                                      tableName, '")'))$name
+    field %in% res
+}
 getConfigTable <- function(){
     res <- connectDB(read_db_decrypt, .globals$configTableName)
 }
@@ -58,14 +64,21 @@ createConfigTable <- function(appconf){
                            collapse = .globals$configTableSep),
           ref_year=replaceNULL(.ele$ref$entry$year),
           ref_journal=replaceNULL(.ele$ref$entry$journal),
-          ref_abstract=replaceNULL(.ele$ref$entry$abstract))
+          ref_abstract=replaceNULL(.ele$ref$entry$abstract),
+          availableDate=file.info(file.path(.globals$datafolder, .ele$id, .globals$filenames$appconf))$ctime,
+          updatedDate=file.info(file.path(.globals$datafolder, .ele$id, .globals$filenames$appconf))$mtime)
     })
     appData <- do.call(rbind, appData)
     if(length(dim(appData))==2){
+        if(ncol(appData)<16){
+            appData[, 'availableDate'] <- Sys.time()
+            appData[, 'updatedDate'] <- appData[, 'availableDate']
+        }
         colnames(appData) <- c('title', 'id', 'species', 'type', 'markers',
                                'keywords', 'groupCol', 'ref_bib', 'ref_doi',
                                'ref_pmid', 'ref_title', 'ref_author',
-                               'ref_year', 'ref_journal', 'ref_abstract')
+                               'ref_year', 'ref_journal', 'ref_abstract',
+                               'availableDate', 'updatedDate')
         appData <- as.data.frame(appData)
         appData$locker <- vapply(appData$id, FUN = checkLocker,
                                  FUN.VALUE = logical(1L))
@@ -76,11 +89,18 @@ createConfigTable <- function(appconf){
     }
 }
 
+fixConfigTable <- function(){
+    if(!fieldExists('availableDate', .globals$configTableName)){
+        appconf <- getAppConfObj(privilege = 'all')
+        createConfigTable(appconf)
+    }
+}
 updateConfigTable <- function(appconf){
     if(missing(appconf)){
         appconf <- getAppConfObj(privilege = 'all')
         createConfigTable(appconf)
     }else{
+        fixConfigTable()
         if(is(appconf, 'APPconf')){
             appconf <- list(ele=appconf)
         }
@@ -118,7 +138,8 @@ updateConfigTable <- function(appconf){
                            ' `ref_journal`="',
                            replaceNULL(.ele$ref$entry$journal), '",',
                            ' `ref_abstract`="',
-                           replaceNULL(.ele$ref$entry$abstract), '"',
+                           replaceNULL(.ele$ref$entry$abstract), '",',
+                           ' `updatedDate`=', as.numeric(Sys.time()),
                            ' WHERE id="', .ele$id, '"')
             sendNoreplyQueryToDB(statement = query)
         })
@@ -139,7 +160,25 @@ updateConfigTblLocker <- function(key, value){
     updateConfigTblKey(key = key, feild = 'locker', value = as.numeric(value))
 }
 
+listDatasetInfo <- function(
+        feild=c('title', 'id', 'species', 'type', 'availableDate', 'updatedDate')){
+    ds <- lapply(feild, function(.ele)
+        checkKeyFromConfig(feild=.ele, unique = FALSE))
+    ds <- do.call(cbind, ds)
+    colnames(ds) <- feild
+    rownames(ds) <- ds[, 'id']
+    ds <- as.data.frame(ds)
+    if('availableDate' %in% feild){
+        ds$availableDate <- as.POSIXct(as.numeric(ds$availableDate))
+    }
+    if('updatedDate' %in% feild){
+        ds$updatedDate <- as.POSIXct(as.numeric(ds$updatedDate))
+    }
+    ds
+}
+
 checkKeyFromConfig <- function(key, feild, unique=TRUE){
+    fixConfigTable()
     if(missing(key) || length(key)==0){
         # list full references
         query <- paste('SELECT', feild, 'FROM', .globals$configTableName)

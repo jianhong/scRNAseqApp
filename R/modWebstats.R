@@ -21,7 +21,9 @@ webstatsUI <- function (id) {
         )),
         DTOutput(ns("issues")),
         DTOutput(ns("counter")),
-        DTOutput(ns("search"))
+        DTOutput(ns("search")),
+        plotOutput(ns("datasetPlot"), height = '300px'),
+        DTOutput(ns("dataset"))
     ))
 }
 #' @importFrom DT renderDT JS
@@ -30,6 +32,7 @@ webstatsUI <- function (id) {
 #' @importFrom data.table as.data.table .SD
 #' @importFrom reshape2 melt
 #' @importFrom ggplot2 geom_bar position_dodge geom_text aes labs theme_minimal
+#'  after_stat
 webstatsServer <- function(id) {
     moduleServer(id, function(input, output, session) {
         ## web description
@@ -279,6 +282,28 @@ webstatsServer <- function(id) {
                 options = list(
                     dom = 'Brtip',
                     lengthMenu = list(c(10, 25, 50, -1), c(10, 25, 50, "All")),
+                    buttons = c('pageLength', 'copy', 'csv', 'excel', 'pdf', 'print')
+                ))
+        
+        ## dataset stats
+        di <- listDatasetInfo()
+        output$datasetPlot <- renderPlot({
+            ggplot(di, aes(x = as.integer(format(.data$updatedDate, "%Y")))) +
+                geom_bar(stat = "count") + 
+                geom_text(stat = "count", aes(label = after_stat(count)), vjust = -0.3) +
+                labs(
+                    x = "",
+                    y = "conts") +
+                theme_minimal()
+            
+        })
+        output$dataset <- 
+            renderDT(
+                di,
+                extensions = 'Buttons',
+                options = list(
+                    dom = 'Brtip',
+                    lengthMenu = list(c(5, 10, 50, -1), c(5, 10, 50, "All")),
                     buttons = c('pageLength', 'copy', 'csv', 'excel', 'pdf', 'print')
                 ))
     })

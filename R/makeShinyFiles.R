@@ -106,7 +106,7 @@ makeShinyFiles <- function(
     }
     defGenes <- VariableFeatures(obj)
     if(length(defGenes)>10) defGenes <- defGenes[seq.int(10)]
-    if (is.na(defGenes[1])) {
+    if (is.null(defGenes) || is.na(defGenes[1])) {
         warning(
             "Variable genes for seurat object not found! Have you ",
             "ran `FindVariableFeatures` or `SCTransform`?"

@@ -1,7 +1,6 @@
 # Plot violin / boxplot
 #' @importFrom stats rnorm
-#' @importFrom ggplot2 ggplot aes .data geom_violin geom_boxplot
-#' geom_jitter xlab ylab scale_fill_manual theme
+#' @importFrom ggplot2 ggplot aes .data geom_violin geom_boxplot geom_jitter xlab ylab scale_fill_manual theme
 scVioBox <- function(
         inpConf,
         inpMeta,

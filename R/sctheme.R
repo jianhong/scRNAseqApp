@@ -1,6 +1,5 @@
 # Plot theme
-#' @importFrom ggplot2 theme element_text element_rect element_line
-#' element_blank
+#' @importFrom ggplot2 theme element_text element_rect element_line element_blank
 sctheme <-
     function(
         base_size = 24,

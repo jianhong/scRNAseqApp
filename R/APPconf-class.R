@@ -18,8 +18,7 @@ setClassUnion("character_OR_NULL", c("character", "NULL"))
 #'  keywords of the study.
 #' @slot groupCol character. The key group column name to separate
 #'  the cells.
-#' @importFrom methods setClass representation prototype setMethod
-#'  new `slot<-` setClassUnion
+#' @importFrom methods setClass representation prototype setMethod new `slot<-` setClassUnion
 #' @export
 #' @examples
 #' appconf <- readRDS(system.file("extdata", "data",

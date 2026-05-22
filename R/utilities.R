@@ -668,8 +668,7 @@ darkTheme <- function(p, returnBG=FALSE, bg_color){
     return(p)
 }
 
-#' @importFrom ggplot2 xlim ylim ggplot_build ggplot_gtable layer_scales
-#' coord_cartesian
+#' @importFrom ggplot2 xlim ylim ggplot_build ggplot_gtable layer_scales coord_cartesian
 #' @importFrom grid convertWidth
 addLimits <- function(p, x=NULL, y=NULL, coord=NULL, id, postfix, input){
     notify <- FALSE

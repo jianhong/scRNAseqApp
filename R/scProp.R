@@ -1,6 +1,5 @@
 # Plot proportion plot
-#' @importFrom ggplot2 ggplot aes .data geom_col ylab coord_flip xlab
-#' scale_fill_manual theme
+#' @importFrom ggplot2 ggplot aes .data geom_col ylab coord_flip xlab scale_fill_manual theme
 #' @importFrom data.table .SD .N
 scProp <- function(
         inpConf,

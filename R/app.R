@@ -298,6 +298,7 @@ scRNAseqApp <- function(
             if (!is.null(isolate(dataSource$auth$admin))) {
                 if (isolate(dataSource$auth$admin)) {
                     webstatsServer("webstats")
+                    privilegeServer("privilege")
                     uploadServer("upload")
                     editServer("editdata")
                 }

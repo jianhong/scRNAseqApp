@@ -1,7 +1,5 @@
 # Plot gene expression on dimred
-#' @importFrom ggplot2 ggplot aes .data geom_point xlab ylab guides
-#' guide_colorbar scale_color_gradientn coord_fixed scale_y_discrete
-#' scale_x_continuous xlim
+#' @importFrom ggplot2 ggplot aes .data geom_point xlab ylab guides guide_colorbar scale_color_gradientn coord_fixed scale_y_discrete scale_x_continuous xlim
 #' @importFrom ggridges geom_density_ridges theme_ridges
 scDRgene <- function(
         inpConf,

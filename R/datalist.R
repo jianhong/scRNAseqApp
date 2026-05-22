@@ -256,7 +256,11 @@ checkToken <- function(tokenList, token, dataset) {
 checkPrivilege <- function(privilege, datasetname) {
     if (is.null(privilege))
         return(FALSE)
-    privilege == "all" || grepl(datasetname, privilege, fixed = TRUE)
+    if (privilege == "all")
+        return(TRUE)
+    
+    privilege <- trimws(unlist(strsplit(privilege, ";")))
+    datasetname %in% privilege
 }
 
 checkMisc <- function(slot, folder) {

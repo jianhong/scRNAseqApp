@@ -1,7 +1,5 @@
 # sqlite operation
-#' @importFrom DBI dbConnect dbDisconnect dbWriteTable
-#'  dbGetQuery dbSendQuery dbListTables dbClearResult
-#'  sqlInterpolate dbListFields dbAppendTable
+#' @importFrom DBI dbConnect dbDisconnect dbWriteTable dbGetQuery dbSendQuery dbListTables dbClearResult sqlInterpolate dbListFields dbAppendTable
 #' @importFrom RSQLite SQLite
 getDBconn <- function(){
     dbConnect(SQLite(),
@@ -19,7 +17,7 @@ sendNoreplyQueryToDB <- function(...){
     res <- dbSendQuery(conn = conn, ...)
     dbClearResult(res)
 }
-#' @importFrom shinymanager read_db_decrypt
+#' @importFrom shinymanager read_db_decrypt write_db_encrypt
 isEncrypted <- function(){
     db <- connectDB(read_db_decrypt, name = .globals$credentialTableName)
     identical(names(db), c("value", "iv"))
@@ -29,6 +27,13 @@ getCredential <- function(){
                      .globals$credentialTableName,
                      .globals$passphrase)
 }
+updatCredential <- function(values){
+    connectDB(write_db_encrypt,
+              value = values,
+              name = .globals$credentialTableName,
+              passphrase = .globals$passphrase)
+}
+
 tableExists <- function(tableName){
     tableName %in% connectDB(dbListTables)
 }
@@ -232,6 +237,9 @@ listDatasets <- function(key, privilege='', named=FALSE){
         return(makeSortedUnique(ds))
     }
     locker <- checkKeyFromConfig(key, feild = 'locker', unique=FALSE)
+    if(privilege=='locked'){
+        return(makeSortedUnique(ds[as.logical(locker)]))
+    }
     if(any(locker)){
         keep <- mapply(function(.ds, .locker){
             !.locker || grepl(.ds, privilege, fixed = TRUE)

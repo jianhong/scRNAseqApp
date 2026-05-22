@@ -104,6 +104,9 @@ secureUI <- function(ui0, timeout = 30) {
                         title = 'SiteInfo',
                         webstatsUI('webstats')),
                     tabPanel(
+                        title = 'Privileges',
+                        privilegeUI('privilege')),
+                    tabPanel(
                         title = 'UploadData',
                         uploadUI("upload")),
                     tabPanel(

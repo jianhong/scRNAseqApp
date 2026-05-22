@@ -1,0 +1,6 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^\.Rhistory$
+tests/testthat/_snaps
+^\.positai$
+^\.claude$

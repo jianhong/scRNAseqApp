@@ -9,8 +9,7 @@ bilinear <- function(x, y, xy, Q11, Q21, Q12, Q22) {
 #' @importFrom grDevices rgb
 #' @importFrom data.table data.table
 #' @importFrom plotly plot_ly layout
-#' @importFrom ggplot2 ggplot aes .data geom_point xlab ylab
-#' scale_color_gradientn guides guide_colorbar coord_fixed
+#' @importFrom ggplot2 ggplot aes .data geom_point xlab ylab scale_color_gradientn guides guide_colorbar coord_fixed
 scDRcoex <- function(
         inpConf,
         inpMeta,

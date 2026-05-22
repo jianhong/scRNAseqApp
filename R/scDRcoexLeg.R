@@ -1,7 +1,6 @@
 #' @importFrom grDevices rgb
 #' @importFrom data.table data.table
-#' @importFrom ggplot2 ggplot aes .data xlab ylab coord_fixed
-#' scale_x_continuous scale_y_continuous geom_tile
+#' @importFrom ggplot2 ggplot aes .data xlab ylab coord_fixed scale_x_continuous scale_y_continuous geom_tile
 scDRcoexLeg <- function(gene1, gene2, colorPairs, labelsFontsize = 24,
                         labelsFontFamily = 'Helvetica') {
     # Generate coex color palette

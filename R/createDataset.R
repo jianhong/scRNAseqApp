@@ -33,9 +33,7 @@
 #' @param fov Name of FOV (field of view).
 #' @param boundaries The container name of segmentation coordinates.
 #' @param molecules The container name of molecules coordinates.
-#' @importFrom SeuratObject Reductions Idents Assays DefaultAssay GetAssayData
-#'  `DefaultAssay<-` VariableFeatures Misc `Misc<-` Embeddings `Idents<-`
-#'  DefaultFOV DefaultBoundary Images Molecules
+#' @importFrom SeuratObject Reductions Idents Assays DefaultAssay GetAssayData `DefaultAssay<-` VariableFeatures Misc `Misc<-` Embeddings `Idents<-` DefaultFOV DefaultBoundary Images Molecules
 #' @importFrom Seurat FindAllMarkers FindVariableFeatures ScaleData
 #' @return The updated Seurat object.
 #' @export

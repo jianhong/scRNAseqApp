@@ -1,6 +1,5 @@
 # Plot heatmap for proportion
-#' @importFrom ggplot2 ggplot aes .data scale_color_gradientn ylab xlab geom_tile geom_text
-#' scale_fill_manual theme
+#' @importFrom ggplot2 ggplot aes .data scale_color_gradientn ylab xlab geom_tile geom_text scale_fill_manual theme
 #' @importFrom data.table data.table
 #' @importFrom reshape2 melt
 #' @importFrom stats prcomp

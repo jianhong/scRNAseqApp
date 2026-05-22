@@ -1,6 +1,5 @@
 # Plot ATAC track on dimred
-#' @importFrom ggplot2 ggplot aes .data geom_line xlab ylab guides
-#' scale_x_continuous xlim vars
+#' @importFrom ggplot2 ggplot aes .data geom_line xlab ylab guides scale_x_continuous xlim vars
 #' @importFrom gridExtra grid.arrange
 #' @importFrom rtracklayer import
 #' @importFrom GenomicRanges GRanges strand seqnames gaps
@@ -158,8 +157,7 @@ scDRatac <- function(
 #' @importFrom GenomicRanges start end
 #' @importFrom IRanges subsetByOverlaps
 #' @importFrom GenomeInfoDb seqnames
-#' @importFrom ggplot2 ggplot aes geom_segment theme_classic element_blank
-#' theme xlab ylab scale_color_manual .data
+#' @importFrom ggplot2 ggplot aes geom_segment theme_classic element_blank theme xlab ylab scale_color_manual .data
 PeakPlot <- function(
         dataset,
         region,
@@ -210,8 +208,7 @@ PeakPlot <- function(
 #' @importFrom IRanges subsetByOverlaps
 #' @importFrom GenomicRanges start end
 #' @importFrom GenomeInfoDb seqnames
-#' @importFrom ggplot2 ggplot geom_hline aes theme_classic xlim
-#' ylab theme element_blank scale_color_gradient2
+#' @importFrom ggplot2 ggplot geom_hline aes theme_classic xlim ylab theme element_blank scale_color_gradient2
 #' @importFrom ggforce geom_bezier
 LinkPlot <- function(
         dataset,
@@ -278,8 +275,7 @@ LinkPlot <- function(
 #' @importFrom IRanges subsetByOverlaps
 #' @importFrom GenomicRanges start end
 #' @importFrom GenomeInfoDb seqnames
-#' @importFrom ggplot2 theme_classic ylim xlim ylab xlab
-#' geom_segment geom_text aes scale_color_manual .data
+#' @importFrom ggplot2 theme_classic ylim xlim ylab xlab geom_segment geom_text aes scale_color_manual .data
 #' @importFrom grid arrow
 #' @importFrom S4Vectors split
 AnnotationPlot <- function(

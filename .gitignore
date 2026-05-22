@@ -6,3 +6,4 @@
 *.Rproj
 scRNAseqAppFiles
 tests/testthat/_snaps
+.positai

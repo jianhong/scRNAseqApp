@@ -39,13 +39,11 @@
 #' @param molecules The container name of molecules coordinates.
 #' @return data files required for shiny app
 #' @importFrom IRanges tile Views viewMeans ranges nearest
-#' @importFrom SeuratObject GetAssayData VariableFeatures Embeddings Reductions
-#' GetTissueCoordinates
+#' @importFrom SeuratObject GetAssayData VariableFeatures Embeddings Reductions GetTissueCoordinates
 #' @importFrom data.table data.table as.data.table
 #' @importFrom rhdf5 h5createFile h5createGroup h5createDataset h5write
 #' @importFrom Rsamtools TabixFile seqnamesTabix scanTabix
-#' @importFrom GenomeInfoDb keepSeqlevels seqinfo seqnames seqlevelsStyle
-#' `seqlevelsStyle<-`
+#' @importFrom GenomeInfoDb keepSeqlevels seqinfo seqnames seqlevelsStyle `seqlevelsStyle<-`
 #' @importFrom GenomicRanges GRanges width coverage GRangesList
 #' @importFrom rtracklayer export
 #' @importFrom utils read.table

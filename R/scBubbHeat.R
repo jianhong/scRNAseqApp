@@ -1,10 +1,8 @@
 # Plot gene expression bubbleplot / heatmap
 #' @importFrom stats as.dendrogram dist hclust quantile as.formula
-#' @importFrom ComplexHeatmap merge_dendrogram Heatmap draw rowAnnotation
-#' HeatmapAnnotation Legend pindex
+#' @importFrom ComplexHeatmap merge_dendrogram Heatmap draw rowAnnotation HeatmapAnnotation Legend pindex
 #' @importFrom circlize colorRamp2
-#' @importFrom grid gpar grid.circle unit.c unit grid.xaxis grid.yaxis 
-#'  seekViewport current.viewport grid.lines
+#' @importFrom grid gpar grid.circle unit.c unit grid.xaxis grid.yaxis seekViewport current.viewport grid.lines
 #' @importFrom rhdf5 h5read
 #' @importFrom data.table rbindlist dcast.data.table data.table := uniqueN
 #' @importFrom ggdendro dendro_data

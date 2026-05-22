@@ -19,9 +19,13 @@ webstatsUI <- function (id) {
         column(
             width = 9, plotOutput(ns("distPlot"), height = "300px")
         )),
+        h2('Issues'),
         DTOutput(ns("issues")),
+        h2('Vistors'),
         DTOutput(ns("counter")),
+        h2('Search stats'),
         DTOutput(ns("search")),
+        h2('Dataset stats'),
         plotOutput(ns("datasetPlot"), height = '300px'),
         DTOutput(ns("dataset"))
     ))
@@ -31,8 +35,7 @@ webstatsUI <- function (id) {
 #' @importFrom jsonlite parse_json
 #' @importFrom data.table as.data.table .SD
 #' @importFrom reshape2 melt
-#' @importFrom ggplot2 geom_bar position_dodge geom_text aes labs theme_minimal
-#'  after_stat
+#' @importFrom ggplot2 geom_bar position_dodge geom_text aes labs theme_minimal after_stat
 webstatsServer <- function(id) {
     moduleServer(id, function(input, output, session) {
         ## web description

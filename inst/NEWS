@@ -1,3 +1,8 @@
+CHANGES IN VERSION 1.13.3
+-------------------------
+
+    o Replace size with linewidth for geom_segment.
+
 CHANGES IN VERSION 1.13.2
 -------------------------
 

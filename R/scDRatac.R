@@ -186,7 +186,7 @@ PeakPlot <- function(
                     y = .1,
                     xend = .data$end,
                     yend = .1),
-                size = 2,
+                linewidth = 2,
                 color = color,
                 inherit.aes = FALSE)
     } else {
@@ -346,7 +346,7 @@ AnnotationPlot <- function(
                     color = colorFun(.data$strand)
                 ),
                 show.legend = FALSE,
-                size = 3
+                linewidth = 3
             ) +
             # gene body
             geom_segment(
@@ -359,7 +359,7 @@ AnnotationPlot <- function(
                     color = colorFun(.data$strand)
                 ),
                 show.legend = FALSE,
-                size = 1/2
+                linewidth = 1/2
             )
         if (nrow(x = annotation_df_list$plus) > 0) {
             # forward strand arrows
@@ -379,7 +379,7 @@ AnnotationPlot <- function(
                     length = unit(x = 0.04, units = "inches")
                 ),
                 show.legend = FALSE,
-                size = 1/2
+                linewidth = 1/2
             )
         }
         if (nrow(x = annotation_df_list$minus) > 0) {
@@ -400,7 +400,7 @@ AnnotationPlot <- function(
                     length = unit(x = 0.04, units = "inches")
                 ),
                 show.legend = FALSE,
-                size = 1/2
+                linewidth = 1/2
             )
         }
         # label genes

@@ -51,7 +51,7 @@ scDRmonocle <- function(
                     xend = .data[["target_prin_graph_dim_1"]],
                     yend = .data[["target_prin_graph_dim_2"]]
                 ),
-                size = trajectory_graph_segment_size,
+                linewidth = trajectory_graph_segment_size,
                 color = I(trajectory_graph_color),
                 linetype = "solid",
                 na.rm = TRUE,

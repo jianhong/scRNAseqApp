@@ -86,13 +86,13 @@ geneAccGeneExprServer <- function(id, dataSource, optCrt) {
             }
             updateGeneExprPlot(
                 postfix = 2,
-                selectedGene,
-                optCrt,
-                id,
-                input,
-                output,
-                session,
-                dataSource)
+                selectedGene = selectedGene,
+                optCrt = optCrt,
+                id = id,
+                input = input,
+                output = output,
+                session = session,
+                dataSource = dataSource)
         }else{
             output$AccExpr <- renderUI({
                 HTML("")

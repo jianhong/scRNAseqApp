@@ -6,6 +6,7 @@ scDRgene <- function(
         inpMeta,
         dimRedX,
         dimRedY,
+        dimRedZ,
         gene1,
         subsetCellKey,
         subsetCellVal,
@@ -47,12 +48,26 @@ scDRgene <- function(
     exprColname <- 'val'
     subsetCellKey <- subsetCellKey[subsetCellKey!="N/A"]
     subsetCellVal <- namedSubsetCellVals(subsetCellKey, subsetCellVal)
-    ggData <- inpMeta[, c(
-        inpConf[inpConf$UI == dimRedX]$ID,
-        inpConf[inpConf$UI == dimRedY]$ID,
-        inpConf[inpConf$UI %in% subsetCellKey]$ID),
-        with = FALSE]
-    cnid <- if(ncol(ggData)>2) 3 else 0
+    
+    if(missing(dimRedZ)) dimRedZ <- NULL
+    plot3D <- isTRUE(dimRedZ %in% inpConf$UI)
+    if(plot3D){
+        ggData <- inpMeta[, c(
+            inpConf[inpConf$UI == dimRedX]$ID,
+            inpConf[inpConf$UI == dimRedY]$ID,
+            inpConf[inpConf$UI == dimRedZ]$ID,
+            inpConf[inpConf$UI %in% subsetCellKey]$ID),
+            with = FALSE]
+        cnid <- if(ncol(ggData)>3) 4 else 0
+    }else{
+        ggData <- inpMeta[, c(
+            inpConf[inpConf$UI == dimRedX]$ID,
+            inpConf[inpConf$UI == dimRedY]$ID,
+            inpConf[inpConf$UI %in% subsetCellKey]$ID),
+            with = FALSE]
+        cnid <- if(ncol(ggData)>2) 3 else 0
+    }
+    
     
     dots <- list(...)
     if('interactive' %in% names(dots)){
@@ -120,6 +135,7 @@ scDRgene <- function(
     
     ## make the first subsetCellKey as sub
     colnames(ggData)[c(1, 2)] <- c("X", "Y")
+    if(plot3D) colnames(ggData)[3] <- "Z"
     if(cnid>2) colnames(ggData)[cnid] <- subGrpColname
     rat <- getRatio(ggData)
     bgCells <- sum(!keep) > 0
@@ -145,38 +161,61 @@ scDRgene <- function(
             ggData[ggData[[exprColname]] > inpColRange[2], exprColname] <-
                 inpColRange[2]
         }
-        ggOut <- ggXYplot(ggData)
-        if (bgCells) {
-            ggOut <- labelBackgroundCells(
-                ggOut,
-                ggData2,
-                pointSize,
-                color = "snow2",
-                shape = 16,
-                hide = hideFilterCell)
+        if(plot3D){
+            return(layout(
+                plot_ly(
+                    x = ggData$X,
+                    y = ggData$Y,
+                    z = ggData$Z,
+                    text = paste('expr:', ggData$val),
+                    type = "scatter3d",
+                    mode = "markers",
+                    color = ggData$val,
+                    colors = availableThemes(gradientCol),
+                    size = 1
+                ),
+                scene =
+                    list(
+                        xaxis = list(title = dimRedX),
+                        yaxis = list(title = dimRedY),
+                        zaxis = list(title = dimRedZ)
+                    )
+            )) 
+        }else{
+            ggOut <- ggXYplot(ggData)
+            if (bgCells) {
+                ggOut <- labelBackgroundCells(
+                    ggOut,
+                    ggData2,
+                    pointSize,
+                    color = "snow2",
+                    shape = 16,
+                    hide = hideFilterCell)
+            }
+            
+            ggOut <- pointPlot(
+                ggOut = ggOut,
+                pointSize = pointSize,
+                fontSize = labelsFontsize,
+                labelsFontFamily = labelsFontFamily,
+                dimRedX = dimRedX,
+                dimRedY = dimRedY,
+                keepXYlables = keepXYlables) +
+                guides(color = guide_colorbar(barwidth = 15))
+            if (inpColRange[2] > 0) {
+                ggOut <- ggOut +
+                    scale_color_gradientn(
+                        gene1,
+                        colours = availableThemes(gradientCol),
+                        limits = inpColRange)
+            } else{
+                ggOut <- ggOut +
+                    scale_color_gradientn(
+                        gene1,
+                        colours = availableThemes(gradientCol))
+            }
+            ggOut <- fixCoord(ggOut, plotAspectRatio, rat, xlim, ylim)
         }
-        ggOut <- pointPlot(
-            ggOut = ggOut,
-            pointSize = pointSize,
-            fontSize = labelsFontsize,
-            labelsFontFamily = labelsFontFamily,
-            dimRedX = dimRedX,
-            dimRedY = dimRedY,
-            keepXYlables = keepXYlables) +
-            guides(color = guide_colorbar(barwidth = 15))
-        if (inpColRange[2] > 0) {
-            ggOut <- ggOut +
-                scale_color_gradientn(
-                    gene1,
-                    colours = availableThemes(gradientCol),
-                    limits = inpColRange)
-        } else{
-            ggOut <- ggOut +
-                scale_color_gradientn(
-                    gene1,
-                    colours = availableThemes(gradientCol))
-        }
-        ggOut <- fixCoord(ggOut, plotAspectRatio, rat, xlim, ylim)
     } else{
         ## ridgePlot
         ggData[[subGrpColname]] <- factor(

@@ -155,73 +155,76 @@ geneExprPlotControlUI <- function(
                 NS0(id, "GeneExprtype", postfix), "Plot type",
                 choices = c("Dotplot", "Ridgeplot"),
                 selected = "Dotplot"),
-            conditionalPanel(
-                condition = paste0(
-                    "input.GeneExprtype", postfix, " == 'Dotplot'"),
-                ns=NS(id),
-                radioButtons(
-                    NS0(id, "GeneExprcol", postfix), "Colour:",
-                    inline = TRUE,
-                    choices = colorNames,
-                    selected = colorNames[1]),
-                radioButtons(
-                    NS0(id, "GeneExprord", postfix), "Plot order:",
-                    choices = c("Max-1st", "Min-1st",
-                                "Original", "Random"),
-                    selected = "Max-1st", inline = TRUE),
-                checkboxInput(
-                    NS0(id, "GeneExprhid", postfix),
-                    "Hide filtered cells", value = FALSE),
-                checkboxInput(
-                    NS0(id, "usingPan", postfix),
-                    "Using wheel to zoom in/out", value = FALSE),
-                actionButton(
-                    NS0(id, "GeneExprrgb", postfix),
-                    "Manually set max color value",
-                    inline = TRUE),
-                conditionalPanel(
-                    condition =
-                        paste0("input.GeneExprrgb", postfix, " % 2 ==1"),
-                    ns=NS(id),
-                    numericInput(
-                        NS0(id, "GeneExprrg", postfix), "Max value:",
-                        value = 100))
-            ),
-            actionButton(
-                NS0(id, "manuXYlimTog", postfix),
-                "Manually set x/y axis", inline = TRUE),
-            conditionalPanel(
-                condition = paste0(
-                    "input.manuXYlimTog", postfix, " % 2 ==1"),
-                ns=NS(id),
-                sliderInput(
-                    NS0(id, "manuXlim", postfix), "Xlim range:",
-                    min = -10, max = 100,
-                    value = c(-1.5, 10),
-                    step = 0.1),
+            div(id = paste0(NS0(id, "Cell3Div", postfix), 'Menucontainer'),
                 conditionalPanel(
                     condition = paste0(
                         "input.GeneExprtype", postfix, " == 'Dotplot'"),
                     ns=NS(id),
+                    radioButtons(
+                        NS0(id, "GeneExprcol", postfix), "Colour:",
+                        inline = TRUE,
+                        choices = colorNames,
+                        selected = colorNames[1]),
+                    radioButtons(
+                        NS0(id, "GeneExprord", postfix), "Plot order:",
+                        choices = c("Max-1st", "Min-1st",
+                                    "Original", "Random"),
+                        selected = "Max-1st", inline = TRUE),
+                    checkboxInput(
+                        NS0(id, "GeneExprhid", postfix),
+                        "Hide filtered cells", value = FALSE),
+                    checkboxInput(
+                        NS0(id, "usingPan", postfix),
+                        "Using wheel to zoom in/out", value = FALSE),
+                    actionButton(
+                        NS0(id, "GeneExprrgb", postfix),
+                        "Manually set max color value",
+                        inline = TRUE),
+                    conditionalPanel(
+                        condition =
+                            paste0("input.GeneExprrgb", postfix, " % 2 ==1"),
+                        ns=NS(id),
+                        numericInput(
+                            NS0(id, "GeneExprrg", postfix), "Max value:",
+                            value = 100))
+                ),
+            
+                actionButton(
+                    NS0(id, "manuXYlimTog", postfix),
+                    "Manually set x/y axis", inline = TRUE),
+                conditionalPanel(
+                    condition = paste0(
+                        "input.manuXYlimTog", postfix, " % 2 ==1"),
+                    ns=NS(id),
                     sliderInput(
-                        NS0(id, "manuYlim", postfix), "Ylim range:",
+                        NS0(id, "manuXlim", postfix), "Xlim range:",
                         min = -10, max = 100,
                         value = c(-1.5, 10),
-                        step = 0.1)
-                ),
-                manuXYlimOriUI(id, postfix),
-                if(linkXYlim){
+                        step = 0.1),
                     conditionalPanel(
-                        condition = paste0("input.manuXYlimTog",
-                                           ifelse(postfix==2, 1, 2),
-                                           " % 2 ==1"),
+                        condition = paste0(
+                            "input.GeneExprtype", postfix, " == 'Dotplot'"),
                         ns=NS(id),
-                        checkboxInput(
-                            NS0(id, 'XYlimLinker', postfix),
-                            "Link X/Y Axis",
-                            value = TRUE)
-                    )
-                }
+                        sliderInput(
+                            NS0(id, "manuYlim", postfix), "Ylim range:",
+                            min = -10, max = 100,
+                            value = c(-1.5, 10),
+                            step = 0.1)
+                    ),
+                    manuXYlimOriUI(id, postfix),
+                    if(linkXYlim){
+                        conditionalPanel(
+                            condition = paste0("input.manuXYlimTog",
+                                               ifelse(postfix==2, 1, 2),
+                                               " % 2 ==1"),
+                            ns=NS(id),
+                            checkboxInput(
+                                NS0(id, 'XYlimLinker', postfix),
+                                "Link X/Y Axis",
+                                value = TRUE)
+                        )
+                    }
+                )
             )
         )
     )
@@ -259,96 +262,99 @@ cellInfoPlotControlUI <- function(
                     )
                 )),
             textOutput(NS0(id, "subsetCellNum", postfix), inline=TRUE),
-            radioButtons(
-                NS0(id, "CellInfocol", postfix), "Colour (Continuous data):",
-                inline = TRUE,
-                choices = colorNames,
-                selected = colorNames[1]),
-            radioButtons(
-                NS0(id, "CellInfoord", postfix), "Plot order:",
-                choices = c("Max-1st", "Min-1st",
-                            "Original", "Random"),
-                selected = "Original", inline = TRUE),
-            checkboxInput(
-                NS0(id, "CellInfolab", postfix),
-                "Show cell info labels", value = TRUE),
-            selectInput(
-                NS0(id, 'CellInfoname', postfix),
-                "Cell info labels",
-                choices = NULL
-            ),
-            checkboxInput(
-                NS0(id, "CellInfohid", postfix),
-                "Hide filtered cells", value = FALSE),
-            checkboxInput(
-                NS0(id, "usingPan", postfix),
-                "Using wheel to zoom in/out", value = FALSE),
-            checkboxInput(
-                NS0(id, "CellInfoslingshot", postfix),
-                "Show lineages", value = TRUE),
-            checkboxInput(
-                NS0(id, "CellInfoedge", postfix),
-                "Show cell-cell links", value = TRUE),
-            checkboxInput(
-                NS0(id, 'CellInfoSegmentation', postfix),
-                "Show cell segmentation", value = FALSE),
-            conditionalPanel(
-                condition = paste0(
-                    "input.CellInfoSegmentation", postfix, " == true"),
-                ns=NS(id),
-                sliderInput(
-                    NS0(id, 'CellInfoSegAlpha', postfix),
-                    "Cell segmentation alpha", value=1, 
-                    min = 0, max=1, step=0.01),
+            
+            div(id = paste0(NS0(id, "Cell3Div", postfix), 'Menucontainer'),
+                radioButtons(
+                    NS0(id, "CellInfocol", postfix), "Colour (Continuous data):",
+                    inline = TRUE,
+                    choices = colorNames,
+                    selected = colorNames[1]),
+                radioButtons(
+                    NS0(id, "CellInfoord", postfix), "Plot order:",
+                    choices = c("Max-1st", "Min-1st",
+                                "Original", "Random"),
+                    selected = "Original", inline = TRUE),
                 checkboxInput(
-                    NS0(id, 'CellInfoSegBorderColor', postfix),
-                    "Show cell segmentation border",
-                    value = FALSE
+                    NS0(id, "CellInfolab", postfix),
+                    "Show cell info labels", value = TRUE),
+                selectInput(
+                    NS0(id, 'CellInfoname', postfix),
+                    "Cell info labels",
+                    choices = NULL
                 ),
+                checkboxInput(
+                    NS0(id, "CellInfohid", postfix),
+                    "Hide filtered cells", value = FALSE),
+                checkboxInput(
+                    NS0(id, "usingPan", postfix),
+                    "Using wheel to zoom in/out", value = FALSE),
+                checkboxInput(
+                    NS0(id, "CellInfoslingshot", postfix),
+                    "Show lineages", value = TRUE),
+                checkboxInput(
+                    NS0(id, "CellInfoedge", postfix),
+                    "Show cell-cell links", value = TRUE),
+                checkboxInput(
+                    NS0(id, 'CellInfoSegmentation', postfix),
+                    "Show cell segmentation", value = FALSE),
                 conditionalPanel(
                     condition = paste0(
-                        "input.CellInfoSegBorderColor", postfix, " == true"),
+                        "input.CellInfoSegmentation", postfix, " == true"),
                     ns=NS(id),
-                    colourInput(
-                        NS0(id, 'CellInfoSegColor', postfix),
-                        "Cell segmentation border color",
-                        value = '#EEEEEE'
-                    )
-                )
-            ),
-            checkboxInput(
-                NS0(id, 'CellInfoBgImg', postfix),
-                "Show spatial image", value = FALSE),
-            actionButton(
-                NS0(id, "manuXYlimTog", postfix),
-                "Manually set x/y axis", inline = TRUE),
-            conditionalPanel(
-                condition = paste0(
-                    "input.manuXYlimTog", postfix, " % 2 ==1"),
-                ns=NS(id),
-                sliderInput(
-                    NS0(id, "manuXlim", postfix), "Xlim range:",
-                    min = -10, max = 100,
-                    value = c(-1.5, 10),
-                    step = 0.1),
-                sliderInput(
-                    NS0(id, "manuYlim", postfix), "Ylim range:",
-                    min = -10, max = 100,
-                    value = c(-1.5, 10),
-                    step = 0.1),
-                manuXYlimOriUI(id, postfix),
-                if(linkXYlim){
+                    sliderInput(
+                        NS0(id, 'CellInfoSegAlpha', postfix),
+                        "Cell segmentation alpha", value=1, 
+                        min = 0, max=1, step=0.01),
+                    checkboxInput(
+                        NS0(id, 'CellInfoSegBorderColor', postfix),
+                        "Show cell segmentation border",
+                        value = FALSE
+                    ),
                     conditionalPanel(
-                        condition = paste0("input.manuXYlimTog",
-                                           ifelse(postfix==2, 1, 2),
-                                           " % 2 ==1"),
+                        condition = paste0(
+                            "input.CellInfoSegBorderColor", postfix, " == true"),
                         ns=NS(id),
-                        checkboxInput(
-                            NS0(id, 'XYlimLinker', postfix),
-                            "Link X/Y Axis",
-                            value = TRUE)
+                        colourInput(
+                            NS0(id, 'CellInfoSegColor', postfix),
+                            "Cell segmentation border color",
+                            value = '#EEEEEE'
+                        )
                     )
-                }
+                ),
+                checkboxInput(
+                    NS0(id, 'CellInfoBgImg', postfix),
+                    "Show spatial image", value = FALSE),
+                actionButton(
+                    NS0(id, "manuXYlimTog", postfix),
+                    "Manually set x/y axis", inline = TRUE),
+                conditionalPanel(
+                    condition = paste0(
+                        "input.manuXYlimTog", postfix, " % 2 ==1"),
+                    ns=NS(id),
+                    sliderInput(
+                        NS0(id, "manuXlim", postfix), "Xlim range:",
+                        min = -10, max = 100,
+                        value = c(-1.5, 10),
+                        step = 0.1),
+                    sliderInput(
+                        NS0(id, "manuYlim", postfix), "Ylim range:",
+                        min = -10, max = 100,
+                        value = c(-1.5, 10),
+                        step = 0.1),
+                    manuXYlimOriUI(id, postfix),
+                    if(linkXYlim){
+                        conditionalPanel(
+                            condition = paste0("input.manuXYlimTog",
+                                               ifelse(postfix==2, 1, 2),
+                                               " % 2 ==1"),
+                            ns=NS(id),
+                            checkboxInput(
+                                NS0(id, 'XYlimLinker', postfix),
+                                "Link X/Y Axis",
+                                value = TRUE)
+                        )
+                    }
+                )
             )
         ),
         div(style = "visibility:hidden;",
@@ -433,13 +439,15 @@ boxPlotControlUI <- function(
     )
 }
 
-dimensionReductionUI <- function(id, ABcolumn){
+dimensionReductionUI <- function(id, ABcolumn, Z=FALSE){
     idx <- "GeneExprdrX"
     idy <- "GeneExprdrY"
+    idz <- "GeneExprdrZ"
     title <- "Dimension Reduction"
     if(!missing(ABcolumn)){
         idx <- paste0(idx, ABcolumn)
         idy <- paste0(idy, ABcolumn)
+        idz <- paste0(idz, ABcolumn)
         title <- paste(title, ABcolumn)
         tagList(
             actionButton(NS0(id, "reductionTogT", ABcolumn),
@@ -460,7 +468,22 @@ dimensionReductionUI <- function(id, ABcolumn){
                         selectInput(
                             NS(id, idy),
                             "Y-axis:",
-                            choices = NULL))
+                            choices = NULL),
+                        if(isTRUE(Z)){
+                            selectInput(
+                                NS(id, idz),
+                                "Z-axis:",
+                                choices = NULL)
+                        }else{
+                            div(
+                                style = "visibility:hidden;",
+                                selectInput(
+                                    NS(id, idz),
+                                    "Z-axis:",
+                                    choices = NULL)
+                            )
+                        }
+                        )
                 )
             )
         )
@@ -477,7 +500,22 @@ dimensionReductionUI <- function(id, ABcolumn){
                     selectInput(
                         NS(id, idy),
                         "Y-axis:",
-                        choices = NULL))
+                        choices = NULL),
+                    if(isTRUE(Z)){
+                    selectInput(
+                        NS(id, idz),
+                        "Z-axis:",
+                        choices = NULL)
+                    }else{
+                        div(
+                            style = "visibility:hidden;",
+                            selectInput(
+                                NS(id, idz),
+                                "Z-axis:",
+                                choices = NULL)
+                        )
+                    }
+                    )
             )
         )
     }

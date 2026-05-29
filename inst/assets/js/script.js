@@ -168,8 +168,20 @@
         $("#"+id).trigger('click');
     })
     // show duplicated botton
-    Shiny.addCustomMessageHandler("toggle_div", function(id){
+    Shiny.addCustomMessageHandler("show_div", function(id){
         $("#"+id).css('visibility', 'visible');
+    })
+    // hide div
+    Shiny.addCustomMessageHandler("hide_div", function(id){
+        $("#"+id).css('visibility', 'hidden');
+    })
+    // switch div
+    Shiny.addCustomMessageHandler("toggle_div", function(id){
+        if($("#"+id).css('visibility') === 'hidden'){
+            $("#"+id).css('visibility', 'visible');
+        }else{
+            $("#"+id).css('visibility', 'hidden');
+        }
     })
     // resizable-container
     function initResizable() {

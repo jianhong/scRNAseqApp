@@ -11,6 +11,7 @@ scDRcell <- function(
         inpMeta,
         dimRedX,
         dimRedY,
+        dimRedZ,
         cellinfoID,
         cellinfoName=cellinfoID,
         subsetCellKey,
@@ -54,16 +55,38 @@ scDRcell <- function(
         }
     }
     # Prepare ggData
-    ggData <- inpMeta[, unique(c(
-        inpConf[inpConf$UI == dimRedX]$ID,
-        inpConf[inpConf$UI == dimRedY]$ID,
-        inpConf[inpConf$UI == cellinfoID]$ID,
-        inpConf[inpConf$UI %in% subsetCellKey]$ID,
-        inpConf[inpConf$UI == cellinfoName]$ID)),
-        with = FALSE]
+    plot3D <- isTRUE(dimRedZ %in% inpConf$UI)
+    if(plot3D){
+        ggData <- inpMeta[, unique(c(
+            inpConf[inpConf$UI == dimRedX]$ID,
+            inpConf[inpConf$UI == dimRedY]$ID,
+            inpConf[inpConf$UI == dimRedZ]$ID,
+            inpConf[inpConf$UI == cellinfoID]$ID,
+            inpConf[inpConf$UI %in% subsetCellKey]$ID,
+            inpConf[inpConf$UI == cellinfoName]$ID)),
+            with = FALSE]
+    }else{
+        ggData <- inpMeta[, unique(c(
+            inpConf[inpConf$UI == dimRedX]$ID,
+            inpConf[inpConf$UI == dimRedY]$ID,
+            inpConf[inpConf$UI == cellinfoID]$ID,
+            inpConf[inpConf$UI %in% subsetCellKey]$ID,
+            inpConf[inpConf$UI == cellinfoName]$ID)),
+            with = FALSE]
+    }
+    
     if (ncol(ggData) < 3)
         return(ggplot())
-    colnames(ggData)[c(1,2)] <- c("X", "Y")
+    if(plot3D){
+        colnames(ggData)[c(1,2,3)] <- c("X", "Y", "Z")
+        cnid <- 4
+        inpCellBorder <- FALSE
+        inpBgImg <- FALSE
+        inpShowEdge <- FALSE
+    }else{
+        colnames(ggData)[c(1,2)] <- c("X", "Y")
+        cnid <- 3
+    }
     dots <- list(...)
     if('interactive' %in% names(dots)){
         if(isTRUE(dots$interactive)){
@@ -180,12 +203,12 @@ scDRcell <- function(
     }
     if(subsetCellKey[1]==cellinfoID){
         subGrpColname <- valColname
-        colnames(ggData)[3] <- valColname
+        colnames(ggData)[cnid] <- valColname
     }else{## make the first subsetCellKey as sub
-        if(ncol(ggData)<4){
+        if(ncol(ggData)<cnid+1){
             return(ggplot())
         }
-        colnames(ggData)[c(3,4)] <- c(valColname, subGrpColname)
+        colnames(ggData)[c(cnid,cnid+1)] <- c(valColname, subGrpColname)
     }
     bgCells <- sum(!keep) > 0
     
@@ -243,6 +266,28 @@ scDRcell <- function(
         }
     }else{
         cellinfoName <- names(ggCol)
+    }
+    
+    if(plot3D){
+        return(layout(
+            plot_ly(
+                x = ggData$X,
+                y = ggData$Y,
+                z = ggData$Z,
+                text = ggData$val,
+                type = "scatter3d",
+                mode = "markers",
+                color = ggData$val,
+                colors = ggCol,
+                size = pointSize * 3
+            ),
+            scene =
+                list(
+                    xaxis = list(title = dimRedX),
+                    yaxis = list(title = dimRedY),
+                    zaxis = list(title = dimRedZ)
+                )
+        )) 
     }
     
     # Actual ggplot

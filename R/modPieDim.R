@@ -186,12 +186,12 @@ plotPieDimServer <- function(id, dataSource, optCrt) {
         })
         updateGeneExprDotPlotUI(
             postfix = 1,
-            id,
-            input,
-            output,
-            session,
-            plot1,
-            .globals$pList1[input$GeneExprpsz],
+            id = id,
+            input = input,
+            output = output,
+            session = session,
+            plotX = plot1,
+            height = .globals$pList1[input$GeneExprpsz],
             dataSource()$dataset,
             input$GeneExprdrX,
             input$GeneExprdrY,

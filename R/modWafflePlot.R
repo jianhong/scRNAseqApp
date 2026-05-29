@@ -80,13 +80,13 @@ plotWaffleServer <- function(id, dataSource, optCrt, postfix = 1) {
             )
         })
         updateGeneExprDotPlotUI(
-            postfix,
-            id,
-            input,
-            output,
-            session,
-            plotX,
-            .globals$pList3[input$plotpsz],
+            postfix = postfix,
+            id = id,
+            input = input,
+            output = output,
+            session = session,
+            plotX = plotX,
+            height = .globals$pList3[input$plotpsz],
             dataSource()$dataset,
             make.names(input$genelist)
         )

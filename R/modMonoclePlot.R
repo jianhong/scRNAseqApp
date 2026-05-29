@@ -122,12 +122,12 @@ plotMonocleServer <- function(id, dataSource, optCrt) {
             })
             updateGeneExprDotPlotUI(
                 postfix = 1,
-                id,
-                input,
-                output,
-                session,
-                plot1,
-                .globals$pList2[input$plotpsz],
+                id = id,
+                input = input,
+                output = output,
+                session = session,
+                plotX = plot1,
+                height = .globals$pList2[input$plotpsz],
                 dataSource()$dataset,
                 input$group,
                 input$node

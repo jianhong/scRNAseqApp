@@ -77,23 +77,23 @@ geneExprGeneExprServer <- function(id, dataSource, optCrt) {
         ### gene expressions
         updateGeneExprPlot(
             postfix = 1,
-            dataSource()$sc1def$gene1,
-            optCrt,
-            id,
-            input,
-            output,
-            session,
-            dataSource
+            selectedGene = dataSource()$sc1def$gene1,
+            optCrt = optCrt,
+            id = id,
+            input = input,
+            output = output,
+            session = session,
+            dataSource = dataSource
         )
         updateGeneExprPlot(
             postfix = 2,
-            dataSource()$sc1def$gene2,
-            optCrt,
-            id,
-            input,
-            output,
-            session,
-            dataSource
+            selectedGene = dataSource()$sc1def$gene2,
+            optCrt = optCrt,
+            id = id,
+            input = input,
+            output = output,
+            session = session,
+            dataSource = dataSource
         )
     })
 }

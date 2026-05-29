@@ -12,6 +12,7 @@ updateDimRedSelInputPair <-
     function(session, input, dataSource, ABcolumn='') {
         idx <- paste0("GeneExprdrX", ABcolumn)
         idy <- paste0("GeneExprdrY", ABcolumn)
+        idz <- paste0("GeneExprdrZ", ABcolumn)
         updateDimRedSelInput(
             session,
             idx,
@@ -26,6 +27,15 @@ updateDimRedSelInputPair <-
             dataSource()$sc1conf,
             dataSource()$sc1def$dimred[2]
         )
+        try({
+            updateSelectInput(
+                session,
+                idz,
+                "Z-axis:",
+                choices = c(NA, dataSource()$sc1conf[
+                    dataSource()$sc1conf$dimred == TRUE]$UI),
+                selected = character(0L))
+        })
         observeEvent(input[[idx]], {
             try({
                 conf <- dataSource()$sc1conf
@@ -38,6 +48,14 @@ updateDimRedSelInputPair <-
                     "Y-axis:",
                     dataSource()$sc1conf,
                     choices[which.min(dist)])
+                
+                updateSelectInput(
+                    session,
+                    idz,
+                    "Z-axis:",
+                    choices = c(NA, dataSource()$sc1conf[
+                        dataSource()$sc1conf$dimred == TRUE]$UI),
+                    selected = character(0L))
             })
         })
     }
@@ -367,41 +385,97 @@ updateGeneExprDotPlotUI <-
                     value = '')
             }
         }
-        output[[paste0("GeneExproup", postfix)]] <- renderPlot({
-            addLimits(darkTheme(plotX()),
-                      x=ranges$x, y=ranges$y,
-                      coord=input[[paste0('coord', postfix)]],
-                      id=id, postfix=postfix, input=input)
-        }, background=darkTheme(returnBG=TRUE))
         
-        output[[paste0("GeneExproup.ui", postfix)]] <- renderUI({
-            plotUI <- plotOutput(
-                NS0(id, "GeneExproup", postfix),
-                width = ifelse(
-                    input[[paste0("GeneExproup.w", postfix)]]==
-                        .globals$figWidth,
-                    '100%', input[[paste0("GeneExproup.w", postfix)]]*72),
-                height = ifelse(
-                    input[[paste0("GeneExproup.h", postfix)]]==
-                        .globals$figHeight, height,
-                    input[[paste0("GeneExproup.h", postfix)]]*72),
-                dblclick = NS0(id, 'GeneExproup.dbl', postfix),
-                click = clickOpts(NS0(id, 'GeneExproup.clk', postfix),
-                                  clip = FALSE),
-                brush = brushOpts(NS0(id, 'GeneExproup.brush', postfix),
-                                  resetOnNew = TRUE))
-            if(id %in% c('cellInfoGeneExpr', 'cellInfoCellInfo',
-                         'subsetGeneExpr', 'geneExprGeneExpr',
-                         'sunburst')){
-                div(
-                    #class = "wheel-zoomable-plot", # default close it
-                    id = NS0(id, 'GeneExproupDIV', postfix),
+        refreshGeneExprUI <- reactiveValues(oldUI='2D')
+        create2DUI <- function(){
+            output[[paste0("GeneExproup.ui", postfix)]] <- renderUI({
+                plotUI <- plotOutput(
+                    NS0(id, "GeneExproup", postfix),
+                    width = ifelse(
+                        input[[paste0("GeneExproup.w", postfix)]]==
+                            .globals$figWidth,
+                        '100%', input[[paste0("GeneExproup.w", postfix)]]*72),
+                    height = ifelse(
+                        input[[paste0("GeneExproup.h", postfix)]]==
+                            .globals$figHeight, height,
+                        input[[paste0("GeneExproup.h", postfix)]]*72),
+                    dblclick = NS0(id, 'GeneExproup.dbl', postfix),
+                    click = clickOpts(NS0(id, 'GeneExproup.clk', postfix),
+                                      clip = FALSE),
+                    brush = brushOpts(NS0(id, 'GeneExproup.brush', postfix),
+                                      resetOnNew = TRUE))
+                if(id %in% c('cellInfoGeneExpr', 'cellInfoCellInfo',
+                             'subsetGeneExpr', 'geneExprGeneExpr',
+                             'sunburst')){
+                    div(
+                        #class = "wheel-zoomable-plot", # default close it
+                        id = NS0(id, 'GeneExproupDIV', postfix),
+                        plotUI
+                    )
+                }else{
                     plotUI
-                )
+                }
+            })
+            output[[paste0("GeneExproup", postfix)]] <- renderPlot({
+                addLimits(darkTheme(plotX()),
+                          x=ranges$x, y=ranges$y,
+                          coord=input[[paste0('coord', postfix)]],
+                          id=id, postfix=postfix, input=input)
+            }, background=darkTheme(returnBG=TRUE))
+        }
+        create2DUI()
+        observeEvent(input$GeneExprdrZ, {
+            req(dataSource)
+            
+            # Snapshot old state safely with isolate()
+            oldUI <- isolate(refreshGeneExprUI$oldUI)
+            newUI <- '2D'
+
+            if(is(plotX(), 'plotly')){
+                refresh <- TRUE
+                newUI <- '3D'
             }else{
-                plotUI
+                if(oldUI=='3D'){
+                    refresh <- TRUE
+                }else{
+                    refresh <- FALSE
+                }
+                newUI <- '2D'
             }
+            if(refresh){
+                removeUI(selector=paste0("#", id, "-GeneExproup\\.ui",
+                                         postfix, " > *"), immediate=TRUE)
+            }
+            if(newUI=='3D'){
+                output[[paste0("GeneExproup.ui", postfix)]] <- renderUI({
+                    plotlyOutput(
+                        NS0(id, "GeneExproup", postfix),
+                        width = ifelse(
+                            input[[paste0("GeneExproup.w", postfix)]]==
+                                .globals$figWidth,
+                            '100%', input[[paste0("GeneExproup.w", postfix)]]*72),
+                        height = ifelse(
+                            input[[paste0("GeneExproup.h", postfix)]]==
+                                .globals$figHeight, height,
+                            input[[paste0("GeneExproup.h", postfix)]]*72))
+                })
+                output[[paste0("GeneExproup", postfix)]] <- renderPlotly({
+                    plotX() %>% event_register("plotly_click")
+                })
+                # hide or show the controllers
+                session$sendCustomMessage(
+                    'hide_div', 
+                    paste0(NS0(id, "Cell3Div", postfix), 'Menucontainer'))
+            }else{
+                create2DUI()
+                # show the controllers
+                session$sendCustomMessage(
+                    'show_div', 
+                    paste0(NS0(id, "Cell3Div", postfix), 'Menucontainer'))
+            }
+            refreshGeneExprUI$oldUI <- newUI
         })
+        
         # Handle pan switch
         observeEvent(input[[paste0("usingPan", postfix)]], {
             session$sendCustomMessage(
@@ -514,7 +588,7 @@ updateGeneExprDotPlotUI <-
             # updateActionButton(session,
             #                    paste0("CellInfodel", postfix),
             #                    disabled = FALSE)
-            session$sendCustomMessage("toggle_div",
+            session$sendCustomMessage("show_div",
                                       paste0(NS0(id, "CellInfodup", postfix),
                                              'container'))
             observeEvent(input[[paste0("CellInfodup",postfix)]], {
@@ -820,6 +894,7 @@ updateCellInfoPlot <-
                 inpMeta=dataSource()$sc1meta,
                 dimRedX=input$GeneExprdrX,
                 dimRedY=input$GeneExprdrY,
+                dimRedZ=input$GeneExprdrZ,
                 cellinfoID=input[[cellInfoLabel]],
                 cellinfoName=input[[cellInfoName]],
                 subsetCellKey=input$subsetCell,
@@ -871,13 +946,13 @@ updateCellInfoPlot <-
             )
         })
         updateGeneExprDotPlotUI(
-            postfix,
-            id,
-            input,
-            output,
-            session,
-            plotX,
-            .globals$pList1[input$GeneExprpsz],
+            postfix = postfix,
+            id = id,
+            input = input,
+            output = output,
+            session = session,
+            plotX = plotX,
+            height = .globals$pList1[input$GeneExprpsz],
             dataSource()$dataset,
             input$GeneExprdrX,
             input$GeneExprdrY,
@@ -1070,13 +1145,13 @@ updateGeneAccPlot <-
                 keepXYlables = input$GeneExprtxt)
         })
         updateGeneExprDotPlotUI(
-            postfix,
-            id,
-            input,
-            output,
-            session,
-            plotX,
-            paste0((length(input$subsetCellVal)+4)*150, "px"),
+            postfix = postfix,
+            id = id,
+            input = input,
+            output = output,
+            session = session,
+            plotX = plotX,
+            height = paste0((length(input$subsetCellVal)+4)*150, "px"),
             dataSource()$dataset,
             input$GeneExprdrX,
             input$GeneExprdrY,
@@ -1189,13 +1264,13 @@ updateMoleculePlot <-
             )
         })
         updateGeneExprDotPlotUI(
-            postfix,
-            id,
-            input,
-            output,
-            session,
-            plotX,
-            .globals$pList1[input$GeneExprpsz],
+            postfix = postfix,
+            id = id,
+            input = input,
+            output = output,
+            session = session,
+            plotX = plotX,
+            height = .globals$pList1[input$GeneExprpsz],
             dataSource()$dataset,
             input$FOVLabel,
             input[[GeneNameLabel]]
@@ -1211,7 +1286,8 @@ updateGeneExprPlot <-
         input,
         output,
         session,
-        dataSource) {
+        dataSource
+        ) {
         GeneNameLabel <- paste0('GeneName', postfix)
         updateSelectizeInput(
             session,
@@ -1291,6 +1367,7 @@ updateGeneExprPlot <-
                 inpMeta=dataSource()$sc1meta,
                 dimRedX=input$GeneExprdrX,
                 dimRedY=input$GeneExprdrY,
+                dimRedZ=input$GeneExprdrZ,
                 gene1=input[[GeneNameLabel]],
                 subsetCellKey=input$subsetCell,
                 subsetCellVal=getSubsetCellVal(input),
@@ -1319,17 +1396,18 @@ updateGeneExprPlot <-
             )
         })
         updateGeneExprDotPlotUI(
-            postfix,
-            id,
-            input,
-            output,
-            session,
-            plotX,
-            .globals$pList1[input$GeneExprpsz],
+            postfix = postfix,
+            id = id,
+            input = input,
+            output = output,
+            session = session,
+            plotX = plotX,
+            height = .globals$pList1[input$GeneExprpsz],
             dataSource()$dataset,
             input$GeneExprdrX,
             input$GeneExprdrY,
-            input[[GeneNameLabel]]
+            input[[GeneNameLabel]],
+            dataSource = dataSource
         )
     }
 
@@ -1423,6 +1501,7 @@ updateSubsetGeneExprPlot <-
                 inpMeta=dataSource()$sc1meta,
                 dimRedX=input$GeneExprdrX,
                 dimRedY=input$GeneExprdrY,
+                dimRedZ=input$GeneExprdrZ,
                 gene1=input$GeneName,
                 subsetCellKey=c(input$CellInfo, input$subsetCell),
                 subsetCellVal=getSubsetCellVal(
@@ -1456,13 +1535,13 @@ updateSubsetGeneExprPlot <-
             )
         })
         updateGeneExprDotPlotUI(
-            postfix,
-            id,
-            input,
-            output,
-            session,
-            plotX,
-            .globals$pList1[input$GeneExprpsz],
+            postfix = postfix,
+            id = id,
+            input = input,
+            output = output,
+            session = session,
+            plotX = plotX,
+            height = .globals$pList1[input$GeneExprpsz],
             dataSource()$dataset,
             input$GeneExprdrX,
             input$GeneExprdrY,

@@ -11,7 +11,7 @@ cellInfoGeneExprUI <- function(id) {
             )
         ),
         fluidRow(
-            column(3, dimensionReductionUI(id)),
+            column(3, dimensionReductionUI(id, Z=TRUE)),
             column(5, subsetCellByInfoUI(id)),
             column(4, graphicsControlUI(id))
         ),
@@ -106,12 +106,12 @@ cellInfoGeneExprServer <- function(id, dataSource, optCrt) {
         }
         updateGeneExprPlot(
             postfix = 2,
-            selectedGene,
-            optCrt,
-            id,
-            input,
-            output,
-            session,
-            dataSource)
+            selectedGene = selectedGene,
+            optCrt = optCrt,
+            id = id,
+            input = input,
+            output = output,
+            session = session,
+            dataSource = dataSource)
     })
 }

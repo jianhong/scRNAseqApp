@@ -93,9 +93,9 @@ createDataSet <- function(
             return(DefaultBoundary(object = seu[[x]]))
         }), use.names = TRUE)
         null <- mapply(function(.fov, .b){
-            stopifnot("The 'boundaries' is not a Segmentation or centroids object"=
+            stopifnot("The 'boundaries' is not a Segmentation or Centroids object"=
                           inherits(seu[[.fov]][[.b]], c('Segmentation',
-                                                        'centroids')))
+                                                        'Centroids')))
         }, fov, boundaries)
         molecules <- molecules %||% unlist(lapply(fov, function(x){
             return(Molecules(object = seu[[x]])[1])

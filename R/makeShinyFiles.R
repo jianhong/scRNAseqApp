@@ -308,7 +308,7 @@ makeShinyFiles <- function(
     if(!is.null(fov) && !is.null(boundaries)){
         coordinates <- mapply(FUN=function(.f, .b){
             x <- obj[[.f]][[.b]]
-            if(inherits(x, c('Segmentation', 'centroids'))){
+            if(inherits(x, c('Segmentation', 'Centroids'))){
                 coor <- GetTissueCoordinates(obj[[.f]])
                 if(all(c('x', 'y', 'cell')==colnames(coor))){
                     colnames(coor)[3] <- 'sampleID'

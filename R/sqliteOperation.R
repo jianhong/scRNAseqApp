@@ -214,6 +214,7 @@ listReferences <- function(key){
     ref
 }
 makeSortedUnique <- function(x){
+    if(length(x)==0) return(x)
     if(length(names(x))==length(x)){
         x <- x[order(names(x))]
     }else{

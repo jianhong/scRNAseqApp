@@ -51,14 +51,15 @@ A typical app directory looks like:
 ```
 MyApp/
 ├── data/                  # Stored datasets
-├── www/
+├── db/
 │   ├── database.sqlite    # User/app database
 │   ├── counter.tsv        # Usage tracking
+|── www/
 │   └── ...                # Static app assets
 └── app.R
 ```
 
-Note: When deploying, ensure the `www/` directory and database files are writable by the Shiny server user.
+Note: When deploying, ensure the `db/` directory and database files are writable by the Shiny server user.
 
 ---
 
@@ -118,9 +119,9 @@ This method will use local computational resources, not suggested for large data
 2. Initialize the app directory using `scInit()`.
 3. Set the correct permissions for:
 
-   * `www/database.sqlite`
-   * `www/counter.tsv`
-   * Other files under `www/` if user management is enabled.
+   * `db/database.sqlite`
+   * `db/counter.tsv`
+   * Other files under `db/` if user management is enabled.
 4. Add data by copying the `destinationFolder` (e.g., `MyApp` in the example above) into the `data/` folder on the server.  
    If the newly copied data are not available to public users, first try reloading the app,  
    then check the accessibility and permissions of the folder.

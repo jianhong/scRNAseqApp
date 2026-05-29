@@ -58,10 +58,13 @@ scInit <- function(
     
     dir.create(file.path(app_path, 'app_cache'))
     
-    www <- file.path(app_path, "www")
-    dir.create(www)
+    www <- file.path(app_path, .globals$downloadFolder)
+    dir.create(www, recursive = TRUE, showWarnings = FALSE)
+    config <- file.path(app_path, dirname(.globals$counterFilename))
+    dir.create(config, recursive = TRUE, showWarnings = FALSE)
     # Prepare the downloader folder
-    dir.create(file.path(app_path, .globals$downloadFolder))
+    dir.create(file.path(app_path, .globals$downloadFolder),
+               showWarnings = FALSE)
     # Write the counter file
     visitor <-
         data.frame(
@@ -70,7 +73,7 @@ scInit <- function(
             agent = 'Mozilla/5.0')
     write.table(
         visitor,
-        file = file.path(www, 'counter.tsv'),
+        file = file.path(app_path, .globals$counterFilename),
         quote = FALSE,
         sep = "\t",
         row.names = FALSE
@@ -95,7 +98,7 @@ scInit <- function(
     updateConfigTable()
     touchGeneTable()
     touchGenename2Symbol()
-    .globals$counterFilename <- file.path(www, 'counter.tsv')
+    .globals$counterFilename <- file.path(app_path, .globals$counterFilename)
     touchVisitorTable()
     # Write the app.R
     writeLines(c(

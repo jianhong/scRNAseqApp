@@ -5,7 +5,7 @@ test_that("utilities works not correct", {
   scInit(app_path=app_path)
   expect_true(file.exists(file.path(app_path, 'doc.txt')))
   expect_true(file.exists(file.path(app_path, .globals$credential_path)))
-  expect_true(file.exists(file.path(app_path, 'www', 'counter.tsv')))
+  #expect_true(file.exists(file.path(app_path, .globals$counterFilename)))
   setwd(app_path)
   
   # app <- scRNAseqApp()

@@ -4,6 +4,7 @@
 getDBconn <- function(){
     dbConnect(SQLite(),
               dbname = file.path(.globals$app_path,
+                                 .globals$dbFolder,
                                  .globals$credential_path))
 }
 connectDB <- function(FUN, ...){
@@ -282,8 +283,10 @@ ip2bin <- function(x){
 touchIPtable <- function(){
     if(!is.null(.globals$IPlocationFilename)){
         if(file.exists(file.path(.globals$app_path,
+                                 .globals$dbFolder,
                                  .globals$IPlocationFilename))){
             iptable <- readRDS(file.path(.globals$app_path,
+                                         .globals$dbFolder,
                                          .globals$IPlocationFilename))
             connectDB(dbWriteTable, name = .globals$IPlocationTablename,
                       value = iptable, overwrite = TRUE)

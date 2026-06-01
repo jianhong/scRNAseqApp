@@ -18,6 +18,7 @@ scRNAseqApp(
   theme = bs_theme(bootswatch = "lumen"),
   use_bs_themer = FALSE,
   showHelpVideo = FALSE,
+  dbFolder = "db",
   ...
 )
 }
@@ -48,6 +49,8 @@ Default to 30. 0 to disable.}
 \item{showHelpVideo}{logical(1) or character(1).
 Show help videos in homepage or not. If an url is provided, the
 url will be embedded as a iframe element.}
+
+\item{dbFolder}{The user management database folder.}
 
 \item{...}{parameters can be passed to shinyApp except ui and server.}
 }

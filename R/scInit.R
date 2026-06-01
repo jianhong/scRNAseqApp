@@ -60,7 +60,7 @@ scInit <- function(
     
     www <- file.path(app_path, .globals$downloadFolder)
     dir.create(www, recursive = TRUE, showWarnings = FALSE)
-    config <- file.path(app_path, dirname(.globals$counterFilename))
+    config <- file.path(app_path, .globals$dbFolder)
     dir.create(config, recursive = TRUE, showWarnings = FALSE)
     # Prepare the downloader folder
     dir.create(file.path(app_path, .globals$downloadFolder),
@@ -73,7 +73,7 @@ scInit <- function(
             agent = 'Mozilla/5.0')
     write.table(
         visitor,
-        file = file.path(app_path, .globals$counterFilename),
+        file = file.path(app_path, .globals$dbFolder, .globals$counterFilename),
         quote = FALSE,
         sep = "\t",
         row.names = FALSE
@@ -88,17 +88,20 @@ scInit <- function(
         stringsAsFactors = FALSE
     )
     # Init the database
-    dir.create(file.path(app_path, dirname(.globals$credential_path)),
+    dir.create(file.path(app_path, .globals$dbFolder),
                recursive = TRUE, showWarnings = FALSE)
     create_db(
         credentials_data = credentials,
-        sqlite_path = file.path(app_path, .globals$credential_path),
+        sqlite_path = file.path(app_path,
+                                .globals$dbFolder,
+                                .globals$credential_path),
         passphrase = passphrase
     )
     updateConfigTable()
     touchGeneTable()
     touchGenename2Symbol()
-    .globals$counterFilename <- file.path(app_path, .globals$counterFilename)
+    .globals$counterFilename <- file.path(app_path, .globals$dbFolder, 
+                                          .globals$counterFilename)
     touchVisitorTable()
     # Write the app.R
     writeLines(c(

@@ -40,9 +40,10 @@
 .globals$h5fATACcell <- 'cell' # ATAC cell level signals table prefix 
 .globals$h5fATACcoor <- 'coor' # ATAC coor level signals table prefix
 .globals$downloadFolder <- file.path("www", "download")
-.globals$counterFilename <- file.path("db", "counter.tsv")
-.globals$IPlocationFilename <- file.path("db", "iptable.rds")
-.globals$credential_path <- file.path("db", "database.sqlite")
+.globals$dbFolder <- 'db'
+.globals$counterFilename <- "counter.tsv"
+.globals$IPlocationFilename <- "iptable.rds"
+.globals$credential_path <- "database.sqlite"
 .globals$credentialTableName <- 'credentials'
 .globals$passphrase <- NULL
 .globals$configTableName <- 'config'

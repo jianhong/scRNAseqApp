@@ -15,6 +15,7 @@
 #' @param showHelpVideo logical(1) or character(1). 
 #' Show help videos in homepage or not. If an url is provided, the
 #' url will be embedded as a iframe element.
+#' @param dbFolder The user management database folder.
 #' @param ... parameters can be passed to shinyApp except ui and server.
 #' @import shiny
 #' @importFrom utils packageVersion packageDescription read.delim
@@ -54,12 +55,15 @@ scRNAseqApp <- function(
         theme = bs_theme(bootswatch = 'lumen'),
         use_bs_themer = FALSE,
         showHelpVideo = FALSE,
+        dbFolder = 'db',
         ...) {
     stopifnot(is(theme, "bs_theme"))
     .globals$theme <- theme
     .globals$app_path <- app_path
+    .globals$dbFolder <- dbFolder
     .globals$counterFilename <- file.path(
-        app_path, .globals$counterFilename)
+        app_path, .globals$dbFolder, 
+        .globals$counterFilename)
     ## config file
     .globals <- loadConfigFile(.globals, app_path)
     if(!is_abs_path(datafolder)){

@@ -4,8 +4,9 @@ test_that("utilities works not correct", {
   on.exit(unlink(app_path, recursive = TRUE))
   scInit(app_path=app_path)
   expect_true(file.exists(file.path(app_path, 'doc.txt')))
-  expect_true(file.exists(file.path(app_path, .globals$credential_path)))
-  #expect_true(file.exists(file.path(app_path, .globals$counterFilename)))
+  expect_true(file.exists(file.path(app_path,
+                                    .globals$dbFolder,
+                                    .globals$credential_path)))
   setwd(app_path)
   
   # app <- scRNAseqApp()

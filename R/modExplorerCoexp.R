@@ -129,7 +129,8 @@ scCoexpServer <- function(
             p_input$GeneExprdrX,
             p_input$GeneExprdrY,
             input$GeneName1,
-            input$GeneName2
+            input$GeneName2,
+            dataSource = dataSource
         )
     })
 }

@@ -173,7 +173,8 @@ scInfoServer <- function(
             dataSource()$dataset,
             p_input$GeneExprdrX,
             p_input$GeneExprdrY,
-            input[[cellInfoLabel]]
+            input[[cellInfoLabel]],
+            dataSource = dataSource
         )
     })
 }

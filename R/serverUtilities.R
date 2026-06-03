@@ -417,11 +417,12 @@ updateGeneExprDotPlotUI <-
                 }
             })
             output[[paste0("GeneExproup", postfix)]] <- renderPlot({
-                addLimits(darkTheme(plotX()),
+                addLimits(darkTheme(plotX(), dataSource=dataSource),
                           x=ranges$x, y=ranges$y,
                           coord=input[[paste0('coord', postfix)]],
                           id=id, postfix=postfix, input=input)
-            }, background=darkTheme(returnBG=TRUE))
+            }, bg=darkTheme(returnBG=TRUE,
+                            dataSource=dataSource))
         }
         create2DUI()
         observeEvent(input$GeneExprdrZ, {
@@ -791,7 +792,8 @@ updateGeneExprDotPlotUI <-
             handlerFUN(
                 input = input,
                 postfix = postfix,
-                plotX,
+                plot = plotX,
+                dataSource = dataSource,
                 ...)
         
     }
@@ -1155,7 +1157,8 @@ updateGeneAccPlot <-
             dataSource()$dataset,
             input$GeneExprdrX,
             input$GeneExprdrY,
-            input[[GeneNameLabel]]
+            input[[GeneNameLabel]],
+            dataSource = dataSource
         )
     }
 
@@ -1273,7 +1276,8 @@ updateMoleculePlot <-
             height = .globals$pList1[input$GeneExprpsz],
             dataSource()$dataset,
             input$FOVLabel,
-            input[[GeneNameLabel]]
+            input[[GeneNameLabel]],
+            dataSource = dataSource
         )
     }
 
@@ -1546,7 +1550,8 @@ updateSubsetGeneExprPlot <-
             input$GeneExprdrX,
             input$GeneExprdrY,
             input$GeneName,
-            input$CellInfo
+            input$CellInfo,
+            dataSource = dataSource
         )
     }
 
@@ -1565,6 +1570,7 @@ updateSubModulePlotUI <-
         plotX,
         height,
         lasso=FALSE,
+        dataSource=NULL,
         ...) {
         if (isTRUE(interactive)) {
             output[[paste0("GeneExproup", postfix)]] <-
@@ -1621,8 +1627,9 @@ updateSubModulePlotUI <-
             }
         } else{
             output[[paste0("GeneExproup", postfix)]] <- renderPlot({
-                plotX()
-            })
+                darkTheme(plotX(), dataSource=dataSource)
+            }, bg=darkTheme(returnBG=TRUE,
+                            dataSource=dataSource))
             output[[paste0("GeneExproup.ui", postfix)]] <- renderUI({
                 plotOutput(
                     NS0(NS(pid, id), "GeneExproup", postfix),
@@ -1639,7 +1646,8 @@ updateSubModulePlotUI <-
                 plotsDownloadHandler(
                     input = input,
                     postfix = postfix,
-                    plotX,
+                    plot = plotX,
+                    dataSource = dataSource,
                     ...)
         }
     }

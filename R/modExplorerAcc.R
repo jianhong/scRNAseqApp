@@ -274,7 +274,8 @@ scAccServer <- function(
             dataSource()$dataset,
             p_input$GeneExprdrX,
             p_input$GeneExprdrY,
-            input[[CoordLabel]]
+            input[[CoordLabel]],
+            dataSource = dataSource
         )
     })
 }

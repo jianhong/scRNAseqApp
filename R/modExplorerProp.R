@@ -113,7 +113,8 @@ scPropServer <- function(
             dataSource()$dataset,
             input$plottyp,
             input$CellInfoX,
-            input$CellInfoY
+            input$CellInfoY,
+            dataSource = dataSource
         )
     })
 }

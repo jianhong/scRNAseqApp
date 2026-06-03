@@ -163,7 +163,8 @@ plotProportionServer <- function(id, dataSource, optCrt) {
             dataSource()$dataset,
             input$plottyp,
             input$CellInfoX,
-            input$CellInfoY
+            input$CellInfoY,
+            dataSource = dataSource
         )
         
         getProportion <- function(plot1){
@@ -245,7 +246,8 @@ plotProportionServer <- function(id, dataSource, optCrt) {
             dataSource()$dataset,
             input$plottyp,
             input$CellInfoX,
-            input$CellInfoY
+            input$CellInfoY,
+            dataSource = dataSource
         )
     })
 }

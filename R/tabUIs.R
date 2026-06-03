@@ -1156,3 +1156,65 @@ contextMenuViolinUI <- function(id, postfix=1, group = FALSE){
         )
     )
 }
+
+darkPanel <- function(){
+    tabPanel(
+        'darkTheme',
+        value = 'darkThemeOpt',
+        HTML("Dark Theme Options"),
+        h4("Background and Text setting for the dark theme"),
+        "In this tab, users can adjust the theme for dark mode",
+        br(),
+        br(),
+        fluidRow(
+            column(
+                5,
+                style = "border-right: 2px solid black",
+                # ── Tabbed controls ──────────────────────────────
+                tabsetPanel(
+                    id = "theme_tabs",
+                    tabPanel("Background",
+                             br(),
+                             colourInput("bg_color", "Plot background", value = "#222"),
+                             colourInput("panel_bg", "Panel background", value = "gray20"),
+                             colourInput("grid_color", "Grid lines", value = "gray30"),
+                             selectInput("panel_border", "Panel border",
+                                         choices = c("None" = "blank", "Rect" = "rect"))
+                    ),
+                    
+                    tabPanel("Text",
+                             br(),
+                             colourInput("axis_text", "Axis text", value = "#ffffff"),
+                             colourInput("axis_title", "Axis title", value = "#ffffff"),
+                             colourInput("plot_title", "Plot title", value = "#ffffff"),
+                             colourInput("plot_subtitle", "Plot subtitle", value = "#cccccc")
+                    ),
+                    
+                    tabPanel("Panels",
+                             br(),
+                             selectInput("grid_type", "Grid lines",
+                                         choices = c("Both" = "both",
+                                                     "Major only" = "major",
+                                                     "None" = "none")),
+                             sliderInput("grid_size", "Grid line width",
+                                         min = 0.1, max = 1.5, value = 0.3, step = 0.1)
+                    ),
+                    
+                    tabPanel("Legend",
+                             br(),
+                             colourInput("legend_text", "Legend text", value = "#ffffff"),
+                             colourInput("legend_title", "Legend title", value = "#ffffff"),
+                             colourInput("legend_bg", "Legend background", value = "#222"),
+                             colourInput("strip_bg", "Strip background", value = "gray20"),
+                             colourInput("strip_text", "Strip text", value = "#ffffff")
+                    )
+                ),
+                hr(),
+                actionButton("applyDarkTheme", "Apply theme", width = "80%", class = "btn-primary")
+            ),
+            column(7, 
+                   plotOutput("darkThemePreview", height = "400px"))
+        ),
+        br()
+    )
+}

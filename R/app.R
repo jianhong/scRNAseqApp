@@ -22,7 +22,7 @@
 #' @importFrom xfun base64_uri is_abs_path
 #' @importFrom shinyhelper observe_helpers
 #' @importFrom ggplot2 ggplot aes geom_bar theme_minimal xlab ylab
-#' @importFrom bslib bs_theme bs_themer
+#' @importFrom bslib bs_theme bs_themer nav_spacer nav_item input_dark_mode
 #' @export
 #' @return An object that represents the app.
 #' @examples
@@ -181,7 +181,11 @@ scRNAseqApp <- function(
                 issueUI('issues'),
                 ### Tab: Login form
                 #tabLogin(),
-                loginUI(loginNavbarTitle, defaultDataset)
+                loginUI(loginNavbarTitle, defaultDataset),
+                # dark mode
+                nav_spacer(),
+                nav_item(input_dark_mode(id='theme_mode', mode='light')),
+                darkPanel()
             )
         )
     }
@@ -243,8 +247,82 @@ scRNAseqApp <- function(
             # passward
             Password = "",
             # toekn
-            token = ""
-        ) 
+            token = "",
+            # bg_color
+            theme_mode = 'light',
+            dark_theme = list()
+        )
+        ## dark mode
+        observeEvent(input$theme_mode, {
+            # Dark or light mode
+            if (!is.null(input$theme_mode) && input$theme_mode == "dark") {
+                dataSource$theme_mode <- input$theme_mode
+                showTab(inputId = 'topnav', target = 'darkThemeOpt')
+            } else {
+                # Otherwise,
+                dataSource$theme_mode <- 'light'
+                hideTab(inputId = 'topnav', target = 'darkThemeOpt')
+            }
+        })
+        output$darkThemePreview <- renderPlot({
+            ggplot(data.frame(
+                x=seq.int(10),
+                y=sample(seq.int(20), 10),
+                n=sample(letters[seq.int(5)], 10, replace = TRUE)
+            ), aes(.data$x, .data$y, color=.data$n)) +
+                geom_point(size=3) + theme(
+                    plot.background = element_rect(fill = input$bg_color,
+                                                   color = NA),
+                    panel.background = element_rect(fill = input$panel_bg,
+                                                    color = NA),
+                    panel.border = if (input$panel_border == "blank") {
+                        element_blank()
+                    } else {
+                        element_rect(fill = NA, color = input$grid_color)
+                    },
+                    panel.grid = switch(input$grid_type,
+                                        both  = element_line(
+                                            color = input$grid_col, 
+                                            linewidth = input$grid_size),
+                                        major = element_line(
+                                            color = input$grid_col,
+                                            linewidth = input$grid_size),
+                                        none  = element_blank()
+                    ),
+                    axis.text = element_text(color = input$axis_text),
+                    axis.title = element_text(color = input$axis_title),
+                    plot.title = element_text(color = input$plot_title),
+                    plot.subtitle = element_text(color = input$plot_subtitle),
+                    legend.background = element_rect(fill = input$legend_bg,
+                                                     color = NA),
+                    legend.text = element_text(color = input$legend_text),
+                    legend.title = element_text(color = input$legend_title),
+                    legend.key = element_rect(fill = input$legend_bg,
+                                              color = NA),
+                    strip.background = element_rect(fill = input$strip_bg,
+                                                    color = NA),
+                    strip.text = element_text(color = input$strip_text)
+                )
+        })
+        observeEvent(input$applyDarkTheme, {
+            dataSource$dark_theme <- list(
+                bg_color = input$bg_color,
+                panel_bg=input$panel_bg,
+                panel_border=input$panel_border,
+                grid_color=input$grid_color,
+                grid_type=input$grid_type,
+                axis_text=input$axis_text,
+                base_size=input$base_size,
+                axis_title=input$axis_title,
+                plot_subtitle = input$plot_subtitle,
+                legend_bg = input$legend_bg,
+                legend_text = input$legend_text,
+                legend_title = input$legend_title,
+                strip_bg = input$strip_bg,
+                strip_text = input$strip_text
+            )
+        })
+        
         updateDataSource <- function(datasets, selected){
             if(missing(datasets)) datasets <- 
                     listDatasets(privilege = dataSource$auth$privilege,

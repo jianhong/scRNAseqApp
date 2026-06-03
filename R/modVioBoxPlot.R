@@ -146,7 +146,8 @@ plotVioBoxServer <- function(id, dataSource, optCrt) {
             dataSource()$dataset,
             input$plottyp,
             input$CellInfoX,
-            input$filterCell
+            input$filterCell,
+            dataSource = dataSource
         )
         output$violin.dt <- renderDT({
             violin <- plot1()$data

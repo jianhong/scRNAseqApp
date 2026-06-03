@@ -381,7 +381,8 @@ plotBubbleHeatmapServer <- function(id, dataSource, optCrt) {
                     plotsDownloadHandler
                 } else{
                     heatmapDownloadHandler
-                }
+                },
+                dataSource = dataSource
             )
         )
     })

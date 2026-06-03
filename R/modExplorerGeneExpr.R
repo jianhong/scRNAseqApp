@@ -123,7 +123,8 @@ scExprServer <- function(
             dataSource()$dataset,
             p_input$GeneExprdrX,
             p_input$GeneExprdrY,
-            input[[GeneNameLabel]]
+            input[[GeneNameLabel]],
+            dataSource = dataSource
         )
     })
 }

@@ -130,7 +130,8 @@ plotMonocleServer <- function(id, dataSource, optCrt) {
                 height = .globals$pList2[input$plotpsz],
                 dataSource()$dataset,
                 input$group,
-                input$node
+                input$node,
+                dataSource = dataSource
             )
         }
         # update the ui

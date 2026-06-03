@@ -118,7 +118,8 @@ scVlnServer <- function(
             lasso = FALSE,
             dataSource()$dataset,
             input$plottyp,
-            input$CellInfoX
+            input$CellInfoX,
+            dataSource = dataSource
         )
     })
 }

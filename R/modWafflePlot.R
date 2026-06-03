@@ -88,7 +88,8 @@ plotWaffleServer <- function(id, dataSource, optCrt, postfix = 1) {
             plotX = plotX,
             height = .globals$pList3[input$plotpsz],
             dataSource()$dataset,
-            make.names(input$genelist)
+            make.names(input$genelist),
+            dataSource = dataSource
         )
     })
 }

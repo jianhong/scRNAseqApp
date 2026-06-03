@@ -141,7 +141,8 @@ coExprServer <- function(id, dataSource, optCrt) {
             input$GeneExprdrX,
             input$GeneExprdrY,
             input$GeneName1,
-            input$GeneName2
+            input$GeneName2,
+            dataSource = dataSource
         )
         
         plot2 <- reactive({
@@ -163,7 +164,8 @@ coExprServer <- function(id, dataSource, optCrt) {
             input$GeneExprdrX,
             input$GeneExprdrY,
             input$GeneName1,
-            input$GeneName2
+            input$GeneName2,
+            dataSource = dataSource
         )
         
         output$coExpr.dt <- renderDT({

@@ -639,31 +639,85 @@ is_dark <- function(color) {
     luminance <- 0.299 * rgb[1] + 0.587 * rgb[2] + 0.114 * rgb[3]
     return(luminance < 128)
 }
+get_current_bg <- function(dataSource){
+    theme <- bs_current_theme()
+    if(!missing(dataSource) && is.function(dataSource)){
+        if(isTRUE(dataSource()$theme_mode=="dark")){
+            return(bslib::bs_get_variables(theme, 'body-bg-dark'))
+        }
+    }
+    return(bslib::bs_get_variables(theme, "body-bg"))
+}
 #' @importFrom bslib bs_get_variables bs_current_theme
-darkTheme <- function(p, returnBG=FALSE, bg_color){
+darkTheme <- function(p, returnBG=FALSE, dataSource, bg_color){
     # Extract the background color
     if(missing(bg_color)||is.null(bg_color)){
-        bg_color <- bslib::bs_get_variables(bs_current_theme(), "body-bg")
+        bg_color <- get_current_bg(dataSource=dataSource)
     }
     if(returnBG) return(bg_color)
     if(isTRUE(is_dark(bg_color))&&is(p, 'ggplot')){
-        p <- p + 
-            theme(
-                plot.background = element_rect(fill = bg_color, color = NA),
-                panel.background = element_rect(fill = "gray20", color = NA),
-                panel.border = element_blank(),
-                panel.grid = element_line(color = "gray30"),
-                axis.text = element_text(color = "white"),
-                axis.title = element_text(color = "white"),
-                plot.title = element_text(color = "white"),
-                plot.subtitle = element_text(color = "white"),
-                legend.background = element_rect(fill = bg_color, color = NA),
-                legend.text = element_text(color = "white"),
-                legend.title = element_text(color = "white"),
-                legend.key = element_rect(fill = bg_color, color = NA),
-                strip.background = element_rect(fill = "gray20", color = NA),
-                strip.text = element_text(color = "white")
-            )
+        darktheme <- theme(
+            plot.background = element_rect(fill = bg_color, color = NA),
+            panel.background = element_rect(fill = "gray20", color = NA),
+            panel.border = element_blank(),
+            panel.grid = element_line(color = "gray30"),
+            axis.text = element_text(color = "white"),
+            axis.title = element_text(color = "white"),
+            plot.title = element_text(color = "white"),
+            plot.subtitle = element_text(color = "white"),
+            legend.background = element_rect(fill = bg_color, color = NA),
+            legend.text = element_text(color = "white"),
+            legend.title = element_text(color = "white"),
+            legend.key = element_rect(fill = bg_color, color = NA),
+            strip.background = element_rect(fill = "gray20", color = NA),
+            strip.text = element_text(color = "white")
+        )
+        if(!missing(dataSource) && is.function(dataSource)){
+            if(isTRUE(dataSource()$theme_mode=="dark") &&
+               isTRUE(length(dataSource()$dark_theme)>10)){
+                darktheme <- theme(
+                    plot.background = element_rect(fill = dataSource()$dark_theme$bg_color,
+                                                   color = NA),
+                    panel.background = element_rect(fill = dataSource()$dark_theme$panel_bg,
+                                                    color = NA),
+                    panel.border = if (dataSource()$dark_theme$panel_border == "blank") {
+                        element_blank()
+                    } else {
+                        element_rect(fill = NA, color = dataSource()$dark_theme$grid_color)
+                    },
+                    panel.grid = switch(dataSource()$dark_theme$grid_type,
+                                        both  = element_line(
+                                            color = dataSource()$dark_theme$grid_col, 
+                                            linewidth = dataSource()$dark_theme$grid_size),
+                                        major = element_line(
+                                            color = dataSource()$dark_theme$grid_col,
+                                            linewidth = dataSource()$dark_theme$grid_size),
+                                        none  = element_blank()
+                    ),
+                    axis.text = element_text(
+                        color = dataSource()$dark_theme$axis_text),
+                    axis.title = element_text(
+                        color = dataSource()$dark_theme$axis_title),
+                    plot.title = element_text(
+                        color = dataSource()$dark_theme$plot_title),
+                    plot.subtitle = 
+                        element_text(color = dataSource()$dark_theme$plot_subtitle),
+                    legend.background = 
+                        element_rect(fill = dataSource()$dark_theme$legend_bg, color = NA),
+                    legend.text = 
+                        element_text(color = dataSource()$dark_theme$legend_text),
+                    legend.title = 
+                        element_text(color = dataSource()$dark_theme$legend_title),
+                    legend.key = 
+                        element_rect(fill = dataSource()$dark_theme$legend_bg, color = NA),
+                    strip.background = 
+                        element_rect(fill = dataSource()$dark_theme$strip_bg, color = NA),
+                    strip.text = element_text(color = dataSource()$dark_theme$strip_text)
+                )
+            }
+        }
+        p <- p + darktheme
+            
     }
     return(p)
 }

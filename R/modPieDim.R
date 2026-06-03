@@ -195,7 +195,8 @@ plotPieDimServer <- function(id, dataSource, optCrt) {
             dataSource()$dataset,
             input$GeneExprdrX,
             input$GeneExprdrY,
-            'sunburst'
+            'sunburst',
+            dataSource = dataSource
         )
     })
 }

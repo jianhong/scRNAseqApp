@@ -93,14 +93,11 @@ heatmapDownloadHandler <-
 #' @importFrom shiny getDefaultReactiveDomain
 #' @importFrom utils write.csv
 click_event_data <- function(session = shiny::getDefaultReactiveDomain(), ...) {
-    if('plotly_click' %in% session$userData$plotlyShinyEventIDs){
-        event_data(event = "plotly_click", ...)
-    }else{
-        return(NULL)
-    }
+    d <- event_data(event = "plotly_click", session = session, ...)
+    return(d)
 }
 lasso_select_data <- function(session = shiny::getDefaultReactiveDomain(), ...) {
-     event_data(event = "plotly_selected", ...)
+     event_data(event = "plotly_selected", session=session, ...)
 }
 get_lasso_selected_ids <- function(session, plot){
     tryCatch({
@@ -159,7 +156,7 @@ exprDownloadHandler <- function(geneIdMap, dataset, meta, lasso=FALSE, plot, ses
 }
 
 #' @importFrom plotly event_data
-plotly3d_click <- function(session) {
+plotly3d_click <- function(session, source="A") {
     renderPrint({
         d <- click_event_data(session = session)
         if (is.null(d))

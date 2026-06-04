@@ -128,8 +128,11 @@ coExpr3dServer <- function(id, dataSource, optCrt) {
                 hideFilterCell=input$CoExprhid1
             )
         })
+        plot_source_id <- session$ns('coexpplot_source')
         output$GeneExpr3Doup1 <- renderPlotly({
-            ggplotly(plot3d()) %>% event_register("plotly_click")
+            ggplotly(darkTheme(plot3d(), dataSource=dataSource),
+                     source=plot_source_id) %>%
+                event_register("plotly_click")
         })
         output$GeneExpr3Doup.ui1 <- renderUI({
             plotlyOutput(
@@ -140,6 +143,6 @@ coExpr3dServer <- function(id, dataSource, optCrt) {
             dataSource()$sc1gene,
             dataSource()$dataset,
             dataSource()$sc1meta)
-        output$clicked <- plotly3d_click(session)
+        output$clicked <- plotly3d_click(session, source=plot_source_id)
     })
 }

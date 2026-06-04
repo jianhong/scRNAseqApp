@@ -8,7 +8,7 @@ homeUI <- function() {
 #' @importFrom bibtex read.bib
 #' @importFrom RefManageR GetBibEntryWithDOI PrintBibliography
 aboutUI <- function(
-    request, id, banner, defaultDataset, datasets, appconf, doc = "doc.txt",
+    request, id, banner, darkbanner, defaultDataset, datasets, appconf, doc = "doc.txt",
     showHelpVideo=FALSE) {
         ns <- NS(id)
         if(is.character(showHelpVideo)){
@@ -60,7 +60,13 @@ aboutUI <- function(
             div(
                 class = "about-display-container about-content about-top",
                 style = 'width:100%;min-height:300px;',
-                img(class = "about-image about-glass", src = banner),
+                div(
+                    class = "banner-wrapper",
+                    img(class = "about-image about-glass banner-light",
+                        src = banner),
+                    img(class = "about-image about-glass banner-dark",
+                        src = darkbanner)
+                ),
                 absolutePanel(
                     top = "15%",
                     left = "10%",

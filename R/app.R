@@ -78,6 +78,12 @@ scRNAseqApp <- function(
             readline('Please input the passphrase for the user database:')
     }
     ## load banner
+    darkbanner <- sub('\\.(.*)$', '_dark.\\1', banner)
+    if(!file.exists(darkbanner)){
+        darkbanner <- base64_uri(banner)
+    }else{
+        darkbanner <- base64_uri(darkbanner)
+    }
     banner <- base64_uri(banner)
     ## load default parameters
     loginNavbarTitle <- "Switch User"
@@ -132,6 +138,7 @@ scRNAseqApp <- function(
                     req,
                     "about",
                     banner,
+                    darkbanner,
                     defaultDataset,
                     datasets,
                     appconf,
@@ -184,8 +191,8 @@ scRNAseqApp <- function(
                 loginUI(loginNavbarTitle, defaultDataset),
                 # dark mode
                 nav_spacer(),
-                nav_item(input_dark_mode(id='theme_mode', mode='light')),
-                darkPanel()
+                darkPanel(),
+                nav_item(input_dark_mode(id='theme_mode', mode='light'))
             )
         )
     }
@@ -271,55 +278,52 @@ scRNAseqApp <- function(
                 n=sample(letters[seq.int(5)], 10, replace = TRUE)
             ), aes(.data$x, .data$y, color=.data$n)) +
                 geom_point(size=3) + theme(
-                    plot.background = element_rect(fill = input$bg_color,
+                    plot.background = element_rect(fill = input$darktheme_bg_color,
                                                    color = NA),
-                    panel.background = element_rect(fill = input$panel_bg,
+                    panel.background = element_rect(fill = input$darktheme_panel_bg,
                                                     color = NA),
-                    panel.border = if (input$panel_border == "blank") {
+                    panel.border = if (input$darktheme_panel_border == "blank") {
                         element_blank()
                     } else {
-                        element_rect(fill = NA, color = input$grid_color)
+                        element_rect(fill = NA, color = input$darktheme_grid_color)
                     },
-                    panel.grid = switch(input$grid_type,
+                    panel.grid = switch(input$darktheme_grid_type,
                                         both  = element_line(
-                                            color = input$grid_col, 
-                                            linewidth = input$grid_size),
+                                            color = input$darktheme_grid_color, 
+                                            linewidth = input$darktheme_grid_size),
                                         major = element_line(
-                                            color = input$grid_col,
-                                            linewidth = input$grid_size),
+                                            color = input$darktheme_grid_color,
+                                            linewidth = input$darktheme_grid_size),
                                         none  = element_blank()
                     ),
-                    axis.text = element_text(color = input$axis_text),
-                    axis.title = element_text(color = input$axis_title),
-                    plot.title = element_text(color = input$plot_title),
-                    plot.subtitle = element_text(color = input$plot_subtitle),
-                    legend.background = element_rect(fill = input$legend_bg,
+                    axis.text = element_text(color = input$darktheme_axis_text),
+                    axis.title = element_text(color = input$darktheme_axis_title),
+                    legend.background = element_rect(fill = input$darktheme_legend_bg,
                                                      color = NA),
-                    legend.text = element_text(color = input$legend_text),
-                    legend.title = element_text(color = input$legend_title),
-                    legend.key = element_rect(fill = input$legend_bg,
+                    legend.text = element_text(color = input$darktheme_legend_text),
+                    legend.title = element_text(color = input$darktheme_legend_title),
+                    legend.key = element_rect(fill = input$darktheme_legend_bg,
                                               color = NA),
-                    strip.background = element_rect(fill = input$strip_bg,
+                    strip.background = element_rect(fill = input$darktheme_strip_bg,
                                                     color = NA),
-                    strip.text = element_text(color = input$strip_text)
+                    strip.text = element_text(color = input$darktheme_strip_text)
                 )
         })
         observeEvent(input$applyDarkTheme, {
             dataSource$dark_theme <- list(
-                bg_color = input$bg_color,
-                panel_bg=input$panel_bg,
-                panel_border=input$panel_border,
-                grid_color=input$grid_color,
-                grid_type=input$grid_type,
-                axis_text=input$axis_text,
-                base_size=input$base_size,
-                axis_title=input$axis_title,
-                plot_subtitle = input$plot_subtitle,
-                legend_bg = input$legend_bg,
-                legend_text = input$legend_text,
-                legend_title = input$legend_title,
-                strip_bg = input$strip_bg,
-                strip_text = input$strip_text
+                bg_color = input$darktheme_bg_color,
+                panel_bg=input$darktheme_panel_bg,
+                panel_border=input$darktheme_panel_border,
+                grid_color=input$darktheme_grid_color,
+                grid_type=input$darktheme_grid_type,
+                grid_size=input$darktheme_grid_size,
+                axis_text=input$darktheme_axis_text,
+                axis_title=input$darktheme_axis_title,
+                legend_bg = input$darktheme_legend_bg,
+                legend_text = input$darktheme_legend_text,
+                legend_title = input$darktheme_legend_title,
+                strip_bg = input$darktheme_strip_bg,
+                strip_text = input$darktheme_strip_text
             )
         })
         

@@ -461,7 +461,8 @@ updateGeneExprDotPlotUI <-
                             input[[paste0("GeneExproup.h", postfix)]]*72))
                 })
                 output[[paste0("GeneExproup", postfix)]] <- renderPlotly({
-                    plotX() %>% event_register("plotly_click")
+                    darkTheme(plotX(), dataSource=dataSource) %>%
+                        event_register("plotly_click")
                 })
                 # hide or show the controllers
                 session$sendCustomMessage(

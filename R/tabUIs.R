@@ -122,22 +122,22 @@ manuXYlimOriUI <- function(id, postfix){
         numericInput(
             NS0(id, "manuXlimOriMin", postfix),
             label = '',
-            value = NA
+            value = NULL
         ),
         numericInput(
             NS0(id, "manuXlimOriMax", postfix),
             label = '',
-            value = NA
+            value = NULL
         ),
         numericInput(
             NS0(id, "manuYlimOriMin", postfix),
             label = '',
-            value = NA
+            value = NULL
         ),
         numericInput(
             NS0(id, "manuYlimOriMax", postfix),
             label = '',
-            value = NA
+            value = NULL
         ))
 }
 
@@ -1175,38 +1175,36 @@ darkPanel <- function(){
                     id = "theme_tabs",
                     tabPanel("Background",
                              br(),
-                             colourInput("bg_color", "Plot background", value = "#222"),
-                             colourInput("panel_bg", "Panel background", value = "gray20"),
-                             colourInput("grid_color", "Grid lines", value = "gray30"),
-                             selectInput("panel_border", "Panel border",
+                             colourInput("darktheme_bg_color", "Plot background", value = "#222"),
+                             colourInput("darktheme_panel_bg", "Panel background", value = "gray20"),
+                             colourInput("darktheme_grid_color", "Grid lines", value = "gray30"),
+                             selectInput("darktheme_panel_border", "Panel border",
                                          choices = c("None" = "blank", "Rect" = "rect"))
                     ),
                     
                     tabPanel("Text",
                              br(),
-                             colourInput("axis_text", "Axis text", value = "#ffffff"),
-                             colourInput("axis_title", "Axis title", value = "#ffffff"),
-                             colourInput("plot_title", "Plot title", value = "#ffffff"),
-                             colourInput("plot_subtitle", "Plot subtitle", value = "#cccccc")
+                             colourInput("darktheme_axis_text", "Axis text", value = "#ffffff"),
+                             colourInput("darktheme_axis_title", "Axis title", value = "#ffffff")
                     ),
                     
                     tabPanel("Panels",
                              br(),
-                             selectInput("grid_type", "Grid lines",
+                             selectInput("darktheme_grid_type", "Grid lines",
                                          choices = c("Both" = "both",
                                                      "Major only" = "major",
                                                      "None" = "none")),
-                             sliderInput("grid_size", "Grid line width",
+                             sliderInput("darktheme_grid_size", "Grid line width",
                                          min = 0.1, max = 1.5, value = 0.3, step = 0.1)
                     ),
                     
                     tabPanel("Legend",
                              br(),
-                             colourInput("legend_text", "Legend text", value = "#ffffff"),
-                             colourInput("legend_title", "Legend title", value = "#ffffff"),
-                             colourInput("legend_bg", "Legend background", value = "#222"),
-                             colourInput("strip_bg", "Strip background", value = "gray20"),
-                             colourInput("strip_text", "Strip text", value = "#ffffff")
+                             colourInput("darktheme_legend_text", "Legend text", value = "#ffffff"),
+                             colourInput("darktheme_legend_title", "Legend title", value = "#ffffff"),
+                             colourInput("darktheme_legend_bg", "Legend background", value = "#222"),
+                             colourInput("darktheme_strip_bg", "Strip background", value = "gray20"),
+                             colourInput("darktheme_strip_text", "Strip text", value = "#ffffff")
                     )
                 ),
                 hr(),

@@ -117,8 +117,11 @@ scCoexp3dServer <- function(
             )
         })
         source <- NS0(NS(pid, id), "GeneExpr3Doup", 1)
+        plot_source_id <- session$ns('explore_coexpplot_source')
         output$GeneExpr3Doup1 <- renderPlotly({
-            ggplotly(plot3d()) %>% event_register("plotly_click")
+            ggplotly(darkTheme(plot3d(), dataSource=dataSource),
+                     source=plot_source_id) %>%
+                event_register("plotly_click")
         })
         output$GeneExpr3Doup.ui1 <- renderUI({
             plotlyOutput(
@@ -129,6 +132,7 @@ scCoexp3dServer <- function(
             dataSource()$sc1gene,
             dataSource()$dataset,
             dataSource()$sc1meta)
-        output$clicked <- plotly3d_click(session)
+        output$clicked <- plotly3d_click(session,
+                                         source=plot_source_id)
     })
 }

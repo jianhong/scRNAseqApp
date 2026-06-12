@@ -139,3 +139,6 @@
 
 #' @importFrom utils globalVariables
 utils::globalVariables('count')
+
+#' default x,y lim value
+.globals$defaultLimValue <- c(-1.500101, 10.00101)

@@ -20,7 +20,7 @@ scDRgene <- function(
         plotAspectRatio,
         keepXYlables,
         inpPlt = "Dotplot",
-        inpXlim,
+        inpXlim, # for ridgePlot
         inpColRange = 0,
         valueFilterKey,
         valueFilterCutoff,
@@ -28,6 +28,12 @@ scDRgene <- function(
         hideFilterCell = FALSE,
         geneType = c('gene', 'coor'),
         xlim=NULL,ylim=NULL,
+        inpCellBorder=FALSE,# stereo-seq cell borders
+        cellborderFilename='',
+        cellSegAlpha=1,
+        cellSegColor=NA,
+        inpBgImg=FALSE,
+        backgroundImage='',
         ...) {
     if (gene1[1] == "") {
         return(ggplot())
@@ -59,6 +65,8 @@ scDRgene <- function(
             inpConf[inpConf$UI %in% subsetCellKey]$ID),
             with = FALSE]
         cnid <- if(ncol(ggData)>3) 4 else 0
+        inpCellBorder <- FALSE
+        inpBgImg <- FALSE
     }else{
         ggData <- inpMeta[, c(
             inpConf[inpConf$UI == dimRedX]$ID,
@@ -75,6 +83,10 @@ scDRgene <- function(
             ggData$sampleID <- inpMeta$sampleID
         }
     }
+    
+    checkCellSegmentationAvailability(environment())
+    backgroundAlignFun <- checkBgImgAvailability(environment())
+    
     lassoSelected <- rep(TRUE, nrow(ggData))
     if('selectedCellIDs' %in% names(dots)){
         if(length(dots$selectedCellIDs)){
@@ -182,7 +194,18 @@ scDRgene <- function(
                     )
             )) 
         }else{
-            ggOut <- ggXYplot(ggData)
+            # Actual ggplot
+            if(isTRUE(inpBgImg)){
+                backgroundAlignArgs$plot_data <- ggData
+                ggData <- do.call(backgroundAlignFun, backgroundAlignArgs)
+                if(inpCellBorder){
+                    backgroundAlignArgs$plot_data <- cellborder
+                    cellborder <- do.call(backgroundAlignFun, backgroundAlignArgs)
+                }
+                ggOut <- ggXYplot(ggData, backgroundImage)
+            }else{
+                ggOut <- ggXYplot(ggData) 
+            }
             if (bgCells) {
                 ggOut <- labelBackgroundCells(
                     ggOut,
@@ -200,17 +223,28 @@ scDRgene <- function(
                 labelsFontFamily = labelsFontFamily,
                 dimRedX = dimRedX,
                 dimRedY = dimRedY,
-                keepXYlables = keepXYlables) +
+                keepXYlables = keepXYlables,
+                inpCellBorder = inpCellBorder,
+                cellborder = cellborder,
+                cellSegColor = cellSegColor,
+                cellSegAlpha = cellSegAlpha) +
                 guides(color = guide_colorbar(barwidth = 15))
             if (inpColRange[2] > 0) {
                 ggOut <- ggOut +
                     scale_color_gradientn(
                         gene1,
                         colours = availableThemes(gradientCol),
+                        limits = inpColRange) +
+                    scale_fill_gradientn(
+                        gene1,
+                        colours = availableThemes(gradientCol),
                         limits = inpColRange)
             } else{
                 ggOut <- ggOut +
                     scale_color_gradientn(
+                        gene1,
+                        colours = availableThemes(gradientCol)) +
+                    scale_fill_gradientn(
                         gene1,
                         colours = availableThemes(gradientCol))
             }

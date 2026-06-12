@@ -105,6 +105,15 @@ coExprServer <- function(id, dataSource, optCrt) {
                 render = I(optCrt)
             )
         )
+        ## update the x/y axis
+        postfix <- 1
+        geneExprXYlimTog <- paste0('manuXYlimTog', postfix)
+        geneExprXlim <- paste0('manuXlim', postfix)
+        geneExprYlim <- paste0('manuYlim', postfix)
+        observeEvent(input[[geneExprXYlimTog]],{
+            updateXYlimRange(postfix, input, session, dataSource,
+                             geneExprXlim, geneExprYlim)
+        })
         ### plots
         plot1 <- reactive({
             scDRcoex(
@@ -126,9 +135,29 @@ coExprServer <- function(id, dataSource, optCrt) {
                 labelsFontFamily=input$GeneExprfml,
                 plotAspectRatio=input$GeneExprasp,
                 keepXYlables=input$GeneExprtxt,
-                hideFilterCell=input$CoExprhid1
+                hideFilterCell=input$CoExprhid1,
+                xlim = if(isTRUE(all(input[[geneExprXlim]]!=.globals$defaultLimValue)))
+                    input[[geneExprXlim]] else NULL,
+                ylim = if(isTRUE(all(input[[geneExprYlim]]!=.globals$defaultLimValue)))
+                    input[[geneExprYlim]] else NULL,
+                inpCellBorder=input$CoExprSegmentation1,
+                cellborderFilename=file.path(
+                    .globals$datafolder,
+                    dataSource()$dataset,
+                    .globals$filenames[["cellborder"]]),
+                cellSegAlpha = input$CoExprSegAlpha1,
+                cellSegColor = ifelse(
+                    input$CoExprSegBorderColor1,
+                    input$CoExprSegColor1,
+                    NA),
+                inpBgImg=input$CoExprBgImg1,
+                backgroundImage=file.path(
+                    .globals$datafolder,
+                    dataSource()$dataset,
+                    .globals$filenames[["backgroundImage"]])
             )
         })
+        
         updateGeneExprDotPlotUI(
             postfix = 1,
             id = id,

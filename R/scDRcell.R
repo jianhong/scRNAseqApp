@@ -93,79 +93,10 @@ scDRcell <- function(
             ggData$sampleID <- inpMeta$sampleID
         }
     }
-    if(isTRUE(inpCellBorder)){
-        if (file.exists(cellborderFilename)) {
-            cellborder <- readRDS(cellborderFilename)
-            # cellborderFilename must be a RDS filename.
-            # The RDS file must be a list of cell borders.
-            # The names of the list is the reductions name, such as umap
-            if(is.list(cellborder)){
-                dimRed_prefix <- sub('.$', '', dimRedX)
-                if(dimRed_prefix==sub('.$', '', dimRedY)){
-                    if(dimRed_prefix %in% names(cellborder)){
-                        cellborder <- cellborder[[dimRed_prefix]]
-                        if(!all(c('x', 'y', 'idx', 'sampleID') %in%
-                                colnames(cellborder))){
-                            showNotification(
-                                "The cell border should be a table with
-                                x, y, idx, sampleID",
-                                type = 'error',
-                                duration = 5)
-                            inpCellBorder <- FALSE
-                        }else{
-                            ggData$sampleID <- inpMeta$sampleID
-                        }
-                    }else{
-                        inpCellBorder <- FALSE
-                    }
-                }else{
-                    inpCellBorder <- FALSE
-                }
-            }else{
-                inpCellBorder <- FALSE
-            }
-        }else{
-            inpCellBorder <- FALSE
-        }
-    }
-    if(isTRUE(inpBgImg)){
-        if(file.exists(backgroundImage)){
-            backgroundImage <- readRDS(backgroundImage)
-            if(is.list(backgroundImage)){
-                dimRed_prefix <- sub('.$', '', dimRedX)
-                if(dimRed_prefix==sub('.$', '', dimRedY)){
-                    if(dimRed_prefix %in% names(backgroundImage)){
-                        backgroundImage <- backgroundImage[[dimRed_prefix]]
-                        backgroundAlignFun <- 
-                            backgroundImage$FUN
-                        if(is.null(backgroundAlignFun)){
-                            backgroundAlignFun <- transformImage
-                        }
-                        backgroundAlignArgs <-
-                            backgroundImage$args
-                        backgroundImage <- backgroundImage$raster_df
-                        if(!all(c('x', 'y', 'value') %in% 
-                                colnames(backgroundImage))){
-                            showNotification(
-                                "The background should be a table with
-                                x, y, value",
-                                type = 'error',
-                                duration = 5)
-                            inpBgImg <- FALSE
-                        }
-                    }else{
-                        inpBgImg <- FALSE
-                    }
-                }else{
-                    inpBgImg <- FALSE
-                }
-            }else{
-                inpBgImg <- FALSE
-            }
-        }else{
-            inpBgImg <- FALSE
-        }
-    }
+    
+    checkCellSegmentationAvailability(environment())
+    backgroundAlignFun <- checkBgImgAvailability(environment())
+    
     lassoSelected <- rep(TRUE, nrow(ggData))
     if('selectedCellIDs' %in% names(dots)){
         if(length(dots$selectedCellIDs)){

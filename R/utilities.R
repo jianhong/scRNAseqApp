@@ -904,3 +904,139 @@ transformImage <- function(
     }
     return(plot_data)
 }
+
+checkCellSegmentationAvailability <- 
+    function(env){
+    if(isTRUE(env$inpCellBorder)){
+        if (file.exists(env$cellborderFilename)) {
+            env$cellborder <- readRDS(env$cellborderFilename)
+            # cellborderFilename must be a RDS filename.
+            # The RDS file must be a list of cell borders.
+            # The names of the list is the reductions name, such as umap
+            if(is.list(env$cellborder)){
+                dimRed_prefix <- sub('.$', '', env$dimRedX)
+                if(dimRed_prefix==sub('.$', '', env$dimRedY)){
+                    if(dimRed_prefix %in% names(env$cellborder)){
+                        env$cellborder <- env$cellborder[[dimRed_prefix]]
+                        if(!all(c('x', 'y', 'idx', 'sampleID') %in%
+                                colnames(env$cellborder))){
+                            showNotification(
+                                "The cell border should be a table with
+                                x, y, idx, sampleID",
+                                type = 'error',
+                                duration = 5)
+                            env$inpCellBorder <- FALSE
+                        }else{
+                            env$ggData$sampleID <- env$inpMeta$sampleID
+                        }
+                    }else{
+                        env$inpCellBorder <- FALSE
+                    }
+                }else{
+                    env$inpCellBorder <- FALSE
+                }
+            }else{
+                env$inpCellBorder <- FALSE
+            }
+        }else{
+            env$inpCellBorder <- FALSE
+        }
+    }
+}
+
+checkBgImgAvailability <- 
+    function(env){
+        backgroundAlignFun <- NULL
+        if(isTRUE(env$inpBgImg)){
+            if(file.exists(env$backgroundImage)){
+                env$backgroundImage <- readRDS(env$backgroundImage)
+                if(is.list(env$backgroundImage)){
+                    dimRed_prefix <- sub('.$', '', env$dimRedX)
+                    if(dimRed_prefix==sub('.$', '', env$dimRedY)){
+                        if(dimRed_prefix %in% names(env$backgroundImage)){
+                            env$backgroundImage <- env$backgroundImage[[dimRed_prefix]]
+                            backgroundAlignFun <- 
+                                env$backgroundImage$FUN
+                            if(is.null(backgroundAlignFun)){
+                                backgroundAlignFun <- transformImage
+                            }
+                            env$backgroundAlignArgs <-
+                                env$backgroundImage$args
+                            env$backgroundImage <- env$backgroundImage$raster_df
+                            if(!all(c('x', 'y', 'value') %in% 
+                                    colnames(env$backgroundImage))){
+                                showNotification(
+                                    "The background should be a table with
+                                x, y, value",
+                                    type = 'error',
+                                    duration = 5)
+                                env$inpBgImg <- FALSE
+                            }
+                        }else{
+                            env$inpBgImg <- FALSE
+                        }
+                    }else{
+                        env$inpBgImg <- FALSE
+                    }
+                }else{
+                    env$inpBgImg <- FALSE
+                }
+            }else{
+                env$inpBgImg <- FALSE
+            }
+        }
+        return(backgroundAlignFun)
+    }
+
+updateXYlimRange <- function(postfix, input, session, dataSource, xlimid, ylimid, val, val2){
+    if(isTRUE(input$GeneExprdrX %in% dataSource()$sc1conf$UI)){
+        if(missing(val)){
+            val <- dataSource()$sc1meta[[
+                dataSource()$sc1conf[
+                    dataSource()$sc1conf$UI == input$GeneExprdrX]$ID]]
+        }
+        
+        minv <- floor(min(val, na.rm = TRUE))
+        maxv <- getM(val)
+        stepv <- (maxv-minv)/100
+        updateSliderInput(
+            session,
+            xlimid,
+            label = "Xlim range:",
+            min = minv-100*stepv,
+            max = maxv+100*stepv,
+            value = c(minv*0.95, maxv*1.05),
+            step = stepv
+        )
+        updateNumericInput(
+            inputId = paste0('manuXlimOriMin', postfix),
+            value = minv*0.95)
+        updateNumericInput(
+            inputId = paste0('manuXlimOriMax', postfix),
+            value = maxv*1.05)
+        
+        if(missing(val2)){
+            val2 <- dataSource()$sc1meta[[
+                dataSource()$sc1conf[
+                    dataSource()$sc1conf$UI == input$GeneExprdrY]$ID]]
+        }
+        minv2 <- floor(min(val2, na.rm = TRUE))
+        maxv2 <- getM(val2)
+        stepv2 <- (maxv2-minv2)/100
+        updateSliderInput(
+            session,
+            ylimid,
+            label = "Ylim range:",
+            min = minv2-100*stepv2,
+            max = maxv2+100*stepv2,
+            value = c(minv2*0.95, maxv2*1.05),
+            step = stepv2
+        )
+        updateNumericInput(
+            inputId = paste0('manuYlimOriMin', postfix),
+            value = minv2*0.95)
+        updateNumericInput(
+            inputId = paste0('manuYlimOriMax', postfix),
+            value = maxv2*1.05)
+    }
+}

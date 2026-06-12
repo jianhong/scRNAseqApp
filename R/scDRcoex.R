@@ -9,7 +9,7 @@ bilinear <- function(x, y, xy, Q11, Q21, Q12, Q22) {
 #' @importFrom grDevices rgb
 #' @importFrom data.table data.table
 #' @importFrom plotly plot_ly layout
-#' @importFrom ggplot2 ggplot aes .data geom_point xlab ylab scale_color_gradientn guides guide_colorbar coord_fixed
+#' @importFrom ggplot2 ggplot aes .data geom_point xlab ylab scale_color_gradientn guides guide_colorbar coord_fixed scale_colour_identity scale_fill_identity
 scDRcoex <- function(
         inpConf,
         inpMeta,
@@ -33,6 +33,13 @@ scDRcoex <- function(
         valueFilterCutoff,
         valueFilterCutoff2,
         hideFilterCell = FALSE,
+        xlim=NULL,ylim=NULL,
+        inpCellBorder=FALSE,# stereo-seq cell borders
+        cellborderFilename='',
+        cellSegAlpha=1,
+        cellSegColor=NA,
+        inpBgImg=FALSE,
+        backgroundImage='',
         ...) {
     if (is.null(gene1) || is.null(gene2) || gene1 == "" || gene2 == "") {
         return(NULL)
@@ -55,7 +62,13 @@ scDRcoex <- function(
     colnames(ggData)[c(1, 2)] <- c("X", "Y")
     if (plotType == "3D") {
         ggData$sampleID <- inpMeta$sampleID
+        inpCellBorder <- FALSE
+        inpBgImg <- FALSE
     }
+    
+    checkCellSegmentationAvailability(environment())
+    backgroundAlignFun <- checkBgImgAvailability(environment())
+    
     ggData <-
         cbindFilterValues(
             ggData,
@@ -165,7 +178,20 @@ scDRcoex <- function(
                 )
         ))
     }
-    ggOut <- ggplot(ggData, aes(x = .data[["X"]], y = .data[["Y"]]))
+    
+    ggData$val <- ggData$cMix
+    
+    if(isTRUE(inpBgImg)){
+        backgroundAlignArgs$plot_data <- ggData
+        ggData <- do.call(backgroundAlignFun, backgroundAlignArgs)
+        if(inpCellBorder){
+            backgroundAlignArgs$plot_data <- cellborder
+            cellborder <- do.call(backgroundAlignFun, backgroundAlignArgs)
+        }
+        ggOut <- ggXYplot(ggData, backgroundImage)
+    }else{
+        ggOut <- ggXYplot(ggData) 
+    }
     if (bgCells) {
         ggOut <- labelBackgroundCells(
             ggOut,
@@ -175,17 +201,24 @@ scDRcoex <- function(
             shape = 16,
             hide = hideFilterCell)
     }
-    ggOut <- ggOut +
-        geom_point(
-            size = pointSize,
-            shape = 16,
-            color = ggData$cMix) +
-        xlab(dimRedX) + ylab(dimRedY) +
-        sctheme(
-            base_size = labelsFontsize,
-            family = labelsFontFamily,
-            XYval = keepXYlables)
     
-    ggOut <- fixCoord(ggOut, plotAspectRatio, rat)
+    ggOut <- pointPlot(
+        ggOut = ggOut,
+        pointSize = pointSize,
+        fontSize = labelsFontsize,
+        labelsFontFamily = labelsFontFamily,
+        dimRedX = dimRedX,
+        dimRedY = dimRedY,
+        keepXYlables = keepXYlables,
+        inpCellBorder = inpCellBorder,
+        cellborder = cellborder,
+        cellSegColor = cellSegColor,
+        cellSegAlpha = cellSegAlpha)
+
+    ggOut <- ggOut +
+        scale_colour_identity(guide = 'none') +
+        scale_fill_identity(guide = 'none')
+    
+    ggOut <- fixCoord(ggOut, plotAspectRatio, rat, xlim, ylim)
     return(ggOut)
 }

@@ -309,8 +309,13 @@ updateGeneExprDotPlotUI <-
         ranges <- reactiveValues(x = NULL,
                                  y = NULL)
         # link the ranges to manuXlim and Ylim
+        geneExprXYlimTog <- paste0('manuXYlimTog', postfix)
         cellInfoXlim <- paste0('manuXlim', postfix)
         cellInfoYlim <- paste0('manuYlim', postfix)
+        # observeEvent(list(input$GeneExprdrX, input$GeneExprdrY), {
+        #     updateXYlimRange(postfix, input, session, dataSource,
+        #                      cellInfoXlim, cellInfoYlim)
+        # }) # those code moved to each UI, since the molecules are not using the same logical.
         observeEvent(ranges$x, {
             if(length(ranges$x)==2){
                 updateSliderInput(
@@ -406,7 +411,7 @@ updateGeneExprDotPlotUI <-
                                       resetOnNew = TRUE))
                 if(id %in% c('cellInfoGeneExpr', 'cellInfoCellInfo',
                              'subsetGeneExpr', 'geneExprGeneExpr',
-                             'sunburst')){
+                             'sunburst', 'coExpr')){
                     div(
                         #class = "wheel-zoomable-plot", # default close it
                         id = NS0(id, 'GeneExproupDIV', postfix),
@@ -845,50 +850,8 @@ updateCellInfoPlot <-
                 ), 'cells'))
         })
         observeEvent(input[[cellInfoXYlimTog]],{
-            if(isTRUE(input$GeneExprdrX %in% dataSource()$sc1conf$UI)){
-                val <- dataSource()$sc1meta[[
-                    dataSource()$sc1conf[
-                        dataSource()$sc1conf$UI == input$GeneExprdrX]$ID]]
-                minv <- floor(min(val, na.rm = TRUE))
-                maxv <- getM(val)
-                stepv <- (maxv-minv)/100
-                updateSliderInput(
-                    session,
-                    cellInfoXlim,
-                    label = "Xlim range:",
-                    min = minv-100*stepv,
-                    max = maxv+100*stepv,
-                    value = c(minv*0.95, maxv*1.05),
-                    step = stepv
-                )
-                updateNumericInput(
-                    inputId = paste0('manuXlimOriMin', postfix),
-                    value = minv*0.95)
-                updateNumericInput(
-                    inputId = paste0('manuXlimOriMax', postfix),
-                    value = maxv*1.05)
-                val2 <- dataSource()$sc1meta[[
-                    dataSource()$sc1conf[
-                        dataSource()$sc1conf$UI == input$GeneExprdrY]$ID]]
-                minv2 <- floor(min(val2, na.rm = TRUE))
-                maxv2 <- getM(val2)
-                stepv2 <- (maxv2-minv2)/100
-                updateSliderInput(
-                    session,
-                    cellInfoYlim,
-                    label = "Ylim range:",
-                    min = minv2-100*stepv2,
-                    max = maxv2+100*stepv2,
-                    value = c(minv2*0.95, maxv2*1.05),
-                    step = stepv2
-                )
-                updateNumericInput(
-                    inputId = paste0('manuYlimOriMin', postfix),
-                    value = minv2*0.95)
-                updateNumericInput(
-                    inputId = paste0('manuYlimOriMax', postfix),
-                    value = maxv2*1.05)
-            }
+            updateXYlimRange(postfix, input, session, dataSource,
+                             cellInfoXlim, cellInfoYlim)
         })
         
         plotX <- reactive({
@@ -927,9 +890,9 @@ updateCellInfoPlot <-
                 editorStatus = ifelse(
                     length(input[[paste0('editorStatus', postfix)]]),
                     input[[paste0('editorStatus', postfix)]], NA),
-                xlim = if(input[[cellInfoXYlimTog]] %% 2 == 1)
+                xlim = if(isTRUE(all(input[[cellInfoXlim]]!=.globals$defaultLimValue)))
                     input[[cellInfoXlim]] else NULL,
-                ylim = if(input[[cellInfoXYlimTog]] %% 2 == 1)
+                ylim = if(isTRUE(all(input[[cellInfoYlim]]!=.globals$defaultLimValue)))
                     input[[cellInfoYlim]] else NULL,
                 inpCellBorder=input[[paste0('CellInfoSegmentation', postfix)]],
                 cellborderFilename=file.path(
@@ -1205,48 +1168,13 @@ updateMoleculePlot <-
             )
         )
         
-        geneExprXYlimTog <- paste0('manuXYlimTog', 2)
-        geneExprXlim <- paste0('manuXlim', 2)
-        geneExprYlim <- paste0('manuYlim', 2)
-        observeEvent(input[[geneExprXYlimTog]],{
-            val <- molecules[[rdim]]$x
-            minv <- floor(min(val, na.rm = TRUE))
-            maxv <- getM(val)
-            stepv <- (maxv-minv)/100
-            updateSliderInput(
-                session,
-                geneExprXlim,
-                label = "Xlim range:",
-                min = minv-100*stepv,
-                max = maxv+100*stepv,
-                value = c(minv*0.95, maxv*1.05),
-                step = stepv
-            )
-            updateNumericInput(
-                inputId = paste0('manuXlimOriMin', postfix),
-                value = minv*0.95)
-            updateNumericInput(
-                inputId = paste0('manuXlimOriMax', postfix),
-                value = maxv*1.05)
-            val2 <- molecules[[rdim]]$y
-            minv2 <- floor(min(val2, na.rm = TRUE))
-            maxv2 <- getM(val2)
-            stepv2 <- (maxv2-minv2)/100
-            updateSliderInput(
-                session,
-                geneExprYlim,
-                label = "Ylim range:",
-                min = minv2-100*stepv2,
-                max = maxv2+100*stepv2,
-                value = c(minv2*0.95, maxv2*1.05),
-                step = stepv2
-            )
-            updateNumericInput(
-                inputId = paste0('manuYlimOriMin', postfix),
-                value = minv2*0.95)
-            updateNumericInput(
-                inputId = paste0('manuYlimOriMax', postfix),
-                value = maxv2*1.05)
+        geneExprXlim <- paste0('manuXlim', postfix)
+        geneExprYlim <- paste0('manuYlim', postfix)
+        observeEvent(list(input$GeneExprdrX, input$GeneExprdrY), {
+            updateXYlimRange(postfix=postfix, input, session, dataSource,
+                             geneExprXlim, geneExprYlim,
+                             val = molecules[[rdim]]$x,
+                             val2 = molecules[[rdim]]$y)
         })
         
         ### plots
@@ -1261,10 +1189,30 @@ updateMoleculePlot <-
                 labelsFontFamily=input$GeneExprfml,
                 plotAspectRatio=input$GeneExprasp,
                 keepXYlables=input$GeneExprtxt,
-                xlim = if(input[[geneExprXYlimTog]] %% 2 == 1)
+                xlim = if(isTRUE(all(input[[geneExprXlim]]!=.globals$defaultLimValue)))
                     input[[geneExprXlim]] else NULL,
-                ylim = if(input[[geneExprXYlimTog]] %% 2 == 1)
-                    input[[geneExprYlim]] else NULL
+                ylim = if(isTRUE(all(input[[geneExprYlim]]!=.globals$defaultLimValue)))
+                    input[[geneExprYlim]] else NULL,
+                inpCellBorder=input[[paste0('GeneExprSegmentation', postfix)]],
+                cellborderFilename=file.path(
+                    .globals$datafolder,
+                    dataSource()$dataset,
+                    .globals$filenames[["cellborder"]]),
+                cellSegAlpha = input[[paste0('GeneExprSegAlpha', postfix)]],
+                cellSegColor = ifelse(
+                    input[[paste0('GeneExprSegBorderColor', postfix)]],
+                    input[[paste0('GeneExprSegColor', postfix)]],
+                    NA),
+                cellColor = if(input[[paste0('GeneExprSegmentation', postfix)]])
+                    list(# hard coding here, use cell information to color cells
+                    cellinfoID=input[['CellInfo1']],
+                    inpConf=dataSource()$sc1conf,
+                    inpMeta=dataSource()$sc1meta) else NULL, 
+                inpBgImg=input[[paste0('GeneExprBgImg', postfix)]],
+                backgroundImage=file.path(
+                    .globals$datafolder,
+                    dataSource()$dataset,
+                    .globals$filenames[["backgroundImage"]])
             )
         })
         updateGeneExprDotPlotUI(
@@ -1318,51 +1266,9 @@ updateGeneExprPlot <-
         geneExprXYlimTog <- paste0('manuXYlimTog', postfix)
         geneExprXlim <- paste0('manuXlim', postfix)
         geneExprYlim <- paste0('manuYlim', postfix)
-        observeEvent(input[[geneExprXYlimTog]],{
-            if(isTRUE(input$GeneExprdrX %in% dataSource()$sc1conf$UI)){
-                val <- dataSource()$sc1meta[[
-                    dataSource()$sc1conf[
-                        dataSource()$sc1conf$UI == input$GeneExprdrX]$ID]]
-                minv <- floor(min(val, na.rm = TRUE))
-                maxv <- getM(val)
-                stepv <- (maxv-minv)/100
-                updateSliderInput(
-                    session,
-                    geneExprXlim,
-                    label = "Xlim range:",
-                    min = minv-100*stepv,
-                    max = maxv+100*stepv,
-                    value = c(minv*0.95, maxv*1.05),
-                    step = stepv
-                )
-                updateNumericInput(
-                    inputId = paste0('manuXlimOriMin', postfix),
-                    value = minv*0.95)
-                updateNumericInput(
-                    inputId = paste0('manuXlimOriMax', postfix),
-                    value = maxv*1.05)
-                val2 <- dataSource()$sc1meta[[
-                    dataSource()$sc1conf[
-                        dataSource()$sc1conf$UI == input$GeneExprdrY]$ID]]
-                minv2 <- floor(min(val2, na.rm = TRUE))
-                maxv2 <- getM(val2)
-                stepv2 <- (maxv2-minv2)/100
-                updateSliderInput(
-                    session,
-                    geneExprYlim,
-                    label = "Ylim range:",
-                    min = minv2-100*stepv2,
-                    max = maxv2+100*stepv2,
-                    value = c(minv2*0.95, maxv2*1.05),
-                    step = stepv2
-                )
-                updateNumericInput(
-                    inputId = paste0('manuYlimOriMin', postfix),
-                    value = minv2*0.95)
-                updateNumericInput(
-                    inputId = paste0('manuYlimOriMax', postfix),
-                    value = maxv2*1.05)
-            }
+        observeEvent(list(input$GeneExprdrX, input$GeneExprdrY),{
+            updateXYlimRange(postfix, input, session, dataSource,
+                             geneExprXlim, geneExprYlim)
         })
         
         ### plots
@@ -1394,10 +1300,25 @@ updateGeneExprPlot <-
                     else
                         input[[paste0("GeneExprrg", postfix)]],
                 hideFilterCell = input[[paste0("GeneExprhid", postfix)]],
-                xlim = if(input[[geneExprXYlimTog]] %% 2 == 1)
+                xlim = if(isTRUE(all(input[[geneExprXlim]]!=.globals$defaultLimValue)))
                     input[[geneExprXlim]] else NULL,
-                ylim = if(input[[geneExprXYlimTog]] %% 2 == 1)
-                    input[[geneExprYlim]] else NULL
+                ylim = if(isTRUE(all(input[[geneExprYlim]]!=.globals$defaultLimValue)))
+                    input[[geneExprYlim]] else NULL,
+                inpCellBorder=input[[paste0('GeneExprSegmentation', postfix)]],
+                cellborderFilename=file.path(
+                    .globals$datafolder,
+                    dataSource()$dataset,
+                    .globals$filenames[["cellborder"]]),
+                cellSegAlpha = input[[paste0('GeneExprSegAlpha', postfix)]],
+                cellSegColor = ifelse(
+                    input[[paste0('GeneExprSegBorderColor', postfix)]],
+                    input[[paste0('GeneExprSegColor', postfix)]],
+                    NA),
+                inpBgImg=input[[paste0('GeneExprBgImg', postfix)]],
+                backgroundImage=file.path(
+                    .globals$datafolder,
+                    dataSource()$dataset,
+                    .globals$filenames[["backgroundImage"]])
             )
         })
         updateGeneExprDotPlotUI(
@@ -1452,51 +1373,9 @@ updateSubsetGeneExprPlot <-
         geneExprXYlimTog <- paste0('manuXYlimTog', postfix)
         geneExprXlim <- paste0('manuXlim', postfix)
         geneExprYlim <- paste0('manuYlim', postfix)
-        observeEvent(input[[geneExprXYlimTog]],{
-            if(isTRUE(input$GeneExprdrX %in% dataSource()$sc1conf$UI)){
-                val <- dataSource()$sc1meta[[
-                    dataSource()$sc1conf[
-                        dataSource()$sc1conf$UI == input$GeneExprdrX]$ID]]
-                minv <- floor(min(val, na.rm = TRUE))
-                maxv <- getM(val)
-                stepv <- (maxv-minv)/100
-                updateSliderInput(
-                    session,
-                    geneExprXlim,
-                    label = "Xlim range:",
-                    min = minv-100*stepv,
-                    max = maxv+100*stepv,
-                    value = c(minv*0.95, maxv*1.05),
-                    step = stepv
-                )
-                updateNumericInput(
-                    inputId = paste0('manuXlimOriMin', postfix),
-                    value = minv*0.95)
-                updateNumericInput(
-                    inputId = paste0('manuXlimOriMax', postfix),
-                    value = maxv*1.05)
-                val2 <- dataSource()$sc1meta[[
-                    dataSource()$sc1conf[
-                        dataSource()$sc1conf$UI == input$GeneExprdrY]$ID]]
-                minv2 <- floor(min(val2, na.rm = TRUE))
-                maxv2 <- getM(val2)
-                stepv2 <- (maxv2-minv2)/100
-                updateSliderInput(
-                    session,
-                    geneExprYlim,
-                    label = "Ylim range:",
-                    min = minv2-100*stepv2,
-                    max = maxv2+100*stepv2,
-                    value = c(minv2*0.95, maxv2*1.05),
-                    step = stepv2
-                )
-                updateNumericInput(
-                    inputId = paste0('manuYlimOriMin', postfix),
-                    value = minv2*0.95)
-                updateNumericInput(
-                    inputId = paste0('manuYlimOriMax', postfix),
-                    value = maxv2*1.05)
-            }
+        observeEvent(list(input$GeneExprdrX, input$GeneExprdrY),{
+            updateXYlimRange(postfix, input, session, dataSource,
+                             geneExprXlim, geneExprYlim)
         })
         
         ### plots
@@ -1533,9 +1412,9 @@ updateSubsetGeneExprPlot <-
                 valueFilterCutoff = input$filterCellVal,
                 valueFilterCutoff2 = input$filterCellVal2,
                 hideFilterCell = input[[paste0("GeneExprhid", postfix)]],
-                xlim = if(input[[geneExprXYlimTog]] %% 2 == 1)
+                xlim = if(isTRUE(all(input[[geneExprXlim]]!=.globals$defaultLimValue)))
                     input[[geneExprXlim]] else NULL,
-                ylim = if(input[[geneExprXYlimTog]] %% 2 == 1)
+                ylim = if(isTRUE(all(input[[geneExprYlim]]!=.globals$defaultLimValue)))
                     input[[geneExprYlim]] else NULL
             )
         })
@@ -1802,8 +1681,11 @@ pointPlot <- function(
                 family = labelsFontFamily,
                 XYval = keepXYlables)
     if (isTRUE(inpCellBorder)) {
-        cellborder <- merge(cellborder, ggOut$data,
-                            by='sampleID')
+        if('sampleID' %in% colnames(ggOut$data)){
+            cellborder <- merge(cellborder, ggOut$data,
+                                by='sampleID')
+        }else{#molecules without cell id, so can not merge
+        }
         sampleID <- factor(cellborder$sampleID,
                            levels=ggOut$data$sampleID)
         cellborder <- cellborder[order(sampleID, 

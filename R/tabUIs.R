@@ -186,7 +186,37 @@ geneExprPlotControlUI <- function(
                         ns=NS(id),
                         numericInput(
                             NS0(id, "GeneExprrg", postfix), "Max value:",
-                            value = 100))
+                            value = 100)),
+                    checkboxInput(
+                        NS0(id, 'GeneExprSegmentation', postfix),
+                        "Show cell segmentation", value = FALSE),
+                    conditionalPanel(
+                        condition = paste0(
+                            "input.GeneExprSegmentation", postfix, " == true"),
+                        ns=NS(id),
+                        sliderInput(
+                            NS0(id, 'GeneExprSegAlpha', postfix),
+                            "Cell segmentation alpha", value=1, 
+                            min = 0, max=1, step=0.01),
+                        checkboxInput(
+                            NS0(id, 'GeneExprSegBorderColor', postfix),
+                            "Show cell segmentation border",
+                            value = FALSE
+                        ),
+                        conditionalPanel(
+                            condition = paste0(
+                                "input.GeneExprSegBorderColor", postfix, " == true"),
+                            ns=NS(id),
+                            colourInput(
+                                NS0(id, 'GeneExprSegColor', postfix),
+                                "Cell segmentation border color",
+                                value = '#EEEEEE'
+                            )
+                        )
+                    ),
+                    checkboxInput(
+                        NS0(id, 'GeneExprBgImg', postfix),
+                        "Show spatial image", value = FALSE)
                 ),
             
                 actionButton(
@@ -199,7 +229,7 @@ geneExprPlotControlUI <- function(
                     sliderInput(
                         NS0(id, "manuXlim", postfix), "Xlim range:",
                         min = -10, max = 100,
-                        value = c(-1.5, 10),
+                        value = .globals$defaultLimValue,
                         step = 0.1),
                     conditionalPanel(
                         condition = paste0(
@@ -208,7 +238,7 @@ geneExprPlotControlUI <- function(
                         sliderInput(
                             NS0(id, "manuYlim", postfix), "Ylim range:",
                             min = -10, max = 100,
-                            value = c(-1.5, 10),
+                            value = .globals$defaultLimValue,
                             step = 0.1)
                     ),
                     manuXYlimOriUI(id, postfix),
@@ -334,12 +364,12 @@ cellInfoPlotControlUI <- function(
                     sliderInput(
                         NS0(id, "manuXlim", postfix), "Xlim range:",
                         min = -10, max = 100,
-                        value = c(-1.5, 10),
+                        value = .globals$defaultLimValue,
                         step = 0.1),
                     sliderInput(
                         NS0(id, "manuYlim", postfix), "Ylim range:",
                         min = -10, max = 100,
-                        value = c(-1.5, 10),
+                        value = .globals$defaultLimValue,
                         step = 0.1),
                     manuXYlimOriUI(id, postfix),
                     if(linkXYlim){
@@ -394,8 +424,57 @@ geneCoExprPlotControlUI <- function(id, postfix=1, plotly=FALSE){
                 NS0(id, "CoExprhid", postfix),
                 "Hide filtered cells", value = FALSE),
             checkboxInput(
-                NS0(id, "usingPan", postfix),
-                "Using wheel to zoom in/out", value = FALSE)
+                NS0(id, 'CoExprSegmentation', postfix),
+                "Show cell segmentation", value = FALSE),
+            conditionalPanel(
+                condition = paste0(
+                    "input.CoExprSegmentation", postfix, " == true"),
+                ns=NS(id),
+                sliderInput(
+                    NS0(id, 'CoExprSegAlpha', postfix),
+                    "Cell segmentation alpha", value=1, 
+                    min = 0, max=1, step=0.01),
+                checkboxInput(
+                    NS0(id, 'CoExprSegBorderColor', postfix),
+                    "Show cell segmentation border",
+                    value = FALSE
+                ),
+                conditionalPanel(
+                    condition = paste0(
+                        "input.CoExprSegBorderColor", postfix, " == true"),
+                    ns=NS(id),
+                    colourInput(
+                        NS0(id, 'CoExprSegColor', postfix),
+                        "Cell segmentation border color",
+                        value = '#EEEEEE'
+                    )
+                )
+            ),
+            checkboxInput(
+                NS0(id, 'CoExprBgImg', postfix),
+                "Show spatial image", value = FALSE),
+            actionButton(
+                NS0(id, "manuXYlimTog", postfix),
+                "Manually set x/y axis", inline = TRUE),
+            conditionalPanel(
+                condition = paste0(
+                    "input.manuXYlimTog", postfix, " % 2 ==1"),
+                ns=NS(id),
+                sliderInput(
+                    NS0(id, "manuXlim", postfix), "Xlim range:",
+                    min = -10, max = 100,
+                    value = .globals$defaultLimValue,
+                    step = 0.1),
+                sliderInput(
+                    NS0(id, "manuYlim", postfix), "Ylim range:",
+                    min = -10, max = 100,
+                    value = .globals$defaultLimValue,
+                    step = 0.1),
+                manuXYlimOriUI(id, postfix)
+            ),
+            checkboxInput(
+               NS0(id, "usingPan", postfix),
+               "Using wheel to zoom in/out", value = FALSE)
         )
     )
 }
@@ -1021,7 +1100,8 @@ contextMenuGeneExprUI <- function(
                         ns=NS(id),
                         sliderInput(
                             NS0(id, "manuXlim", postfix), "Xlim range:",
-                            min = -10, max = 100, value = c(-1.5, 10),
+                            min = -10, max = 100,
+                            value = .globals$defaultLimValue,
                             step = 0.1),
                         manuXYlimOriUI(id, postfix)
                     )

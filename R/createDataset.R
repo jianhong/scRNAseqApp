@@ -651,9 +651,9 @@ addBackgroundImage <- function(
     }
     if(isTRUE(flip)){
         if(isTRUE(CCR_90)){
-            tmp <- tiff$y
+            tmp <- tiff$x
             tiff$x <- tiff$y
-            tiff$y <- tiff$x
+            tiff$y <- tmp
         }else{
             tiff$x <- image_width - tiff$x
         }

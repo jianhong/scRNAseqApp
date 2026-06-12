@@ -1703,7 +1703,7 @@ pointPlot <- function(
     }
     ggOut
 }
-#' @importFrom ggplot2 geom_raster
+#' @importFrom ggplot2 geom_raster scale_fill_gradient annotate
 #' @importFrom ggnewscale new_scale_fill
 ggXYplot <- function(ggData, backgroundImageData) {
     p <- ggplot(ggData, aes(
@@ -1712,12 +1712,25 @@ ggXYplot <- function(ggData, backgroundImageData) {
     ))
     if(!missing(backgroundImageData)){
         if(all(c('x','y','value') %in% colnames(backgroundImageData))){
+            xmin <- min(backgroundImageData$x)
+            xmax <- max(backgroundImageData$x)
+            ymin <- min(backgroundImageData$y)
+            ymax <- max(backgroundImageData$y)
+            backgroundImageData <- 
+                backgroundImageData[backgroundImageData$value!=0, ,drop=FALSE]
+            
             p <- p +
+                annotate("rect",
+                         xmin = xmin, xmax = xmax,
+                         ymin = ymin, ymax = ymax,
+                         fill = "black") + 
                 geom_raster(data = backgroundImageData,
                             aes(x = .data[["x"]], y = .data[["y"]],
                                 fill = .data[["value"]]),
                             inherit.aes = FALSE,
-                            show.legend = FALSE) +
+                            show.legend = FALSE,
+                            na.rm=TRUE) +
+                scale_fill_gradient(na.value='black', low='black', high ='white') +
                 ggnewscale::new_scale_fill()
         }
     }

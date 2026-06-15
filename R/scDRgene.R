@@ -27,7 +27,7 @@ scDRgene <- function(
         valueFilterCutoff2,
         hideFilterCell = FALSE,
         geneType = c('gene', 'coor'),
-        xlim=NULL,ylim=NULL,
+        #xlim=NULL,ylim=NULL,
         inpCellBorder=FALSE,# stereo-seq cell borders
         cellborderFilename='',
         cellSegAlpha=1,
@@ -248,7 +248,7 @@ scDRgene <- function(
                         gene1,
                         colours = availableThemes(gradientCol))
             }
-            ggOut <- fixCoord(ggOut, plotAspectRatio, rat, xlim, ylim)
+            ggOut <- fixCoord(ggOut, plotAspectRatio, rat)
         }
     } else{
         ## ridgePlot

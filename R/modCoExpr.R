@@ -136,10 +136,6 @@ coExprServer <- function(id, dataSource, optCrt) {
                 plotAspectRatio=input$GeneExprasp,
                 keepXYlables=input$GeneExprtxt,
                 hideFilterCell=input$CoExprhid1,
-                xlim = if(isTRUE(all(input[[geneExprXlim]]!=.globals$defaultLimValue)))
-                    input[[geneExprXlim]] else NULL,
-                ylim = if(isTRUE(all(input[[geneExprYlim]]!=.globals$defaultLimValue)))
-                    input[[geneExprYlim]] else NULL,
                 inpCellBorder=input$CoExprSegmentation1,
                 cellborderFilename=file.path(
                     .globals$datafolder,

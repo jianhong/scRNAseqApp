@@ -36,7 +36,7 @@ scDRcell <- function(
         inpShowEdge,#spring links, cell-cell graph edges
         edgeFilename,
         editorStatus,
-        xlim=NULL,ylim=NULL,
+        #xlim=NULL,ylim=NULL,
         inpCellBorder=FALSE,# stereo-seq cell borders
         cellborderFilename='',
         cellSegAlpha=1,
@@ -444,6 +444,6 @@ scDRcell <- function(
                 )
         }
     }
-    ggOut <- fixCoord(ggOut, plotAspectRatio, rat, xlim, ylim)
+    ggOut <- fixCoord(ggOut, plotAspectRatio, rat)
     return(ggOut)
 }

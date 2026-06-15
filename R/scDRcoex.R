@@ -33,7 +33,6 @@ scDRcoex <- function(
         valueFilterCutoff,
         valueFilterCutoff2,
         hideFilterCell = FALSE,
-        xlim=NULL,ylim=NULL,
         inpCellBorder=FALSE,# stereo-seq cell borders
         cellborderFilename='',
         cellSegAlpha=1,
@@ -219,6 +218,6 @@ scDRcoex <- function(
         scale_colour_identity(guide = 'none') +
         scale_fill_identity(guide = 'none')
     
-    ggOut <- fixCoord(ggOut, plotAspectRatio, rat, xlim, ylim)
+    ggOut <- fixCoord(ggOut, plotAspectRatio, rat)
     return(ggOut)
 }

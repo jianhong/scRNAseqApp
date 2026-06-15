@@ -329,6 +329,11 @@ updateGeneExprDotPlotUI <-
                         paste0('manuXlim', ifelse(postfix==1, 2, 1)),
                         value = ranges$x
                     )
+                    updateNumericInput(
+                        inputId = paste0('setRangeX', 
+                                         ifelse(postfix==1, 2, 1)),
+                        value = input[[paste0('setRangeX', 
+                                              ifelse(postfix==1, 2, 1))]]+1)
                 }
             }
         })
@@ -345,9 +350,20 @@ updateGeneExprDotPlotUI <-
                         paste0('manuYlim', ifelse(postfix==1, 2, 1)),
                         value = ranges$y
                     )
+                    updateNumericInput(
+                        inputId = paste0('setRangeY', 
+                                         ifelse(postfix==1, 2, 1)),
+                        value = input[[paste0('setRangeY', 
+                                              ifelse(postfix==1, 2, 1))]]+1)
                 }
             }
         })
+        observeEvent(input[[paste0('setRangeX', postfix)]],{
+            ranges$x <- input[[cellInfoXlim]]
+        }, ignoreInit = TRUE)
+        observeEvent(input[[paste0('setRangeY', postfix)]],{
+            ranges$y <- input[[cellInfoYlim]]
+        }, ignoreInit = TRUE)
         observeEvent(input[[paste0('XYlimLinker', postfix)]], {
             pairedXYlimLinker <- paste0('XYlimLinker', ifelse(postfix==1, 2, 1))
             updateCheckboxInput(
@@ -383,6 +399,16 @@ updateGeneExprDotPlotUI <-
                     value = c(input[[paste0('manuYlimOriMin', postfix)]],
                               input[[paste0('manuYlimOriMax', postfix)]])
                 )
+                updateNumericInput(
+                    inputId = paste0('setRangeX', 
+                                     ifelse(postfix==1, 2, 1)),
+                    value = input[[paste0('setRangeX', 
+                                          ifelse(postfix==1, 2, 1))]]+1)
+                updateNumericInput(
+                    inputId = paste0('setRangeY', 
+                                     ifelse(postfix==1, 2, 1)),
+                    value = input[[paste0('setRangeY', 
+                                          ifelse(postfix==1, 2, 1))]]+1)
             }
             if(!is.null(input[[paste0('GeneExpext.info', postfix)]])){
                 updateTextInput(
@@ -421,13 +447,15 @@ updateGeneExprDotPlotUI <-
                     plotUI
                 }
             })
-            output[[paste0("GeneExproup", postfix)]] <- renderPlot({
-                addLimits(darkTheme(plotX(), dataSource=dataSource),
-                          x=ranges$x, y=ranges$y,
-                          coord=input[[paste0('coord', postfix)]],
-                          id=id, postfix=postfix, input=input)
-            }, bg=darkTheme(returnBG=TRUE,
-                            dataSource=dataSource))
+            observeEvent(list(input[[cellInfoXlim]], input[[cellInfoYlim]]), {
+                output[[paste0("GeneExproup", postfix)]] <- renderPlot({
+                    addLimits(darkTheme(plotX(), dataSource=dataSource),
+                              ranges=ranges,
+                              coord=input[[paste0('coord', postfix)]],
+                              id=id, postfix=postfix, input=input)
+                }, bg=darkTheme(returnBG=TRUE,
+                                dataSource=dataSource))
+            })
         }
         create2DUI()
         observeEvent(input$GeneExprdrZ, {
@@ -800,6 +828,7 @@ updateGeneExprDotPlotUI <-
                 postfix = postfix,
                 plot = plotX,
                 dataSource = dataSource,
+                ranges = ranges,
                 ...)
         
     }
@@ -849,7 +878,7 @@ updateCellInfoPlot <-
                     subsetCellPct=100
                 ), 'cells'))
         })
-        observeEvent(input[[cellInfoXYlimTog]],{
+        observeEvent(list(input$GeneExprdrX, input$GeneExprdrY),{
             updateXYlimRange(postfix, input, session, dataSource,
                              cellInfoXlim, cellInfoYlim)
         })
@@ -890,10 +919,6 @@ updateCellInfoPlot <-
                 editorStatus = ifelse(
                     length(input[[paste0('editorStatus', postfix)]]),
                     input[[paste0('editorStatus', postfix)]], NA),
-                xlim = if(isTRUE(all(input[[cellInfoXlim]]!=.globals$defaultLimValue)))
-                    input[[cellInfoXlim]] else NULL,
-                ylim = if(isTRUE(all(input[[cellInfoYlim]]!=.globals$defaultLimValue)))
-                    input[[cellInfoYlim]] else NULL,
                 inpCellBorder=input[[paste0('CellInfoSegmentation', postfix)]],
                 cellborderFilename=file.path(
                     .globals$datafolder,
@@ -1189,10 +1214,6 @@ updateMoleculePlot <-
                 labelsFontFamily=input$GeneExprfml,
                 plotAspectRatio=input$GeneExprasp,
                 keepXYlables=input$GeneExprtxt,
-                xlim = if(isTRUE(all(input[[geneExprXlim]]!=.globals$defaultLimValue)))
-                    input[[geneExprXlim]] else NULL,
-                ylim = if(isTRUE(all(input[[geneExprYlim]]!=.globals$defaultLimValue)))
-                    input[[geneExprYlim]] else NULL,
                 inpCellBorder=input[[paste0('GeneExprSegmentation', postfix)]],
                 cellborderFilename=file.path(
                     .globals$datafolder,
@@ -1300,10 +1321,10 @@ updateGeneExprPlot <-
                     else
                         input[[paste0("GeneExprrg", postfix)]],
                 hideFilterCell = input[[paste0("GeneExprhid", postfix)]],
-                xlim = if(isTRUE(all(input[[geneExprXlim]]!=.globals$defaultLimValue)))
-                    input[[geneExprXlim]] else NULL,
-                ylim = if(isTRUE(all(input[[geneExprYlim]]!=.globals$defaultLimValue)))
-                    input[[geneExprYlim]] else NULL,
+                # xlim = if(isTRUE(all(input[[geneExprXlim]]!=.globals$defaultLimValue)))
+                #     input[[geneExprXlim]] else NULL,
+                # ylim = if(isTRUE(all(input[[geneExprYlim]]!=.globals$defaultLimValue)))
+                #     input[[geneExprYlim]] else NULL,
                 inpCellBorder=input[[paste0('GeneExprSegmentation', postfix)]],
                 cellborderFilename=file.path(
                     .globals$datafolder,
@@ -1411,11 +1432,11 @@ updateSubsetGeneExprPlot <-
                 valueFilterKey = input$filterCell,
                 valueFilterCutoff = input$filterCellVal,
                 valueFilterCutoff2 = input$filterCellVal2,
-                hideFilterCell = input[[paste0("GeneExprhid", postfix)]],
-                xlim = if(isTRUE(all(input[[geneExprXlim]]!=.globals$defaultLimValue)))
-                    input[[geneExprXlim]] else NULL,
-                ylim = if(isTRUE(all(input[[geneExprYlim]]!=.globals$defaultLimValue)))
-                    input[[geneExprYlim]] else NULL
+                hideFilterCell = input[[paste0("GeneExprhid", postfix)]]#,
+                # xlim = if(isTRUE(all(input[[geneExprXlim]]!=.globals$defaultLimValue)))
+                #     input[[geneExprXlim]] else NULL,
+                # ylim = if(isTRUE(all(input[[geneExprYlim]]!=.globals$defaultLimValue)))
+                #     input[[geneExprYlim]] else NULL
             )
         })
         updateGeneExprDotPlotUI(
@@ -1638,12 +1659,13 @@ relevelCol <- function(inpConf, ui_key, ggData, coln) {
     return(ggCol)
 }
 #' @importFrom ggplot2 coord_fixed
-fixCoord <- function(ggOut, aspectRatio, ratio, xlim=NULL, ylim=NULL) {
-    if (aspectRatio == "Square") {
-        ggOut <- ggOut + coord_fixed(ratio = ratio, xlim=xlim, ylim=ylim)
-    } else if (aspectRatio == "Fixed") {
-        ggOut <- ggOut + coord_fixed(xlim=xlim, ylim=ylim)
-    }
+fixCoord <- function(ggOut, aspectRatio, ratio) {
+    # if (aspectRatio == "Square") {
+    #     ggOut <- ggOut + coord_fixed(ratio = ratio)
+    # } else if (aspectRatio == "Fixed") {
+    #     ggOut <- ggOut + coord_fixed()
+    # }
+    ggOut$meta$fixCoord <- list(aspectRatio=aspectRatio, ratio=ratio)
     return(ggOut)
 }
 labelBackgroundCells <- function(

@@ -788,13 +788,14 @@ darkTheme <- function(p, returnBG=FALSE, dataSource, bg_color){
 
 #' @importFrom ggplot2 xlim ylim ggplot_build ggplot_gtable layer_scales coord_cartesian
 #' @importFrom grid convertWidth
-addLimits <- function(p, x=NULL, y=NULL, coord=NULL, id, postfix, input){
+addLimits <- function(p, ranges=NULL, coord=NULL, id, postfix, input, ...){
     notify <- FALSE
     if(is(p, 'ggplot')){
         if(!is.null(coord)){
             ## ATAC plot
-            if(!is.null(x)){
+            if(!is.null(ranges)){
                 try({
+                    x <- ranges$x
                     gr0 <- GRanges(coord)
                     gr <- c(start(gr0), end(gr0))
                     infoLabel <- paste0('GeneExpext.info', postfix)
@@ -823,22 +824,69 @@ addLimits <- function(p, x=NULL, y=NULL, coord=NULL, id, postfix, input){
                 })
             }
         }else{
-            if(!is.null(x) || !is.null(y)){
+            if(!is.null(ranges)){
+                ## for background image, filter the plot data by x, and y
+                x <- ranges$x
+                y <- ranges$y
+                ratio <- NULL
+                if(!is.null(p$meta$fixCoord)){
+                    if (isTRUE(p$meta$fixCoord$aspectRatio == "Square")) {
+                        ratio  <- p$meta$fixCoord$ratio
+                    } else if (isTRUE(p$meta$fixCoord$aspectRatio == "Fixed")) {
+                        ratio  <- 1
+                    }
+                }
+                if('geom_raster' %in% names(p$layers)){
+                    raster_layer <- p$layers[['geom_raster']]
+                    expandX <- diff(x) * 0.05
+                    expandY <- diff(y) * 0.05
+                    if(all(c('x', 'y') %in% colnames(raster_layer$data))){
+                        if(is.null(y)){
+                            raster_layer$data <- 
+                                raster_layer$data[
+                                    raster_layer$data$x >= x[1] - expandX &
+                                        raster_layer$data$x <= x[2] + expandX, ,
+                                    drop=FALSE]
+                        }else{
+                            if(is.null(x)){
+                                raster_layer$data <- 
+                                    raster_layer$data[
+                                        raster_layer$data$y >= y[1] - expandY &
+                                            raster_layer$data$y <=
+                                            y[2] + expandY, ,
+                                        drop=FALSE]
+                            }else{
+                                raster_layer$data <- 
+                                    raster_layer$data[
+                                        raster_layer$data$x >= x[1] - expandX &
+                                            raster_layer$data$x <=x[2]+expandX &
+                                            raster_layer$data$y >=y[1]-expandY &
+                                            raster_layer$data$y <=y[2]+expandY,
+                                        , drop=FALSE]
+                            }
+                        }
+                        p$layers[['geom_raster']] <- raster_layer
+                    }
+                }
                 if(is.null(y)){
                     if(is(layer_scales(p)$x, 'ScaleContinuousPosition')){
-                        p <- p + coord_cartesian(xlim = x)
+                        p <- p + coord_cartesian(xlim = x,
+                                                 ratio=ratio)
                         notify <- TRUE
                     }
                 }else{
                     if(is.null(x)){
                         if(is(layer_scales(p)$y, 'ScaleContinuousPosition')){
-                            p <- p + coord_cartesian(ylim = y)
+                            p <- p + coord_cartesian(ylim = y,
+                                                     ratio=ratio)
                             notify <- TRUE
                         }
                     }else{
                         if(is(layer_scales(p)$x, 'ScaleContinuousPosition') &&
                            is(layer_scales(p)$y, 'ScaleContinuousPosition'))
-                            p <- p + coord_cartesian(xlim = x, ylim = y)
+                            p <- p + coord_cartesian(xlim = x,
+                                                     ylim = y,
+                                                     ratio=ratio)
                         notify <- TRUE
                     }
                 }
@@ -1038,5 +1086,14 @@ updateXYlimRange <- function(postfix, input, session, dataSource, xlimid, ylimid
         updateNumericInput(
             inputId = paste0('manuYlimOriMax', postfix),
             value = maxv2*1.05)
+        
+        updateNumericInput(
+            inputId = paste0('setRangeX', postfix),
+            value = input[[paste0('setRangeX', 
+                                  postfix)]]+1)
+        updateNumericInput(
+            inputId = paste0('setRangeY', postfix),
+            value = input[[paste0('setRangeY', 
+                                  postfix)]]+1)
     }
 }

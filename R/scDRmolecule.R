@@ -11,7 +11,6 @@ scDRmolecule <- function(
         labelsFontFamily,
         plotAspectRatio,
         keepXYlables,
-        xlim=NULL,ylim=NULL,
         inpCellBorder=FALSE,# stereo-seq cell borders
         cellborderFilename='',
         cellSegAlpha=1,
@@ -111,7 +110,7 @@ scDRmolecule <- function(
             override.aes = list(size = 5),
             nrow = ceiling(length(genes)/5)
         ))
-    ggOut <- fixCoord(ggOut, plotAspectRatio, rat, xlim, ylim)
+    ggOut <- fixCoord(ggOut, plotAspectRatio, rat)
     
     return(ggOut)
 }

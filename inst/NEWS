@@ -1,3 +1,8 @@
+CHANGES IN VERSION 1.13.11
+-------------------------
+
+    o Fix the issue applied the coordinates twice.
+    
 CHANGES IN VERSION 1.13.10
 -------------------------
 

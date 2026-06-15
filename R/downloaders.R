@@ -7,7 +7,8 @@ outputFileName <- function(ext, ...) {
 #' @noRd
 #' @importFrom ggplot2 ggsave
 #' @importFrom shiny downloadHandler
-plotsDownloadHandler <- function(input, postfix, plot, dataSource, ...) {
+plotsDownloadHandler <- function(input, postfix, plot, dataSource,
+                                 ranges, ...) {
     downloadHandler(
         filename = function() {
             outputFileName(input[[paste0("GeneExproup.fmt", postfix)]], ...)
@@ -21,7 +22,8 @@ plotsDownloadHandler <- function(input, postfix, plot, dataSource, ...) {
                     height = input[[paste0("GeneExproup.h", postfix)]],
                     width = input[[paste0("GeneExproup.w", postfix)]],
                     useDingbats = FALSE,
-                    plot = darkTheme(plot(), dataSource = dataSource)
+                    plot = addLimits(darkTheme(plot(), dataSource = dataSource),
+                                     ranges=ranges)
                 )
             } else if(input[[paste0("GeneExproup.fmt", postfix)]] == "CSV"){
                 plot <- plot()
@@ -33,7 +35,8 @@ plotsDownloadHandler <- function(input, postfix, plot, dataSource, ...) {
                         tolower(input[[paste0("GeneExproup.fmt", postfix)]]),
                     height = input[[paste0("GeneExproup.h", postfix)]],
                     width = input[[paste0("GeneExproup.w", postfix)]],
-                    plot = darkTheme(plot(), dataSource = dataSource)
+                    plot = addLimits(darkTheme(plot(), dataSource = dataSource),
+                                     ranges=ranges)
                 )
             }
         }

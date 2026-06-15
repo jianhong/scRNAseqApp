@@ -138,6 +138,16 @@ manuXYlimOriUI <- function(id, postfix){
             NS0(id, "manuYlimOriMax", postfix),
             label = '',
             value = NULL
+        ),
+        numericInput(
+            NS0(id, 'setRangeX', postfix),
+            label = '',
+            value = 1
+        ),
+        numericInput(
+            NS0(id, 'setRangeY', postfix),
+            label = '',
+            value = 1
         ))
 }
 

@@ -123,6 +123,8 @@ scDRcoex <- function(
     gg <- getCoexpCol(GeneExprDotCol, nGrid = 16, nPad = 2)
     
     # Map colours
+    if(length(ggData$val1)==0) return(NULL)
+    if(length(ggData$val2)==0) return(NULL)
     mv1 <- max(ggData$val1, na.rm = TRUE)
     mv2 <- max(ggData$val2, na.rm = TRUE)
     ggData$v1 <-

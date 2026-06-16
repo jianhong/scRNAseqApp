@@ -1,3 +1,8 @@
+CHANGES IN VERSION 1.13.15
+-------------------------
+
+    o Fix plot for legend of co-expression.
+    
 CHANGES IN VERSION 1.13.14
 -------------------------
 

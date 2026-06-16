@@ -10,7 +10,7 @@ scDRcoexLeg <- function(gene1, gene2, colorPairs, labelsFontsize = 24,
     # Actual ggplot
     ggOut <- ggplot(gg, aes(.data[["v1"]], .data[["v2"]])) +
         geom_tile(fill = gg$cMix) +
-        xlab(gene1) + ylab(gene2) + coord_fixed(ratio = 1) +
+        xlab(gene1) + ylab(gene2) +
         scale_x_continuous(
             breaks = c(0, nTot),
             labels = c("low", "high")) +
@@ -19,5 +19,7 @@ scDRcoexLeg <- function(gene1, gene2, colorPairs, labelsFontsize = 24,
             labels = c("low", "high")) +
         sctheme(base_size = labelsFontsize,
                 family = labelsFontFamily, XYval = TRUE)
+    
+    ggOut$meta$fixCoord <- list(aspectRatio='Fixed', ratio=1)
     return(ggOut)
 }

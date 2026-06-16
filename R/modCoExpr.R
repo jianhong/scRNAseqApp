@@ -105,15 +105,6 @@ coExprServer <- function(id, dataSource, optCrt) {
                 render = I(optCrt)
             )
         )
-        ## update the x/y axis
-        postfix <- 1
-        geneExprXYlimTog <- paste0('manuXYlimTog', postfix)
-        geneExprXlim <- paste0('manuXlim', postfix)
-        geneExprYlim <- paste0('manuYlim', postfix)
-        observeEvent(input[[geneExprXYlimTog]],{
-            updateXYlimRange(postfix, input, session, dataSource,
-                             geneExprXlim, geneExprYlim)
-        })
         ### plots
         plot1 <- reactive({
             scDRcoex(

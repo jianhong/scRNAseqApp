@@ -1036,64 +1036,50 @@ checkBgImgAvailability <-
         return(backgroundAlignFun)
     }
 
-updateXYlimRange <- function(postfix, input, session, dataSource, xlimid, ylimid, val, val2){
-    if(isTRUE(input$GeneExprdrX %in% dataSource()$sc1conf$UI)){
+updateLimRange <- function(postfix, input, session, dataSource, limid, X=TRUE, val){
+    if(isTRUE(X)){
+        dimred <- input$GeneExprdrX
+        label <- 'Xlim range:'
+        manuID <- 'X'
+    }else{
+        dimred <- input$GeneExprdrY
+        label <- 'Ylim range:'
+        manuID <- 'Y'
+    }
+    if(isTRUE(dimred %in% dataSource()$sc1conf$UI)){
         if(missing(val)){
-            val <- dataSource()$sc1meta[[
-                dataSource()$sc1conf[
-                    dataSource()$sc1conf$UI == input$GeneExprdrX]$ID]]
+            id <- which(dataSource()$sc1conf$UI == dimred)
+            id <- dataSource()$sc1conf[id, ]$ID
+            if(length(id)){
+                val <- dataSource()$sc1meta[[id]]
+            }
         }
         
-        minv <- floor(min(val, na.rm = TRUE))
-        maxv <- getM(val)
-        stepv <- (maxv-minv)/100
-        updateSliderInput(
-            session,
-            xlimid,
-            label = "Xlim range:",
-            min = minv-100*stepv,
-            max = maxv+100*stepv,
-            value = c(minv*0.95, maxv*1.05),
-            step = stepv
-        )
-        updateNumericInput(
-            inputId = paste0('manuXlimOriMin', postfix),
-            value = minv*0.95)
-        updateNumericInput(
-            inputId = paste0('manuXlimOriMax', postfix),
-            value = maxv*1.05)
-        
-        if(missing(val2)){
-            val2 <- dataSource()$sc1meta[[
-                dataSource()$sc1conf[
-                    dataSource()$sc1conf$UI == input$GeneExprdrY]$ID]]
+        if(length(val)){
+            minv <- floor(min(val, na.rm = TRUE))
+            maxv <- getM(val)
+            stepv <- (maxv-minv)/100
+            if(!is.na(minv) && !is.na(maxv)){
+                updateSliderInput(
+                    session,
+                    limid,
+                    label = label,
+                    min = minv-100*stepv,
+                    max = maxv+100*stepv,
+                    value = c(minv-5*stepv, maxv+5*stepv),
+                    step = stepv
+                )
+            }
+            updateNumericInput(
+                inputId = paste0('manu', manuID, 'limOriMin', postfix),
+                value = minv-5*stepv)
+            updateNumericInput(
+                inputId = paste0('manu', manuID, 'limOriMax', postfix),
+                value = maxv+5*stepv)
+            updateNumericInput(
+                inputId = paste0('setRange', manuID, postfix),
+                value = input[[paste0('setRange', manuID, 
+                                      postfix)]]+1)
         }
-        minv2 <- floor(min(val2, na.rm = TRUE))
-        maxv2 <- getM(val2)
-        stepv2 <- (maxv2-minv2)/100
-        updateSliderInput(
-            session,
-            ylimid,
-            label = "Ylim range:",
-            min = minv2-100*stepv2,
-            max = maxv2+100*stepv2,
-            value = c(minv2*0.95, maxv2*1.05),
-            step = stepv2
-        )
-        updateNumericInput(
-            inputId = paste0('manuYlimOriMin', postfix),
-            value = minv2*0.95)
-        updateNumericInput(
-            inputId = paste0('manuYlimOriMax', postfix),
-            value = maxv2*1.05)
-        
-        updateNumericInput(
-            inputId = paste0('setRangeX', postfix),
-            value = input[[paste0('setRangeX', 
-                                  postfix)]]+1)
-        updateNumericInput(
-            inputId = paste0('setRangeY', postfix),
-            value = input[[paste0('setRangeY', 
-                                  postfix)]]+1)
     }
 }

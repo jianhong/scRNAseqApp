@@ -109,10 +109,15 @@ scDRgene <- function(
         )
     
     if(geneType=='gene'){
-        ggData[[exprColname]] <- read_exprs(
+        expr <- read_exprs(
             dataset,
             geneIdMap[gene1],
             valueOnly = TRUE)
+        if(length(expr)==nrow(ggData)){
+            ggData[[exprColname]] <- expr
+        }else{
+            return(ggplot())
+        }
     }else{
         coord <- strsplit(gene1[1], '[:-]')[[1]]
         stopifnot('Wrong coordinates format'=length(coord)==3)

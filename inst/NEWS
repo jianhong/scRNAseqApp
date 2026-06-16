@@ -1,3 +1,8 @@
+CHANGES IN VERSION 1.13.14
+-------------------------
+
+    o Fix the coordinates issue for init.
+    
 CHANGES IN VERSION 1.13.13
 -------------------------
 

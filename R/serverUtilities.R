@@ -304,7 +304,8 @@ updateGeneExprDotPlotUI <-
         ...,
         handlerFUN = plotsDownloadHandler,
         isInfoPlot = FALSE,
-        dataSource = NULL) {
+        dataSource = NULL,
+        molecules = NULL) {
         # Reactive values to store zoom ranges
         ranges <- reactiveValues(x = NULL,
                                  y = NULL)
@@ -312,50 +313,68 @@ updateGeneExprDotPlotUI <-
         geneExprXYlimTog <- paste0('manuXYlimTog', postfix)
         cellInfoXlim <- paste0('manuXlim', postfix)
         cellInfoYlim <- paste0('manuYlim', postfix)
-        # observeEvent(list(input$GeneExprdrX, input$GeneExprdrY), {
-        #     updateXYlimRange(postfix, input, session, dataSource,
-        #                      cellInfoXlim, cellInfoYlim)
-        # }) # those code moved to each UI, since the molecules are not using the same logical.
         observeEvent(ranges$x, {
-            if(length(ranges$x)==2){
-                updateSliderInput(
-                    session,
-                    cellInfoXlim,
-                    value = ranges$x
-                )
-                if(isTRUE(input[[paste0('XYlimLinker', postfix)]])){
+            if(length(ranges$x)==2 &&
+               !is.na(ranges$x[1]) && !is.na(ranges$x[2])){
+                if(!all(input[[cellInfoXlim]]==ranges$x)){
                     updateSliderInput(
                         session,
-                        paste0('manuXlim', ifelse(postfix==1, 2, 1)),
+                        cellInfoXlim,
                         value = ranges$x
                     )
-                    updateNumericInput(
-                        inputId = paste0('setRangeX', 
-                                         ifelse(postfix==1, 2, 1)),
-                        value = input[[paste0('setRangeX', 
-                                              ifelse(postfix==1, 2, 1))]]+1)
+                    if(isTRUE(input[[paste0('XYlimLinker', postfix)]])){
+                        updateSliderInput(
+                            session,
+                            paste0('manuXlim', ifelse(postfix==1, 2, 1)),
+                            value = ranges$x
+                        )
+                        updateNumericInput(
+                            inputId = paste0('setRangeX', 
+                                             ifelse(postfix==1, 2, 1)),
+                            value = input[[paste0('setRangeX', 
+                                                  ifelse(postfix==1, 2, 1))]]+1)
+                    }
                 }
             }
         })
         observeEvent(ranges$y, {
-            if(length(ranges$y)==2){
-                updateSliderInput(
-                    session,
-                    cellInfoYlim,
-                    value = ranges$y
-                )
-                if(isTRUE(input[[paste0('XYlimLinker', postfix)]])){
+            if(length(ranges$y)==2 && 
+               !is.na(ranges$y[1]) && !is.na(ranges$y[2])){
+                if(!all(input[[cellInfoYlim]]==ranges$y)){
                     updateSliderInput(
                         session,
-                        paste0('manuYlim', ifelse(postfix==1, 2, 1)),
+                        cellInfoYlim,
                         value = ranges$y
                     )
-                    updateNumericInput(
-                        inputId = paste0('setRangeY', 
-                                         ifelse(postfix==1, 2, 1)),
-                        value = input[[paste0('setRangeY', 
-                                              ifelse(postfix==1, 2, 1))]]+1)
+                    if(isTRUE(input[[paste0('XYlimLinker', postfix)]])){
+                        updateSliderInput(
+                            session,
+                            paste0('manuYlim', ifelse(postfix==1, 2, 1)),
+                            value = ranges$y
+                        )
+                        updateNumericInput(
+                            inputId = paste0('setRangeY', 
+                                             ifelse(postfix==1, 2, 1)),
+                            value = input[[paste0('setRangeY', 
+                                                  ifelse(postfix==1, 2, 1))]]+1)
+                    }
                 }
+            }
+        })
+        observeEvent(input[[cellInfoXlim]], {
+            if(!all(input[[cellInfoXlim]]==ranges$x)){
+                updateNumericInput(
+                    inputId = paste0('setRangeX', postfix), 
+                    value = input[[paste0('setRangeX', postfix)]] + 1
+                )
+            }
+        })
+        observeEvent(input[[cellInfoYlim]], {
+            if(!all(input[[cellInfoYlim]]==ranges$y)){
+                updateNumericInput(
+                    inputId = paste0('setRangeY', postfix), 
+                    value = input[[paste0('setRangeY', postfix)]] + 1
+                )
             }
         })
         observeEvent(input[[paste0('setRangeX', postfix)]],{
@@ -371,52 +390,73 @@ updateGeneExprDotPlotUI <-
                 value = input[[paste0('XYlimLinker', postfix)]]
             )
         })
-        resetRanges <- function(){
-            ranges$x <- NULL
-            ranges$y <- NULL
-            updateSliderInput(
-                session,
-                cellInfoXlim,
-                value = c(input[[paste0('manuXlimOriMin', postfix)]],
-                          input[[paste0('manuXlimOriMax', postfix)]])
-            )
-            updateSliderInput(
-                session,
-                cellInfoYlim,
-                value = c(input[[paste0('manuYlimOriMin', postfix)]],
-                          input[[paste0('manuYlimOriMax', postfix)]])
-            )
-            if(isTRUE(input[[paste0('XYlimLinker', postfix)]])){
-                updateSliderInput(
-                    session,
-                    paste0('manuXlim', ifelse(postfix==1, 2, 1)),
-                    value = c(input[[paste0('manuXlimOriMin', postfix)]],
-                              input[[paste0('manuXlimOriMax', postfix)]])
-                )
-                updateSliderInput(
-                    session,
-                    paste0('manuYlim', ifelse(postfix==1, 2, 1)),
-                    value = c(input[[paste0('manuYlimOriMin', postfix)]],
-                              input[[paste0('manuYlimOriMax', postfix)]])
-                )
-                updateNumericInput(
-                    inputId = paste0('setRangeX', 
-                                     ifelse(postfix==1, 2, 1)),
-                    value = input[[paste0('setRangeX', 
-                                          ifelse(postfix==1, 2, 1))]]+1)
-                updateNumericInput(
-                    inputId = paste0('setRangeY', 
-                                     ifelse(postfix==1, 2, 1)),
-                    value = input[[paste0('setRangeY', 
-                                          ifelse(postfix==1, 2, 1))]]+1)
+        resetXYRanges <- function(X=TRUE){
+            if(isTRUE(X)){
+                ranges$x <- NULL
+                label <- 'X'
+            }else{
+                ranges$y <- NULL
+                label <- 'Y'
             }
+            
+            if(isTRUE(!is.na(input[[paste0('manu', label, 'limOriMin', postfix)]]) &&
+               !is.na(input[[paste0('manu', label, 'limOriMax', postfix)]]))){
+                updateSliderInput(
+                    session,
+                    paste0('manu', label, 'lim', postfix),
+                    value = c(input[[paste0('manu', label, 'limOriMin', postfix)]],
+                              input[[paste0('manu', label, 'limOriMax', postfix)]])
+                )
+                if(isTRUE(input[[paste0('XYlimLinker', postfix)]])){
+                    updateSliderInput(
+                        session,
+                        paste0('manu', label, 'lim', ifelse(postfix==1, 2, 1)),
+                        value = c(input[[paste0('manu', label, 'limOriMin', postfix)]],
+                                  input[[paste0('manu', label, 'limOriMax', postfix)]])
+                    )
+                    updateNumericInput(
+                        inputId = paste0('setRange', label, 
+                                         ifelse(postfix==1, 2, 1)),
+                        value = input[[paste0('setRange', label, 
+                                              ifelse(postfix==1, 2, 1))]]+1)
+                }
+            }
+        }
+        resetRanges <- function(){
+            resetXYRanges(X=TRUE)
+            resetXYRanges(X=FALSE)
             if(!is.null(input[[paste0('GeneExpext.info', postfix)]])){
                 updateTextInput(
                     inputId = paste0('GeneExpext.info', postfix),
                     value = '')
             }
         }
-        
+        observeEvent(input$GeneExprdrX, {
+            if(length(molecules)>0){
+                updateLimRange(postfix, input, session, dataSource,
+                               cellInfoXlim,
+                               X=TRUE,
+                               val = molecules[[
+                                   input[[paste0('fov', postfix)]]
+                               ]]$x)
+            }else{
+                updateLimRange(postfix, input, session, dataSource,
+                                 cellInfoXlim, X=TRUE) 
+            }
+        })
+        observeEvent(input$GeneExprdrY, {
+            if(length(molecules)>0){
+                updateLimRange(postfix, input, session, dataSource,
+                               cellInfoYlim,
+                               X=FALSE,
+                               val = molecules[[
+                                   input[[paste0('fov', postfix)]]
+                               ]]$y)
+            }else{
+                updateLimRange(postfix, input, session, dataSource,
+                                 cellInfoYlim, X=FALSE)
+            }
+        })
         refreshGeneExprUI <- reactiveValues(oldUI='2D')
         create2DUI <- function(){
             output[[paste0("GeneExproup.ui", postfix)]] <- renderUI({
@@ -878,10 +918,6 @@ updateCellInfoPlot <-
                     subsetCellPct=100
                 ), 'cells'))
         })
-        observeEvent(list(input$GeneExprdrX, input$GeneExprdrY),{
-            updateXYlimRange(postfix, input, session, dataSource,
-                             cellInfoXlim, cellInfoYlim)
-        })
         
         plotX <- reactive({
             scDRcell(
@@ -1193,15 +1229,6 @@ updateMoleculePlot <-
             )
         )
         
-        geneExprXlim <- paste0('manuXlim', postfix)
-        geneExprYlim <- paste0('manuYlim', postfix)
-        observeEvent(list(input$GeneExprdrX, input$GeneExprdrY), {
-            updateXYlimRange(postfix=postfix, input, session, dataSource,
-                             geneExprXlim, geneExprYlim,
-                             val = molecules[[rdim]]$x,
-                             val2 = molecules[[rdim]]$y)
-        })
-        
         ### plots
         plotX <- reactive({
             scDRmolecule(
@@ -1247,7 +1274,8 @@ updateMoleculePlot <-
             dataSource()$dataset,
             input$FOVLabel,
             input[[GeneNameLabel]],
-            dataSource = dataSource
+            dataSource = dataSource,
+            molecules = molecules
         )
     }
 
@@ -1287,10 +1315,6 @@ updateGeneExprPlot <-
         geneExprXYlimTog <- paste0('manuXYlimTog', postfix)
         geneExprXlim <- paste0('manuXlim', postfix)
         geneExprYlim <- paste0('manuYlim', postfix)
-        observeEvent(list(input$GeneExprdrX, input$GeneExprdrY),{
-            updateXYlimRange(postfix, input, session, dataSource,
-                             geneExprXlim, geneExprYlim)
-        })
         
         ### plots
         plotX <- reactive({
@@ -1321,10 +1345,6 @@ updateGeneExprPlot <-
                     else
                         input[[paste0("GeneExprrg", postfix)]],
                 hideFilterCell = input[[paste0("GeneExprhid", postfix)]],
-                # xlim = if(isTRUE(all(input[[geneExprXlim]]!=.globals$defaultLimValue)))
-                #     input[[geneExprXlim]] else NULL,
-                # ylim = if(isTRUE(all(input[[geneExprYlim]]!=.globals$defaultLimValue)))
-                #     input[[geneExprYlim]] else NULL,
                 inpCellBorder=input[[paste0('GeneExprSegmentation', postfix)]],
                 cellborderFilename=file.path(
                     .globals$datafolder,
@@ -1394,10 +1414,6 @@ updateSubsetGeneExprPlot <-
         geneExprXYlimTog <- paste0('manuXYlimTog', postfix)
         geneExprXlim <- paste0('manuXlim', postfix)
         geneExprYlim <- paste0('manuYlim', postfix)
-        observeEvent(list(input$GeneExprdrX, input$GeneExprdrY),{
-            updateXYlimRange(postfix, input, session, dataSource,
-                             geneExprXlim, geneExprYlim)
-        })
         
         ### plots
         plotX <- reactive({
@@ -1432,11 +1448,7 @@ updateSubsetGeneExprPlot <-
                 valueFilterKey = input$filterCell,
                 valueFilterCutoff = input$filterCellVal,
                 valueFilterCutoff2 = input$filterCellVal2,
-                hideFilterCell = input[[paste0("GeneExprhid", postfix)]]#,
-                # xlim = if(isTRUE(all(input[[geneExprXlim]]!=.globals$defaultLimValue)))
-                #     input[[geneExprXlim]] else NULL,
-                # ylim = if(isTRUE(all(input[[geneExprYlim]]!=.globals$defaultLimValue)))
-                #     input[[geneExprYlim]] else NULL
+                hideFilterCell = input[[paste0("GeneExprhid", postfix)]]
             )
         })
         updateGeneExprDotPlotUI(
@@ -1603,9 +1615,14 @@ subModuleMenuObservor <- function(
 ## plots related
 getRatio <- function(ggData) {
     ## help function
-    return((
-        max(ggData$X, na.rm = TRUE) - min(ggData$X, na.rm = TRUE)) / (
-            max(ggData$Y, na.rm = TRUE) - min(ggData$Y, na.rm = TRUE)))
+    if(is.numeric(ggData$X) && is.numeric(ggData$Y)){
+        return((
+            max(ggData$X, na.rm = TRUE) - min(ggData$X, na.rm = TRUE)) / (
+                max(ggData$Y, na.rm = TRUE) - min(ggData$Y, na.rm = TRUE)))
+    }else{
+        return(1)
+    }
+    
 }
 orderGeneExpr <- function(ggData, GeneExprDotOrd, coln) {
     if (GeneExprDotOrd == "Max-1st") {

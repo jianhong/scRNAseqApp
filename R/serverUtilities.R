@@ -360,10 +360,10 @@ updateGeneExprDotPlotUI <-
         })
         observeEvent(input[[paste0('setRangeX', postfix)]],{
             ranges$x <- input[[cellInfoXlim]]
-        }, ignoreInit = TRUE)
+        }, ignoreInit = FALSE)
         observeEvent(input[[paste0('setRangeY', postfix)]],{
             ranges$y <- input[[cellInfoYlim]]
-        }, ignoreInit = TRUE)
+        }, ignoreInit = FALSE)
         observeEvent(input[[paste0('XYlimLinker', postfix)]], {
             pairedXYlimLinker <- paste0('XYlimLinker', ifelse(postfix==1, 2, 1))
             updateCheckboxInput(

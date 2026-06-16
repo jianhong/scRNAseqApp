@@ -1,3 +1,9 @@
+CHANGES IN VERSION 1.13.12
+-------------------------
+
+    o Change back from coord_cartesian to coord_fixed to make sure the function 
+    accept ratio paramter.
+    
 CHANGES IN VERSION 1.13.11
 -------------------------
 

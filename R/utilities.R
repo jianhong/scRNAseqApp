@@ -786,7 +786,7 @@ darkTheme <- function(p, returnBG=FALSE, dataSource, bg_color){
     return(p)
 }
 
-#' @importFrom ggplot2 xlim ylim ggplot_build ggplot_gtable layer_scales coord_cartesian
+#' @importFrom ggplot2 xlim ylim ggplot_build ggplot_gtable layer_scales coord_cartesian coord_fixed
 #' @importFrom grid convertWidth
 addLimits <- function(p, ranges=NULL, coord=NULL, id, postfix, input, ...){
     notify <- FALSE
@@ -870,21 +870,21 @@ addLimits <- function(p, ranges=NULL, coord=NULL, id, postfix, input, ...){
                 }
                 if(is.null(y)){
                     if(is(layer_scales(p)$x, 'ScaleContinuousPosition')){
-                        p <- p + coord_cartesian(xlim = x,
+                        p <- p + coord_fixed(xlim = x,
                                                  ratio=ratio)
                         notify <- TRUE
                     }
                 }else{
                     if(is.null(x)){
                         if(is(layer_scales(p)$y, 'ScaleContinuousPosition')){
-                            p <- p + coord_cartesian(ylim = y,
+                            p <- p + coord_fixed(ylim = y,
                                                      ratio=ratio)
                             notify <- TRUE
                         }
                     }else{
                         if(is(layer_scales(p)$x, 'ScaleContinuousPosition') &&
                            is(layer_scales(p)$y, 'ScaleContinuousPosition'))
-                            p <- p + coord_cartesian(xlim = x,
+                            p <- p + coord_fixed(xlim = x,
                                                      ylim = y,
                                                      ratio=ratio)
                         notify <- TRUE

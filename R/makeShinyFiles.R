@@ -27,7 +27,13 @@
 #' @param chunkSize number of genes written to h5file at any one time. Lower
 #'   this number to reduce memory consumption. Should not be less than 10
 #' @param binSize number of bps for each bin for ATAC fragment coverage. Used
-#' to reduce the file size of bigwig.
+#' to reduce the file size of bigwig. Default 100.
+#' @param normBy Normalization method for the bigwig files. Default `nCell`.
+#' `nCells` will divide the number of insertions in a tile by the number of
+#' cells in the group. `none` will apply no normalization.
+#' The name of a metadata column can also be passed, in which case insertions
+#' will be divided by the sum of that column over the cells in the group, with a
+#' scaling factor of 10^4 applied.
 #' @param fragmentNameMapList list of named character vector. 
 #' The name map list must be the same order as the fragment list in the object.
 #' For each element of the list,
@@ -43,8 +49,8 @@
 #' @importFrom data.table data.table as.data.table
 #' @importFrom rhdf5 h5createFile h5createGroup h5createDataset h5write
 #' @importFrom Rsamtools TabixFile seqnamesTabix scanTabix
-#' @importFrom GenomeInfoDb keepSeqlevels seqinfo seqnames seqlevelsStyle `seqlevelsStyle<-`
-#' @importFrom GenomicRanges GRanges width coverage GRangesList
+#' @importFrom GenomeInfoDb keepSeqlevels seqinfo seqnames seqlevelsStyle `seqlevelsStyle<-` seqlengths seqlevels
+#' @importFrom GenomicRanges GRanges width coverage GRangesList tileGenome binnedAverage
 #' @importFrom rtracklayer export
 #' @importFrom utils read.table
 #' @importFrom fs path_sanitize
@@ -62,12 +68,14 @@ makeShinyFiles <- function(
         default.dimred = NA,
         default.symbol = 'rownames',
         chunkSize = 500,
-        binSize = 1,
+        binSize = 100,
+        normBy = 'nCells',
         fragmentNameMapList,
         fov = NULL,
         boundaries = NULL,
         molecules = NULL) {
     stopifnot(is.numeric(binSize))
+    binSize <- binSize[1]
     ### Preprocessing and checks
     # Generate defaults for assayName / slot
     stopifnot(is(obj, "Seurat"))
@@ -206,10 +214,11 @@ makeShinyFiles <- function(
             ## get fragments for each cell and group
             fragments <- peaks@fragments #GetAssayData(obj, layer = "fragments")
             if (missing(fragmentNameMapList)){
-                fragmentNameMapList <- sc1meta$sampleID
-                names(fragmentNameMapList) <- sc1meta$sampleID
-                fragmentNameMapList <- rep(list(fragmentNameMapList),
-                                           length(fragments))
+                fragmentNameMapList <- lapply(fragments, function(frag){
+                    n=names(frag@cells)
+                    names(n) <- frag@cells
+                    n
+                })
             }
             stopifnot(is.list(fragmentNameMapList))
             stopifnot(
@@ -277,6 +286,19 @@ makeShinyFiles <- function(
         levels(sc1meta[[i]]) <-
             strsplit(sc1conf[sc1conf$ID == i]$fUI, "\\|")[[1]]
         sc1conf[sc1conf$ID == i]$fID <- sc1conf[sc1conf$ID == i]$fUI
+    }
+    # check normBy
+    if(!normBy %in% c('none', 'nCells')){
+        if(normBy %in% colnames(sc1meta)){
+            ## must be numeric, which will use sum(..., na.rm=TRUE) to calculate
+            lapply(normBy, function(.col){
+                if(!is.numeric(sc1meta[[.col]][, 1])){
+                    stop(normBy, ' in metadata of the object is not a numeric column.')
+                }
+            })
+        }else{
+            stop('normBy is not a colname of metadata of the object or nCells or none')
+        }
     }
     # Extract dimred and append to both XXXmeta.rds and XXXconf.rds...
     for (iDR in Reductions(obj)) {
@@ -589,6 +611,7 @@ makeShinyFiles <- function(
                             pruning.mode = "coarse")
                         message('Creating coverage for ', fragment.path)
                         coverage <- lapply(seq_along(region), function(i){
+                            message('Reading reads for ', seqnames(region)[i])
                             reads <- scanTabix(
                                 file = tabix.file,
                                 param = region[i])
@@ -602,6 +625,7 @@ makeShinyFiles <- function(
                                 message(e, '\nCannot convert the seqstyle to ',
                                         seq_x_style[1],' for ', region[i])
                             })
+                            message('Grouping the signals for ', seqnames(region)[i])
                             reads.grp <- lapply(grp, function(.grp){
                                 lapply(split(
                                     reads,
@@ -667,54 +691,63 @@ makeShinyFiles <- function(
                             })
                         }
                     }
-                    ## normalization
-                    res <- lapply(res[[1]], function(.grp) {
-                        mapply(
-                            .grp,
-                            rep(binSize, length(.grp))[seq_along(.grp)],
-                            FUN=function(.fac, bs){
-                                if(bs>1){
-                                    # summarize by bin
-                                    .fac_gr <- GRanges(.fac)
-                                    wid <- width(.fac_gr)
-                                    k <- wid<bs
-                                    if(any(k)){
-                                        .fac_0 <- .fac_gr[!k]
-                                        .fac_1 <- .fac_gr[k]
-                                        ## sumarize signal by bin size
-                                        .fac_1.rd <- reduce(.fac_1,
-                                                            with.revmap=TRUE)
-                                        .fac_1_tile <- tile(.fac_1.rd, width=bs)
-                                        .fac_1 <- unlist(.fac_1_tile)
-                                        .fac_0 <- c(.fac_0, .fac_1)
-                                        .fac_gr <- split(.fac_0,
-                                                         seqnames(.fac_0))
-                                        .fac <- 
-                                            mapply(
-                                                .fac, .fac_gr[names(.fac)],
-                                                FUN=function(.rle, .gr){
-                                                    .ir <- ranges(.gr)
-                                                    .gr$score <-
-                                                        viewMeans(Views(.rle,
-                                                                        .ir),
-                                                                  na.rm=TRUE)
-                                                    .gr
-                                                })
-                                        rm(.fac_0, .fac_1,
-                                           .fac_1.rd, .fac_1_tile, .fac_gr)
-                                        .fac <- unlist(GRangesList(.fac))
-                                    }else{
-                                        .fac <- .fac_gr
-                                    }
-                                }else{
-                                    .fac <- GRanges(.fac)
-                                }
-                                .fac <- .fac[.fac$score!=0]
-                                ## normalize by FPKM
-                                .s <- .fac$score * width(.fac)/1e3
-                                .fac$score <- 1e6*.fac$score/sum(.s)
-                                .fac
+                    # resample the signals to reduce the bigwig file size
+                    if(binSize>1){
+                        bins <- tileGenome(seqlengths(regions),
+                                           tilewidth=binSize,
+                                           cut.last.tile.in.chrom = TRUE)
+                        zeros <- coverage(regions, weight=0)
+                        res <- lapply(res[[1]], function(.grp){
+                            lapply(
+                                .grp,
+                                function(.cov){
+                                    missingLev <- setdiff(seqlevels(bins),
+                                                          names(.cov))
+                                    .cov <- c(.cov, zeros[missingLev])[seqlevels(bins)]
+                                    bin_cov <- binnedAverage(bins, .cov, "score")
+                                })
+                        })
+                    }
+                    ## normalization, methods includes any column in metadata
+                    ## or nCells, RC, none
+                    if(normBy %in% c('none', 'nCells')){
+                        if(normBy=='nCells'){
+                            cellGroupi <- sc1meta[, names(res), with=FALSE]
+                            res <- mapply(res, as.list(cellGroupi),
+                                           FUN=function(.grp, .gp){
+                                ncell <- table(.gp)
+                                mapply(.grp, ncell[names(.grp)],
+                                       FUN=function(.cov, .f){
+                                           .cov$score <- .cov$score/.f
+                                           .cov
+                                       }, SIMPLIFY = FALSE)
                             }, SIMPLIFY = FALSE)
+                        }
+                    }else{
+                        if(normBy %in% colnames(sc1meta)){
+                            res <- mapply(res, names(res),
+                                          FUN=function(.grp, .gp){
+                                cellGroupi <- sc1meta[, c(normBy, .gp),
+                                                      with=FALSE]
+                                cellGroupi <- split(cellGroupi[, 1],
+                                                    cellGroupi[, 2])
+                                cellGroupi <- vapply(cellGroupi, sum,
+                                                     FUN.VALUE = numeric(1L),
+                                                     na.rm=TRUE)
+                                
+                                mapply(.grp, cellGroupi[names(.grp)],
+                                       FUN=function(.cov, .f){
+                                           .cov$score <- .cov$score * 10^4/.f
+                                           .cov
+                                       }, SIMPLIFY = FALSE)
+                            }, SIMPLIFY = FALSE)
+                        }
+                    }
+                    # remove zeros
+                    res <- lapply(res, function(.grp){
+                        lapply(.grp, function(.cov){
+                            .cov[.cov$score>0]
+                        })
                     })
                     ## export
                     mapply(res, names(res), FUN=function(.grp, .grpname){

@@ -24,6 +24,12 @@
 #' @param theme color theme. default is "Paired" from ColorBrewer palettes.
 #' @param binSize number of bps for each bin for ATAC fragment coverage. Used
 #' to reduce the file size of bigwig.
+#' @param normBy Normalization method for the bigwig files. Default `nCell`.
+#' `nCells` will divide the number of insertions in a tile by the number of
+#' cells in the group. `none` will apply no normalization.
+#' The name of a metadata column can also be passed, in which case insertions
+#' will be divided by the sum of that column over the cells in the group, with a
+#' scaling factor of 10^4 applied.
 #' @param fragmentNameMapList list of named character vector. 
 #' The name map list must be the same order as the fragment list in the object.
 #' For each element of the list,
@@ -61,7 +67,8 @@ createDataSet <- function(
         datafolder = "data",
         default.symbol = 'rownames',
         theme = "Paired",
-        binSize = 1,
+        binSize = 100,
+        normBy = 'nCells',
         fragmentNameMapList,
         fov = NULL,
         boundaries = NULL,
@@ -243,6 +250,7 @@ createDataSet <- function(
         default.multigene = markers,
         default.symbol = default.symbol,
         binSize = binSize,
+        normBy = normBy,
         fragmentNameMapList = fragmentNameMapList,
         fov = fov,
         boundaries = boundaries,

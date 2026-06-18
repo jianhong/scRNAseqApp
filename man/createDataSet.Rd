@@ -20,7 +20,8 @@ createDataSet(
   datafolder = "data",
   default.symbol = "rownames",
   theme = "Paired",
-  binSize = 1,
+  binSize = 100,
+  normBy = "nCells",
   fragmentNameMapList,
   fov = NULL,
   boundaries = NULL,
@@ -62,6 +63,13 @@ Default is to use the "data" layer}
 
 \item{binSize}{number of bps for each bin for ATAC fragment coverage. Used
 to reduce the file size of bigwig.}
+
+\item{normBy}{Normalization method for the bigwig files. Default \code{nCell}.
+\code{nCells} will divide the number of insertions in a tile by the number of
+cells in the group. \code{none} will apply no normalization.
+The name of a metadata column can also be passed, in which case insertions
+will be divided by the sum of that column over the cells in the group, with a
+scaling factor of 10^4 applied.}
 
 \item{fragmentNameMapList}{list of named character vector.
 The name map list must be the same order as the fragment list in the object.

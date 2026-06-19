@@ -667,8 +667,8 @@ makeShinyFiles <- function(
                     }
                 }
                 if(length(res)>0){
-                    message('Exporting coverage to bigwig files.')
                     ## accumulate the signals
+                    message('Accumulating signals into one.')
                     if(length(res)>1){
                         for(i in seq_along(res)[-1]){
                             N_grp <- names(res[[1]])
@@ -692,6 +692,7 @@ makeShinyFiles <- function(
                         }
                     }
                     # resample the signals to reduce the bigwig file size
+                    message('Bin average the signals.')
                     if(binSize>1){
                         bins <- tileGenome(seqlengths(regions),
                                            tilewidth=binSize,
@@ -704,12 +705,13 @@ makeShinyFiles <- function(
                                     missingLev <- setdiff(seqlevels(bins),
                                                           names(.cov))
                                     .cov <- c(.cov, zeros[missingLev])[seqlevels(bins)]
-                                    bin_cov <- binnedAverage(bins, .cov, "score")
+                                    bin_cov <- binnedAverage(bins, .cov, "score", na.rm=TRUE)
                                 })
                         })
                     }
                     ## normalization, methods includes any column in metadata
                     ## or nCells, RC, none
+                    message('Normalization')
                     if(normBy %in% c('none', 'nCells')){
                         if(normBy=='nCells'){
                             cellGroupi <- sc1meta[, names(res), with=FALSE]
@@ -750,6 +752,7 @@ makeShinyFiles <- function(
                         })
                     })
                     ## export
+                    message('Exporting coverage to bigwig files.')
                     mapply(res, names(res), FUN=function(.grp, .grpname){
                         .grp <- .grp[lengths(.grp)>0]
                         mapply(.grp, names(.grp), FUN=function(.fac, .facname){

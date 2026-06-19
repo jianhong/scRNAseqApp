@@ -301,29 +301,38 @@ makeShinyFiles <- function(
         }
     }
     # Extract dimred and append to both XXXmeta.rds and XXXconf.rds...
+    withReduction <- FALSE
     for (iDR in Reductions(obj)) {
         drMat <- Embeddings(obj[[iDR]])
         if (ncol(drMat) > 5) {
             drMat <- drMat[, seq.int(5)]
         }  # Take first 5 components only
-        drMat <- drMat[sc1meta$sampleID,]          # Ensure ordering
-        drMat <- as.data.table(drMat)
-        sc1meta <- cbind(sc1meta, drMat)
-        
-        # Update sc1conf accordingly
-        tmp <- data.table(
-            ID = colnames(drMat),
-            UI = colnames(drMat),
-            fID = NA,
-            fUI = NA,
-            fCL = NA,
-            fRow = NA,
-            default = 0,
-            grp = FALSE,
-            dimred = TRUE
-        )
-        tmp$UI <- gsub("_", "", tmp$UI)
-        sc1conf <- rbindlist(list(sc1conf, tmp))
+        if(all(sc1meta$sampleID %in% rownames(drMat))){
+            drMat <- drMat[sc1meta$sampleID,]          # Ensure ordering
+            drMat <- as.data.table(drMat)
+            sc1meta <- cbind(sc1meta, drMat)
+            
+            # Update sc1conf accordingly
+            tmp <- data.table(
+                ID = colnames(drMat),
+                UI = colnames(drMat),
+                fID = NA,
+                fUI = NA,
+                fCL = NA,
+                fRow = NA,
+                default = 0,
+                grp = FALSE,
+                dimred = TRUE
+            )
+            tmp$UI <- gsub("_", "", tmp$UI)
+            sc1conf <- rbindlist(list(sc1conf, tmp))
+            withReduction <- TRUE
+        }else{
+            message('sketch reduction ', iDR, ' are not included.')
+        }
+    }
+    if(!withReduction){
+        stop('No reduction are available for the full dataset!')
     }
     # Extract coordinates for spatial
     cellborders <- list()

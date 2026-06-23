@@ -1,4 +1,4 @@
-plotPieDimUI <- function(id, type='expr') {
+plotPieDimUI <- function(id, type='expr', postfix=1) {
     stopifnot(type %in% c('expr', 'cellinfo'))
     tabPanel(
         value = id,
@@ -110,6 +110,25 @@ plotPieDimUI <- function(id, type='expr') {
                             max = 1,
                             step = 0.01,
                             value = .8
+                        ),
+                        actionButton(
+                            NS0(id, "manuXYlimTog", postfix),
+                            "Manually set x/y axis", inline = TRUE),
+                        conditionalPanel(
+                            condition = paste0(
+                                "input.manuXYlimTog", postfix, " % 2 ==1"),
+                            ns=NS(id),
+                            sliderInput(
+                                NS0(id, "manuXlim", postfix), "Xlim range:",
+                                min = -10, max = 100,
+                                value = .globals$defaultLimValue,
+                                step = 0.1),
+                            sliderInput(
+                                NS0(id, "manuYlim", postfix), "Ylim range:",
+                                min = -10, max = 100,
+                                value = .globals$defaultLimValue,
+                                step = 0.1),
+                            manuXYlimOriUI(id, postfix)
                         )
                     )
                 )

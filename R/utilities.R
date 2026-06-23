@@ -1076,10 +1076,6 @@ updateLimRange <- function(postfix, input, session, dataSource, limid, X=TRUE, v
             updateNumericInput(
                 inputId = paste0('manu', manuID, 'limOriMax', postfix),
                 value = maxv+5*stepv)
-            updateNumericInput(
-                inputId = paste0('setRange', manuID, postfix),
-                value = input[[paste0('setRange', manuID, 
-                                      postfix)]]+1)
         }
     }
 }

@@ -104,7 +104,7 @@ cellInfoMolUI <- function(id, postfix=2) {
                                            checkboxInput(
                                                NS0(id, 'XYlimLinker', postfix),
                                                "Link X/Y Axis",
-                                               value = TRUE) ## must keep same as paired XYlimLinker
+                                               value = FALSE) ## must keep same as paired XYlimLinker
                                        )
                                    )
                                 )
@@ -125,7 +125,8 @@ cellInfoMolServer <- function(id, dataSource, optCrt) {
         ### Dimension Reduction
         updateDimRedSelInputPair(session, input, dataSource)
         ## update XYlimLinker with Reduction
-        observeEvent(input[['GeneExprdrX']], {
+        observeEvent(list(input[['GeneExprdrX']],
+                          input[['fov2']]), {
             rdim <- sub('.$', '', input[['GeneExprdrX']])
             updateCheckboxInput(
                 inputId = 'XYlimLinker2',

@@ -16,6 +16,8 @@
 .divider:hover,.divider.dragging{background:#5a5c69}
 .divider::after{content:"⋮";font-size:14px;color:#858796;pointer-events:none}
 .divider:hover::after,.divider.dragging::after{color:#fff}
+/*tooltip*/
+.tooltip-box{z-index: 999; background-color: rgba(255, 255, 255, 0.1); padding: 10px; box-shadow: 3px 3px 10px rgba(0,0,0,0.15); pointer-events: none;}
 /*About icon stats*/
 .about-container:after,.about-container:before,.about-clear:after,.about-clear:before{content:"";display:table;clear:both}
 .about-margin-bottom{margin-bottom:16px!important}

@@ -49,7 +49,7 @@
 #' @importFrom data.table data.table as.data.table
 #' @importFrom rhdf5 h5createFile h5createGroup h5createDataset h5write
 #' @importFrom Rsamtools TabixFile seqnamesTabix scanTabix
-#' @importFrom GenomeInfoDb keepSeqlevels seqinfo seqnames seqlevelsStyle `seqlevelsStyle<-` seqlengths seqlevels
+#' @importFrom GenomeInfoDb keepSeqlevels seqinfo `seqinfo<-` seqnames seqlevelsStyle `seqlevelsStyle<-` seqlengths seqlevels
 #' @importFrom GenomicRanges GRanges width coverage GRangesList tileGenome binnedAverage
 #' @importFrom rtracklayer export
 #' @importFrom utils read.table
@@ -328,11 +328,11 @@ makeShinyFiles <- function(
             sc1conf <- rbindlist(list(sc1conf, tmp))
             withReduction <- TRUE
         }else{
-            message('sketch reduction ', iDR, ' are not included.')
+            message('sketch reduction ', iDR, ' is not included.')
         }
     }
     if(!withReduction){
-        stop('No reduction are available for the full dataset!')
+        stop('No reduction is available for the full dataset!')
     }
     # Extract coordinates for spatial
     cellborders <- list()
@@ -593,190 +593,13 @@ makeShinyFiles <- function(
             }, error=function(.e){
                 warning("Cannot get genomic informations")
             })
-            grp <- sc1conf[sc1conf$grp, ]$ID
+            
             if(is(regions, "GRanges")){
-                message("The following steps will cost memories.")
-                res <- list()
-                for(k in seq_along(fragments)){
-                    fragment.path <- fragments[[k]]@path
-                    if(file.exists(fragment.path)){
-                        tabix.file <- TabixFile(fragment.path)
-                        open(con = tabix.file)
-                        on.exit(close(tabix.file))
-                        region <- regions
-                        seq_x <- as.character(seqnames(x = region))
-                        seq_y <- seqnamesTabix(file = tabix.file)
-                        seq_x_style <- seqlevelsStyle(seq_x)
-                        seq_y_style <- seqlevelsStyle(seq_y)
-                        if(length(intersect(seq_x_style, seq_y_style))==0){
-                            seqlevelsStyle(region)<-seq_y_style[1]
-                        }
-                        seqnames.in.both <- intersect(
-                            x = seqnames(x = region),
-                            y = seqnamesTabix(file = tabix.file))
-                        region <- keepSeqlevels(
-                            x = region,
-                            value = seqnames.in.both,
-                            pruning.mode = "coarse")
-                        message('Creating coverage for ', fragment.path)
-                        coverage <- lapply(seq_along(region), function(i){
-                            message('Reading reads for ', seqnames(region)[i])
-                            reads <- scanTabix(
-                                file = tabix.file,
-                                param = region[i])
-                            reads <- read.table(text = reads[[1]])
-                            colnames(reads) <- 
-                                c("seqnames", "start", "end", "name", "score")
-                            reads <- GRanges(reads)
-                            tryCatch({
-                                seqlevelsStyle(reads)<-seq_x_style[1]
-                            }, error = function(e){
-                                message(e, '\nCannot convert the seqstyle to ',
-                                        seq_x_style[1],' for ', region[i])
-                            })
-                            message('Grouping the signals for ', seqnames(region)[i])
-                            reads.grp <- lapply(grp, function(.grp){
-                                lapply(split(
-                                    reads,
-                                    sc1meta[[.grp]][
-                                        match(fragmentNameMapList[[k]][
-                                            reads$name],
-                                            sc1meta$sampleID
-                                              )]),
-                                    function(.e){
-                                        coverage(.e, weight = .e$score)
-                                    })
-                            })
-                            rm(reads)
-                            names(reads.grp) <- grp
-                            reads.grp
-                        })
-                        seqlevelsStyle(region)<-seq_x_style[1]
-                        names(coverage) <- as.character(seqnames(region))
-                        ## coverage is 3 level list,
-                        ## level 1, chromosome
-                        ## level 2, group
-                        ## level 3, factors in group
-                        if(length(coverage)){
-                            res[[k]] <- list()
-                            for(i in names(coverage[[1]])){
-                                res[[k]][[i]] <- list()
-                                for(j in names(coverage[[1]][[i]])){
-                                    res[[k]][[i]][[j]] <-
-                                        Reduce(c, lapply(coverage,
-                                                         function(.cvg){
-                                            .cvg[[i]][[j]]
-                                        }))
-                                }
-                            }
-                        }
-                        
-                        close(tabix.file)
-                        on.exit()
-                    }
-                }
-                if(length(res)>0){
-                    ## accumulate the signals
-                    message('Accumulating signals into one.')
-                    if(length(res)>1){
-                        for(i in seq_along(res)[-1]){
-                            N_grp <- names(res[[1]])
-                            names(N_grp) <- N_grp
-                            res[[1]] <- lapply(N_grp, function(.grp){
-                                N_fac <- names(res[[1]][[.grp]])
-                                names(N_fac) <- N_fac
-                                lapply(N_fac, function(.fac){
-                                    if(sum(lengths(
-                                        res[[1]][[.grp]][[.fac]]))==0){
-                                        return(res[[i]][[.grp]][[.fac]])
-                                    }
-                                    if(sum(lengths(
-                                        res[[i]][[.grp]][[.fac]]))==0){
-                                        return(res[[1]][[.grp]][[.fac]])
-                                    }
-                                    res[[1]][[.grp]][[.fac]] +
-                                        res[[i]][[.grp]][[.fac]]
-                                })
-                            })
-                        }
-                    }
-                    # resample the signals to reduce the bigwig file size
-                    message('Bin average the signals.')
-                    if(binSize>1){
-                        bins <- tileGenome(seqlengths(regions),
-                                           tilewidth=binSize,
-                                           cut.last.tile.in.chrom = TRUE)
-                        zeros <- coverage(regions, weight=0)
-                        res <- lapply(res[[1]], function(.grp){
-                            lapply(
-                                .grp,
-                                function(.cov){
-                                    missingLev <- setdiff(seqlevels(bins),
-                                                          names(.cov))
-                                    .cov <- c(.cov, zeros[missingLev])[seqlevels(bins)]
-                                    bin_cov <- binnedAverage(bins, .cov, "score", na.rm=TRUE)
-                                })
-                        })
-                    }
-                    ## normalization, methods includes any column in metadata
-                    ## or nCells, RC, none
-                    message('Normalization')
-                    if(normBy %in% c('none', 'nCells')){
-                        if(normBy=='nCells'){
-                            cellGroupi <- sc1meta[, names(res), with=FALSE]
-                            res <- mapply(res, as.list(cellGroupi),
-                                           FUN=function(.grp, .gp){
-                                ncell <- table(.gp)
-                                mapply(.grp, ncell[names(.grp)],
-                                       FUN=function(.cov, .f){
-                                           .cov$score <- .cov$score/.f
-                                           .cov
-                                       }, SIMPLIFY = FALSE)
-                            }, SIMPLIFY = FALSE)
-                        }
-                    }else{
-                        if(normBy %in% colnames(sc1meta)){
-                            res <- mapply(res, names(res),
-                                          FUN=function(.grp, .gp){
-                                cellGroupi <- sc1meta[, c(normBy, .gp),
-                                                      with=FALSE]
-                                cellGroupi <- split(cellGroupi[, 1],
-                                                    cellGroupi[, 2])
-                                cellGroupi <- vapply(cellGroupi, sum,
-                                                     FUN.VALUE = numeric(1L),
-                                                     na.rm=TRUE)
-                                
-                                mapply(.grp, cellGroupi[names(.grp)],
-                                       FUN=function(.cov, .f){
-                                           .cov$score <- .cov$score * 10^4/.f
-                                           .cov
-                                       }, SIMPLIFY = FALSE)
-                            }, SIMPLIFY = FALSE)
-                        }
-                    }
-                    # remove zeros
-                    res <- lapply(res, function(.grp){
-                        lapply(.grp, function(.cov){
-                            .cov[.cov$score>0]
-                        })
-                    })
-                    ## export
-                    message('Exporting coverage to bigwig files.')
-                    mapply(res, names(res), FUN=function(.grp, .grpname){
-                        .grp <- .grp[lengths(.grp)>0]
-                        mapply(.grp, names(.grp), FUN=function(.fac, .facname){
-                            .facname <- path_sanitize(.facname)
-                            pf <- file.path(
-                                appDir, .globals$filenames$bwspath, .grpname)
-                            dir.create(pf,
-                                recursive = TRUE, showWarnings=FALSE)
-                            export(.fac, file.path(
-                                pf,
-                                paste0(.facname, ".bigwig")),
-                                format = "BigWig")
-                        })
-                    })
-                }
+                grp <- sc1conf[sc1conf$grp, ]$ID
+                exportGroupBW(appDir,
+                              fragments, fragmentNameMapList,
+                              grp,
+                              regions, sc1meta, normBy, binSize)
             }
             # asy used to create coverage files,
             # Note this is different from fragment signals

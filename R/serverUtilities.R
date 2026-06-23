@@ -306,96 +306,93 @@ updateGeneExprDotPlotUI <-
         isInfoPlot = FALSE,
         dataSource = NULL,
         molecules = NULL) {
-        # Reactive values to store zoom ranges
-        ranges <- reactiveValues(x = NULL,
-                                 y = NULL)
         # link the ranges to manuXlim and Ylim
         geneExprXYlimTog <- paste0('manuXYlimTog', postfix)
         cellInfoXlim <- paste0('manuXlim', postfix)
         cellInfoYlim <- paste0('manuYlim', postfix)
-        observeEvent(ranges$x, {
-            if(length(ranges$x)==2 &&
-               !is.na(ranges$x[1]) && !is.na(ranges$x[2])){
-                if(!all(input[[cellInfoXlim]]==ranges$x)){
+        reducedDimsChangeInMolecules <- reactiveVal(FALSE)
+        observeEvent(list(input[[cellInfoXlim]], input[[cellInfoYlim]]), {
+            if(isTRUE(input[[paste0('XYlimLinker', postfix)]]) &&
+               !reducedDimsChangeInMolecules()){
+                pairedX <- paste0('manuXlim', ifelse(postfix==1, 2, 1))
+                if(!all(input[[cellInfoXlim]]==input[[pairedX]])){
                     updateSliderInput(
                         session,
-                        cellInfoXlim,
-                        value = ranges$x
+                        pairedX,
+                        value = input[[cellInfoXlim]]
                     )
-                    if(isTRUE(input[[paste0('XYlimLinker', postfix)]])){
-                        updateSliderInput(
-                            session,
-                            paste0('manuXlim', ifelse(postfix==1, 2, 1)),
-                            value = ranges$x
-                        )
-                        updateNumericInput(
-                            inputId = paste0('setRangeX', 
-                                             ifelse(postfix==1, 2, 1)),
-                            value = input[[paste0('setRangeX', 
-                                                  ifelse(postfix==1, 2, 1))]]+1)
-                    }
+                }
+                pairedY <- paste0('manuYlim', ifelse(postfix==1, 2, 1))
+                if(!all(input[[cellInfoYlim]]==input[[pairedY]])){
+                    updateSliderInput(
+                        session,
+                        pairedY,
+                        value = input[[cellInfoYlim]]
+                    )
+                }
+            }
+            if(reducedDimsChangeInMolecules()){
+                reducedDimsChangeInMolecules(FALSE)
+            }
+        })
+        
+        observeEvent(input$GeneExprdrX, {
+            if(length(molecules)==0){
+                updateLimRange(postfix, input, session, dataSource,
+                               cellInfoXlim, X=TRUE)
+                if(length(input$fov2)>0){
+                    reducedDimsChangeInMolecules(TRUE)
                 }
             }
         })
-        observeEvent(ranges$y, {
-            if(length(ranges$y)==2 && 
-               !is.na(ranges$y[1]) && !is.na(ranges$y[2])){
-                if(!all(input[[cellInfoYlim]]==ranges$y)){
-                    updateSliderInput(
-                        session,
-                        cellInfoYlim,
-                        value = ranges$y
-                    )
-                    if(isTRUE(input[[paste0('XYlimLinker', postfix)]])){
-                        updateSliderInput(
-                            session,
-                            paste0('manuYlim', ifelse(postfix==1, 2, 1)),
-                            value = ranges$y
-                        )
-                        updateNumericInput(
-                            inputId = paste0('setRangeY', 
-                                             ifelse(postfix==1, 2, 1)),
-                            value = input[[paste0('setRangeY', 
-                                                  ifelse(postfix==1, 2, 1))]]+1)
-                    }
+        observeEvent(input$GeneExprdrY, {
+            if(length(molecules)==0){
+                updateLimRange(postfix, input, session, dataSource,
+                               cellInfoYlim, X=FALSE)
+                if(length(input$fov2)>0){
+                    reducedDimsChangeInMolecules(TRUE)
                 }
             }
         })
-        observeEvent(input[[cellInfoXlim]], {
-            if(!all(input[[cellInfoXlim]]==ranges$x)){
-                updateNumericInput(
-                    inputId = paste0('setRangeX', postfix), 
-                    value = input[[paste0('setRangeX', postfix)]] + 1
-                )
+        observeEvent(input$fov2, {
+            if(length(molecules)>0){
+                updateLimRange(postfix, input, session, dataSource,
+                               cellInfoXlim,
+                               X=TRUE,
+                               val = molecules[[
+                                   input[[paste0('fov', postfix)]]
+                               ]]$x)
+                updateLimRange(postfix, input, session, dataSource,
+                               cellInfoYlim,
+                               X=FALSE,
+                               val = molecules[[
+                                   input[[paste0('fov', postfix)]]
+                               ]]$y)
             }
         })
-        observeEvent(input[[cellInfoYlim]], {
-            if(!all(input[[cellInfoYlim]]==ranges$y)){
-                updateNumericInput(
-                    inputId = paste0('setRangeY', postfix), 
-                    value = input[[paste0('setRangeY', postfix)]] + 1
-                )
-            }
-        })
-        observeEvent(input[[paste0('setRangeX', postfix)]],{
-            ranges$x <- input[[cellInfoXlim]]
-        }, ignoreInit = FALSE)
-        observeEvent(input[[paste0('setRangeY', postfix)]],{
-            ranges$y <- input[[cellInfoYlim]]
-        }, ignoreInit = FALSE)
         observeEvent(input[[paste0('XYlimLinker', postfix)]], {
+            thisXYlimLinker <- paste0('XYlimLinker', postfix)
             pairedXYlimLinker <- paste0('XYlimLinker', ifelse(postfix==1, 2, 1))
-            updateCheckboxInput(
-                inputId = pairedXYlimLinker,
-                value = input[[paste0('XYlimLinker', postfix)]]
-            )
+            if(input[[pairedXYlimLinker]]!=input[[thisXYlimLinker]]){
+                if(isTRUE(!is.null(input[['fov2']]))){
+                    rdim <- sub('.$', '', input[['GeneExprdrX']])
+                    updateCheckboxInput(
+                        inputId = pairedXYlimLinker,
+                        value = isTRUE(rdim==input[['fov2']])
+                    )
+                }else{
+                    updateCheckboxInput(
+                        inputId = pairedXYlimLinker,
+                        value = input[[thisXYlimLinker]]
+                    )  
+                }
+            }
         })
+        # save Ranges
         resetXYRanges <- function(X=TRUE){
             if(isTRUE(X)){
-                ranges$x <- NULL
                 label <- 'X'
             }else{
-                ranges$y <- NULL
                 label <- 'Y'
             }
             
@@ -414,11 +411,6 @@ updateGeneExprDotPlotUI <-
                         value = c(input[[paste0('manu', label, 'limOriMin', postfix)]],
                                   input[[paste0('manu', label, 'limOriMax', postfix)]])
                     )
-                    updateNumericInput(
-                        inputId = paste0('setRange', label, 
-                                         ifelse(postfix==1, 2, 1)),
-                        value = input[[paste0('setRange', label, 
-                                              ifelse(postfix==1, 2, 1))]]+1)
                 }
             }
         }
@@ -431,32 +423,6 @@ updateGeneExprDotPlotUI <-
                     value = '')
             }
         }
-        observeEvent(input$GeneExprdrX, {
-            if(length(molecules)>0){
-                updateLimRange(postfix, input, session, dataSource,
-                               cellInfoXlim,
-                               X=TRUE,
-                               val = molecules[[
-                                   input[[paste0('fov', postfix)]]
-                               ]]$x)
-            }else{
-                updateLimRange(postfix, input, session, dataSource,
-                                 cellInfoXlim, X=TRUE) 
-            }
-        })
-        observeEvent(input$GeneExprdrY, {
-            if(length(molecules)>0){
-                updateLimRange(postfix, input, session, dataSource,
-                               cellInfoYlim,
-                               X=FALSE,
-                               val = molecules[[
-                                   input[[paste0('fov', postfix)]]
-                               ]]$y)
-            }else{
-                updateLimRange(postfix, input, session, dataSource,
-                                 cellInfoYlim, X=FALSE)
-            }
-        })
         refreshGeneExprUI <- reactiveValues(oldUI='2D')
         create2DUI <- function(){
             output[[paste0("GeneExproup.ui", postfix)]] <- renderUI({
@@ -474,23 +440,81 @@ updateGeneExprDotPlotUI <-
                     click = clickOpts(NS0(id, 'GeneExproup.clk', postfix),
                                       clip = FALSE),
                     brush = brushOpts(NS0(id, 'GeneExproup.brush', postfix),
-                                      resetOnNew = TRUE))
+                                      resetOnNew = TRUE),
+                    hover = hoverOpts(NS0(id, 'GeneExproup.hover', postfix),
+                                      delay=500, delayType='debounce'))
                 if(id %in% c('cellInfoGeneExpr', 'cellInfoCellInfo',
                              'subsetGeneExpr', 'geneExprGeneExpr',
-                             'sunburst', 'coExpr')){
+                             'sunburst', 'deconvolution', 'coExpr')){
                     div(
                         #class = "wheel-zoomable-plot", # default close it
                         id = NS0(id, 'GeneExproupDIV', postfix),
-                        plotUI
+                        plotUI,
+                        uiOutput(NS0(id, 'GeneExproup.tooltip', postfix))
                     )
                 }else{
                     plotUI
                 }
             })
+            
+            # Handle hover to show the tooltips
+            output[[paste0('GeneExproup.tooltip', postfix)]] <- renderUI({
+                if(!id %in% c('cellInfoGeneExpr', 'cellInfoCellInfo',
+                              'subsetGeneExpr', 'geneExprGeneExpr',
+                              'sunburst', 'deconvolution', 'coExpr')){
+                    return(NULL)
+                }
+                
+                hover <- input[[paste0("GeneExproup.hover", postfix)]]
+                if (is.null(hover)) {
+                    return(NULL)
+                }
+                session$sendCustomMessage(
+                    type='placeGeneExproupInfoEditorBox',
+                    message = id)
+                val <- nearest_element(hover, labelFirst = FALSE)
+                req(length(val)>=3)
+                req(val[1]=='colour')
+                # hover$range the pixel range of the plot panel within the page
+                wellPanel(
+                    style = paste0(
+                        "position: fixed; border-left: 6px solid ", val[2], ";",
+                        "left:", input$current_clientX+5, "px;",
+                        "top:", input$current_clientY+5, "px;"
+                    ),
+                    class="tooltip-box",
+                    id = NS0(id, "GeneExproup_tooltip", postfix),
+                    HTML(paste0(
+                        "<b><i class='fa fa-circle' style='color: ",
+                        val[2], ";'></i></b> ", val[3], "<br/>"
+                    ))
+                )
+            })
+            # Handle brush (drag selection) for zooming
+            observeEvent(input[[paste0("GeneExproup.brush", postfix)]], {
+                if(!isTRUE(input[[paste0("GeneExproup.isPanning", postfix)]])){
+                    brush <- input[[paste0("GeneExproup.brush", postfix)]]
+                    if (!is.null(brush)) {
+                        updateSliderInput(
+                            session,
+                            cellInfoXlim,
+                            value = c(brush$xmin, brush$xmax)
+                        )
+                        updateSliderInput(
+                            session,
+                            cellInfoYlim,
+                            value = c(brush$ymin, brush$ymax)
+                        )
+                    }
+                }
+            })
+            
             observeEvent(list(input[[cellInfoXlim]], input[[cellInfoYlim]]), {
                 output[[paste0("GeneExproup", postfix)]] <- renderPlot({
+                    setCurrentPlot()
                     addLimits(darkTheme(plotX(), dataSource=dataSource),
-                              ranges=ranges,
+                              ranges=list(x=input[[cellInfoXlim]],
+                                          y=input[[cellInfoYlim]]),
                               coord=input[[paste0('coord', postfix)]],
                               id=id, postfix=postfix, input=input)
                 }, bg=darkTheme(returnBG=TRUE,
@@ -559,57 +583,86 @@ updateGeneExprDotPlotUI <-
                                value=input[[paste0("usingPan",
                                                    postfix)]]))
         })
-        # Handle brush (drag selection) for zooming
-        observeEvent(input[[paste0("GeneExproup.brush", postfix)]], {
-            if(!isTRUE(input[[paste0("GeneExproup.isPanning", postfix)]])){
-                brush <- input[[paste0("GeneExproup.brush", postfix)]]
-                if (!is.null(brush)) {
-                    ranges$x <- c(brush$xmin, brush$xmax)
-                    ranges$y <- c(brush$ymin, brush$ymax)
-                }
-            }
-        })
+        
         # handle wheel zoom in and out
-        setXYranges <- function(){
-            if(is.null(ranges$x) || is.null(ranges$y)){
-                p <- plotX()
-                ggp1 <- ggplot_build(p)
-                ranges$x <- ggp1$layout$panel_params[[1]]$x.range
-                ranges$y <- ggp1$layout$panel_params[[1]]$y.range
-            }
-        }
         observeEvent(input[[paste0("GeneExproup.scroll", postfix)]], {
-            setXYranges()
-            dx <- diff(ranges$x)/10
-            dy <- diff(ranges$y)/10
+            x <- input[[cellInfoXlim]]
+            y <- input[[cellInfoYlim]]
+            dx <- diff(x)/10
+            dy <- diff(y)/10
             if(input[[paste0("GeneExproup.scroll", postfix)]]>0){
-                ranges$x <- ranges$x + c(-dx, dx)
-                ranges$y <- ranges$y + c(-dy, dy)
+                updateSliderInput(
+                    session,
+                    cellInfoXlim,
+                    value = x + c(-dx, dx)
+                )
+                updateSliderInput(
+                    session,
+                    cellInfoYlim,
+                    value = y + c(-dy, dy)
+                )
             }else{
-                ranges$x <- ranges$x + c(dx, -dx)
-                ranges$y <- ranges$y + c(dy, -dy)
+                updateSliderInput(
+                    session,
+                    cellInfoXlim,
+                    value = x + c(dx, -dx)
+                )
+                updateSliderInput(
+                    session,
+                    cellInfoYlim,
+                    value = y + c(dy, -dy)
+                )
             }
         })
         # handle pan (drag)
         observeEvent(input[[paste0("GeneExproup.pan", postfix)]], {
             if(isTRUE(input[[paste0("GeneExproup.isPanning", postfix)]])){
-                setXYranges()
                 dx <- input[[paste0("GeneExproup.pan", postfix)]]$dx
                 dy <- input[[paste0("GeneExproup.pan", postfix)]]$dy
                 w  <- input[[paste0("GeneExproup.pan", postfix)]]$width
                 h  <- input[[paste0("GeneExproup.pan", postfix)]]$height
-                xr <- diff(ranges$x)
-                yr <- diff(ranges$y)
+                x <- input[[cellInfoXlim]]
+                y <- input[[cellInfoYlim]]
+                xr <- diff(x)
+                yr <- diff(y)
                 x_shift <- -dx/w * xr
                 y_shift <- dy/h * yr
-                ranges$x <- ranges$x + x_shift
-                ranges$y <- ranges$y + y_shift
+                updateSliderInput(
+                    session,
+                    cellInfoXlim,
+                    value = x + x_shift
+                )
+                updateSliderInput(
+                    session,
+                    cellInfoYlim,
+                    value = y + y_shift
+                )
             }
         })
-        nearest_element <- function(e){
-            if(is.null(e)) return("undefined", 'undefined')
-            p <- plotX()
-            ggp1 <- ggplot_build(p)
+        
+        currentplot <- reactiveVal()
+        setCurrentPlot <- function(){
+            ## set current plot for nearest_element
+            ## need to be run when plot updated
+            p <- tryCatch(plotX(), error=function(.e){
+                return(NULL)
+            })
+            if(is(p, 'ggplot')){
+                ggp1 <- tryCatch(ggplot_build(p), error=function(.e){
+                  return(NULL)
+                })
+                currentplot(ggp1)
+            }
+        }
+        # replace nearPoints
+        nearest_element <- function(e, labelFirst=TRUE){
+            if(is.null(e)) return(c("undefined", 'undefined'))
+            ggp1 <- isolate(currentplot())
+            if(is.null(ggp1)||isTRUE(lengths(ggp1$data)[1]==0)){
+                setCurrentPlot()
+                ggp1 <- isolate(currentplot())
+            }
+            p <- ggp1$plot
             xrg <- ggp1$layout$panel_params[[1]]$x.range
             yrg <- ggp1$layout$panel_params[[1]]$y.range
             text_layer_id <- vapply(p$layers, function(.ele){
@@ -625,8 +678,38 @@ updateGeneExprDotPlotUI <-
                 do.call(rbind,
                         lapply(ggp1$data[!text_layer_id],
                                function(.ele){
-                                   .ele[, c('x', 'y', 'colour')]
+                                   if(all(c('x', 'y', 'colour') %in%
+                                          colnames(.ele))){
+                                       .ele[, c('x', 'y', 'colour')] 
+                                   }
                                }))
+            if(!labelFirst){
+                nearestLabel <- (e$x - points_layers$x)^2 +
+                    (e$y - points_layers$y)^2
+                maxDist <- (diff(xrg)/100)^2 + (diff(yrg)/100)^2
+                if(min(nearestLabel)>maxDist){
+                    return(c("undefined", 'undefined'))
+                }
+                k <- which.min(nearestLabel)[1]
+                nearestLabel <- c('colour',
+                                  points_layers$colour[k])
+                if('val' %in% colnames(p$data)){
+                    d <- p$data
+                    colnames(d) <- tolower(colnames(d))
+                    val <- d[d$x==points_layers$x[k] &
+                                              d$y==points_layers$y[k],
+                    ]$val
+                    if(length(val)){
+                        if(is.numeric(val[1])) {
+                            val <- prettyNum(val[1])
+                        }else{
+                            val <- as.character(val[1])
+                        }
+                        nearestLabel <- c(nearestLabel, val)
+                    }
+                }
+                return(nearestLabel)
+            }
             text_layers$width <-
                 grid::convertWidth(grid::stringWidth('W'),
                                    'npc', valueOnly = TRUE)*
@@ -646,8 +729,9 @@ updateGeneExprDotPlotUI <-
             }else{
                 nearestLabel <- (e$x - points_layers$x)^2 +
                     (e$y - points_layers$y)^2
+                k <- which.min(nearestLabel)[1]
                 nearestLabel <- c('colour',
-                                  points_layers$colour[which.min(nearestLabel)[1]])
+                                  points_layers$colour[k])
             }
             return(nearestLabel)
         }
@@ -779,51 +863,54 @@ updateGeneExprDotPlotUI <-
                 }
             })
             observeEvent(input[[paste0("GeneExproup.dbl", postfix)]],{
-                if(!is.null(ranges$x) || !is.null(ranges$y)){
+                if(!all(input[[cellInfoXlim]]==c(input[[paste0('manuXlimOriMin', postfix)]],
+                                                 input[[paste0('manuXlimOriMax', postfix)]])) ||
+                   !all(input[[cellInfoYlim]]==c(input[[paste0('manuYlimOriMin', postfix)]],
+                                                 input[[paste0('manuYlimOriMax', postfix)]]))){
                     resetRanges()
                 }else{
                     evt <- input[[paste0("GeneExproup.dbl", postfix)]]
-                    if(!is.null(evt)){
-                        session$sendCustomMessage(
-                            type='placeGeneExproupInfoEditorBox',
-                            message = id)
-                        output[[paste0("GeneExproup.info", postfix)]] <- renderUI({
-                            val <- nearest_element(evt)
-                            fluidRow(
-                                column(4,
-                                       if(val[1]=='colour'){
-                                           colourInput(
-                                               NS0(id, "GeneExproup.upd",
-                                                   postfix),
-                                               label = NULL,
-                                               value = val[2]
-                                           )
-                                       }else{
-                                           textInput(NS0(id, "GeneExproup.upd",
-                                                         postfix),
-                                                     label = NULL,
-                                                     value = val[2])
-                                       },
-                                       div(
-                                           style = "visibility:hidden;",
-                                           textInput(NS0(id, 'GeneExproup.vtp', 
-                                                         postfix),
-                                                     label = NULL,
-                                                     value = val[1]),
-                                           textInput(NS0(id, "GeneExproup.old",
-                                                         postfix),
-                                                     label = NULL,
-                                                     value = val[2]))),
-                                column(4, actionButton(NS0(id, "GeneExproup.submit",
-                                                           postfix),
-                                                       label = 'update')),
-                                column(4),
-                                style=paste0('position:absolute; left:',
-                                             input$current_mouseX,'px; top:',
-                                             input$current_mouseY, 'px;')
-                            )
-                        })
-                    }
+                    req(evt)
+                    session$sendCustomMessage(
+                        type='placeGeneExproupInfoEditorBox',
+                        message = id)
+                    output[[paste0("GeneExproup.info", postfix)]] <- renderUI({
+                        val <- nearest_element(evt)
+                        fluidRow(
+                            column(4,
+                                   if(val[1]=='colour'){
+                                       colourInput(
+                                           NS0(id, "GeneExproup.upd",
+                                               postfix),
+                                           label = NULL,
+                                           value = val[2]
+                                       )
+                                   }else{
+                                       textInput(NS0(id, "GeneExproup.upd",
+                                                     postfix),
+                                                 label = NULL,
+                                                 value = val[2])
+                                   },
+                                   div(
+                                       style = "visibility:hidden;",
+                                       textInput(NS0(id, 'GeneExproup.vtp', 
+                                                     postfix),
+                                                 label = NULL,
+                                                 value = val[1]),
+                                       textInput(NS0(id, "GeneExproup.old",
+                                                     postfix),
+                                                 label = NULL,
+                                                 value = val[2]))),
+                            column(4, actionButton(NS0(id, "GeneExproup.submit",
+                                                       postfix),
+                                                   label = 'update')),
+                            column(4),
+                            style=paste0('position:fixed; left:',
+                                         input$current_clientX,'px; top:',
+                                         input$current_clientY, 'px;')
+                        )
+                    })
+                    
                 }
             })
             observeEvent(input[[paste0("GeneExproup.clk", postfix)]],{

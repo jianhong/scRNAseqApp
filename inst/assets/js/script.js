@@ -148,15 +148,19 @@
         }, true);
 
     // Get mouse coordinates
-    var mouseX, mouseY;
+    var mouseX, mouseY, clientX, clientY;
     $(document).mousemove(function(e){
         mouseX = e.pageX;
         mouseY = e.pageY;
+        clientX = e.clientX;
+        clientY = e.clientY;
     }).mouseover();
     
     Shiny.addCustomMessageHandler("placeGeneExproupInfoEditorBox", function(id){
         Shiny.setInputValue(id+'-current_mouseX', mouseX);
         Shiny.setInputValue(id+'-current_mouseY', mouseY);
+        Shiny.setInputValue(id+'-current_clientX', clientX);
+        Shiny.setInputValue(id+'-current_clientY', clientY);
     })
     // editorStatus
     Shiny.addCustomMessageHandler("updateEditorStatus", function(id){

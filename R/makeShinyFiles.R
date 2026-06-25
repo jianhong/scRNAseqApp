@@ -50,7 +50,7 @@
 #' @importFrom rhdf5 h5createFile h5createGroup h5createDataset h5write
 #' @importFrom Rsamtools TabixFile seqnamesTabix scanTabix
 #' @importFrom GenomeInfoDb keepSeqlevels seqinfo `seqinfo<-` seqnames seqlevelsStyle `seqlevelsStyle<-` seqlengths seqlevels
-#' @importFrom GenomicRanges GRanges width coverage GRangesList tileGenome binnedAverage
+#' @importFrom GenomicRanges GRanges width coverage GRangesList tileGenome
 #' @importFrom rtracklayer export
 #' @importFrom utils read.table
 #' @importFrom fs path_sanitize

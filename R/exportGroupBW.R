@@ -169,20 +169,7 @@ exportGroupBW <- function(
             .cov     <- readRDS(tmp_path)
             
             if (binSize > 1L) {
-                chrs_with_signal <- intersect(seqlevels(bins), names(.cov))
-                cov_tmp <- .cov
-                .cov <- lapply(chrs_with_signal, function(chr){
-                    bins_chr <- keepSeqlevels(
-                        bins,
-                        value = chr,
-                        pruning.mode = "coarse")
-                    gr <- as(cov_tmp[chr], 'GRanges')
-                    gr <- gr[gr$score>0]
-                    seqinfo(gr) <- seqinfo(bins_chr)
-                    bins_chr <- subsetByOverlaps(bins_chr, gr)
-                    binnedAverage(bins_chr, .cov[chr], "score", na.rm = TRUE)
-                })
-                .cov <- unlist(GRangesList(.cov))
+                .cov <- binAverage(bins, .cov)
             }
             
             if (normBy == 'nCells') {
@@ -208,4 +195,28 @@ exportGroupBW <- function(
         }
     }
     unlink(tmp_base, recursive = TRUE)
+}
+
+
+binAverage <- function(bins, .cov){
+    ## do not use binnedAverage
+    ## reason: if the fragment not cover the whole region,
+    ##       the right side 0's will be trimmed and the mean values are not
+    ##.      accurate.
+    ##       and all the bins here are well ordered and timmed.
+    ## all tile are trimmed and sorted
+    chrs_with_signal <- intersect(seqlevels(bins), names(.cov))
+    bins_chr <- keepSeqlevels(
+        bins,
+        value = chrs_with_signal,
+        pruning.mode = "coarse")
+    .cov <- .cov[chrs_with_signal]
+    gr <- as(.cov, 'GRanges')
+    gr <- gr[gr$score>0]
+    seqinfo(gr) <- seqinfo(bins_chr)
+    bins_chr <- subsetByOverlaps(bins_chr, gr)
+    v <- Views(.cov, bins_chr)
+    means <- viewMeans(v, na.rm=TRUE)
+    bins_chr$score <- unsplit(means, as.factor(seqnames(bins_chr)))
+    bins_chr
 }

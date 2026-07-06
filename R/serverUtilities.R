@@ -949,14 +949,17 @@ updateGeneExprDotPlotUI <-
                 
             })
         }
-        output[[paste0("GeneExproup.dwn", postfix)]] <-
-            handlerFUN(
-                input = input,
-                postfix = postfix,
-                plot = plotX,
-                dataSource = dataSource,
-                ranges = ranges,
-                ...)
+        observeEvent(list(input[[cellInfoXlim]], input[[cellInfoYlim]]), {
+            output[[paste0("GeneExproup.dwn", postfix)]] <-
+                handlerFUN(
+                    input = input,
+                    postfix = postfix,
+                    plot = plotX,
+                    dataSource = dataSource,
+                    ranges = list(x=input[[cellInfoXlim]],
+                                  y=input[[cellInfoYlim]]),
+                    ...)
+        })
         
     }
 

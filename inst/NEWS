@@ -1,3 +1,8 @@
+CHANGES IN VERSION 1.13.18
+-------------------------
+
+    o Fix the bug in download button after remove the reactive values of ranges.
+    
 CHANGES IN VERSION 1.13.17
 -------------------------
 

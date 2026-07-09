@@ -191,13 +191,8 @@ scDRcoex <- function(
             ))))
         ## use normalized value? v1, v2
         ## use raw value? val1, val2
-        if(isTRUE(useNorm)){
-            ggData1 <- ggData[, c(subGrpColname, 'val1'), with = FALSE]
-            ggData2 <- ggData[, c(subGrpColname, 'val2'), with = FALSE]
-        }else{
-            ggData1 <- ggData[, c(subGrpColname, 'v1'), with = FALSE]
-            ggData2 <- ggData[, c(subGrpColname, 'v2'), with = FALSE]
-        }
+        ggData1 <- ggData[, c(subGrpColname, 'v1'), with = FALSE]
+        ggData2 <- ggData[, c(subGrpColname, 'v2'), with = FALSE]
         colnames(ggData1) <- colnames(ggData2) <- 
             c(subGrpColname, 'val')
         ggData1$group <- gene1
@@ -217,6 +212,7 @@ scDRcoex <- function(
         ggOut <- stream_plot(ggData, x='idx', y='val',
                              group='group',
                              groupY=subGrpColname,
+                             normByTotal=useNorm,
                              type=streamType) +
             scale_y_discrete(expand = c(0.01, 0.01)) +
             scale_x_continuous(expand = c(0, 0)) +

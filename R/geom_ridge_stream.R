@@ -4,6 +4,8 @@
 #' @param x Column name for x-axis (numeric, e.g. time)
 #' @param y Column name for y-axis values (magnitude per group)
 #' @param group Column name for stream groups (filled ribbons)
+#' @param groupY Column name for faucet_grid
+#' @param normByTotal Normalize x value by total cells.
 #' @param type "mirror" (symmetric, classic stream), "ridge" (zero baseline), 
 #'                  "proportional" (fills to 1)
 #' @param bw Bandwidth for loess smoothing (0–1, default 0.3)
@@ -15,15 +17,18 @@
 #' @importFrom stats loess predict setNames
 #' 
 stream_plot <- function(data, x, y, group, groupY,
+                        normByTotal=FALSE,
                         type = "mirror",
                         bw = 0.3, n_grid = 100,
                         alpha = 0.85, palette = NULL) {
     type <- match.arg(type, c('mirror', 'ridge', 'proportional'))
     dt <- as.data.table(data)
     # smooth each group over a common x grid via loess
-    x_grid <- seq(min(dt[[x]], na.rm = TRUE),
-                  max(dt[[x]], na.rm = TRUE),
-                  length.out = n_grid)
+    if(!normByTotal){
+        x_grid <- seq(min(dt[[x]], na.rm = TRUE),
+                      max(dt[[x]], na.rm = TRUE),
+                      length.out = n_grid) 
+    }
     
     groups <- unique(dt[[group]])
     groupsY <- unique(dt[[groupY]])
@@ -33,8 +38,20 @@ stream_plot <- function(data, x, y, group, groupY,
         lapply(groupsY, function(gY){
             sub <- subset(dt, gps == g & gpY == gY)
             fit <- loess(as.formula(paste(y, "~", x)), data = sub, span = bw)
-            pred <- pmax(predict(fit, newdata = data.frame(setNames(list(x_grid), x))), 0)
-            data.table(x_val = x_grid, value = pred, grp = g, grpY = gY)
+            if(normByTotal){
+                x_grid <- seq(min(sub[[x]], na.rm = TRUE),
+                              max(sub[[x]], na.rm = TRUE),
+                              length.out = n_grid) 
+            }
+            pred <- 
+                pmax(predict(fit, newdata = data.frame(setNames(list(x_grid),
+                                                                x))), 0)
+            if(!normByTotal){
+                data.table(x_val = x_grid, value = pred, grp = g, grpY = gY)
+            }else{
+                data.table(x_val = seq.int(n_grid), value = pred, grp = g,
+                           grpY = gY)
+            }
         })
     }), recursive = FALSE))
     setnames(smooth_dt, "grp", group)

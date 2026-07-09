@@ -114,6 +114,12 @@ availableThemes <- function(output='name'){
             "#0077e6", "#1a8cff", "#3399ff", "#4da6ff", "#66b3ff",
             "#80bfff", "#99ccff", "#b3d9ff", "#cce6ff", "#e6f2ff",
             "#99b3cc", "#668fb3", "#336699", "#264d73", "#19334d"
+        ),
+        
+        # 11. paired color for stream plot
+        paired_darken = c(
+            "#FF0000", "#CC0303", "#00A08A", "#0B7E6D", "#F2AD00", "#BE8707",
+            "#F98400", "#C36812", "#5BBCD6", "#3595AC"
         )
     )
     

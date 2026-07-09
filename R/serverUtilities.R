@@ -687,7 +687,7 @@ updateGeneExprDotPlotUI <-
                 nearestLabel <- (e$x - points_layers$x)^2 +
                     (e$y - points_layers$y)^2
                 maxDist <- (diff(xrg)/100)^2 + (diff(yrg)/100)^2
-                if(min(nearestLabel)>maxDist){
+                if(isTRUE(min(nearestLabel)>maxDist)){
                     return(c("undefined", 'undefined'))
                 }
                 k <- which.min(nearestLabel)[1]
@@ -1715,12 +1715,14 @@ getRatio <- function(ggData) {
     
 }
 orderGeneExpr <- function(ggData, GeneExprDotOrd, coln) {
-    if (GeneExprDotOrd == "Max-1st") {
-        ggData <- ggData[order(ggData[, coln, with = FALSE])]
-    } else if (GeneExprDotOrd == "Min-1st") {
-        ggData <- ggData[order(-ggData[, coln, with = FALSE])]
-    } else if (GeneExprDotOrd == "Random") {
-        ggData <- ggData[sample(nrow(ggData))]
+    if(nrow(ggData)>0 && coln %in% colnames(ggData)){
+        if (GeneExprDotOrd == "Max-1st") {
+            ggData <- ggData[order(ggData[, coln, with = FALSE])]
+        } else if (GeneExprDotOrd == "Min-1st") {
+            ggData <- ggData[order(-ggData[, coln, with = FALSE])]
+        } else if (GeneExprDotOrd == "Random") {
+            ggData <- ggData[sample(nrow(ggData))]
+        }  
     }
     return(ggData)
 }

@@ -39,6 +39,9 @@ scDRcoex <- function(
         cellSegColor=NA,
         inpBgImg=FALSE,
         backgroundImage='',
+        inpXlim=NULL,
+        useNorm=FALSE,
+        streamType='proportional',
         ...) {
     if (is.null(gene1) || is.null(gene2) || gene1 == "" || gene2 == "") {
         return(NULL)
@@ -180,8 +183,52 @@ scDRcoex <- function(
         ))
     }
     
-    ggData$val <- ggData$cMix
+    if (plotType == "Ridgeplot"){
+        ggData[[subGrpColname]] <- factor(
+            ggData[[subGrpColname]],
+            levels = rev(sortLevels(as.character(
+                unique(ggData[[subGrpColname]])
+            ))))
+        ## use normalized value? v1, v2
+        ## use raw value? val1, val2
+        if(isTRUE(useNorm)){
+            ggData1 <- ggData[, c(subGrpColname, 'val1'), with = FALSE]
+            ggData2 <- ggData[, c(subGrpColname, 'val2'), with = FALSE]
+        }else{
+            ggData1 <- ggData[, c(subGrpColname, 'v1'), with = FALSE]
+            ggData2 <- ggData[, c(subGrpColname, 'v2'), with = FALSE]
+        }
+        colnames(ggData1) <- colnames(ggData2) <- 
+            c(subGrpColname, 'val')
+        ggData1$group <- gene1
+        ggData2$group <- gene2
+        ggData1$cellID <- ggData2$cellID <- seq.int(nrow(ggData))
+        ggData <- rbind(ggData1, ggData2)
+        ggData[, "row_idx" := .I]
+        first_occ <- ggData[, list(first_row = min(.SD$row_idx)),
+                            by = c("group",subGrpColname, "cellID")]
+        setorderv(first_occ, 'first_row')
+        first_occ[, "idx" := seq_len(.N),
+                  by = c("group", subGrpColname)]
+        setnames(first_occ, "idx", "cell_idx")
+        ggData[first_occ, "idx" := cell_idx,
+               on = c("group",subGrpColname, "cellID")]
+        ggData[["row_idx"]] <- NULL
+        ggOut <- stream_plot(ggData, x='idx', y='val',
+                             group='group',
+                             groupY=subGrpColname,
+                             type=streamType) +
+            scale_y_discrete(expand = c(0.01, 0.01)) +
+            scale_x_continuous(expand = c(0, 0)) +
+            ylab(subsetCellKey) +
+            xlab("cell ID")
+        if (length(inpXlim) == 2) {
+            ggOut <- ggOut + xlim(inpXlim)
+        }
+        return(ggOut)
+    }
     
+    ggData$val <- ggData$cMix
     if(isTRUE(inpBgImg)){
         backgroundAlignArgs$plot_data <- ggData
         ggData <- do.call(backgroundAlignFun, backgroundAlignArgs)

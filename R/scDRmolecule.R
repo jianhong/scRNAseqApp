@@ -35,6 +35,9 @@ scDRmolecule <- function(
     }
     ggData <- molecules[[fov]]
     ggData <- ggData[ggData$molecule %in% genes, , drop=FALSE]
+    if(length(dim(ggData))!=2){
+        return(ggplot())
+    }
     colnames(ggData) <- c("X", "Y", "val")
     rat <- getRatio(ggData)
     

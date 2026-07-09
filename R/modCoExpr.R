@@ -118,7 +118,7 @@ coExprServer <- function(id, dataSource, optCrt) {
                 subsetCellVal=getSubsetCellVal(input),
                 dataset=dataSource()$dataset,
                 geneIdMap=dataSource()$sc1gene,
-                plotType="2D",
+                plotType=input[[paste0('CoExprtype', 1)]],
                 pointSize=input$GeneExprsiz,
                 GeneExprDotCol=input$CoExprcol1,
                 GeneExprDotOrd=input$CoExprord1,
@@ -141,7 +141,13 @@ coExprServer <- function(id, dataSource, optCrt) {
                 backgroundImage=file.path(
                     .globals$datafolder,
                     dataSource()$dataset,
-                    .globals$filenames[["backgroundImage"]])
+                    .globals$filenames[["backgroundImage"]]),
+                inpXlim=if (input[[paste0("manuXYlimTog", 1)]] %% 2 == 0)
+                            0
+                        else
+                            input[[paste0("manuXlim", 1)]],
+                useNorm=input[[paste0('useNorm', 1)]],
+                streamType=input[[paste0('CoExprStreamtype', 1)]]
             )
         })
         

@@ -413,69 +413,107 @@ geneCoExprPlotControlUI <- function(id, postfix=1, plotly=FALSE){
             condition = paste0(
                 "input.CoExprtog", postfix, " % 2 == 1"), ns=NS(id),
             radioButtons(
-                NS0(id, "CoExprcol", postfix), "Colour:",
-                inline = TRUE,
-                choices = choices,
-                selected = choices[1]),
-            radioButtons(
-                NS0(id, "CoExprord", postfix), "Plot order:",
-                choices = c("Max-1st", "Min-1st", "Original", "Random"),
-                selected = "Max-1st", inline = TRUE),
-            checkboxInput(
-                NS0(id, "CoExprhid", postfix),
-                "Hide filtered cells", value = FALSE),
-            checkboxInput(
-                NS0(id, 'CoExprSegmentation', postfix),
-                "Show cell segmentation", value = FALSE),
+                NS0(id, "CoExprtype", postfix), "Plot type",
+                choices = c("Dotplot", "Ridgeplot"),
+                selected = "Dotplot"),
             conditionalPanel(
                 condition = paste0(
-                    "input.CoExprSegmentation", postfix, " == true"),
+                    "input.CoExprtype", postfix,
+                    " == 'Dotplot'"),
                 ns=NS(id),
-                sliderInput(
-                    NS0(id, 'CoExprSegAlpha', postfix),
-                    "Cell segmentation alpha", value=1, 
-                    min = 0, max=1, step=0.01),
+                radioButtons(
+                    NS0(id, "CoExprcol", postfix), "Colour:",
+                    inline = TRUE,
+                    choices = choices,
+                    selected = choices[1]),
+                radioButtons(
+                    NS0(id, "CoExprord", postfix), "Plot order:",
+                    choices = c("Max-1st", "Min-1st", "Original", "Random"),
+                    selected = "Max-1st", inline = TRUE),
                 checkboxInput(
-                    NS0(id, 'CoExprSegBorderColor', postfix),
-                    "Show cell segmentation border",
-                    value = FALSE
-                ),
+                    NS0(id, "CoExprhid", postfix),
+                    "Hide filtered cells", value = FALSE),
+                checkboxInput(
+                    NS0(id, 'CoExprSegmentation', postfix),
+                    "Show cell segmentation", value = FALSE),
                 conditionalPanel(
                     condition = paste0(
-                        "input.CoExprSegBorderColor", postfix, " == true"),
+                        "input.CoExprSegmentation", postfix, " == true"),
                     ns=NS(id),
-                    colourInput(
-                        NS0(id, 'CoExprSegColor', postfix),
-                        "Cell segmentation border color",
-                        value = '#EEEEEE'
+                    sliderInput(
+                        NS0(id, 'CoExprSegAlpha', postfix),
+                        "Cell segmentation alpha", value=1, 
+                        min = 0, max=1, step=0.01),
+                    checkboxInput(
+                        NS0(id, 'CoExprSegBorderColor', postfix),
+                        "Show cell segmentation border",
+                        value = FALSE
+                    ),
+                    conditionalPanel(
+                        condition = paste0(
+                            "input.CoExprSegBorderColor", postfix, " == true"),
+                        ns=NS(id),
+                        colourInput(
+                            NS0(id, 'CoExprSegColor', postfix),
+                            "Cell segmentation border color",
+                            value = '#EEEEEE'
+                        )
                     )
-                )
+                ),
+                checkboxInput(
+                    NS0(id, 'CoExprBgImg', postfix),
+                    "Show spatial image", value = FALSE),
+                actionButton(
+                    NS0(id, "manuXYlimTog", postfix),
+                    "Manually set x/y axis", inline = TRUE),
+                conditionalPanel(
+                    condition = paste0(
+                        "input.manuXYlimTog", postfix, " % 2 ==1"),
+                    ns=NS(id),
+                    sliderInput(
+                        NS0(id, "manuXlim", postfix), "Xlim range:",
+                        min = -10, max = 100,
+                        value = .globals$defaultLimValue,
+                        step = 0.1),
+                    sliderInput(
+                        NS0(id, "manuYlim", postfix), "Ylim range:",
+                        min = -10, max = 100,
+                        value = .globals$defaultLimValue,
+                        step = 0.1),
+                    manuXYlimOriUI(id, postfix)
+                ),
+                checkboxInput(
+                   NS0(id, "usingPan", postfix),
+                   "Using wheel to zoom in/out", value = FALSE)
             ),
-            checkboxInput(
-                NS0(id, 'CoExprBgImg', postfix),
-                "Show spatial image", value = FALSE),
-            actionButton(
-                NS0(id, "manuXYlimTog", postfix),
-                "Manually set x/y axis", inline = TRUE),
             conditionalPanel(
                 condition = paste0(
-                    "input.manuXYlimTog", postfix, " % 2 ==1"),
+                    "input.CoExprtype", postfix,
+                    " == 'Ridgeplot'"),
                 ns=NS(id),
-                sliderInput(
-                    NS0(id, "manuXlim", postfix), "Xlim range:",
-                    min = -10, max = 100,
-                    value = .globals$defaultLimValue,
-                    step = 0.1),
-                sliderInput(
-                    NS0(id, "manuYlim", postfix), "Ylim range:",
-                    min = -10, max = 100,
-                    value = .globals$defaultLimValue,
-                    step = 0.1),
-                manuXYlimOriUI(id, postfix)
-            ),
-            checkboxInput(
-               NS0(id, "usingPan", postfix),
-               "Using wheel to zoom in/out", value = FALSE)
+                radioButtons(
+                    NS0(id, "CoExprStreamtype", postfix), "Stream type:",
+                    choices = c('mirror', 'ridge', 'proportional'),
+                    selected = "proportional", inline = TRUE),
+                checkboxInput(NS0(id, 'useNorm', postfix),
+                              "Normalized by total",
+                              value=FALSE),
+                actionButton(
+                    NS0(id, "manuXYlimTog", postfix),
+                    "Manually set x axis", inline = TRUE),
+                conditionalPanel(
+                    condition = paste0(
+                        "input.manuXYlimTog",
+                        postfix, " % 2 ==1"),
+                    ns=NS(id),
+                    sliderInput(
+                        NS0(id, "manuXlim", postfix), "Xlim range:",
+                        min = -10, max = 100,
+                        value = .globals$defaultLimValue,
+                        step = 0.1),
+                    manuXYlimOriUI(id, postfix)
+                )
+            )
         )
     )
 }

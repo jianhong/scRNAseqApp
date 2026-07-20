@@ -88,10 +88,12 @@ plotPieDimUI <- function(id, type='expr', postfix=1) {
                             NS(id, "CoExprType"),
                             "Plot type",
                             choices = if(type=='expr'){
-                                    c("sunburst", "pie", 'donut', "bar", "density",
+                                    c("sunburst", "pie", 'donut', "bar",
+                                      "density", "stream",
                                       "sum", "max", "mean")
                                 }else{
-                                    c("sunburst", "pie", 'donut', "bar", "density")
+                                    c("sunburst", "pie", 'donut', "bar",
+                                      "density", "stream")
                                 },
                             selected = "sunburst"
                         ),
@@ -103,6 +105,13 @@ plotPieDimUI <- function(id, type='expr', postfix=1) {
                                 inline = TRUE,
                                 choices = availableThemes("sequence"),
                                 selected = availableThemes("sequence")[1])),
+                        conditionalPanel(
+                            condition = "input.CoExprType == 'stream'",
+                            ns=NS(id),
+                            radioButtons(
+                                NS(id, "CoExprStreamtype"), "Stream type:",
+                                choices = c('mirror', 'ridge', 'proportional'),
+                                selected = "proportional", inline = TRUE)),
                         sliderInput(
                             NS(id, "CoExprAlpha"),
                             "Transparency",
@@ -200,7 +209,8 @@ plotPieDimServer <- function(id, dataSource, optCrt) {
                 labelsFontFamily=input$GeneExprfml,
                 plotAspectRatio = input$GeneExprasp,
                 keepXYlables = input$GeneExprtxt,
-                sunburst_type = input$sunburst_type
+                sunburst_type = input$sunburst_type,
+                streamType = input$CoExprStreamtype
             )
         })
         updateGeneExprDotPlotUI(

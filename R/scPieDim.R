@@ -28,7 +28,9 @@ scPieDim <- function(
         labelsFontFamily = 'Helvetica',
         plotAspectRatio,
         keepXYlables,
-        sunburst_type='expr') {
+        sunburst_type='expr',
+        streamType="ridge",
+        ...) {
     subFilterColname <- 'subValue'
     subGrpColname <- 'sub'
     if(sunburst_type=='expr'){
@@ -116,30 +118,35 @@ scPieDim <- function(
         dimRedX <- colnames(expr)[1]
         dimRedY <- colnames(expr)[2]
     }
-    
-    if(sunburst_type=='expr'){
-        if (sum(keep & expr_keep) * nrow(geneList) > 5000) {
-            ## filter the expression event, otherwise too slow
-            df <- data.frame(keep=keep & expr_keep, expr_levels = rowSums(expr))
-            df$id <- seq.int(nrow(df))
-            df <- df[df$keep, , drop=FALSE]
-            df <- df[order(df$expr_levels, decreasing = TRUE), , drop=FALSE]
-            df <- df[seq.int(ceiling(5000/nrow(geneList))), , drop=FALSE]
-            expr_keep <- seq_along(expr_keep) %in% df$id
+    if(plotType!='stream'){
+        if(sunburst_type=='expr'){
+            if (sum(keep & expr_keep) * nrow(geneList) > 5000) {
+                showNotification('The plots are subsamples results (maximal cells 5K).')
+                ## filter the expression event, otherwise too slow
+                df <- data.frame(keep=keep & expr_keep, expr_levels = rowSums(expr))
+                df$id <- seq.int(nrow(df))
+                df <- df[df$keep, , drop=FALSE]
+                df <- df[order(df$expr_levels, decreasing = TRUE), , drop=FALSE]
+                df <- df[seq.int(ceiling(5000/nrow(geneList))), , drop=FALSE]
+                expr_keep <- seq_along(expr_keep) %in% df$id
+            }
+        }else{
+            if (sum(keep & expr_keep) * nrow(geneList) > 5000) {
+                showNotification('The plots are subsamples results (maximal cells 5K).')
+                ## filter the cell, otherwise too slow
+                ## use the less cell information, if it contain more information
+                ## mean cell deconvolution does not work 
+                expr_keep <- apply(expr, 1, function(.ele) length(.ele>0.1))
+                df <- data.frame(keep=keep & expr_keep, expr_levels = expr_keep)
+                df$id <- seq.int(nrow(df))
+                df <- df[df$keep, , drop=FALSE]
+                df <- df[order(df$expr_levels, decreasing = FALSE), , drop=FALSE]
+                df <- df[seq.int(ceiling(5000/nrow(geneList))), , drop=FALSE]
+                expr_keep <- seq_along(expr_keep) %in% df$id
+            }
         }
     }else{
-        if (sum(keep & expr_keep) * nrow(geneList) > 5000) {
-            ## filter the cell, otherwise too slow
-            ## use the less cell information, if it contain more information
-            ## mean cell deconvolution does not work 
-            expr_keep <- apply(expr, 1, function(.ele) length(.ele>0.1))
-            df <- data.frame(keep=keep & expr_keep, expr_levels = expr_keep)
-            df$id <- seq.int(nrow(df))
-            df <- df[df$keep, , drop=FALSE]
-            df <- df[order(df$expr_levels, decreasing = FALSE), , drop=FALSE]
-            df <- df[seq.int(ceiling(5000/nrow(geneList))), , drop=FALSE]
-            expr_keep <- seq_along(expr_keep) %in% df$id
-        }
+        expr_keep <- TRUE
     }
     ggData_ <- ggData[keep & expr_keep]
     expr <- expr[keep & expr_keep, , drop = FALSE]
@@ -156,6 +163,46 @@ scPieDim <- function(
     expr$X0 <-
         expr$X + (as.numeric(factor(as.character(expr$geneName))) - 1) * size /
         2
+    if(plotType=='stream'){
+        ggData <- expr[, c("sampleID", subGrpColname, "geneName", "val"),
+                       with=FALSE]
+        ## reorder the cells to make sure the output order are same as co-expr.
+        ggData$geneName <- factor(ggData$geneName, levels=geneList$gene)
+        ggData[, 'mv' :=max(.SD$val, na.rm=TRUE), by=c("geneName")]
+        nTot <- getTotalNumber(nGrid = 16, nPad = 2)
+        ggData$v1 = round(nTot*ggData$val/ggData$mv)
+        ggData$mv <- NULL
+        ggData[, 'v0' := sum(.SD$v1), by=c(subGrpColname, "sampleID")]
+        ggData$v1 <- NULL
+        setorderv(ggData, c("geneName", "v0"))
+        ggData[, 'cellID':=seq.int(.N), by=c('geneName')]
+        ggData[[subGrpColname]] <- factor(
+            ggData[[subGrpColname]],
+            levels = rev(sortLevels(as.character(
+                unique(ggData[[subGrpColname]])
+            ))))
+        setDT(ggData)
+        ggData[, "row_idx" := .I]
+        first_occ <- ggData[, list(first_row = min(.SD$row_idx)),
+                            by = c("geneName",subGrpColname, "cellID")]
+        setorderv(first_occ, 'first_row')
+        first_occ[, "idx" := seq_len(.N),
+                  by = c("geneName", subGrpColname)]
+        setnames(first_occ, "idx", "cell_idx")
+        ggData[first_occ, "idx" := cell_idx,
+               on = c("geneName",subGrpColname, "cellID")]
+        ggData[["row_idx"]] <- NULL
+        ggOut <- stream_plot(ggData, x='idx', y='val',
+                             group='geneName',
+                             groupY=subGrpColname,
+                             normByTotal=CoExpred,
+                             type=streamType) +
+            scale_y_discrete(expand = c(0.01, 0.01)) +
+            scale_x_continuous(expand = c(0, 0)) +
+            ylab(subsetCellKey) +
+            xlab("cell ID")
+        return(ggOut)
+    }
     ggOut <- ggplot(data = expr, aes(x0 = .data[["X"]], y0 = .data[["Y"]]))
     if (markGrp) {
         ggOut <- ggOut +

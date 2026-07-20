@@ -189,14 +189,14 @@ scDRcoex <- function(
             levels = rev(sortLevels(as.character(
                 unique(ggData[[subGrpColname]])
             ))))
-        ## use normalized value? v1, v2
         ## use raw value? val1, val2
-        ggData1 <- ggData[, c(subGrpColname, 'v1'), with = FALSE]
-        ggData2 <- ggData[, c(subGrpColname, 'v2'), with = FALSE]
+        ggData1 <- ggData[, c(subGrpColname, 'val1'), with = FALSE]
+        ggData2 <- ggData[, c(subGrpColname, 'val2'), with = FALSE]
         colnames(ggData1) <- colnames(ggData2) <- 
             c(subGrpColname, 'val')
         ggData1$group <- gene1
         ggData2$group <- gene2
+        ## the cell id is ordered by sum of the two gene expression
         ggData1$cellID <- ggData2$cellID <- seq.int(nrow(ggData))
         ggData <- rbind(ggData1, ggData2)
         ggData[, "row_idx" := .I]

@@ -42,7 +42,7 @@ save_tmp_index_for_one_fragments <- function(
         
         if (is.null(txt) || length(txt) == 0L) next
         
-        col.names <- getColNames(head(txt, n5))
+        col.names <- getColNames(head(txt, n=5))
         reads <- fread(
             text = txt,
             sep = "\t",

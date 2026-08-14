@@ -42,10 +42,11 @@ save_tmp_index_for_one_fragments <- function(
         
         if (is.null(txt) || length(txt) == 0L) next
         
+        col.names <- getColNames(head(txt, n5))
         reads <- fread(
             text = txt,
             sep = "\t",
-            col.names = c("seqnames", "start", "end", "name", "score"),
+            col.names = col.names,
             showProgress = FALSE)
         rm(txt)
         
@@ -197,6 +198,19 @@ exportGroupBW <- function(
     unlink(tmp_base, recursive = TRUE)
 }
 
+getColNames <- function(txt, sep='\t'){
+    col5 <- c("seqnames", "start", "end", "name", "score")
+    col6 <- c("seqnames", "start", "end", "name", "score", "strand")
+    reads <- fread(
+        text = txt,
+        sep = "\t",
+        showProgress = FALSE)
+    if(ncol(reads)==5){
+        return(col5)
+    }else{
+        return(col6)
+    }
+}
 
 binAverage <- function(bins, .cov){
     ## do not use binnedAverage

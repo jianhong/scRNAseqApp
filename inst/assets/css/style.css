@@ -190,3 +190,19 @@ div.about-right>div{font-size:24px!important;magin:10px 0!important;font-weight:
 /* banner Dark mode overrides automatically triggered by bslib */
 [data-bs-theme="dark"] .banner-wrapper .banner-light {display: none;}
 [data-bs-theme="dark"] .banner-wrapper .banner-dark {display: block;}
+/*splash screeen*/
+#splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2c3e5050; color: white; flex-direction: column; justify-content: center; align-items: center; padding: 0; box-sizing: border-box; z-index: 9999; overflow: hidden; display: none; transition: opacity 1.5s cubic-bezier(0.25, 1, 0.5, 1), transform 1.5s cubic-bezier(0.25, 1, 0.5, 1); will-change: opacity, transform;}
+.splash-footer { position: absolute; bottom: 30px; width: 100%; display: flex; justify-content: center; align-items: center; z-index: 10000; }
+.close-splash-btn { background-color: #3498db; color: white; border: none; padding: 10px 20px; font-size: 14px; border-radius: 4px; cursor: pointer; transition: background 0.2s ease; }
+.close-splash-btn:hover { background-color: #2980b9; }
+.ppt-viewport { position: relative; width: 80vw; height: 75vh; display: flex; background: #2c3e50; justify-content: center; align-items: center; opacity: 0; transform: scale(0.95); transition: opacity 1.2s cubic-bezier(0.25, 1, 0.5, 1), transform 1.2s cubic-bezier(0.25, 1, 0.5, 1); will-change: opacity, transform; padding: 0; box-sizing: border-box; border-radius: 8px; }
+.ppt-viewport.entrance { opacity: 1; transform: scale(1); }
+.slide-item { position: absolute; width: 95%; opacity: 0; transform: translateY(30px) scale(0.98); transition: opacity 1.2s cubic-bezier(0.25, 1, 0.5, 1), transform 1.2s cubic-bezier(0.25, 1, 0.5, 1); will-change: opacity, transform; pointer-events: none; text-align: center; margin-top:40px;}
+.slide-item.active { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+.slide-item h3 { font-size: 2.5rem; margin-bottom: 1.5rem; color: #38bdf8; }
+.slide-item p, .slide-item ul { font-size: 1.3rem; line-height: 1.6; color: #cbd5e1; }
+.slide-item ul { display: inline-block; text-align: left; }
+.image-slide { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; height: 75vh; background-size: cover; background-position: center; border-radius: 8px; position: relative;}
+.image-slide::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px; z-index: 10001; background-size: contain; background-repeat: no-repeat; background-position: center; }
+.image-slide h1 { position: relative; z-index: 10002; font-size: 4rem; font-weight: bold; color: #ffffff; text-shadow: 0 4px 12px rgba(0,0,0,0.5); margin: 0;}
+.image-slide p { color: #ffffff; text-shadow: 0 4px 12px rgba(0,0,0,0.5); margin: 0;}

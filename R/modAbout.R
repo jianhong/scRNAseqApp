@@ -229,11 +229,94 @@ aboutUI <- function(
                     "ShinyCell",
                     href = "https://github.com/SGDDNB/ShinyCell",
                     target = "_blank")
+            ),
+            div(id = "splash-screen",
+                div(class = "ppt-viewport",
+                    uiOutput(ns("markdownSlides"))
+                )
             )
         )
-    }
+}
+#' @importFrom markdown markdownToHTML
 aboutServer <- function(id, dataSource, optCrt) {
     moduleServer(id, function(input, output, session) {
+        output$markdownSlides <- renderUI({
+            session$onFlushed(function() {
+                session$sendCustomMessage(type = "start_ppt",
+                                          message = list(interval = 4000))
+            }, once = TRUE)
+            file_path <- file.path(.globals$datafolder,
+                                   .globals$filenames$welcomepage)
+            if(!file.exists(file_path)){
+                return(div(class = "slide-item",
+                           div(class = "image-slide", 
+                               div(
+                                   class =
+                                       "panel panel-danger",
+                                   div(
+                                       class =
+                                           paste(
+                                               "panel-heading",
+                                               "about-container",
+                                               "about-padding-16"),
+                                   h1("Welcome!"),
+                                   p('Getting Everything Ready for You.',
+                                     'The App Will Launch Shortly.')
+                                   )
+                               )
+                           ),
+                           div(class = "splash-footer",
+                               actionButton(inputId = "close-splash",
+                                            class = "close-splash-btn",
+                                            label = "Close & Continue",
+                                            icon = icon('close'))
+                           )
+                ))
+            }
+            # Read raw lines of markdown text
+            lines <- readLines(file_path, warn = FALSE)
+            # Find positions where structural headers begin (using H3 tags here)
+            header_indices <- grep("^### ", lines)
+            if (length(header_indices) == 0) {
+                return(div(class = "slide-item",
+                    h1("Welcome!"),
+                    p("Find welcome.md but ", 
+                    "no '###' headers found to slice into slides."),
+                    div(class = "splash-footer",
+                        actionButton(inputId = "close-splash",
+                                     class = "close-splash-btn",
+                                     label = "Close & Continue",
+                                     icon = icon('close'))
+                    )
+                ))}
+            
+            slide_blocks <- list()
+            num_headers <- length(header_indices)
+            
+            for (i in seq_len(num_headers)) {
+                start_line <- header_indices[i]
+                # Pull up until next header or the absolute end of the file
+                end_line <- 
+                    if (i < num_headers) {
+                        header_indices[i + 1] - 1
+                    } else length(lines)
+                slide_text <- lines[start_line:end_line]
+                # Process this individual slide segment chunk into standalone HTML elements
+                slide_html <- HTML(markdown::markdownToHTML(
+                    text = paste(slide_text, collapse = "\n"),
+                    fragment.only = TRUE))
+                # Wrap each into our transition-capable slide-item container
+                slide_blocks[[i]] <- div(class = "slide-item", slide_html)
+            }
+            tagList(slide_blocks,
+                    div(class = "splash-footer",
+                        actionButton(inputId = "close-splash",
+                                     class = "close-splash-btn",
+                                     label = "Close & Continue",
+                                     icon = icon('close'))
+                    ))
+        })
+        
         bibentry <- function(key){
             getRef(dataSource()$dataset, key, dataSource()$appconf)
         }

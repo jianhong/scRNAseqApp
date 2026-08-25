@@ -16,6 +16,65 @@
   $(document).on('shiny:outputinvalidated', show_loader);
   $(document).on('shiny:bound', show_loader);
   $(document).on('shiny:value shiny:error', hide_loader);
+  // splash screen
+  let isFirstIdle = true;
+  $(document).on('shiny:sessioninitialized', function(){
+    // Connection ready: Show the welcome splash screen
+    $('#splash-screen').css('display', 'flex');
+    $('#about-markdownSlides').html('<h1>Welcome!</h1>');
+  });
+  // Attaching the listener with a custom '.splash' namespace
+  $(document).on('shiny:idle.splash', function(event) {
+    if (!isFirstIdle) return;
+    isFirstIdle = false;
+    // Unbind ONLY the splash screen handler
+    $(document).off('shiny:idle.splash');
+    // close button
+    // Utility function to close overlay smoothly
+    function closeSplashScreen() {
+      let splash = $('#splash-screen');
+      splash.css({
+        'opacity': '0',
+        'transform': 'scale(1.05)'
+      });
+      splash.on('transitionend', function() {
+        splash.remove();
+      });
+    }
+    $(document).on('click', '#close-splash', function() {
+      closeSplashScreen();
+    });
+    // Target all the markdown-parsed slides
+    Shiny.addCustomMessageHandler('start_ppt', function(data) {
+      // Instantly fix layout boundaries of the wrapper container
+      $('#about-markdownSlides').css({
+        'width': '100%',
+        'height': '100%',
+        'position': 'relative'
+      });
+      $('.ppt-viewport').addClass('entrance');
+      let extractedUrl = $('.banner-wrapper').find('img:first').attr('src').replace(/^url\(['"]?/, '').replace(/['"]?\)$/, '');
+      $('.image-slide').css('background-image', 'url(' + extractedUrl + ')');
+      let slides = $('.slide-item');
+      let currentSlide = 0;
+      let slideInterval = data.interval; // Dynamically uses the 4000ms from R!
+      if (slides.length > 0) {
+        // Show the first slide instantly
+        $(slides[currentSlide]).addClass('active');
+        let loop = setInterval(function() {
+          if (currentSlide === slides.length - 1) {
+            clearInterval(loop);
+            closeSplashScreen();
+          } else {
+            $(slides[currentSlide]).removeClass('active');
+            currentSlide++;
+            $(slides[currentSlide]).addClass('active');
+          }
+        }, slideInterval);
+      }
+    });
+  });
+  // handle visitor clicks
   $(document).on('shiny:sessioninitialized', function(){
     $.getJSON("https://api.ipify.org/?format=json", function(e) {
       Shiny.setInputValue("remote_addr", e.ip);
@@ -187,8 +246,9 @@
             $("#"+id).css('visibility', 'hidden');
         }
     })
-    // resizable-container
-    function initResizable() {
+  });
+  // resizable-container
+  function initResizable() {
           document.querySelectorAll('.resizable-container').forEach(function (container) {
             // Skip already-initialised containers
             if (container.dataset.resizableInit) return;
@@ -230,9 +290,8 @@
             });
           });
         }
-    // Wait for Shiny to render panels
-    $(document).on('shiny:idle', function(){
-        initResizable();
-    });
+  // Wait for Shiny to render panels
+  $(document).on('shiny:idle', function(){
+      initResizable();
   });
 }())

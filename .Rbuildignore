@@ -4,3 +4,4 @@
 tests/testthat/_snaps
 ^\.positai$
 ^\.claude$
+TODO.md

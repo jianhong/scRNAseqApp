@@ -26,7 +26,7 @@ scDRgene <- function(
         valueFilterCutoff,
         valueFilterCutoff2,
         hideFilterCell = FALSE,
-        geneType = c('gene', 'coor'),
+        geneType = c('gene', 'score', 'coor'),
         #xlim=NULL,ylim=NULL,
         inpCellBorder=FALSE,# stereo-seq cell borders
         cellborderFilename='',
@@ -39,7 +39,7 @@ scDRgene <- function(
         return(ggplot())
     }
     geneType <- match.arg(geneType)
-    if(geneType=='gene'){
+    if(geneType %in% c('gene', 'score')){
         if (is.na(geneIdMap[gene1])) {
             return(ggplot())
         }
@@ -76,14 +76,12 @@ scDRgene <- function(
         cnid <- if(ncol(ggData)>2) 3 else 0
     }
     
-    
     dots <- list(...)
     if('interactive' %in% names(dots)){
         if(isTRUE(dots$interactive)){
             ggData$sampleID <- inpMeta$sampleID
         }
     }
-    
     checkCellSegmentationAvailability(environment())
     backgroundAlignFun <- checkBgImgAvailability(environment())
     
@@ -108,11 +106,14 @@ scDRgene <- function(
             valueFilterCutoff2
         )
     
-    if(geneType=='gene'){
+    if(geneType %in% c('gene', 'score')){
         expr <- read_exprs(
             dataset,
             geneIdMap[gene1],
-            valueOnly = TRUE)
+            valueOnly = TRUE,
+            h5_fn = ifelse(geneType=='gene',
+                           .globals$filenames$sc1gexpr, 
+                           .globals$filenames$sc1gscore))
         if(length(expr)==nrow(ggData)){
             ggData[[exprColname]] <- expr
         }else{
@@ -168,6 +169,7 @@ scDRgene <- function(
     }
     # Actual ggplot
     if (inpPlt == "Dotplot") {
+        ggData <- ggData[!is.na(ggData$X) & !is.na(ggData$Y)]
         if (length(inpColRange) == 1) {
             inpColRange <- c(min(
                 0, min(inpColRange, na.rm = TRUE),

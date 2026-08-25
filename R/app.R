@@ -241,6 +241,8 @@ scRNAseqApp <- function(
             sc1gene = NULL,
             # meta for current sc data
             sc1meta = NULL,
+            # gene score gene name for current sc data
+            sc1gsgene = NULL,
             #search_cache
             search_results = NULL,
             # user logged
@@ -557,15 +559,34 @@ scRNAseqApp <- function(
         # handle dynamic tabs
         existing_tabs <- reactiveVal(character())
         insertAdditionalTab <- function(id, UI){
-            if(!id %in% existing_tabs()){
-                insertTab(
-                    inputId = 'topnav',
-                    target = 'CellInfo/GeneExpr',
-                    position = 'after',
-                    tab = UI(id),
-                    session = session
-                )
-                existing_tabs(c(existing_tabs(), id))
+            if(length(id)==1){
+                if(!id %in% existing_tabs()){
+                    insertTab(
+                        inputId = 'topnav',
+                        target = 'CellInfo/GeneExpr',
+                        position = 'after',
+                        tab = UI(id),
+                        session = session
+                    )
+                    existing_tabs(c(existing_tabs(), id))
+                }
+            }else{
+                if(length(id)){
+                    menuUIargs <- list(
+                        title="CellAcc/GeneExpr"
+                    )
+                    for(i in seq_along(id)){
+                        menuUIargs <- c(menuUIargs, list(UI[[i]](id[i])))
+                    }
+                    insertTab(
+                        inputId = 'topnav',
+                        target = 'CellInfo/GeneExpr',
+                        position = 'after',
+                        tab = do.call(navbarMenu, menuUIargs),
+                        session = session
+                    )
+                    existing_tabs(c(existing_tabs(), 'CellAcc/GeneExpr', id))
+                }
             }
         }
         removeAdditionalTab <- function(id){
@@ -573,6 +594,13 @@ scRNAseqApp <- function(
                 removeTab(inputId = 'topnav', target = id)
                 existing_tabs(existing_tabs()[existing_tabs()!=id])
             }
+        }
+        removeAllAdditionalTab <- function(){
+            removeAdditionalTab('cellInfoMolecule')
+            removeAdditionalTab('ATACvsExpr')
+            removeAdditionalTab('geneScoreGeneExpr')
+            removeAdditionalTab('geneScoreVsExpr')
+            removeAdditionalTab('CellAcc/GeneExpr')
         }
         ## refresh data when change dataset
         refreshData <- function(input, output, session) {
@@ -625,20 +653,65 @@ scRNAseqApp <- function(
             if(dataSource$data_types[[dataSource$dataset]] %in% 
                c("scMultiome", "scATACseq")){
                 ### ATAC vs Expr
-                insertAdditionalTab('ATACvsExpr', geneAccGeneExprUI)
-                removeAdditionalTab('cellInfoMolecule')
-                geneAccGeneExprServer(
-                    "ATACvsExpr",
-                    reactive({
-                        dataSource
-                    }),
-                    optCrt)
+                removeAllAdditionalTab()
+                if(dataSource$data_types[[dataSource$dataset]]=='scATACseq'){
+                    insertAdditionalTab('ATACvsExpr', geneAccGeneExprUI)
+                    geneAccGeneExprServer(
+                        "ATACvsExpr",
+                        reactive({
+                            dataSource
+                        }),
+                        optCrt)  
+                }else{#scMultiome
+                    if(file.exists(file.path(.globals$datafolder,
+                                             dataSource$dataset,
+                                             .globals$filenames$sc1gscore))){
+                        insertAdditionalTab(c('ATACvsExpr',
+                                              'geneScoreGeneExpr',
+                                              'geneScoreVsExpr'),
+                                            list(geneAccGeneExprUI,
+                                                 geneScoreGeneExprUI,
+                                                 geneScoreVsExprUI))
+                        geneAccGeneExprServer(
+                            "ATACvsExpr",
+                            reactive({
+                                dataSource
+                            }),
+                            optCrt)
+                        geneScoreGeneExprServer(
+                            "geneScoreGeneExpr",
+                            reactive({
+                                dataSource
+                            }),
+                            optCrt)
+                        geneScoreVsExprServer(
+                            'geneScoreVsExpr',
+                            reactive({
+                                dataSource
+                            }),
+                            optCrt)
+                    }else{
+                        insertAdditionalTab('ATACvsExpr',
+                                            geneAccGeneExprUI)
+                        geneAccGeneExprServer(
+                            "ATACvsExpr",
+                            reactive({
+                                dataSource
+                            }),
+                            optCrt)
+                    }
+                }
             }else{
                 if(dataSource$data_types[[dataSource$dataset]] %in% "spatial"  &&
-                   file.exists(file.path(.globals$datafolder, dataSource$dataset, .globals$filenames$molecules))){
+                   file.exists(file.path(.globals$datafolder,
+                                         dataSource$dataset,
+                                         .globals$filenames$molecules))){
                     ### cellinfo vs molecules
-                    insertAdditionalTab('cellInfoMolecule', cellInfoMolUI)
                     removeAdditionalTab('ATACvsExpr')
+                    removeAdditionalTab('geneScoreGeneExpr')
+                    removeAdditionalTab('CellAcc/GeneExpr')
+                    removeAdditionalTab('geneScoreVsExpr')
+                    insertAdditionalTab('cellInfoMolecule', cellInfoMolUI)
                     cellInfoMolServer(
                         "cellInfoMolecule",
                         reactive({
@@ -646,8 +719,7 @@ scRNAseqApp <- function(
                         }),
                         optCrt)
                 }else{
-                    removeAdditionalTab('ATACvsExpr')
-                    removeAdditionalTab('cellInfoMolecule')
+                    removeAllAdditionalTab()
                 }
             }
             

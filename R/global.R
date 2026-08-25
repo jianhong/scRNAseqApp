@@ -16,6 +16,8 @@
     sc1def = "sc1def.rds",
     sc1gene = "sc1gene.rds",
     sc1gexpr = "sc1gexpr.h5",
+    sc1gscore = "sc1gscore.h5",
+    sc1gsgene = "sc1gsgene.rds",
     sc1meta = "sc1meta.rds",
     sc1atac = "sc1atac.h5",
     sc1peak = 'sc1peak.rds',

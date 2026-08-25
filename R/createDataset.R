@@ -781,3 +781,68 @@ addCellLinks <- function(
     saveRDS(out, scfile)
     return(invisible(out))
 }
+
+#' add Gene Score matrix
+#' @noRd
+#' @param obj input single-cell object for Seurat (v3+)
+#' @param scConf config data.table
+#' @param assayName assay in single-cell data object to use for plotting
+#'   gene scores.
+#' @param gscoreSlot layer in single-cell gene score assay to plot.
+#' Default is to use the "data" layer
+#' @param appDir specify directory to create the shiny app in
+#' @param chunkSize number of genes written to h5file at any one time. Lower
+#'   this number to reduce memory consumption. Should not be less than 10
+addGeneScoreMatrix <- function(obj,
+                               assayName='GeneScore',
+                               gscoreSlot='data',
+                               appDir='Data',
+                               chunkSize = 500){
+    gscoreAsy <- extAssayData(obj, assay = assayName, slot = gscoreSlot)
+    gscore.rownm <- rownames(gscoreAsy)
+    gscore.matdim <- dim(gscoreAsy)
+    # Make XXXgenes.rds
+    sc1gene <- seq(gscore.matdim[1])
+    names(sc1gene) <- gscore.rownm
+    sc1gene <- sc1gene[order(names(sc1gene))]
+    sc1gene <- sc1gene[order(nchar(names(sc1gene)))]
+    saveRDS(sc1gene, file = file.path(appDir, .globals$filenames$sc1gsgene))
+    
+    filename <- file.path(appDir, .globals$filenames$sc1gscore)
+    if(h5createFile(filename)){
+        if(h5createGroup(filename, .globals$h5fGrpPrefix)){
+            if(h5createDataset(
+                filename,
+                dataset = .globals$h5fGrp,
+                dims = gscore.matdim,
+                maxdims = gscore.matdim,
+                H5type = "H5T_NATIVE_FLOAT", #storage.mode(gscoreAsy[1]),
+                chunk = c(1, gscore.matdim[2]),
+                filter = 'GZIP',
+                level = 6)){
+                chk <- chunkSize
+                while (chk > (gscore.matdim[1] - 8)) {
+                    # Account for cases where nGene < chunkSize
+                    chk <-
+                        floor(chk / 2)
+                }
+                for (i in seq.int(floor((gscore.matdim[1] - 8) / chk))) {
+                    h5write(as.matrix(gscoreAsy[((i - 1) * chk + 1):(i * chk), ]),
+                            file = filename,
+                            name = .globals$h5fGrp,
+                            index = list(((i - 1) * chk + 1):(i * chk), NULL))
+                }
+                h5write(as.matrix(gscoreAsy[(i * chk + 1):gscore.matdim[1], ]),
+                        file = filename,
+                        name = .globals$h5fGrp,
+                        index = list((i * chk + 1):gscore.matdim[1], NULL))
+            }else{
+                stop("can not create dataset:", .globals$h5fGrp)
+            }
+        }else{
+            stop("can not create group:", .globals$h5fGrpPrefix)
+        }
+    }else{
+        stop("can not create file:", filename)
+    } 
+}

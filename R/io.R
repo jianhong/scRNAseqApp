@@ -6,7 +6,7 @@ readData <- function(slot, folder) {
     return(NULL)
 }
 loadData <- function(dataSource) {
-    for (i in c("sc1conf", "sc1def", "sc1gene", "sc1meta")) {
+    for (i in c("sc1conf", "sc1def", "sc1gene", "sc1meta", "sc1gsgene")) {
         dataSource[[i]] <- readData(i, dataSource$dataset)
     }
     return(dataSource)
@@ -87,6 +87,7 @@ writeMisc <- function(misc, folder, slot) {
 #' @param config configs by loading sc1conf.rds
 #' @param groupName The group name in the metadata colnames
 #' @param valueOnly return the values of first gene
+#' @param h5_fn Filename of h5 file
 #' @param cell barcode/sampleID pos retrieved from sc1meta.rds
 #' @return If valueOnly is TRUE, return expression values for first gene.
 #' Otherwise, return a data.table with expressions and group information.
@@ -100,13 +101,15 @@ read_exprs <- function(
         groupName,
         splitName,
         valueOnly = FALSE,
+        h5_fn = .globals$filenames$sc1gexpr,
         cell) {
     fs <- file.path(
         .globals$datafolder,
         h5f,
-        .globals$filenames$sc1gexpr)
+        h5_fn)
     if(!file.exists(fs)){
-        stop("No expression data available. Data may be removed.")
+        warning("No expression data available. Data may be removed.")
+        return(NULL)
     }
     if (valueOnly) {
         if (!missing(cell)) {

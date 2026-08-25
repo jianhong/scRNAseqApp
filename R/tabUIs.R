@@ -414,12 +414,12 @@ geneCoExprPlotControlUI <- function(id, postfix=1, plotly=FALSE){
                 "input.CoExprtog", postfix, " % 2 == 1"), ns=NS(id),
             radioButtons(
                 NS0(id, "CoExprtype", postfix), "Plot type",
-                choices = c("Dotplot", "Ridgeplot"),
+                choices = c("Dotplot", "XYscatter", "Ridgeplot"),
                 selected = "Dotplot"),
             conditionalPanel(
                 condition = paste0(
                     "input.CoExprtype", postfix,
-                    " == 'Dotplot'"),
+                    " != 'Ridgeplot'"),
                 ns=NS(id),
                 radioButtons(
                     NS0(id, "CoExprcol", postfix), "Colour:",
@@ -801,11 +801,11 @@ cellInfoTblUI <- function(id, postfix=1){
 }
 
 #' @importFrom magrittr %>%
-geneExprUI <- function(id, postfix=1){
+geneExprUI <- function(id, postfix=1, title='Gene name:'){
     tagList(
         selectInput(
             NS0(id, "GeneName", postfix),
-            'Gene name:', choices=NULL) %>%
+            title, choices=NULL) %>%
             helper1(category="geneName")
     )
 }

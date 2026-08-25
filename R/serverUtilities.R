@@ -1378,22 +1378,40 @@ updateGeneExprPlot <-
         input,
         output,
         session,
-        dataSource
+        dataSource,
+        geneType='gene'
         ) {
         GeneNameLabel <- paste0('GeneName', postfix)
-        updateSelectizeInput(
-            session,
-            GeneNameLabel,
-            choices = sort(names(dataSource()$sc1gene)),
-            server = TRUE,
-            selected = selectedGene,
-            options = list(
-                maxOptions = .globals$maxNumGene,
-                create = TRUE,
-                persist = TRUE,
-                render = I(optCrt)
+        if(geneType=='gene'){
+            updateSelectizeInput(
+                session,
+                GeneNameLabel,
+                choices = sort(names(dataSource()$sc1gene)),
+                server = TRUE,
+                selected = selectedGene,
+                options = list(
+                    maxOptions = .globals$maxNumGene,
+                    create = TRUE,
+                    persist = TRUE,
+                    render = I(optCrt)
+                )
             )
-        )
+        }else{
+            updateSelectizeInput(
+                session,
+                GeneNameLabel,
+                choices = sort(names(dataSource()$sc1gsgene)),
+                server = TRUE,
+                selected = selectedGene,
+                options = list(
+                    maxOptions = .globals$maxNumGene,
+                    create = TRUE,
+                    persist = TRUE,
+                    render = I(optCrt)
+                )
+            )
+        }
+        
         observeEvent(input[[GeneNameLabel]], {
             if(isTRUE(input[[GeneNameLabel]]!=dataSource()$sc1def$gene1 &&
                       input[[GeneNameLabel]]!=dataSource()$sc1def$gene2 &&
@@ -1418,7 +1436,12 @@ updateGeneExprPlot <-
                 subsetCellKey=input$subsetCell,
                 subsetCellVal=getSubsetCellVal(input),
                 dataset=dataSource()$dataset,
-                geneIdMap=dataSource()$sc1gene,
+                geneIdMap=
+                    if(geneType=='gene')
+                        dataSource()$sc1gene
+                    else
+                        dataSource()$sc1gsgene
+                ,
                 pointSize=input$GeneExprsiz,
                 gradientCol=input[[paste0("GeneExprcol", postfix)]],
                 GeneExprDotOrd=input[[paste0("GeneExprord", postfix)]],
@@ -1435,6 +1458,7 @@ updateGeneExprPlot <-
                     else
                         input[[paste0("GeneExprrg", postfix)]],
                 hideFilterCell = input[[paste0("GeneExprhid", postfix)]],
+                geneType = geneType,
                 inpCellBorder=input[[paste0('GeneExprSegmentation', postfix)]],
                 cellborderFilename=file.path(
                     .globals$datafolder,
@@ -1914,10 +1938,18 @@ getCoexpCol <- function(
     gg <- gg[, c("v1", "v2", "cMix")]
     return(gg)
 }
-getCoexpVal <- function(ggData, dataset, geneIdMap, gene1, gene2) {
+getCoexpVal <- function(ggData, dataset, geneIdMap, gene1, gene2,
+                        geneType='gene', geneIdMap2) {
     ggData$val1 <- read_exprs(dataset, geneIdMap[gene1], valueOnly = TRUE)
-    ggData$val2 <-
-        read_exprs(dataset, geneIdMap[gene2], valueOnly = TRUE)
+    if(geneType=='gene'){
+        ggData$val2 <-
+            read_exprs(dataset, geneIdMap[gene2], valueOnly = TRUE) 
+    }else{## gene score
+        ggData$val2 <- read_exprs(dataset, geneIdMap2[gene2], valueOnly = TRUE,
+                                  h5_fn = ifelse(geneType=='gene',
+                                                 .globals$filenames$sc1gexpr, 
+                                                 .globals$filenames$sc1gscore))
+    }
     ggData[ggData$val1 < 0]$val1 <- 0
     ggData[ggData$val2 < 0]$val2 <- 0
     return(ggData)

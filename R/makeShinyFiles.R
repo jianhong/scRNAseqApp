@@ -392,7 +392,9 @@ makeShinyFiles <- function(
                 sc1conf <- rbindlist(list(sc1conf, tmp))
                 
                 # save the cell borders
-                cellborders[[names(coordinates)[iCoor]]] <- 
+                cellborders[[
+                    gsub("_", "", names(coordinates)[iCoor])
+                    ]] <- 
                     coordinates[[iCoor]]$cellborder
             }
         }
@@ -459,6 +461,13 @@ makeShinyFiles <- function(
         }
     }else{
         stop("can not create file:", filename)
+    }
+    ## export genescore
+    if(scConf$type=='scMultiome' && 'GeneScore' %in% Assays(obj) &&
+       default.symbol == 'rownames'){
+        addGeneScoreMatrix(obj = obj,
+                           appDir = appDir,
+                           chunkSize = chunkSize)
     }
     
     if (!isTRUE(all.equal(sc1meta$sampleID, gex.colnm))) {

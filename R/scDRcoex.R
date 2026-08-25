@@ -7,9 +7,10 @@ bilinear <- function(x, y, xy, Q11, Q21, Q12, Q22) {
     return(oup)
 }
 #' @importFrom grDevices rgb
+#' @importFrom stats cor
 #' @importFrom data.table data.table
 #' @importFrom plotly plot_ly layout
-#' @importFrom ggplot2 ggplot aes .data geom_point xlab ylab scale_color_gradientn guides guide_colorbar coord_fixed scale_colour_identity scale_fill_identity
+#' @importFrom ggplot2 ggplot aes .data geom_point xlab ylab scale_color_gradientn guides guide_colorbar coord_fixed scale_colour_identity scale_fill_identity geom_smooth
 scDRcoex <- function(
         inpConf,
         inpMeta,
@@ -42,6 +43,8 @@ scDRcoex <- function(
         inpXlim=NULL,
         useNorm=FALSE,
         streamType='proportional',
+        geneType='gene',
+        geneIdMap2,
         ...) {
     if (is.null(gene1) || is.null(gene2) || gene1 == "" || gene2 == "") {
         return(NULL)
@@ -95,7 +98,8 @@ scDRcoex <- function(
         }
     }
     
-    ggData <- getCoexpVal(ggData, dataset, geneIdMap, gene1, gene2)
+    ggData <- getCoexpVal(ggData, dataset, geneIdMap, gene1, gene2,
+                          geneType=geneType, geneIdMap2=geneIdMap2)
     keep <- filterCells(
         ggData,
         subsetCellKey,
@@ -223,7 +227,29 @@ scDRcoex <- function(
         }
         return(ggOut)
     }
-    
+    if(plotType == 'XYscatter'){
+        ggOut <- ggplot(ggData, aes(.data[["val1"]],
+                           .data[["val2"]],
+                           color=.data[["cMix"]])) +
+            geom_point() + scale_colour_identity(guide='none') +
+            annotate("text",
+                     x = 0.9*max(ggData$val1),
+                     y = 0.1*max(ggData$val2),
+                     col = "black",
+                     label = paste("Spearman r = ", 
+                                   signif(cor(ggData$val1, ggData$val2,
+                                              method = "spearman"), 2))) +
+            labs(
+                title = "Scatter Plot with Spearman Correlation",
+                y = paste(gene2, "gene score"),
+                x = paste(gene1, "gene expression")
+            ) +
+            sctheme(base_size = labelsFontsize,
+                    family = labelsFontFamily,
+                    XYval = keepXYlables)
+        ggOut <- fixCoord(ggOut, plotAspectRatio, rat)
+        return(ggOut)
+    }
     ggData$val <- ggData$cMix
     if(isTRUE(inpBgImg)){
         backgroundAlignArgs$plot_data <- ggData

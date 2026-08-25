@@ -326,7 +326,7 @@ getIPtable <- function(ips){
     colnames(res)[colnames(res)=='from'] <- 'ip'
     res
 }
-touchVisitorTable <- function(){
+touchVisitorTable <- function(count=FALSE){
     counter <- NULL
     if(!tableExists(.globals$counterTableName)){
         counter <- read.delim(.globals$counterFilename, header = TRUE)
@@ -337,6 +337,7 @@ touchVisitorTable <- function(){
             connectDB(dbGetQuery,
                       statement = query)
     }
+    if(count) return(counter)
     if(!tableExists(.globals$IPlocationTablename)){
         touchIPtable()
     }
@@ -385,7 +386,7 @@ updateVisitorTable <- function(input, output, session){
             geom_bar(stat = "identity", fill="darkorchid4") +
             theme_minimal() + xlab("") + ylab("visitor counts") +
             theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-    })
+    }) %>% bindCache(touchVisitorTable(TRUE))
 }
 listVisitors <- function(summary=FALSE, ipCounter=FALSE){
     if(summary){

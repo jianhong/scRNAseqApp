@@ -537,38 +537,6 @@ checkGene <- function(
 # vistor plots
 updateVisitor <- function(input, output, session){
     updateVisitorTable(input, output, session)
-    # conterFilename <- .globals$counterFilename
-    # ## update visitor stats
-    # update_visitor <- function(){
-    #     req(input$remote_addr)
-    #     counter <- read.delim(conterFilename, header = TRUE)
-    #     ips <- counter$ip
-    #     counter <- as.Date(counter$date)
-    #     visitors <- paste(format(counter, "%d/%m/%y %H"), ips)
-    #     current <- Sys.time()
-    #     ip <- isolate(input$remote_addr)
-    #     agent <- isolate(input$remote_agent)
-    #     if(!paste(format(current, "%d/%m/%y %H"), ip) %in% visitors){
-    #         write(
-    #             paste(as.character(current), ip, agent, sep="\t"),
-    #             conterFilename, append = TRUE)
-    #     }
-    # }
-    # observeEvent(input$remote_addr, update_visitor())
-    # output$total_visitor <- renderPlot({
-    #     counter <- read.delim(conterFilename, header = TRUE)
-    #     counter <- as.Date(counter$date)
-    #     counter <- counter[as.numeric(difftime(
-    #         as.Date(Sys.time()),
-    #         counter,
-    #         units = 'days'))<730]
-    #     counter <- table(format(counter, "%y-%m"))
-    #     counter <- as.data.frame(counter)
-    #     ggplot(counter, aes(x=.data[["Var1"]], y=.data[["Freq"]])) +
-    #         geom_bar(stat = "identity", fill="darkorchid4") +
-    #         theme_minimal() + xlab("") + ylab("visitor counts") +
-    #         theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-    # })
 }
 
 # used to avoid suppressWarnings(as.numeric)
@@ -1051,7 +1019,7 @@ updateLimRange <- function(postfix, input, session, dataSource, limid, X=TRUE, v
             id <- which(dataSource()$sc1conf$UI == dimred)
             id <- dataSource()$sc1conf[id, ]$ID
             if(length(id)){
-                val <- dataSource()$sc1meta[[id]]
+                val <- dataSource()$sc1meta[[id[1]]]
             }
         }
         

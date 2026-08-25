@@ -243,7 +243,7 @@ aboutServer <- function(id, dataSource, optCrt) {
         output$markdownSlides <- renderUI({
             session$onFlushed(function() {
                 session$sendCustomMessage(type = "start_ppt",
-                                          message = list(interval = 4000))
+                                          message = list(interval = 10000))
             }, once = TRUE)
             file_path <- file.path(.globals$datafolder,
                                    .globals$filenames$welcomepage)

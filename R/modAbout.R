@@ -243,7 +243,7 @@ aboutServer <- function(id, dataSource, optCrt) {
         output$markdownSlides <- renderUI({
             session$onFlushed(function() {
                 session$sendCustomMessage(type = "start_ppt",
-                                          message = list(interval = 10000))
+                                          message = list(interval = 5000))
             }, once = TRUE)
             file_path <- file.path(.globals$datafolder,
                                    .globals$filenames$welcomepage)
@@ -265,7 +265,7 @@ aboutServer <- function(id, dataSource, optCrt) {
                                    )
                                )
                            ),
-                           div(class = "splash-footer",
+                           div(class = "splash-header",
                                actionButton(inputId = "close-splash",
                                             class = "close-splash-btn",
                                             label = "Close & Continue",
@@ -282,7 +282,7 @@ aboutServer <- function(id, dataSource, optCrt) {
                     h1("Welcome!"),
                     p("Find welcome.md but ", 
                     "no '###' headers found to slice into slides."),
-                    div(class = "splash-footer",
+                    div(class = "splash-header",
                         actionButton(inputId = "close-splash",
                                      class = "close-splash-btn",
                                      label = "Close & Continue",
@@ -309,7 +309,7 @@ aboutServer <- function(id, dataSource, optCrt) {
                 slide_blocks[[i]] <- div(class = "slide-item", slide_html)
             }
             tagList(slide_blocks,
-                    div(class = "splash-footer",
+                    div(class = "splash-header",
                         actionButton(inputId = "close-splash",
                                      class = "close-splash-btn",
                                      label = "Close & Continue",

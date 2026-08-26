@@ -52,25 +52,51 @@
         'height': '100%',
         'position': 'relative'
       });
-      $('.ppt-viewport').addClass('entrance');
+      $('.ppt-viewport').addClass('entrance').addClass('border-top-bottom-secondary').addClass('shadow');
       let extractedUrl = $('.banner-wrapper').find('img:first').attr('src').replace(/^url\(['"]?/, '').replace(/['"]?\)$/, '');
       $('.image-slide').css('background-image', 'url(' + extractedUrl + ')');
       let slides = $('.slide-item');
       let currentSlide = 0;
       let slideInterval = data.interval; // Dynamically uses the 4000ms from R!
+      
       if (slides.length > 0) {
+        $('.ppt-viewport').append('<div class="dot-container"></div>');
+        let dotContainer = $('.dot-container');
+        slides.each(function(index) {
+          dotContainer.append(`<span class="dot" data-index="${index}"></span>`);
+        });
+        let dots = $('.dot');
+        function updateSlideDisplay(newIndex) {
+            $(slides[currentSlide]).removeClass('active');
+            $(dots[currentSlide]).removeClass('active');
+            currentSlide = newIndex;
+            $(slides[currentSlide]).addClass('active');
+            $(dots[currentSlide]).addClass('active');
+          }
         // Show the first slide instantly
         $(slides[currentSlide]).addClass('active');
+        $(dots[currentSlide]).addClass('active');
         let loop = setInterval(function() {
           if (currentSlide === slides.length - 1) {
             clearInterval(loop);
             closeSplashScreen();
           } else {
-            $(slides[currentSlide]).removeClass('active');
-            currentSlide++;
-            $(slides[currentSlide]).addClass('active');
+            updateSlideDisplay(currentSlide + 1);
           }
         }, slideInterval);
+        
+        dots.on('click', function() {
+            clearInterval(loop); 
+            let clickedIndex = $(this).data('index');
+            updateSlideDisplay(clickedIndex);
+            loop = setInterval(function() {
+                if (currentSlide === slides.length - 1) {
+                  updateSlideDisplay(0);
+                } else {
+                  updateSlideDisplay(currentSlide + 1);
+                }
+              }, slideInterval);
+          });
       }
     });
   });

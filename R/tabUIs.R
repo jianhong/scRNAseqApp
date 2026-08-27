@@ -463,6 +463,9 @@ geneCoExprPlotControlUI <- function(id, postfix=1, plotly=FALSE){
                 checkboxInput(
                     NS0(id, 'CoExprBgImg', postfix),
                     "Show spatial image", value = FALSE),
+                checkboxInput(
+                   NS0(id, "usingPan", postfix),
+                   "Using wheel to zoom in/out", value = FALSE),
                 actionButton(
                     NS0(id, "manuXYlimTog", postfix),
                     "Manually set x/y axis", inline = TRUE),
@@ -481,10 +484,7 @@ geneCoExprPlotControlUI <- function(id, postfix=1, plotly=FALSE){
                         value = .globals$defaultLimValue,
                         step = 0.1),
                     manuXYlimOriUI(id, postfix)
-                ),
-                checkboxInput(
-                   NS0(id, "usingPan", postfix),
-                   "Using wheel to zoom in/out", value = FALSE)
+                )
             ),
             conditionalPanel(
                 condition = paste0(
@@ -497,22 +497,7 @@ geneCoExprPlotControlUI <- function(id, postfix=1, plotly=FALSE){
                     selected = "proportional", inline = TRUE),
                 checkboxInput(NS0(id, 'useNorm', postfix),
                               "Normalized by total",
-                              value=FALSE),
-                actionButton(
-                    NS0(id, "manuXYlimTog", postfix),
-                    "Manually set x axis", inline = TRUE),
-                conditionalPanel(
-                    condition = paste0(
-                        "input.manuXYlimTog",
-                        postfix, " % 2 ==1"),
-                    ns=NS(id),
-                    sliderInput(
-                        NS0(id, "manuXlim", postfix), "Xlim range:",
-                        min = -10, max = 100,
-                        value = .globals$defaultLimValue,
-                        step = 0.1),
-                    manuXYlimOriUI(id, postfix)
-                )
+                              value=FALSE)
             )
         )
     )

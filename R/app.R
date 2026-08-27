@@ -202,7 +202,7 @@ scRNAseqApp <- function(
     ### Start server code
     server <- function(input, output, session) {
         ## load local storage
-        session$sendCustomMessage("load_key", "defaultDataset")
+        session$sendCustomMessage("load_key", "default_defaultDataset")
         ## set theme
         if (is.null(getShinyOption("bootstrapTheme"))) {
             shinyOptions("bootstrapTheme" = .globals$theme)
@@ -550,10 +550,9 @@ scRNAseqApp <- function(
             }
             session$sendCustomMessage(
                 "save_key",
-                paste(
-                    "defaultDataset",
-                    isolate(input$selectedDatasets),
-                    sep = "|"
+                list(
+                    key="default_defaultDataset",
+                    val=isolate(input$selectedDatasets)
                 ))
         })
         # handle dynamic tabs

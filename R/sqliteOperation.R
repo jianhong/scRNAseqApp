@@ -353,13 +353,21 @@ touchVisitorTable <- function(count=FALSE){
     }
 }
 ## visitor table
+get_client_ip <- function(session) {
+    xff <- session$request$HTTP_X_FORWARDED_FOR
+    if (!is.null(xff) && nzchar(xff)) {
+        return(trimws(strsplit(xff, ",")[[1]][1]))
+    }
+    session$request$REMOTE_ADDR  # fallback, shouldn't be hit once proxy is configured right
+}
 updateVisitorTable <- function(input, output, session){
     touchVisitorTable()
     ## update visitor stats
     update_visitor <- function(){
-        req(input$remote_addr)
+        #req(input$remote_addr)
         current <- Sys.time()
-        ip <- isolate(input$remote_addr)
+        #ip <- isolate(input$remote_addr)
+        ip <- get_client_ip(session)
         agent <- isolate(input$remote_agent)
         ## check ip and time not within 10 min
         query <- paste0('SELECT `date` FROM ',
@@ -379,7 +387,7 @@ updateVisitorTable <- function(input, output, session){
             sendNoreplyQueryToDB(statement = query)
         }
     }
-    observeEvent(input$remote_addr, update_visitor())
+    update_visitor()
     output$total_visitor <- renderPlot({
         counter <- listVisitors(summary=TRUE)
         ggplot(counter, aes(x=.data[["time"]], y=.data[["total"]])) +

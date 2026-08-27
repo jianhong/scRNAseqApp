@@ -18,17 +18,15 @@
   $(document).on('shiny:value shiny:error', hide_loader);
   // splash screen
   let isFirstIdle = true;
-  $(document).on('shiny:sessioninitialized', function(){
-    // Connection ready: Show the welcome splash screen
-    $('#splash-screen').css('display', 'flex');
-    $('#about-markdownSlides').html('<h1>Welcome!</h1>');
-  });
-  // Attaching the listener with a custom '.splash' namespace
-  $(document).on('shiny:idle.splash', function(event) {
+  $(document).on('shiny:sessioninitialized.splash', function(){
     if (!isFirstIdle) return;
     isFirstIdle = false;
     // Unbind ONLY the splash screen handler
-    $(document).off('shiny:idle.splash');
+    $(document).off('shiny:sessioninitialized.splash');
+    
+    // Connection ready: Show the welcome splash screen
+    $('#splash-screen').css('display', 'flex');
+    $('#about-markdownSlides').html('<h1>Welcome!</h1>');
     // close button
     // Utility function to close overlay smoothly
     function closeSplashScreen() {
@@ -43,6 +41,9 @@
     }
     $(document).on('click', '#close-splash', function() {
       closeSplashScreen();
+    });
+    Shiny.addCustomMessageHandler('close_ppt', function(data) {
+        closeSplashScreen();
     });
     // Target all the markdown-parsed slides
     Shiny.addCustomMessageHandler('start_ppt', function(data) {
@@ -100,20 +101,17 @@
       }
     });
   });
+
   // handle visitor clicks
   $(document).on('shiny:sessioninitialized', function(){
-    $.getJSON("https://api.ipify.org/?format=json", function(e) {
-      Shiny.setInputValue("remote_addr", e.ip);
-    });
-    Shiny.addCustomMessageHandler("save_key", function(value){
-      let arr = value.split("|");
-      localStorage.setItem(arr[0], arr[1]);
+    Shiny.addCustomMessageHandler("save_key", function(data){
+      localStorage.setItem(data.key, data.val);
     });
     Shiny.addCustomMessageHandler("load_key", function(key){
       let value = localStorage.getItem(key);
       if(typeof(value)=="undefined") return false;
       if(value === null) return false;
-      Shiny.setInputValue('default_'+key, value);
+      Shiny.setInputValue(key, value);
     });
     $('a[data-value="home"]').on("click", function(e) {
           e.preventDefault();

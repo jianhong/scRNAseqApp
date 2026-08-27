@@ -234,17 +234,38 @@ aboutUI <- function(
                 div(class = "ppt-viewport",
                     uiOutput(ns("markdownSlides"))
                 )
+            ),
+            div(id = "cookie-banner",
+                verbatimTextOutput(ns('policy_content')),
+                div(
+                    actionButton(ns('policy_details'), 
+                                 'Details',
+                                 class = "btn-light"),
+                    actionButton(ns("accept_cookies"),
+                                 "Accept", class = "btn-light"))
             )
         )
 }
 #' @importFrom markdown markdownToHTML
 aboutServer <- function(id, dataSource, optCrt) {
     moduleServer(id, function(input, output, session) {
+        ## close splash screen
+        session$sendCustomMessage("load_key", NS(id, "showSplashScreen"))
+        observeEvent(input$showSplashScreen, {
+            if(isTRUE(input$showSplashScreen ==
+                      as.integer(file.info(file.path(
+                          .globals$datafolder,
+                          .globals$filenames$welcomepage))$mtime))){
+                session$sendCustomMessage(type = "close_ppt",
+                                          list(v=input$default_showSplashScreen))
+            }else{
+                session$onFlushed(function() {
+                    session$sendCustomMessage(type = "start_ppt",
+                                              message = list(interval = 5000))
+                }, once = TRUE)
+            }
+        })
         output$markdownSlides <- renderUI({
-            session$onFlushed(function() {
-                session$sendCustomMessage(type = "start_ppt",
-                                          message = list(interval = 5000))
-            }, once = TRUE)
             file_path <- file.path(.globals$datafolder,
                                    .globals$filenames$welcomepage)
             if(!file.exists(file_path)){
@@ -269,7 +290,11 @@ aboutServer <- function(id, dataSource, optCrt) {
                                actionButton(inputId = "close-splash",
                                             class = "close-splash-btn",
                                             label = "Close & Continue",
-                                            icon = icon('close'))
+                                            icon = icon('close')),
+                               actionButton(NS(id, "dont_show_btn"),
+                                            "Do Not Show Again",
+                                            class = "btn-danger",
+                                            icon = icon('stop'))
                            )
                 ))
             }
@@ -286,7 +311,11 @@ aboutServer <- function(id, dataSource, optCrt) {
                         actionButton(inputId = "close-splash",
                                      class = "close-splash-btn",
                                      label = "Close & Continue",
-                                     icon = icon('close'))
+                                     icon = icon('close')),
+                        actionButton(NS(id, "dont_show_btn"),
+                                     "Do Not Show Again",
+                                     class = "btn-danger",
+                                     icon = icon('stop'))
                     )
                 ))}
             
@@ -313,8 +342,55 @@ aboutServer <- function(id, dataSource, optCrt) {
                         actionButton(inputId = "close-splash",
                                      class = "close-splash-btn",
                                      label = "Close & Continue",
-                                     icon = icon('close'))
+                                     icon = icon('close')),
+                        actionButton(NS(id, "dont_show_btn"),
+                                     "Do Not Show Again",
+                                     class = "btn-danger",
+                                     icon = icon('stop'))
                     ))
+        })
+        observeEvent(input$dont_show_btn, {
+            session$sendCustomMessage(
+                "save_key",
+                list(
+                    key=NS(id, "showSplashScreen"),
+                    val=as.integer(file.info(file.path(.globals$datafolder,
+                                        .globals$filenames$welcomepage))$mtime)
+                ))
+            session$sendCustomMessage(type = "close_ppt", list())
+        })
+        ## cookie policy
+        session$sendCustomMessage("load_key", NS(id, 'cookiepolicy'))
+        observeEvent(input$cookiepolicy, {
+            output$policy_content <- renderText(
+                "This app uses your browser's local storage to save your preferences on your device.")
+            if(is.null(input$cookiepolicy)){
+                session$senCustomMessage("show_div", "cookie-banner")
+            }else{
+                session$sendCustomMessage("hide_div", "cookie-banner")
+            }
+        })
+        observeEvent(input$accept_cookies, {
+            session$sendCustomMessage(
+                'save_key',
+                list(key=NS(id, 'cookiepolicy'),
+                     val=date()))
+            session$sendCustomMessage("hide_div", "cookie-banner")
+        })
+        observeEvent(input$policy_details, {
+            if(isTRUE(input$policy_details %% 2 == 1)){
+                output$policy_content <- renderText(
+                    paste(readLines(
+                        system.file("assets", "img", "policy.txt",
+                                    package="scRNAseqApp")), collapse = '\n')
+                )
+                updateActionButton(inputId ='policy_details', label= 'Summary')
+            }else{
+                output$policy_content <- renderText(
+                    "This app uses your browser's local storage to save your preferences on your device."
+                )
+                updateActionButton(inputId ='policy_details', label= 'Details')
+            }
         })
         
         bibentry <- function(key){

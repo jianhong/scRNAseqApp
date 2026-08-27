@@ -249,21 +249,55 @@ aboutUI <- function(
 #' @importFrom markdown markdownToHTML
 aboutServer <- function(id, dataSource, optCrt) {
     moduleServer(id, function(input, output, session) {
+        ## cookie policy 
+        policy_file_path <- file.path(.globals$datafolder,
+                                      .globals$policy)
+        if(!file.exists(policy_file_path)){
+            policy_file_path <- system.file("assets", "policy", "policy.md",
+                                            package="scRNAseqApp")
+        }
+        session$sendCustomMessage("load_key", NS(id, 'cookiepolicy'))
+        output$policy_content <- renderUI(p(.globals$default_policy))
+        observeEvent(input$cookiepolicy, {
+            if(is.null(input$cookiepolicy)){
+                session$senCustomMessage("show_div", "cookie-banner")
+            }else{
+                session$sendCustomMessage("hide_div", "cookie-banner")
+            }
+        })
+        observeEvent(input$accept_cookies, {
+            session$sendCustomMessage(
+                'save_key',
+                list(key=NS(id, 'cookiepolicy'),
+                     val=date()))
+            session$sendCustomMessage("hide_div", "cookie-banner")
+        })
+        observeEvent(input$policy_details, {
+            if(isTRUE(input$policy_details %% 2 == 1)){
+                output$policy_content <- renderUI(
+                    HTML(
+                        markdown::markdownToHTML(
+                            text = paste(readLines(policy_file_path),
+                                         collapse = "\n"),
+                            fragment.only = TRUE)
+                    )
+                )
+                updateActionButton(inputId ='policy_details', label= 'Summary')
+            }else{
+                output$policy_content <- renderUI(p(.globals$default_policy))
+                updateActionButton(inputId ='policy_details', label= 'Details')
+            }
+        })
         ## close splash screen
         welcomepage_file_path <- file.path(.globals$datafolder,
                                            .globals$welcomepage)
+        session$sendCustomMessage('hide_ppt', list())
         session$sendCustomMessage("load_key", NS(id, "showSplashScreen"))
-        session$sendCustomMessage('hide_ppt', 'null')
         observeEvent(input$showSplashScreen, {
             if(isTRUE(input$showSplashScreen ==
                       as.integer(file.info(welcomepage_file_path)$mtime))){
                 session$sendCustomMessage(type = "close_ppt",
                                           list(v=input$default_showSplashScreen))
-            }else{
-                session$onFlushed(function() {
-                    session$sendCustomMessage(type = "start_ppt",
-                                              message = list(interval = 5000))
-                }, once = TRUE)
             }
         })
         output$markdownSlides <- renderUI({
@@ -356,45 +390,10 @@ aboutServer <- function(id, dataSource, optCrt) {
                 ))
             session$sendCustomMessage(type = "close_ppt", list())
         })
-        ## cookie policy 
-        policy_file_path <- file.path(.globals$datafolder,
-                                      .globals$policy)
-        if(!file.exists(policy_file_path)){
-            policy_file_path <- system.file("assets", "policy", "policy.md",
-                                            package="scRNAseqApp")
-        }
-        session$sendCustomMessage("load_key", NS(id, 'cookiepolicy'))
-        output$policy_content <- renderUI(p(.globals$default_policy))
-        observeEvent(input$cookiepolicy, {
-            if(is.null(input$cookiepolicy)){
-                session$senCustomMessage("show_div", "cookie-banner")
-            }else{
-                session$sendCustomMessage("hide_div", "cookie-banner")
-            }
-        })
-        observeEvent(input$accept_cookies, {
-            session$sendCustomMessage(
-                'save_key',
-                list(key=NS(id, 'cookiepolicy'),
-                     val=date()))
-            session$sendCustomMessage("hide_div", "cookie-banner")
-        })
-        observeEvent(input$policy_details, {
-            if(isTRUE(input$policy_details %% 2 == 1)){
-                output$policy_content <- renderUI(
-                    HTML(
-                        markdown::markdownToHTML(
-                            text = paste(readLines(policy_file_path),
-                                         collapse = "\n"),
-                            fragment.only = TRUE)
-                        )
-                    )
-                updateActionButton(inputId ='policy_details', label= 'Summary')
-            }else{
-                output$policy_content <- renderUI(p(.globals$default_policy))
-                updateActionButton(inputId ='policy_details', label= 'Details')
-            }
-        })
+        session$onFlushed(function() {
+            session$sendCustomMessage(type = "start_ppt",
+                                      message = list(interval = 5000))
+        }, once = TRUE)
         
         bibentry <- function(key){
             getRef(dataSource()$dataset, key, dataSource()$appconf)

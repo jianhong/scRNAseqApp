@@ -59,49 +59,64 @@
       $('.ppt-viewport').addClass('entrance').addClass('border-top-bottom-secondary').addClass('shadow');
       let extractedUrl = $('.banner-wrapper').find('img:first').attr('src').replace(/^url\(['"]?/, '').replace(/['"]?\)$/, '');
       $('.image-slide').css('background-image', 'url(' + extractedUrl + ')');
-      let slides = $('.slide-item');
       let currentSlide = 0;
       let slideInterval = data.interval; // Dynamically uses the 4000ms from R!
-      
-      if (slides.length > 0) {
-        $('.ppt-viewport').append('<div class="dot-container"></div>');
-        let dotContainer = $('.dot-container');
-        slides.each(function(index) {
-          dotContainer.append(`<span class="dot" data-index="${index}"></span>`);
-        });
-        let dots = $('.dot');
-        function updateSlideDisplay(newIndex) {
-            $(slides[currentSlide]).removeClass('active');
-            $(dots[currentSlide]).removeClass('active');
-            currentSlide = newIndex;
+      let attempts = 0;
+      const maxAttempts = 5;
+      let slides = $('.slide-item');
+      const checkUIInterval = setInterval(function() {
+        attempts++;
+        slides = $('.slide-item');
+        if (slides.length > 0) {
+            clearInterval(checkUIInterval);
+            $('.ppt-viewport').append('<div class="dot-container"></div>');
+            let dotContainer = $('.dot-container');
+            slides.each(function(index) {
+              dotContainer.append(`<span class="dot" data-index="${index}"></span>`);
+            });
+            let dots = $('.dot');
+            function updateSlideDisplay(newIndex) {
+                $(slides[currentSlide]).removeClass('active');
+                $(dots[currentSlide]).removeClass('active');
+                currentSlide = newIndex;
+                $(slides[currentSlide]).addClass('active');
+                $(dots[currentSlide]).addClass('active');
+              }
+            // Show the first slide instantly
             $(slides[currentSlide]).addClass('active');
             $(dots[currentSlide]).addClass('active');
-          }
-        // Show the first slide instantly
-        $(slides[currentSlide]).addClass('active');
-        $(dots[currentSlide]).addClass('active');
-        let loop = setInterval(function() {
-          if (currentSlide === slides.length - 1) {
-            clearInterval(loop);
-            closeSplashScreen();
-          } else {
-            updateSlideDisplay(currentSlide + 1);
-          }
-        }, slideInterval);
-        
-        dots.on('click', function() {
-            clearInterval(loop); 
-            let clickedIndex = $(this).data('index');
-            updateSlideDisplay(clickedIndex);
-            loop = setInterval(function() {
-                if (currentSlide === slides.length - 1) {
-                  updateSlideDisplay(0);
-                } else {
-                  updateSlideDisplay(currentSlide + 1);
-                }
-              }, slideInterval);
-          });
-      }
+            let loop = setInterval(function() {
+              if (currentSlide === slides.length - 1) {
+                clearInterval(loop);
+                closeSplashScreen();
+              } else {
+                updateSlideDisplay(currentSlide + 1);
+              }
+            }, slideInterval);
+            
+            dots.on('click', function() {
+                clearInterval(loop); 
+                let clickedIndex = $(this).data('index');
+                updateSlideDisplay(clickedIndex);
+                loop = setInterval(function() {
+                    if (currentSlide === slides.length - 1) {
+                      updateSlideDisplay(0);
+                    } else {
+                      updateSlideDisplay(currentSlide + 1);
+                    }
+                  }, slideInterval);
+              });
+        } else if (attempts >= maxAttempts) {
+          // 3. Timeout fallback: stop looking to prevent memory leaks
+          clearInterval(checkUIInterval);
+          // no slides, must close the splash-screen, otherwise, it will block 
+          // the view.
+          // the issue is that sometimes, the splash screen is not ready, 
+          // it is already be removed.
+          closeSplashScreen();
+          console.warn("UI failed to render within the time limit.");
+        }
+      }, 300); // Runs exactly every 300 milliseconds
     });
   });
 

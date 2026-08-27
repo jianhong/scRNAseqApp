@@ -211,4 +211,4 @@ div.about-right>div{font-size:24px!important;magin:10px 0!important;font-weight:
 .dot { cursor: pointer; height: 12px; width: 12px; background-color:  #55bdf8; border-radius: 50%; transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1); }
 .dot.active, .dot:hover { background-color: #38bdf8; transform: scale(1.2); }
 /* cookie */
-#cookie-banner { position: fixed; bottom:0; left:0; min-width:20%; max-with:99%; background: rgba(var(--bs-body-bg-rgb),0.8); backdrop-filter:saturate(180%) blur(10px); color:white; padding:15px; display:flex; flex-direction: column; justify-content:space-between; align-items:center; z-index:9999;}
+#cookie-banner { position: fixed; bottom:0; left:0; min-width:20%; max-with:99%; background: rgba(var(--bs-body-bg-rgb),0.8); backdrop-filter:saturate(180%) blur(10px); padding:15px; display:flex; flex-direction: column; justify-content:space-between; align-items:center; border: 1px solid black; z-index:9998;}

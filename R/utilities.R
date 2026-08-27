@@ -563,7 +563,7 @@ extAssayData <- function(object, slot, ...){
 
 # load config file
 loadConfigFile <- function(.globals, app_path){
-    configFile <- file.path(app_path, 'www/config.dcf')
+    configFile <- file.path(app_path, .globals$config)
     if(file.exists(configFile)){
         configs <- read.dcf(configFile)
         cn <- intersect(colnames(configs), names(.globals))
@@ -580,7 +580,7 @@ loadConfigFile <- function(.globals, app_path){
             }
         }
     }else{
-        configFile <- file.path(app_path, 'www/config.rds')
+        configFile <- file.path(app_path, .globals$dbFolder, 'config.rds')
         ## no safety check here, need to reconsider.
         if(file.exists(configFile)){
             configs <- readRDS(configFile)

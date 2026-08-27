@@ -25,7 +25,6 @@
     sc1anno = 'sc1anno.rds',
     sc1edge = 'sc1edge.rds',
     coor_revmap = 'coorrevmap.rds',
-    bwspath = 'bws',
     token = "token",
     locker = "LOCKER",
     cellchat = "cellchat.rds",
@@ -33,8 +32,7 @@
     slingshot = "slingshot.rds",
     cellborder = 'cell_border.rds',
     backgroundImage = 'backgroundImage.rds',
-    molecules = 'molecules.rds',
-    welcomepage = "welcome.md"
+    molecules = 'molecules.rds'
 )
 .globals$tokenMinLen <- 8 # minimal token length
 .globals$h5fGrpPrefix <- 'grp' #gene expression table prefix
@@ -59,6 +57,14 @@
 .globals$totalComments <- 2500
 .globals$commentsIntervals <- 10
 .globals$searchTableName <- 'searchlog'
+
+
+.globals$config = "config.dcf"
+.globals$bwspath = 'bws'
+.globals$welcomepage = "welcome.md"
+.globals$policy = "policy.md"
+.globals$default_policy = "This app uses your browser's local storage to save your preferences on your device."
+
 # for home search page, the groupColPattern
 .globals$groupColPattern <- 'celltype'
 # Colour palette

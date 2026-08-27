@@ -39,7 +39,7 @@ scDRatac <- function(
     # Prepare ggData
     pf <- file.path(
         .globals$datafolder, dataset,
-        .globals$filenames$bwspath,
+        .globals$bwspath,
         subsetCellKey)
     bws <- dir(pf, ".bigwig$")
     if(length(bws)==0){

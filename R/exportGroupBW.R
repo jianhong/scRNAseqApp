@@ -89,7 +89,7 @@ save_tmp_index_for_one_fragments <- function(
 exportGroupBW <- function(
         appDir, fragments, fragmentNameMapList, grp,
         regions, sc1meta, normBy, binSize){
-    tmp_base <- file.path(appDir, .globals$filenames$bwspath, "tmp")
+    tmp_base <- file.path(appDir, .globals$bwspath, "tmp")
     dir.create(tmp_base, recursive = TRUE, showWarnings = FALSE)
     
     all_tmp_index <- lapply(seq_along(fragments), function(k){
@@ -184,7 +184,7 @@ exportGroupBW <- function(
             .cov <- .cov[.cov$score > 0]
             
             if (length(.cov) > 0L) {
-                pf <- file.path(appDir, .globals$filenames$bwspath, g)
+                pf <- file.path(appDir, .globals$bwspath, g)
                 dir.create(pf, recursive = TRUE, showWarnings = FALSE)
                 export(.cov,
                        file.path(pf, paste0(path_sanitize(f), ".bigwig")),

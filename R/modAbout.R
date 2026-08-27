@@ -236,7 +236,7 @@ aboutUI <- function(
                 )
             ),
             div(id = "cookie-banner",
-                verbatimTextOutput(ns('policy_content')),
+                uiOutput(ns('policy_content')),
                 div(
                     actionButton(ns('policy_details'), 
                                  'Details',
@@ -250,12 +250,13 @@ aboutUI <- function(
 aboutServer <- function(id, dataSource, optCrt) {
     moduleServer(id, function(input, output, session) {
         ## close splash screen
+        welcomepage_file_path <- file.path(.globals$datafolder,
+                                           .globals$welcomepage)
         session$sendCustomMessage("load_key", NS(id, "showSplashScreen"))
+        session$sendCustomMessage('hide_ppt', 'null')
         observeEvent(input$showSplashScreen, {
             if(isTRUE(input$showSplashScreen ==
-                      as.integer(file.info(file.path(
-                          .globals$datafolder,
-                          .globals$filenames$welcomepage))$mtime))){
+                      as.integer(file.info(welcomepage_file_path)$mtime))){
                 session$sendCustomMessage(type = "close_ppt",
                                           list(v=input$default_showSplashScreen))
             }else{
@@ -266,9 +267,7 @@ aboutServer <- function(id, dataSource, optCrt) {
             }
         })
         output$markdownSlides <- renderUI({
-            file_path <- file.path(.globals$datafolder,
-                                   .globals$filenames$welcomepage)
-            if(!file.exists(file_path)){
+            if(!file.exists(welcomepage_file_path)){
                 return(div(class = "slide-item",
                            div(class = "image-slide", 
                                div(
@@ -299,7 +298,7 @@ aboutServer <- function(id, dataSource, optCrt) {
                 ))
             }
             # Read raw lines of markdown text
-            lines <- readLines(file_path, warn = FALSE)
+            lines <- readLines(welcomepage_file_path, warn = FALSE)
             # Find positions where structural headers begin (using H3 tags here)
             header_indices <- grep("^### ", lines)
             if (length(header_indices) == 0) {
@@ -321,7 +320,6 @@ aboutServer <- function(id, dataSource, optCrt) {
             
             slide_blocks <- list()
             num_headers <- length(header_indices)
-            
             for (i in seq_len(num_headers)) {
                 start_line <- header_indices[i]
                 # Pull up until next header or the absolute end of the file
@@ -354,16 +352,20 @@ aboutServer <- function(id, dataSource, optCrt) {
                 "save_key",
                 list(
                     key=NS(id, "showSplashScreen"),
-                    val=as.integer(file.info(file.path(.globals$datafolder,
-                                        .globals$filenames$welcomepage))$mtime)
+                    val=as.integer(file.info(welcomepage_file_path)$mtime)
                 ))
             session$sendCustomMessage(type = "close_ppt", list())
         })
-        ## cookie policy
+        ## cookie policy 
+        policy_file_path <- file.path(.globals$datafolder,
+                                      .globals$policy)
+        if(!file.exists(policy_file_path)){
+            policy_file_path <- system.file("assets", "policy", "policy.md",
+                                            package="scRNAseqApp")
+        }
         session$sendCustomMessage("load_key", NS(id, 'cookiepolicy'))
+        output$policy_content <- renderUI(p(.globals$default_policy))
         observeEvent(input$cookiepolicy, {
-            output$policy_content <- renderText(
-                "This app uses your browser's local storage to save your preferences on your device.")
             if(is.null(input$cookiepolicy)){
                 session$senCustomMessage("show_div", "cookie-banner")
             }else{
@@ -379,16 +381,17 @@ aboutServer <- function(id, dataSource, optCrt) {
         })
         observeEvent(input$policy_details, {
             if(isTRUE(input$policy_details %% 2 == 1)){
-                output$policy_content <- renderText(
-                    paste(readLines(
-                        system.file("assets", "img", "policy.txt",
-                                    package="scRNAseqApp")), collapse = '\n')
-                )
+                output$policy_content <- renderUI(
+                    HTML(
+                        markdown::markdownToHTML(
+                            text = paste(readLines(policy_file_path),
+                                         collapse = "\n"),
+                            fragment.only = TRUE)
+                        )
+                    )
                 updateActionButton(inputId ='policy_details', label= 'Summary')
             }else{
-                output$policy_content <- renderText(
-                    "This app uses your browser's local storage to save your preferences on your device."
-                )
+                output$policy_content <- renderUI(p(.globals$default_policy))
                 updateActionButton(inputId ='policy_details', label= 'Details')
             }
         })

@@ -25,7 +25,6 @@
     $(document).off('shiny:sessioninitialized.splash');
     
     // Connection ready: Show the welcome splash screen
-    $('#splash-screen').css('display', 'flex');
     $('#about-markdownSlides').html('<h1>Welcome!</h1>');
     // close button
     // Utility function to close overlay smoothly
@@ -45,8 +44,12 @@
     Shiny.addCustomMessageHandler('close_ppt', function(data) {
         closeSplashScreen();
     });
+    Shiny.addCustomMessageHandler('hide_ppt', function(data) {
+        $('#splash-screen').css('display', 'none');
+    });
     // Target all the markdown-parsed slides
     Shiny.addCustomMessageHandler('start_ppt', function(data) {
+      $('#splash-screen').css('display', 'flex');
       // Instantly fix layout boundaries of the wrapper container
       $('#about-markdownSlides').css({
         'width': '100%',

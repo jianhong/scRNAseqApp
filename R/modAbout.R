@@ -36,6 +36,7 @@ aboutUI <- function(
                 }
             }
         }
+        remote_addr <- get_client_ip(request)
         refs <- listReferences()
         species <- listSpecies()
         dbs <- listDatasets(
@@ -220,6 +221,8 @@ aboutUI <- function(
                 textInput(
                     "remote_agent", "remote_agent",
                     value = request[["HTTP_USER_AGENT"]]),
+                textInput("remote_addr", "remote_addr",
+                          value=remote_addr),
                 visitorDependencies()
             ),
             hr(),

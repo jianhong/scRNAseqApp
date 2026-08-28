@@ -1,3 +1,8 @@
+CHANGES IN VERSION 1.13.27
+-------------------------
+
+    o Get IP from reqest string but not session.
+    
 CHANGES IN VERSION 1.13.26
 -------------------------
 

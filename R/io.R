@@ -79,6 +79,7 @@ writeMisc <- function(misc, folder, slot) {
         saveData(misc, folder, slot)
     }
 }
+
 #' read expression from h5 file
 #' @noRd
 #' @param h5f Parent folder name of h5 file
@@ -268,3 +269,193 @@ readATACdataByCoor <- function(h5f, coord, cells, revmap, peaks){
     cnts <- as.data.frame(cnts)
 }
 
+#' read molecules
+#' @noRd
+readMolecule <- function(molecule_fs, fov, molecule){
+    if(!file.exists(molecule_fs)){
+        ## convert old format to h5 format
+        molecule_data <- touchMolecule(molecule_fs)
+        if(!missing(fov)){
+            if(all(!fov %in% names(molecule_data))) return(NULL)
+            molecule_data <- molecule_data[fov]
+        }
+        molecule_data <- do.call(rbind, molecule_data)
+        if(missing(molecule)){
+                return(sort(unique(molecule_data$molecule)))
+        }else{
+            return(molecule_data[
+                molecule_data$molecule %in% molecule, , drop=FALSE])
+        }
+    }else{
+        ## read from h5
+        if(missing(molecule)){
+            return(getMoleculeOnly(molecule_fs, fov))
+        }else{
+            if(missing(fov)){
+                fov <- listMoleculeFOV(molecule_fs)
+            }
+            res <- lapply(fov, function(rd){
+                do.call(rbind, lapply(molecule, function(.ele){
+                    getMoleculeXY(h5_file=molecule_fs, fov=rd, molecule=.ele)
+                }))
+            })
+            return(do.call(rbind, res))
+        }
+    }
+    return(NULL)
+}
+
+checkMoleculeFile <- function(molecule_fs){
+    if(length(molecule_fs)==0) return(FALSE)
+    if(file.exists(molecule_fs)){
+        return(TRUE)
+    }
+    rds_file <- file.path(sub('.h5$', '.rds', molecule_fs))
+    return(file.exists(rds_file))
+}
+
+touchMolecule <- function(molecule_fs){
+    rds_file <- file.path(sub('.h5$', '.rds', molecule_fs))
+    if(!file.exists(rds_file)) return(NULL)
+    molecule_data <- readRDS(rds_file)
+    writeMolecule(molecule_data, molecule_fs)
+    return(molecule_data)
+}
+
+#' @importFrom rhdf5 h5writeAttribute h5readAttributes h5closeAll
+writeMolecule <- function(molecule_data, h5_file, overwrite = TRUE){
+    showNotification("prepare the molecule data.", type='message')
+    if (overwrite && file.exists(h5_file)) file.remove(h5_file)
+    h5createFile(h5_file)
+    for (fov in names(molecule_data)) {
+        df <- molecule_data[[fov]]
+        # Sort rows by molecule so same-molecule rows are contiguous
+        df <- df[order(df$molecule), ]
+        mol_char <- as.character(df$molecule)
+        # Build index: for each unique molecule, its start (0-based) and count
+        rle_mol <- rle(mol_char)
+        starts <- c(0, head(cumsum(rle_mol$lengths), -1))
+        index_df <- data.frame(
+            molecule = rle_mol$values,
+            start    = starts,
+            count    = rle_mol$lengths,
+            stringsAsFactors = FALSE
+        )
+        group <- paste0("/", fov)
+        h5createGroup(h5_file, group)
+        
+        # Data, sorted
+        h5write(df$x, h5_file, paste0(group, "/x"))
+        h5write(df$y, h5_file, paste0(group, "/y"))
+        h5write(mol_char, h5_file, paste0(group, "/molecule"))
+        h5writeAttribute(range(df$x), h5obj = h5_file,
+                         name = "x_range", h5loc = group)
+        h5writeAttribute(range(df$y), h5obj = h5_file,
+                         name = "y_range", h5loc = group)
+        
+        # Index for fast lookup
+        h5write(index_df$molecule, h5_file, paste0(group, "/index_molecule"))
+        h5write(index_df$start,    h5_file, paste0(group, "/index_start"))
+        h5write(index_df$count,    h5_file, paste0(group, "/index_count"))
+    }
+    
+    h5closeAll()
+    invisible(h5_file)
+}
+
+getMoleculeRange <- function(h5_file, fov) {
+    if(!file.exists(h5_file)){
+        molecule_data <- touchMolecule(h5_file)
+        if(length(molecule_data)==0) return(NULL)
+    }
+    fovs <- listMoleculeFOV(h5_file)
+    if(missing(fov)){
+        xy_ranges <- lapply(fovs, getMoleculeRange, h5_file=h5_file)
+        return(
+            list(
+                x = range(unlist(lapply(xy_ranges,
+                                        function(.ele) .ele$x))),
+                y = range(unlist(lapply(xy_ranges,
+                                        function(.ele) .ele$y)))
+            )
+        )
+    }
+    if(!fov %in% fovs){
+        return(NULL)
+    }
+    attrs <- h5readAttributes(h5_file, paste0("/", fov))
+    list(x = attrs$x_range, y = attrs$y_range)
+}
+
+getMoleculeXY <- function(h5_file, fov, molecule) {
+    if(!file.exists(h5_file)){
+        molecule_data <- touchMolecule(h5_file)
+        if(length(molecule_data)==0) return(NULL)
+        molecule_data <- molecule_data[[fov]]
+        return(molecule_data[
+            molecule_data$molecule %in% molecule, , drop=FALSE])
+    }
+    fovs <- listMoleculeFOV(h5_file)
+    if(!fov %in% fovs) return(data.frame(x = numeric(0),
+                                         y = numeric(0),
+                                         molecule = character(0)))
+    group <- paste0("/", fov)
+    
+    idx_mol   <- h5read(h5_file, paste0(group, "/index_molecule"))
+    idx_start <- h5read(h5_file, paste0(group, "/index_start"))
+    idx_count <- h5read(h5_file, paste0(group, "/index_count"))
+    
+    pos <- which(idx_mol == molecule)
+    if (length(pos) == 0) return(data.frame(x = numeric(0),
+                                            y = numeric(0),
+                                            molecule = character(0)))
+    
+    start <- idx_start[pos]  # 0-based
+    count <- idx_count[pos]
+    rows  <- (start + 1):(start + count)   # convert to 1-based
+    
+    x <- h5read(h5_file, paste0(group, "/x"), index = list(rows))
+    y <- h5read(h5_file, paste0(group, "/y"), index = list(rows))
+    
+    data.frame(x, y, molecule)
+}
+
+getMoleculeOnly <- function(h5_file, fov){
+    if(!file.exists(h5_file)){
+        molecule_data <- touchMolecule(h5_file)
+        if(length(molecule_data)==0) return(NULL)
+        if(missing(fov)){
+            fov <- names(molecule_data)
+        }
+        molecule_data <- do.call(rbind, molecule_data[fov])
+        return(sort(unique(molecule_data$molecule)))
+    }
+    if(missing(fov)){
+        groups <- h5ls(h5_file, recursive = FALSE)
+        fovs <- groups$name[groups$group == "/"]
+        molecules <- lapply(fovs, getMoleculeOnly, h5_file=h5_file)
+    }else{
+        if(length(fov)>1){
+            molecules <- lapply(fovs, getMoleculeOnly, h5_file=h5_file)
+        }else{
+            group <- paste0("/", fov)
+            fovs <- listMoleculeFOV(h5_file)
+            if(fov %in% fovs){
+                molecules <- h5read(h5_file, paste0(group, "/index_molecule"))
+            }else{
+                return(getMoleculeOnly(h5_file, fovs[1]))
+            }
+        }
+    }
+    sort(unique(unlist(molecules)))
+}
+
+listMoleculeFOV <- function(h5_file) {
+    if(!file.exists(h5_file)){
+        molecule_data <- touchMolecule(h5_file)
+        if(length(molecule_data)==0) return(NULL)
+        return(names(molecule_data))
+    }
+    groups <- h5ls(h5_file, recursive = FALSE)
+    groups$name[groups$group == "/"]
+}

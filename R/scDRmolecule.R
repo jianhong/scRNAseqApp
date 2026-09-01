@@ -3,7 +3,7 @@
 #' @importFrom ggridges geom_density_ridges theme_ridges
 scDRmolecule <- function(
         genes,
-        molecules,
+        molecules_fs,
         fov,
         pointSize,
         gradientCol,
@@ -33,8 +33,9 @@ scDRmolecule <- function(
         )
         genes <- genes[seq.int(9)]
     }
-    ggData <- molecules[[fov]]
-    ggData <- ggData[ggData$molecule %in% genes, , drop=FALSE]
+    
+    ggData <- readMolecule(
+        molecule_fs=molecules_fs, fov=fov, molecule=genes)
     if(length(dim(ggData))!=2){
         return(ggplot())
     }

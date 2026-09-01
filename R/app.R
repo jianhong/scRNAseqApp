@@ -702,7 +702,7 @@ scRNAseqApp <- function(
                 }
             }else{
                 if(dataSource$data_types[[dataSource$dataset]] %in% "spatial"  &&
-                   file.exists(file.path(.globals$datafolder,
+                   checkMoleculeFile(file.path(.globals$datafolder,
                                          dataSource$dataset,
                                          .globals$filenames$molecules))){
                     ### cellinfo vs molecules

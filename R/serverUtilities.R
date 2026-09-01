@@ -305,7 +305,7 @@ updateGeneExprDotPlotUI <-
         handlerFUN = plotsDownloadHandler,
         isInfoPlot = FALSE,
         dataSource = NULL,
-        molecules = NULL) {
+        molecules_fs = NULL) {
         # link the ranges to manuXlim and Ylim
         geneExprXYlimTog <- paste0('manuXYlimTog', postfix)
         cellInfoXlim <- paste0('manuXlim', postfix)
@@ -337,7 +337,7 @@ updateGeneExprDotPlotUI <-
         })
         
         observeEvent(input$GeneExprdrX, {
-            if(length(molecules)==0){
+            if(!checkMoleculeFile(molecules_fs)){
                 updateLimRange(postfix, input, session, dataSource,
                                cellInfoXlim, X=TRUE)
                 if(length(input$fov2)>0){
@@ -346,7 +346,7 @@ updateGeneExprDotPlotUI <-
             }
         })
         observeEvent(input$GeneExprdrY, {
-            if(length(molecules)==0){
+            if(!checkMoleculeFile(molecules_fs)){
                 updateLimRange(postfix, input, session, dataSource,
                                cellInfoYlim, X=FALSE)
                 if(length(input$fov2)>0){
@@ -355,19 +355,19 @@ updateGeneExprDotPlotUI <-
             }
         })
         observeEvent(input$fov2, {
-            if(length(molecules)>0){
+            if(checkMoleculeFile(molecules_fs)){
                 updateLimRange(postfix, input, session, dataSource,
                                cellInfoXlim,
                                X=TRUE,
-                               val = molecules[[
-                                   input[[paste0('fov', postfix)]]
-                               ]]$x)
+                               val = getMoleculeRange(
+                                   h5_file=molecules_fs,
+                                   fov=input[[paste0('fov', postfix)]])$x)
                 updateLimRange(postfix, input, session, dataSource,
                                cellInfoYlim,
                                X=FALSE,
-                               val = molecules[[
-                                   input[[paste0('fov', postfix)]]
-                               ]]$y)
+                               val = getMoleculeRange(
+                                   h5_file=molecules_fs,
+                                   fov=input[[paste0('fov', postfix)]])$y)
             }
         })
         observeEvent(input[[paste0('XYlimLinker', postfix)]], {
@@ -722,7 +722,7 @@ updateGeneExprDotPlotUI <-
             inRange <- abs((e$x - text_layers$x)/diff(xrg))<=text_layers$width &
                 abs((e$y - text_layers$y)/diff(yrg))<= text_layers$height
             nearestLabel <- nearestLabel==min(nearestLabel) & inRange
-            if(any(nearestLabel)){
+            if(isTRUE(any(nearestLabel))){
                 nearestLabel <- 
                     c('text',
                       as.character(text_layers$label[which(nearestLabel)[1]]))
@@ -1292,12 +1292,8 @@ updateMoleculePlot <-
         molecule_fs <- file.path(.globals$datafolder,
                                  dataSource()$dataset,
                                  .globals$filenames$molecules)
-        if(!file.exists(molecule_fs)){
-            warning('molecule file does not exists')
-            return()
-        }
-        molecules <- readRDS(molecule_fs)
-        available_FOV <- names(molecules)
+        available_FOV <- listMoleculeFOV(molecule_fs)
+        
         updateSelectInput(
             session = session,
             FOVLabel,
@@ -1305,12 +1301,16 @@ updateMoleculePlot <-
             selected = available_FOV[1]
         )
         rdim <- input[[FOVLabel]] %||% available_FOV[1] ## issue
+        available_molecules <- getMoleculeOnly(
+            h5_file=molecule_fs,
+            fov=rdim)
+        
         updateSelectizeInput(
             session,
             GeneNameLabel,
-            choices = sort(unique(molecules[[rdim]]$molecule)),
+            choices = available_molecules,
             server = TRUE,
-            selected = input[[GeneNameLabel]] %||% molecules[[rdim]]$molecule[1],
+            selected = input[[GeneNameLabel]] %||% available_molecules[1],
             options = list(
                 maxOptions = .globals$maxNumGene,
                 create = TRUE,
@@ -1323,7 +1323,7 @@ updateMoleculePlot <-
         plotX <- reactive({
             scDRmolecule(
                 genes = input[[GeneNameLabel]],
-                molecules = molecules,
+                molecules_fs = molecule_fs,
                 fov = input[[FOVLabel]],
                 pointSize=input$GeneExprsiz,
                 gradientCol=input[[paste0("GeneExprcol", postfix)]],
@@ -1365,7 +1365,7 @@ updateMoleculePlot <-
             input$FOVLabel,
             input[[GeneNameLabel]],
             dataSource = dataSource,
-            molecules = molecules
+            molecules_fs = molecule_fs
         )
     }
 

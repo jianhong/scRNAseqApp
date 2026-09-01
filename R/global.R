@@ -32,7 +32,7 @@
     slingshot = "slingshot.rds",
     cellborder = 'cell_border.rds',
     backgroundImage = 'backgroundImage.rds',
-    molecules = 'molecules.rds'
+    molecules = 'molecules.h5'
 )
 .globals$tokenMinLen <- 8 # minimal token length
 .globals$h5fGrpPrefix <- 'grp' #gene expression table prefix

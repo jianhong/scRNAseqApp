@@ -568,8 +568,8 @@ makeShinyFiles <- function(
                 file = file.path(appDir, .globals$filenames$cellborder))
     }
     if(length(moleculesImages)){
-        saveRDS(moleculesImages, 
-                file = file.path(appDir, .globals$filenames$molecules))
+        writeMolecule(molecule_data = moleculesImages, 
+                      h5_file = file.path(appDir, .globals$filenames$molecules))
     }
     
     ### save ATAC objects

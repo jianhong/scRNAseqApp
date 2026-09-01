@@ -932,6 +932,13 @@ checkCellSegmentationAvailability <-
             if(is.list(env$cellborder)){
                 dimRed_prefix <- sub('.$', '', env$dimRedX)
                 if(dimRed_prefix==sub('.$', '', env$dimRedY)){
+                    if(!dimRed_prefix %in% names(env$cellborder)){
+                        ## try to fix the underscore issue
+                        dimRed_prefix1 <- gsub('_', '', dimRed_prefix)
+                        if(dimRed_prefix1 %in% names(env$cellborder)){
+                            dimRed_prefix <- dimRed_prefix1
+                        }
+                    }
                     if(dimRed_prefix %in% names(env$cellborder)){
                         env$cellborder <- env$cellborder[[dimRed_prefix]]
                         if(!all(c('x', 'y', 'idx', 'sampleID') %in%

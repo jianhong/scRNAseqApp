@@ -32,5 +32,17 @@ scDRcoexNum <- function(
     ggData$percent <- 100 * ggData$nCells / sum(ggData$nCells)
     ggData <- ggData[order(ggData$express)]
     colnames(ggData)[1] <- "expression > 0"
+    totalTest <- sum(ggData$nCells)
+    p2_and_p1 <- ggData[ggData[[1]]=='both', ][['nCells']]
+    p1 <- ggData[ggData[[1]]==gene1, ][['nCells']] + p2_and_p1
+    p2 <- ggData[ggData[[1]]==gene2, ][['nCells']] + p2_and_p1
+    pval <- phyper(p2_and_p1 -1,
+                   p2,
+                   totalTest-p2,
+                   p1,
+                   lower.tail = FALSE,
+                   log.p = FALSE)
+    ggData[["Pval Hyper"]] <- rep(as.numeric(NA), nrow(ggData))
+    ggData[1, "Pval Hyper"] <- pval
     return(ggData)
 }

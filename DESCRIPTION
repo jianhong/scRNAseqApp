@@ -1,6 +1,6 @@
 Package: scRNAseqApp
 Title: A single-cell RNAseq Shiny app-package
-Version: 1.13.28
+Version: 1.13.29
 Authors@R:
     c(person(given = "Jianhong",
              family = "Ou",
@@ -19,7 +19,7 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 8.0.0
 VignetteBuilder: knitr
-biocViews: Visualization, SingleCell, RNASeq
+biocViews: Visualization, RNASeq, ShinyApps, DataRepresentation, GeneExpression, Spatial, SingleCell
 Depends:
     R (>= 4.3.0)
 Imports:

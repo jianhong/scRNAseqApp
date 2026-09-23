@@ -354,7 +354,7 @@ touchVisitorTable <- function(count=FALSE){
 }
 ## visitor table
 get_client_ip <- function(request) {
-    for(i in c('HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'HTTP_CLIENT_IP')){
+    for(i in c('HTTP_X_REAL_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_CLIENT_IP')){
         xff <- request[[i]]
         if (!is.null(xff) && nzchar(xff)) {
             return(trimws(strsplit(xff, ",")[[1]][1]))

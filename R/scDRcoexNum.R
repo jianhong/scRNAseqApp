@@ -35,8 +35,11 @@ scDRcoexNum <- function(
     colnames(ggData)[1] <- "expression > 0"
     totalTest <- sum(ggData$nCells)
     p2_and_p1 <- ggData[ggData[[1]]=='both', ][['nCells']]
+    if(length(p2_and_p1)==0) p2_and_p1 <- 0
     p1 <- ggData[ggData[[1]]==gene1, ][['nCells']] + p2_and_p1
+    if(length(p1)==0) p1 <- p2_and_p1
     p2 <- ggData[ggData[[1]]==gene2, ][['nCells']] + p2_and_p1
+    if(length(p2)==0) p2 <- p2_and_p1
     pval <- phyper(p2_and_p1 -1,
                    p2,
                    totalTest-p2,

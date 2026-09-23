@@ -147,7 +147,7 @@
 .globals$subsetgroup <- c('A', 'B')
 
 #' @importFrom utils globalVariables
-utils::globalVariables(c('count', 'cell_idx'))
+utils::globalVariables(c('count', 'cell_idx', '.'))
 
 # default x,y lim value
 .globals$defaultLimValue <- c(-1.500101, 10.00101)

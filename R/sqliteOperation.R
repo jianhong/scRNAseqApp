@@ -555,20 +555,106 @@ deleteComments <- function(id){
     #               " WHERE id IN '", id, "' OR pid = '", id, "'")
     # sendNoreplyQueryToDB(statement=sql)
 }
+
+setTableLocker <- function(name){
+    query <- "CREATE TABLE IF NOT EXISTS app_locks (name TEXT PRIMARY KEY, locked_at TEXT)"
+    connectDB(dbSendQuery, statement = query)
+    if(!checkTableLocker(name)){
+        sql <- paste0("INSERT INTO app_locks VALUES ('", name,
+                      "', datetime('now'))")
+        connectDB(dbSendQuery, statement = sql)
+    }
+}
+releaseTableLocker <- function(name){
+    sql <- paste0("DELETE FROM app_locks WHERE name='", name, "'")
+    connectDB(dbSendQuery, statement = sql)
+}
+checkTableLocker <- function(name){
+    sql <- paste0("SELECT COUNT(*) AS locker FROM app_locks WHERE name='",
+                  name, "'")
+    res <- connectDB(dbGetQuery, statement = sql)
+    return(res$locker>0)
+}
 ## gene table
 ## gene name, expressed datasets
-#' @importFrom promises as.promise then
-touchGeneTable <- function(updateDB=FALSE){
-    if(updateDB || !tableExists(.globals$geneSymbolTableName)){
-        datasets <- listDatasets()
-        symbols <- lapply(datasets, function(.ele) {
-            names(readData("sc1gene", .ele))
-        })
-        symbols <- data.frame(dataset = rep(datasets, lengths(symbols)),
-                              symbol = unlist(symbols))
+#' @importFrom DBI dbReadTable dbWithTransaction dbExecute dbExistsTable
+reWriteGeneTable <- function(){
+    on.exit({
+        try(releaseTableLocker(.globals$geneSymbolTableName))
+    })
+    datasets <- listDatasets()
+    symbols <- lapply(datasets, function(.ele) {
+        names(readData("sc1gene", .ele))
+    })
+    symbols <- data.frame(dataset = rep(datasets, lengths(symbols)),
+                          symbol = unlist(symbols))
+    symbols <- unique(symbols)
+    if(nrow(symbols)==0) return(invisible(TRUE))
+    
+    if(!connectDB(dbExistsTable, .globals$geneSymbolTableName)){
         symbols$expr <- NA
         connectDB(dbWriteTable, name = .globals$geneSymbolTableName,
                   value = symbols, overwrite = TRUE)
+        query <- paste0(
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_ds_sym ON ",
+            .globals$geneSymbolTableName, " (dataset, symbol)")
+        connectDB(dbSendQuery, statement=query)
+    }else{
+        con <- getDBconn()
+        on.exit(dbDisconnect(con), add=TRUE)
+        dbWriteTable(con, "new_data", symbols,
+                     temporary = TRUE, overwrite = TRUE)
+        dbExecute(
+            con,
+            "CREATE INDEX IF NOT EXISTS idx_new ON new_data (dataset, symbol)")
+        dbExecute(con, 
+                  paste0(
+                      "CREATE UNIQUE INDEX IF NOT EXISTS idx_ds_sym ON ",
+                      .globals$geneSymbolTableName, " (dataset, symbol)"))
+        dbWithTransaction(con, {
+            # Remove rows whose (dataset, symbol) is not in the new data
+            dbExecute(con, paste0(
+            "DELETE FROM ",  .globals$geneSymbolTableName,
+            " AS t WHERE NOT EXISTS (SELECT 1 FROM new_data AS n ",
+            " WHERE n.dataset = t.dataset AND n.symbol  = t.symbol)"))
+            
+            # Add rows that are new (expr stays NULL)
+            dbExecute(con, paste0(
+            "INSERT INTO ", .globals$geneSymbolTableName,
+            " (dataset, symbol) SELECT n.dataset, n.symbol FROM new_data AS n ",
+            " WHERE NOT EXISTS (",
+            " SELECT 1 FROM ", .globals$geneSymbolTableName, " AS t ",
+            " WHERE t.dataset = n.dataset AND t.symbol  = n.symbol)"))
+        })
+        dbExecute(con, "DROP TABLE IF EXISTS new_data")
+    }
+    ## must return value for future_promise.
+    return(invisible(TRUE))
+}
+#' @importFrom promises future_promise "%...>%" "%...!%"
+touchGeneTable <- function(updateDB=FALSE){
+    if(updateDB || !tableExists(.globals$geneSymbolTableName)){
+        setTableLocker(.globals$geneSymbolTableName)
+        showMsg <- !is.null(shiny::getDefaultReactiveDomain())
+        if(showMsg) {
+            showNotification("Checking and Updating the database. Please Don't leave the App.",
+                             id='updateGeneTable', 
+                             type="warning", duration = 300)
+        }
+        future_promise(reWriteGeneTable())%...>%
+            { 
+                if(showMsg) {
+                    showNotification("Database integrity checks and potential issue remediation completed.",
+                                     id='updateGeneTable', duration = 5)
+                }
+            } %...!%
+            { 
+                if(showMsg) {
+                showNotification(paste("Error:", conditionMessage(.)),
+                                 id='updateGeneTable',
+                                 type='error', duration = 5)
+                }
+            }
     }
 }
 listGeneSymbols <- function(genes, datasets, like = FALSE, checkExpr = FALSE){

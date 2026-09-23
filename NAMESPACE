@@ -34,10 +34,14 @@ importFrom(DBI,
   dbClearResult,
   dbConnect,
   dbDisconnect,
+  dbExecute,
+  dbExistsTable,
   dbGetQuery,
   dbListFields,
   dbListTables,
+  dbReadTable,
   dbSendQuery,
+  dbWithTransaction,
   dbWriteTable,
   sqlInterpolate
 )
@@ -319,8 +323,9 @@ importFrom(plotly,
   toWebGL
 )
 importFrom(promises,
-  as.promise,
-  then
+  "%...!%",
+  "%...>%",
+  future_promise
 )
 importFrom(reshape2,melt)
 importFrom(rhdf5,

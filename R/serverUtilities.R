@@ -1085,7 +1085,7 @@ expandGR <- function(coor, ext){
     end(coor) <- min(2^31-1, max(start(coor), end(coor) + ext))
     coor
 }
-#' @importFrom GenomicRanges strand start end `strand<-` `start<-` `end<-`
+#' @importFrom GenomicRanges strand start end "strand<-" "start<-" "end<-"
 #' @importFrom IRanges shift
 getCoordByGeneSymbol <- function(symbol, genes, links){
     if(!missing(genes)){

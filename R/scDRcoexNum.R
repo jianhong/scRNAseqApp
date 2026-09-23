@@ -1,4 +1,5 @@
 #' @importFrom data.table .N
+#' @importFrom stats phyper
 scDRcoexNum <- function(
         inpConf,
         inpMeta,

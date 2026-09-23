@@ -17,7 +17,6 @@ Description: The scRNAseqApp is a Shiny app package designed for interactive
 License: GPL-3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 8.0.0
 VignetteBuilder: knitr
 biocViews: Visualization, RNASeq, ShinyApps, DataRepresentation, GeneExpression, Spatial, SingleCell
 Depends:
@@ -53,6 +52,7 @@ Imports:
     methods,
     patchwork,
     plotly,
+    promises,
     RColorBrewer,
     RefManageR,
     reshape2,
@@ -86,3 +86,4 @@ Enhances:
     terra
 URL: https://github.com/jianhong/scRNAseqApp
 BugReports: https://github.com/jianhong/scRNAseqApp/issues
+Config/roxygen2/version: 8.1.0

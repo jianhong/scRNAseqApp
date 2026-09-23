@@ -157,7 +157,7 @@ uploadUI <- function (id) {
 }
 
 #' @importFrom tools file_ext
-#' @importFrom SeuratObject Reductions Idents Assays DefaultAssay GetAssayData `DefaultAssay<-` VariableFeatures Misc `Misc<-` Embeddings `Idents<-`
+#' @importFrom SeuratObject Reductions Idents Assays DefaultAssay GetAssayData "DefaultAssay<-" VariableFeatures Misc "Misc<-" Embeddings "Idents<-"
 #' @importFrom Seurat FindAllMarkers FindVariableFeatures ScaleData CellCycleScoring as.SingleCellExperiment
 #' @importFrom RefManageR GetBibEntryWithDOI GetPubMedByID
 #' @importFrom utils head

@@ -557,6 +557,7 @@ deleteComments <- function(id){
 }
 ## gene table
 ## gene name, expressed datasets
+#' @importFrom promises as.promise then
 touchGeneTable <- function(updateDB=FALSE){
     if(updateDB || !tableExists(.globals$geneSymbolTableName)){
         datasets <- listDatasets()

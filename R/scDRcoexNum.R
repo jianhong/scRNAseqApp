@@ -43,7 +43,10 @@ scDRcoexNum <- function(
                    p1,
                    lower.tail = FALSE,
                    log.p = FALSE)
-    ggData[["Pval Hyper"]] <- rep(as.numeric(NA), nrow(ggData))
-    ggData[1, "Pval Hyper"] <- pval
+    if(length(pval)){
+        ggData[["Pval Hyper"]] <- rep(as.numeric(NA), nrow(ggData))
+        ggData[1, "Pval Hyper"] <- pval
+    }
+    
     return(ggData)
 }

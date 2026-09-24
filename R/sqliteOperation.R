@@ -583,6 +583,13 @@ reWriteGeneTable <- function(){
         try(releaseTableLocker(.globals$geneSymbolTableName))
     })
     datasets <- listDatasets()
+    currentFileInfo <- getCurrentFileInfo("sc1gene", datasets)
+    savedFileInfo <- getSavedFileInfo()
+    if(isTRUE(identical(currentFileInfo, savedFileInfo))){
+        return(invisible(TRUE))
+    }else{
+        saveFileInfo(currentFileInfo)
+    }
     symbols <- lapply(datasets, function(.ele) {
         names(readData("sc1gene", .ele))
     })

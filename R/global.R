@@ -64,6 +64,7 @@
 .globals$welcomepage = "welcome.md"
 .globals$policy = "policy.md"
 .globals$default_policy = "This app uses your browser's local storage to save your preferences on your device."
+.globals$geneFileInfo = "geneFileinfo.rds"
 
 # for home search page, the groupColPattern
 .globals$groupColPattern <- 'celltype'

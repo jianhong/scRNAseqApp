@@ -459,3 +459,24 @@ listMoleculeFOV <- function(h5_file) {
     groups <- h5ls(h5_file, recursive = FALSE)
     groups$name[groups$group == "/"]
 }
+
+getCurrentFileInfo <- function(slot, folder){
+    fs <- file.path(.globals$datafolder, folder, .globals$filenames[[slot]])
+    fs <- sort(fs)
+    info <- file.info(fs)
+    return(data.frame(file = fs, mtime = info$mtime, size = info$size))
+}
+
+getSavedFileInfo <- function(){
+    fs <- file.path(.globals$datafolder, .globals$geneFileInfo)
+    if(file.exists(fs)){
+        return(readRDS(fs))
+    }
+    return(NULL)
+}
+
+saveFileInfo <- function(fileinfo){
+    fs <- file.path(.globals$datafolder, .globals$geneFileInfo)
+    saveRDS(fileinfo, fs)
+}
+

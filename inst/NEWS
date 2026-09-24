@@ -1,3 +1,8 @@
+CHANGES IN VERSION 1.13.32
+-------------------------
+
+    o Update the gene table only when file changed.
+    
 CHANGES IN VERSION 1.13.31
 -------------------------
 

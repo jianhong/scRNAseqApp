@@ -467,7 +467,8 @@ aboutServer <- function(id, dataSource, optCrt) {
                 showNotification(
                     paste('Searching', input$search, 'in database.'),
                     duration = 3,
-                    type = 'message'
+                    type = 'message',
+                    id = 'searching'
                 )
                 updateSearch(
                     input$search,

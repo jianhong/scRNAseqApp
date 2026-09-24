@@ -155,6 +155,7 @@ if (length(getGeneric("lapply")) == 0) {
 #' @param X an APPconf object.
 #' @param FUN function used by `lapply`
 #' @importFrom methods slotNames
+#' @importMethodsFrom BiocGenerics lapply
 #' @examples
 #' lapply(appconf, print)
 setMethod(

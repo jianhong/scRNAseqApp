@@ -429,4 +429,5 @@ importFrom(xml2,
   as_list,
   read_xml
 )
+importMethodsFrom(BiocGenerics,lapply)
 importMethodsFrom(Matrix,summary)

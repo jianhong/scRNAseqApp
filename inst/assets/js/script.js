@@ -336,4 +336,12 @@
   $(document).on('shiny:idle', function(){
       initResizable();
   });
+  $(document).on('shown.bs.modal', function() {
+      if (!window.MathJax) return;
+      if (MathJax.Hub && MathJax.Hub.Queue) {// MathJax v2
+        MathJax.Hub.Queue(['Typeset', MathJax.Hub]);
+      } else if (MathJax.typesetPromise) {// MathJax v3
+        MathJax.typesetPromise();
+      }
+  });
 }())

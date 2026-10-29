@@ -32,8 +32,8 @@ plotBubbleHeatmapUI <- function(id) {
                         title = "List of genes to plot on bubbleplot / heatmap",
                         content = c(
                             "Input genes to plot",
-                            "- Maximum 500 genes
-                            (due to plot space limitations)",
+                            paste0("- Maximum ", .globals$maxHeatmapGene, " genes
+                            (due to plot space limitations)"),
                             "- Genes should be separated by comma,
                             semicolon or newline"
                         )

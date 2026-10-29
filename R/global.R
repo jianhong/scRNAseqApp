@@ -143,6 +143,7 @@
 .globals$maxHeatmapGene <- 100
 .globals$maxNumGene <- 50
 .globals$limitNumGene <- 3
+.globals$maxNumGenePair <- 50
 
 # subset cell setting group
 .globals$subsetgroup <- c('A', 'B')

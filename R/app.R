@@ -108,6 +108,8 @@ scRNAseqApp <- function(
 
     ui0 <- function(req) {
         fluidPage(
+            ### enable MathJax.
+            withMathJax(),
             ### theme
             theme = .globals$theme,
             navbarPage(
@@ -165,6 +167,8 @@ scRNAseqApp <- function(
                     coExprUI("coExpr"),
                     ### Tab: 3d Gene coexpression plot
                     coExpr3dUI("coExpr3d"),
+                    ### Tab: multiple pairs of genes
+                    coMultiExprUI("coMultiExpr"),
                     ### Tab: sunburst plot
                     plotPieDimUI('sunburst', 'expr')
                 ),
@@ -214,7 +218,7 @@ scRNAseqApp <- function(
         ### resize the max upload file size for admin
         options(shiny.maxRequestSize = maxRequestSize) # 1G
         ### For all tags and Server-side selectize
-        observe_helpers()
+        observe_helpers(withMathJax = TRUE)
         optCrt <- "{ option_create: function(data,escape) {
     return('<div class=\"create\"><strong>' + '</strong></div>');
     } }"
@@ -733,6 +737,14 @@ scRNAseqApp <- function(
             ### Plots for tab 3d co-expression
             coExpr3dServer(
                 "coExpr3d",
+                reactive({
+                    dataSource
+                }),
+                optCrt)
+            
+            ### Plots for tab multiple gene pairs co-expression
+            coMultiExprServer(
+                'coMultiExpr',
                 reactive({
                     dataSource
                 }),

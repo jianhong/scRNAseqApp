@@ -1,6 +1,6 @@
 Package: scRNAseqApp
 Title: A single-cell RNAseq Shiny app-package
-Version: 1.13.33
+Version: 1.13.34
 Authors@R:
     c(person(given = "Jianhong",
              family = "Ou",
@@ -87,4 +87,4 @@ Enhances:
     terra
 URL: https://github.com/jianhong/scRNAseqApp
 BugReports: https://github.com/jianhong/scRNAseqApp/issues
-Config/roxygen2/version: 8.1.0
+Config/roxygen2/version: 8.1.1

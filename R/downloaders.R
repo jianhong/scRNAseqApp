@@ -1,8 +1,30 @@
+safe_str <- function(){
+    return(basename(tempfile(pattern = "")))
+}
+paste_safe <- function(..., sep = " ", collapse = NULL, recycle0 = FALSE){
+    args <- list(...)
+    if(length(args)<2){
+        ## only one additional naming element
+        ## add one more randome string
+        args <- c(args, safe_str())
+    }
+    args <- lapply(args, function(x){
+        ## replace empty element with random string
+        if (is.null(x) || identical(x, "")) {
+            return(safe_str())
+        }
+        x
+    })
+    do.call(paste,
+            c(args, list(sep = sep, collapse = collapse, recycle0=recycle0)))
+}
 outputFileName <- function(ext, ...) {
-    paste0(paste(
+    paste0(paste_safe(
         ...,
+        sep = "_"), 
+        "_",
         format(Sys.time(), "%Y%m%d.%M%S"),
-        sep = "_"), ".", tolower(ext))
+        ".", tolower(ext)) 
 }
 #' @noRd
 #' @importFrom ggplot2 ggsave

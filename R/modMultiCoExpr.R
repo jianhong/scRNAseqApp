@@ -217,8 +217,6 @@ coMultiExprServer <- function(id, dataSource, optCrt) {
             plotX = plot1,
             height = .globals$pList1[input$plotpsz],
             dataSource()$dataset,
-            input$CellInfoX,
-            input$CellInfoY,
             dataSource = dataSource
         )
         

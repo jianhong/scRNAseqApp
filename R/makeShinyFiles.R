@@ -215,7 +215,7 @@ makeShinyFiles <- function(
             fragments <- peaks@fragments #GetAssayData(obj, layer = "fragments")
             if (missing(fragmentNameMapList)){
                 fragmentNameMapList <- lapply(fragments, function(frag){
-                    n=names(frag@cells)
+                    n <- names(frag@cells)
                     names(n) <- frag@cells
                     n
                 })
@@ -668,7 +668,7 @@ extractFragmentNameMapList <- function(obj, atacAssayName){
     fragmentNameMapList <- lapply(fragments, function(.ele) {
         if(!'cells' %in% slotNames(.ele)) 
             stop('cells is not a slotName for the fragments!')
-        n=names(.ele@cells)
+        n <- names(.ele@cells)
         names(n) <- .ele@cells
         n
     })

@@ -85,9 +85,9 @@ scDRmolecule <- function(
         if(isTRUE(length(cellborder$val)!=nrow(cellborder))){
             cellborder$val <- 'NA'
             if(isTRUE(is.na(cellSegColor))){
-                ggCol=c('NA'='#EEEEEE')
+                ggCol<-c('NA'='#EEEEEE')
             }else{
-                ggCol=c('NA'=cellSegColor)
+                ggCol<-c('NA'=cellSegColor)
             }
         }
     }

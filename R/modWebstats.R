@@ -147,7 +147,7 @@ webstatsServer <- function(id) {
                 }, by = 'month']
                 dat <- reshape2::melt(dat, id.vars = "month")
             }else{
-                dat = listVisitors(summary = TRUE)
+                dat <- listVisitors(summary = TRUE)
                 colnames(dat) <- c('month', 'total', 'uniqueIP')
                 dat <- reshape2::melt(dat, id.vars = "month")
             }

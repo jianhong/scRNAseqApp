@@ -15,7 +15,7 @@ output:
 runtime: shiny
 ---
 
-```{r, echo=FALSE, results="hide", warning=FALSE, message=FALSE}
+```{r prepareVignette, echo=FALSE, results="hide", warning=FALSE, message=FALSE}
 suppressPackageStartupMessages({
     library(scRNAseqApp)
 })
@@ -298,26 +298,26 @@ PBMC[@satija2015spatial].
 Additional package are also required for enhancement functions such 
 trajectory analysis or cell communication analysis.
 
-```{r, eval=FALSE}
+```{r installation, eval=FALSE}
 library(BiocManager)
 BiocManager::install("scRNAseqApp")
 ```
 
 ## Load library
 
-```{r}
+```{r loadlibrary}
 library(scRNAseqApp)
 ```
 
 ## Initial the database
 
-```{r}
+```{r initdatabase}
 publish_folder=tempdir()
 scInit(app_path=publish_folder)
 ```
 
 ## Start shiny app
-```{r}
+```{r startapp}
 scRNAseqApp(app_path = publish_folder)
 ```
 
@@ -339,7 +339,7 @@ There are two steps to create a new data via R session.
 First, create the config file with description of the data and
 second create the data from a Seurat object.
 
-```{r}
+```{r createdataset}
 library(Seurat)
 appconf <- createAppConfig(
             title="pbmc_small_test",
@@ -380,7 +380,7 @@ The journal is used to support transaction rollback.
 
 # SessionInfo
 
-```{r}
+```{r sessioninfo}
 sessionInfo()
 ```
 

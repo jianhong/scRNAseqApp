@@ -59,12 +59,12 @@
 .globals$searchTableName <- 'searchlog'
 
 
-.globals$config = "config.dcf"
-.globals$bwspath = 'bws'
-.globals$welcomepage = "welcome.md"
-.globals$policy = "policy.md"
-.globals$default_policy = "This app uses your browser's local storage to save your preferences on your device."
-.globals$geneFileInfo = "geneFileinfo.rds"
+.globals$config <- "config.dcf"
+.globals$bwspath <- 'bws'
+.globals$welcomepage <- "welcome.md"
+.globals$policy <- "policy.md"
+.globals$default_policy <- "This app uses your browser's local storage to save your preferences on your device."
+.globals$geneFileInfo <- "geneFileinfo.rds"
 
 # for home search page, the groupColPattern
 .globals$groupColPattern <- 'celltype'
@@ -97,9 +97,9 @@
     "Medium" = 1,
     "Large" = 2)
 
-.globals$figWidth = 8.01
-.globals$figHeight = 6.01
-.globals$figFormats = c('PDF', 'PNG', 'TIFF', 'JPEG', 'BMP', 'CSV')
+.globals$figWidth <- 8.01
+.globals$figHeight <- 6.01
+.globals$figFormats <- c('PDF', 'PNG', 'TIFF', 'JPEG', 'BMP', 'CSV')
 
 # supported organisms
 .globals$supported_organisms <- c(

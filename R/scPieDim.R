@@ -170,7 +170,7 @@ scPieDim <- function(
         ggData$geneName <- factor(ggData$geneName, levels=geneList$gene)
         ggData[, 'mv' :=max(.SD$val, na.rm=TRUE), by=c("geneName")]
         nTot <- getTotalNumber(nGrid = 16, nPad = 2)
-        ggData$v1 = round(nTot*ggData$val/ggData$mv)
+        ggData$v1 <- round(nTot*ggData$val/ggData$mv)
         ggData$mv <- NULL
         ggData[, 'v0' := sum(.SD$v1), by=c(subGrpColname, "sampleID")]
         ggData$v1 <- NULL

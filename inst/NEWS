@@ -1,3 +1,8 @@
+CHANGES IN VERSION 1.13.36
+-------------------------
+
+    o Fix the warning about usage of set.seed issue.
+    
 CHANGES IN VERSION 1.13.35
 -------------------------
 

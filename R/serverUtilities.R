@@ -158,7 +158,7 @@ updateSubsetCellUI <-
                                 )
                             )
                         output[[paste0("subsetCell.uncheckLab", subid1)]] <-
-                            renderPrint(cat("Uncheck All"))
+                            renderText({"Uncheck All"})
                         observeEvent(input[[paste0("subsetCell.uncheck", 
                                                    subid1)]],
                           {
@@ -176,7 +176,7 @@ updateSubsetCellUI <-
                               }
                               output[[paste0("subsetCell.uncheckLab",
                                              subid1)]] <-
-                                  renderPrint(cat(uncheckLab))
+                                  renderText({ uncheckLab })
                               updateCheckboxGroupInput(
                                   session = session,
                                   inputId = paste0('subsetCellVal', subid1),
@@ -2038,6 +2038,11 @@ namedSubsetCellVals <- function(subsetCellKey, subsetCellVal){
     subsetCellVal[unique(subsetCellKey)]
 }
 
+## to avoid set.seed
+pseudo_sample <- function(n, size) {
+    u <- (seq_len(n) * 0.6180339887498949) %% 1   # golden-ratio (Weyl) sequence
+    sort(order(u)[seq_len(size)])                 # indices with the smallest u
+}
 #' @importFrom data.table .I
 filterCells <- function(
         ggData,
@@ -2097,13 +2102,13 @@ filterCells <- function(
         factor_columns <- ggData[, vapply(.SD, is.factor, logical(1L))]
         factor_columns <- colnames(ggData)[factor_columns]
         ggData$pre_filter_keep <- keep
-        set.seed(42) ## keep the seed to make sure always same output
         sel <- ggData[, {
             idx <- rep(FALSE, .N)
             ok <- which(get('pre_filter_keep'))
             n <- length(ok)
             if(n>0){
-                choose <- ok[sample(n, round(n*subsetCellPct))]
+                ## keep the seed to make sure always same output without set.seed
+                choose <- ok[pseudo_sample(n, round(n*subsetCellPct))]
                 idx[choose] <- TRUE
             }
             list(sel = idx, orig_order = .I)

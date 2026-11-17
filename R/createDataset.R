@@ -378,10 +378,10 @@ createAppConfig <-
                 doi <- idConverter(pmid, type = "doi", email = email)
         }
         if(missing(doi)){
-            doi = ""
+            doi <- ""
         }
         if(missing(pmid)){
-            pmid = ""
+            pmid <- ""
         }
         bib <- NULL
         if (!missing(bibentry)) {
@@ -641,7 +641,7 @@ addBackgroundImage <- function(
             stop("'plot_data' must be an argument in the alignmentFUN")
         }
     }else{
-        alignmentFUN=transformImage
+        alignmentFUN <- transformImage
         argNames <- methods::formalArgs(alignmentFUN)
     }
     stopifnot(is.list(alignmentArgs))

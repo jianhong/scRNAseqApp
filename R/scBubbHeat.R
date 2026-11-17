@@ -364,7 +364,7 @@ scBubbHeat <- function(
                         gp = gpar(fill = col_fun(pindex(ggMat, i, j)),
                                   col = NA))
         }
-        lgd_list = list(
+        lgd_list <- list(
             Legend( labels = c(0, 10, 25, 50, 75), title = "percentage",
                     title_position = title_position,
                     graphics = list(

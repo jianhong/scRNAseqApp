@@ -1,12 +1,15 @@
 Package: scRNAseqApp
 Title: A single-cell RNAseq Shiny app-package
-Version: 1.13.35
+Version: 1.13.36
 Authors@R:
     c(person(given = "Jianhong",
              family = "Ou",
              role = c("aut", "cre"),
              email = "jou@morgridge.org",
-             comment=c(ORCID="0000-0002-8652-2488")))
+             comment=c(ORCID="0000-0002-8652-2488")),
+      person(given='Kenneth', family='Poss',
+             email='kposs@morgridge.org',
+             role=c('fnd')))
 Description: The scRNAseqApp is a Shiny app package designed for interactive 
     visualization of single-cell data. It is an enhanced version derived from 
     the ShinyCell, repackaged to accommodate multiple datasets.

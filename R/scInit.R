@@ -3,7 +3,8 @@
 #' which contains the required files.
 #' @param app_path path, a directory where do you want to create the app
 #' @param root character(1), the user name for administrator
-#' @param password character(1), the password for administrator
+#' @param password character(1), the password for administrator. Please replace
+#' the default password.
 #' @param datafolder the folder where saved the dataset for the app
 #' @param overwrite logical(1), overwrite the `app_path` if there is
 #'  a project.
@@ -17,7 +18,7 @@
 #' @importFrom utils write.table
 #' @examples
 #' if(interactive()){
-#'     scInit()
+#'     scInit(password='somethingelse')
 #' }
 
 scInit <- function(
@@ -30,6 +31,10 @@ scInit <- function(
     app_description = 'This database is a collection of
         single cell RNA-seq data.',
     passphrase = NULL) {
+    if(password=='scRNAseqApp'){
+        warning('You are using default password for root user.',
+                '\nPlease change it immediately!')
+    }
     stopifnot(is.logical(overwrite) && length(overwrite) == 1)
     .globals$app_path <- app_path
     if(!is_abs_path(datafolder)){

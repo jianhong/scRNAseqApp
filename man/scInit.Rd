@@ -21,7 +21,8 @@ scInit(
 
 \item{root}{character(1), the user name for administrator}
 
-\item{password}{character(1), the password for administrator}
+\item{password}{character(1), the password for administrator. Please replace
+the default password.}
 
 \item{datafolder}{the folder where saved the dataset for the app}
 
@@ -42,6 +43,6 @@ which contains the required files.
 }
 \examples{
 if(interactive()){
-    scInit()
+    scInit(password='somethingelse')
 }
 }

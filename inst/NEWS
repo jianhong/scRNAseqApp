@@ -1,3 +1,8 @@
+CHANGES IN VERSION 1.13.37
+-------------------------
+
+    o Add warning message when user using default password.
+    
 CHANGES IN VERSION 1.13.36
 -------------------------
 

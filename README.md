@@ -42,7 +42,7 @@ Create and initialize an application folder:
 
 ```r
 publish_folder <- tempdir()
-scInit(app_path = publish_folder)
+scInit(app_path = publish_folder, password='useStrongPWDhere')
 ```
 
 This sets up the required directory structure, database, and configuration files.

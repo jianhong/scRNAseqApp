@@ -313,7 +313,8 @@ library(scRNAseqApp)
 
 ```{r initdatabase}
 publish_folder=tempdir()
-scInit(app_path=publish_folder)
+scInit(app_path=publish_folder,
+       password='changePWD4yourOwnApp')
 ```
 
 ## Start shiny app

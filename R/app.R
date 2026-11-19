@@ -28,7 +28,7 @@
 #' @examples
 #' if(interactive()){
 #'     app_path=tempdir()
-#'     scInit(app_path=app_path)
+#'     scInit(app_path=app_path, password='shouldbeastrongpwd')
 #'     setwd(app_path)
 #'     scRNAseqApp()
 #' }
